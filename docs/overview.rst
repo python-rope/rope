@@ -737,8 +737,7 @@ examples.  After this example you might like to have a look at:
   default wildcard supports.
 
 Finally, restructurings can be improved in many ways (for instance
-adding new wildcards).  You might like to discuss your ideas in the
-mailing list.
+adding new wildcards). 
 
 
 Example 1
@@ -1207,6 +1206,98 @@ invalid information.  Currently there is a basic incremental objectdb
 validation that can be used to remove or fix out of date information.
 Rope uses this feature by default but you can disable it by editing
 ``config.py``.
+
+
+Type Hinting
+------------
+
+Currently supported type hinting for:
+
+- function parameter type, using function doctring (:type or @type)
+- function return type, using function doctring (:rtype or @rtype)
+- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class or constructor of class.
+- any assignment, using type comments of PEP 0484 (in limited form).
+
+If rope cannot detect the type of a function argument correctly (due to the
+dynamic nature of Python), you can help it by hinting the type using
+one of the following docstring syntax styles.
+
+
+**Sphinx style**
+
+http://sphinx-doc.org/domains.html#info-field-lists
+
+::
+
+    def myfunction(node, foo):
+        """Do something with a ``node``.
+
+        :type node: ProgramNode
+        :param str foo: foo parameter description
+
+        """
+        node.| # complete here
+
+
+**Epydoc**
+
+http://epydoc.sourceforge.net/manual-fields.html
+
+::
+
+    def myfunction(node):
+        """Do something with a ``node``.
+
+        @type node: ProgramNode
+
+        """
+        node.| # complete here
+
+
+**Numpydoc**
+
+https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+
+In order to support the numpydoc format, you need to install the `numpydoc
+<https://pypi.python.org/pypi/numpydoc>`__ package.
+
+::
+
+    def foo(var1, var2, long_var_name='hi'):
+        r"""A one-line summary that does not use variable names or the
+        function name.
+
+        ...
+
+        Parameters
+        ----------
+        var1 : array_like
+            Array_like means all those objects -- lists, nested lists,
+            etc. -- that can be converted to an array. We can also
+            refer to variables like `var1`.
+        var2 : int
+            The type above can either refer to an actual Python type
+            (e.g. ``int``), or describe the type of the variable in more
+            detail, e.g. ``(N,) ndarray`` or ``array_like``.
+        long_variable_name : {'hi', 'ho'}, optional
+            Choices in brackets, default first when optional.
+
+        ...
+
+        """
+        var2.| # complete here
+
+
+**PEP 0484**
+
+https://www.python.org/dev/peps/pep-0484/#type-comments
+
+::
+
+   class Sample(object):
+       def __init__(self):
+           self.x = None  # type: random.Random
+           self.x.| # complete here
 
 
 Custom Source Folders

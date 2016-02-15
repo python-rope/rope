@@ -519,6 +519,31 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(a_class, var.get_type())
 
     @testutils.only_for('2.5')
+    def test_nested_with_statement_variable_type(self):
+        code = 'class A(object):\n' \
+               '    def __enter__(self):\n' \
+               '        return self\n'\
+               '    def __exit__(self, type, value, tb):\n' \
+               '        pass\n' \
+               'class B(object):\n' \
+               '    def __enter__(self):\n' \
+               '        return self\n'\
+               '    def __exit__(self, type, value, tb):\n' \
+               '        pass\n' \
+               'with A() as var_a, B() as var_b:\n' \
+               '    pass\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        pymod = libutils.get_string_module(self.project, code)
+        a_class = pymod['A'].get_object()
+        var_a = pymod['var_a'].get_object()
+        self.assertEqual(a_class, var_a.get_type())
+
+        b_class = pymod['B'].get_object()
+        var_b = pymod['var_b'].get_object()
+        self.assertEqual(b_class, var_b.get_type())
+
+    @testutils.only_for('2.5')
     def test_with_statement_with_no_vars(self):
         code = 'with open("file"):    pass\n'
         if sys.version_info < (2, 6, 0):
@@ -561,7 +586,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_no_exceptions_on_module_encoding_problems(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\nsdsdsd\n\xa9\n'
+        contents = b'\nsdsdsd\n\xa9\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -569,7 +594,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_cannot_decode_file2(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n\xa9\n'
+        contents = b'\n\xa9\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -578,7 +603,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_null_bytes(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n\x00\n'
+        contents = b'\n\x00\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -587,7 +612,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_bad_strs(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n"\\x0"\n'
+        contents = b'\n"\\x0"\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()

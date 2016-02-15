@@ -18,6 +18,7 @@ try:
 except NameError:
     unicode = str
 
+
 class CodeAssistTest(unittest.TestCase):
 
     def setUp(self):
@@ -398,8 +399,9 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((None, 2), result)
 
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
-        code = 'def f(a_var):\n    pass\na_var = 10\n' \
-               'if True:\n    print a_var\n'
+        code = 'def f(a_var):\n    pass\na_var = 10\n' + \
+               'if True:\n' + \
+               '    print(a_var)\n'
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 3), result)
 

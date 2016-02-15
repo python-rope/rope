@@ -38,6 +38,13 @@ classifiers = [
     'License :: OSI Approved :: GNU General Public License (GPL)',
     'Natural Language :: English',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
     'Topic :: Software Development']
 
 
@@ -52,7 +59,7 @@ setup(name='rope',
       long_description=get_long_description(),
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
-      url='https://github.com/python-rope/rope',
+      url='https://github.com/sergeyglazyrindev/rope',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
                 'rope.refactor.importutils', 'rope.contrib'],
       license='GNU GPL',
