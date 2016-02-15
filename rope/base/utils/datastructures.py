@@ -1,3 +1,6 @@
+# this snippet was taken from this link
+# http://code.activestate.com/recipes/576694/
+
 import collections
 
 
