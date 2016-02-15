@@ -13,7 +13,8 @@ class ModuleToPackage(object):
         changes = ChangeSet('Transform <%s> module to package' %
                             self.resource.path)
         new_content = self._transform_relatives_to_absolute(self.resource)
-        if new_content is not None:
+        # if new_content is not None:
+        if new_content:
             changes.add_change(ChangeContents(self.resource, new_content))
         parent = self.resource.parent
         name = self.resource.name[:-3]
