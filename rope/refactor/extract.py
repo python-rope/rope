@@ -1,5 +1,6 @@
 import re
 
+from rope.base.utils.datastructures import OrderedSet
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
@@ -599,12 +600,12 @@ class _FunctionInformationCollector(object):
         self.start = start
         self.end = end
         self.is_global = is_global
-        self.prewritten = set()
-        self.maybe_written = set()
-        self.written = set()
-        self.read = set()
-        self.postread = set()
-        self.postwritten = set()
+        self.prewritten = OrderedSet()
+        self.maybe_written = OrderedSet()
+        self.written = OrderedSet()
+        self.read = OrderedSet()
+        self.postread = OrderedSet()
+        self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
 
