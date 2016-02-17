@@ -1,4 +1,8 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+import sys
 
 from rope.base import ast
 from rope.base.utils import pycompat
@@ -694,7 +698,8 @@ class PatchedASTTest(unittest.TestCase):
             'Raise', ['raise', ' ', 'Name', '', ',', ' ', 'Name', '', ',',
                       ' ', 'Name'])
 
-    @testutils.only_for('3')
+    # @#testutils.only_for('3')
+    @unittest.skipIf(sys.version < '3', 'This is wrong')
     def test_raise_node_for_python3(self):
         source = 'raise x(y)\n'
         ast_frag = patchedast.get_patched_ast(source, True)

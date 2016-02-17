@@ -1,7 +1,10 @@
 from rope.refactor import restructure
 from ropetest import testutils
 
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 
 class RestructureTest(unittest.TestCase):
