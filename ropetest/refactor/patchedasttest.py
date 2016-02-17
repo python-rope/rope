@@ -2,6 +2,7 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
+import sys
 
 from rope.base import ast
 from rope.base.utils import pycompat
@@ -555,7 +556,8 @@ class PatchedASTTest(unittest.TestCase):
             'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', 'Name'])
         expected_child = pycompat.ast_arg_type.__name__
         checker.check_children(
-            'arguments', [expected_child, '', ',', ' ', expected_child, '', '=', '',
+            'arguments', [expected_child, '', ',', ' ',
+                          expected_child, '', '=', '',
                           'Num', '', ',', ' ', '*', '', 'z'])
 
     def test_list_node(self):
@@ -697,7 +699,8 @@ class PatchedASTTest(unittest.TestCase):
             'Raise', ['raise', ' ', 'Name', '', ',', ' ', 'Name', '', ',',
                       ' ', 'Name'])
 
-    @testutils.only_for('3')
+    # @#testutils.only_for('3')
+    @unittest.skipIf(sys.version < '3', 'This is wrong')
     def test_raise_node_for_python3(self):
         source = 'raise x(y)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -799,10 +802,13 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         node_to_test = 'Try' if pycompat.PY3 else 'TryFinally'
         if pycompat.PY3:
-            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally',
+            expected_children = ['try', '', ':', '\n    ',
+                                 'Pass', '\n', 'finally',
                                  '', ':', '\n    ', 'Pass']
         else:
-            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally', '', ':', '\n    ', 'Pass']
+            expected_children = ['try', '', ':', '\n    ',
+                                 'Pass', '\n', 'finally', '', ':', '\n    ',
+                                 'Pass']
         checker.check_children(
             node_to_test, expected_children)
 
@@ -840,10 +846,12 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         node_to_test = 'Try' if pycompat.PY3 else 'TryFinally'
         if pycompat.PY3:
-            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'ExceptHandler', '\n',
+            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n',
+                                 'ExceptHandler', '\n',
                                  'finally', '', ':', '\n    ', 'Pass']
         else:
-            expected_children = ['TryExcept', '\n', 'finally', '', ':', '\n    ', 'Pass']
+            expected_children = ['TryExcept', '\n',
+                                 'finally', '', ':', '\n    ', 'Pass']
         checker.check_children(
             node_to_test,
             expected_children

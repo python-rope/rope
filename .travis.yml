@@ -11,8 +11,6 @@ matrix:
   allow_failures:
     - python: "pypy"
     - python: "pypy3"
-    - python: "3.3"
-    - python: "3.4"
-before_script:
-  - '[ "${TRAVIS_PYTHON_VERSION}" = "2.6" ] && travis_retry pip install unittest2 || /bin/true'
+install:
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install importlib unittest2; fi
 script: python setup.py test

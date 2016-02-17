@@ -518,7 +518,7 @@ class PyCoreTest(unittest.TestCase):
         var = pymod['var'].get_object()
         self.assertEquals(a_class, var.get_type())
 
-    @testutils.only_for('2.5')
+    @testutils.only_for('2.7')
     def test_nested_with_statement_variable_type(self):
         code = 'class A(object):\n' \
                '    def __enter__(self):\n' \
