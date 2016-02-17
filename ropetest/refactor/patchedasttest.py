@@ -778,8 +778,9 @@ class PatchedASTTest(unittest.TestCase):
 
     @testutils.only_for('2.5')
     def test_with_node(self):
-        source = 'from __future__ import with_statement\nwith a as ' \
-            'b:\n    pass\n'
+        source = 'from __future__ import with_statement\n' +\
+                 'with a as b:\n' +\
+                 '    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
