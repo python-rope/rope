@@ -6,7 +6,8 @@ except NameError:
     raw_input = input
 
 import rope.base.evaluate
-from rope.base import pynames, pyobjects, arguments, utils, ast
+from rope.base.utils import pycompat
+from rope.base import pynames, pyobjects, arguments, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -271,7 +272,7 @@ class List(BuiltinClass):
         collector('__getitem__', function=self._list_get)
         collector('pop', function=self._list_get)
         try:
-            collector('__getslice__', function=self._self_get)
+            collector('__getslice__', function=self._list_get)
         except AttributeError:
             pass
 
@@ -297,6 +298,10 @@ class List(BuiltinClass):
 
     def _list_get(self, context):
         if self.holding is not None:
+            args = context.get_arguments(['self', 'key'])
+            if (len(args) > 1 and args[1] is not None and
+                    args[1].get_type() == builtins['slice'].get_object()):
+                return get_list(self.holding)
             return self.holding
         return context.get_per_name()
 
@@ -414,7 +419,7 @@ class Tuple(BuiltinClass):
         if objects:
             first = objects[0]
         attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(first)),
+            '__getitem__': BuiltinName(BuiltinFunction(first)),  # @todo: add slice support
             '__getslice__':
             BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
