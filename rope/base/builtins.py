@@ -419,7 +419,7 @@ class Tuple(BuiltinClass):
         if objects:
             first = objects[0]
         attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(first)),  # @todo: add slice support
+            '__getitem__': BuiltinName(BuiltinFunction(first)),  # TODO: add slice support
             '__getslice__':
             BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
@@ -661,12 +661,12 @@ class Lambda(pyobjects.AbstractFunction):
         return 'lambda'
 
     def get_param_names(self, special_args=True):
-        result = [node.id for node in self.arguments.args
-                  if isinstance(node, ast.Name)]
+        result = [pycompat.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, pycompat.ast_arg_type)]
         if self.arguments.vararg:
-            result.append('*' + self.arguments.vararg)
+            result.append('*' + pycompat.get_ast_arg_arg(self.arguments.vararg))
         if self.arguments.kwarg:
-            result.append('**' + self.arguments.kwarg)
+            result.append('**' + pycompat.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     @property
@@ -806,4 +806,4 @@ _initial_builtins = {
                              builtin=raw_input)),
 }
 
-builtins = BuiltinModule('__builtin__', initial=_initial_builtins)
+builtins = BuiltinModule(pycompat.builtins.__name__, initial=_initial_builtins)
