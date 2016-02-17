@@ -4,23 +4,16 @@ import sys
 import warnings
 
 import rope.base.fscommands
-from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 import rope.base.resourceobserver as resourceobserver
-from rope.base.resources import File, Folder, _ResourceMatcher
+import rope.base.utils.pycompat as pycompat
+from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 from rope.base.exceptions import ModuleNotFoundError
+from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
     import pickle
 except ImportError:
     import cPickle as pickle
-try:
-    execfile
-except NameError:
-    def execfile(fn, global_vars, local_vars):
-        with open(fn) as f:
-            code = compile(f.read(), fn, 'exec')
-            exec(code, global_vars, local_vars)
-
 
 
 class _Project(object):
@@ -269,7 +262,7 @@ class Project(_Project):
                                 '__file__': config.real_path})
             if config.exists():
                 config = self.ropefolder.get_child('config.py')
-                execfile(config.real_path, run_globals)
+                pycompat.execfile(config.real_path, run_globals)
             else:
                 exec(self._default_config(), run_globals)
             if 'set_prefs' in run_globals:
