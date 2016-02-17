@@ -3,6 +3,7 @@ import re
 import warnings
 
 from rope.base import ast, codeanalyze, exceptions
+from rope.base.utils import pycompat
 
 try:
     basestring
@@ -537,15 +538,29 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Raise(self, node):
-        children = ['raise']
-        if node.type:
-            children.append(node.type)
-        if node.inst:
-            children.append(',')
-            children.append(node.inst)
-        if node.tback:
-            children.append(',')
-            children.append(node.tback)
+        def get_python3_raise_children(node):
+            children = ['raise']
+            if node.exc:
+                children.append(node.exc)
+            if node.cause:
+                children.append(node.cause)
+            return children
+
+        def get_python2_raise_children(node):
+            children = ['raise']
+            if node.type:
+                children.append(node.type)
+            if node.inst:
+                children.append(',')
+                children.append(node.inst)
+            if node.tback:
+                children.append(',')
+                children.append(node.tback)
+            return children
+        if pycompat.PY2:
+            children = get_python2_raise_children(node)
+        else:
+            children = get_python3_raise_children(node)
         self._handle(node, children)
 
     def _Return(self, node):
@@ -582,10 +597,25 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _TryFinally(self, node):
+        # @todo fixme
+        is_there_except_handler = False
+        not_empty_body = True
+        if len(node.finalbody) == 1:
+            if pycompat.PY2:
+                is_there_except_handler = isinstance(node.body[0], ast.TryExcept)
+                not_empty_body = not bool(len(node.body))
+            elif pycompat.PY3:
+                try:
+                    is_there_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
+                    not_empty_body = True
+                except IndexError:
+                    pass
         children = []
-        if len(node.body) != 1 or not isinstance(node.body[0], ast.TryExcept):
+        if not_empty_body or not is_there_except_handler:
             children.extend(['try', ':'])
         children.extend(node.body)
+        if pycompat.PY3:
+            children.extend(node.handlers)
         children.extend(['finally', ':'])
         children.extend(node.finalbody)
         self._handle(node, children)
@@ -598,6 +628,12 @@ class _PatchingASTWalker(object):
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
+
+    def _Try(self, node):
+        if len(node.finalbody):
+            self._TryFinally(node)
+        else:
+            self._TryExcept(node)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
