@@ -1,5 +1,9 @@
 import os
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 
 from rope.base import exceptions
 from ropetest import testutils
@@ -114,7 +118,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():" +
-                                     "\n    print 'output text'"
+                                     "\n    print('output text')"
                                      "\n    return 'run'\n")
         temp_file_name = 'processtest.tmp'
         try:

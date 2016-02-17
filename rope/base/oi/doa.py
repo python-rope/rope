@@ -65,7 +65,7 @@ class PythonFileRunner(object):
         self.receiving_thread.start()
 
     def _receive_information(self):
-        #temp = open('/dev/shm/info', 'w')
+        #temp = open('/dev/shm/info', 'wb')
         for data in self.receiver.receive_data():
             self.analyze_data(data)
             #temp.write(str(data) + '\n')
@@ -128,7 +128,7 @@ class _SocketReceiver(_MessageReceiver):
     def receive_data(self):
         conn, addr = self.server_socket.accept()
         self.server_socket.close()
-        my_file = conn.makefile('r')
+        my_file = conn.makefile('rb')
         while True:
             try:
                 yield pickle.load(my_file)
