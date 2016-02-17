@@ -10,6 +10,7 @@ try:
 except NameError:
     basestring = (str, bytes)
 
+
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
 
@@ -401,11 +402,11 @@ class _PatchingASTWalker(object):
         if node.vararg is not None:
             if args:
                 children.append(',')
-            children.extend(['*', node.vararg])
+            children.extend(['*', pycompat.get_ast_arg_arg(node.vararg)])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(',')
-            children.extend(['**', node.kwarg])
+            children.extend(['**', pycompat.get_ast_arg_arg(node.kwarg)])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
@@ -516,12 +517,18 @@ class _PatchingASTWalker(object):
         children.extend(node.generators)
         children.append('}')
         self._handle(node, children)
-    
+
     def _Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 
     def _Name(self, node):
         self._handle(node, [node.id])
+
+    def _NameConstant(self, node):
+        self._handle(node, [str(node.value)])
+
+    def _arg(self, node):
+        self._handle(node, [node.arg])
 
     def _Pass(self, node):
         self._handle(node, ['pass'])
@@ -538,6 +545,7 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Raise(self, node):
+
         def get_python3_raise_children(node):
             children = ['raise']
             if node.exc:
