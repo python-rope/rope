@@ -1,17 +1,18 @@
+import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
-import rope.base.builtins
+import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
-import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
-
+from rope.base.utils import pycompat
 
 try:
     unicode
 except NameError:
     unicode = str
+
 
 class PyFunction(pyobjects.PyFunction):
 
@@ -76,13 +77,13 @@ class PyFunction(pyobjects.PyFunction):
 
     def get_param_names(self, special_args=True):
         # TODO: handle tuple parameters
-        result = [node.id for node in self.arguments.args
-                  if isinstance(node, ast.Name)]
+        result = [pycompat.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, pycompat.ast_arg_type)]
         if special_args:
             if self.arguments.vararg:
-                result.append(self.arguments.vararg)
+                result.append(pycompat.get_ast_arg_arg(self.arguments.vararg))
             if self.arguments.kwarg:
-                result.append(self.arguments.kwarg)
+                result.append(pycompat.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     def get_kind(self):
@@ -375,11 +376,16 @@ class _ScopeVisitor(object):
     def _update_evaluated(self, targets, assigned,
                           evaluation='', eval_type=False):
         result = {}
-        names = astutils.get_name_levels(targets)
-        for name, levels in names:
-            assignment = pynames.AssignmentValue(assigned, levels,
+        if isinstance(targets, str):
+            assignment = pynames.AssignmentValue(assigned, [],
                                                  evaluation, eval_type)
-            self._assigned(name, assignment)
+            self._assigned(targets, assignment)
+        else:
+            names = astutils.get_name_levels(targets)
+            for name, levels in names:
+                assignment = pynames.AssignmentValue(assigned, levels,
+                                                     evaluation, eval_type)
+                self._assigned(name, assignment)
         return result
 
     def _With(self, node):
@@ -390,11 +396,13 @@ class _ScopeVisitor(object):
             ast.walk(child, self)
 
     def _excepthandler(self, node):
-        if node.name is not None and isinstance(node.name, ast.Name):
+        node_name_type = str if pycompat.PY3 else ast.Name
+        if node.name is not None and isinstance(node.name, node_name_type):
             type_node = node.type
             if isinstance(node.type, ast.Tuple) and type_node.elts:
                 type_node = type_node.elts[0]
             self._update_evaluated(node.name, type_node, eval_type=True)
+
         for child in node.body:
             ast.walk(child, self)
 
@@ -470,8 +478,10 @@ class _ClassVisitor(_ScopeVisitor):
         _ScopeVisitor._FunctionDef(self, node)
         if len(node.args.args) > 0:
             first = node.args.args[0]
-            if isinstance(first, ast.Name):
-                new_visitor = _ClassInitVisitor(self, first.id)
+            new_visitor = None
+            if isinstance(first, pycompat.ast_arg_type):
+                new_visitor = _ClassInitVisitor(self, pycompat.get_ast_arg_arg(first))
+            if new_visitor is not None:
                 for child in ast.get_child_nodes(node):
                     ast.walk(child, new_visitor)
 
