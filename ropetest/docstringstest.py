@@ -1,4 +1,8 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 
 from rope.contrib.codeassist import code_assist
 from ropetest import testutils

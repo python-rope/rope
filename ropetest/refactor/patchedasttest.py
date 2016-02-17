@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import ast
 from rope.refactor import patchedast
@@ -29,7 +32,7 @@ class PatchedASTTest(unittest.TestCase):
         source = 'a = 10\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        #start = source.index('10')
+        # start = source.index('10')
         checker.check_children('Num', ['10'])
 
     def test_ass_name_node(self):

@@ -1,4 +1,8 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 
 from rope.base.oi import objectdb, memorydb
 from ropetest import testutils
