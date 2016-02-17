@@ -48,6 +48,11 @@ classifiers = [
     'Programming Language :: Python :: 3.5',
     'Topic :: Software Development']
 
+PY26 = sys.version_info[0:2] < (2, 7)
+
+install_requires = []
+if PY26:
+    install_requires = ['unittest2']
 
 def get_long_description():
     lines = open('README.rst').read().splitlines(False)

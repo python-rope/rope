@@ -13,3 +13,5 @@ matrix:
     - python: "pypy3"
     - python: "2.6"
 script: python setup.py test
+install:
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install importlib unittest2; fi
