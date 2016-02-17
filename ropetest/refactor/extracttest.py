@@ -717,12 +717,12 @@ class ExtractMethodTest(unittest.TestCase):
                'a = A()\n' \
                'def f():\n' \
                '    func = a.func()\n' \
-               '    print func\n'
+               '    print(func)\n'
 
         start, end = self._convert_line_range_to_offset(code, 6, 6)
         refactored = self.do_extract_method(code, start, end, 'g')
         refactored = refactored[refactored.index('A()') + 4:]
-        expected = 'def f():\n    func = g()\n    print func\n\n' \
+        expected = 'def f():\n    func = g()\n    print(func)\n\n' \
                    'def g():\n    func = a.func()\n    return func\n'
         self.assertEquals(expected, refactored)
 
@@ -775,12 +775,12 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEquals(expected, refactored)
 
     def test_extracting_pieces_with_distinct_temp_names(self):
-        code = 'a = 1\nprint a\nb = 1\nprint b\n'
+        code = 'a = 1\nprint(a)\nb = 1\nprint(b)\n'
         start = code.index('a')
         end = code.index('\nb')
         refactored = self.do_extract_method(code, start, end, 'f',
                                             similar=True, global_=True)
-        expected = '\ndef f():\n    a = 1\n    print a\n\nf()\nf()\n'
+        expected = '\ndef f():\n    a = 1\n    print(a)\n\nf()\nf()\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_methods_in_glob_funcs_should_be_glob(self):
@@ -876,12 +876,12 @@ class ExtractMethodTest(unittest.TestCase):
         code = "def a_func(b):\n" \
                "    if b > 0:\n" \
                "        a = 2\n" \
-               "    print a\n"
+               "    print(a)\n"
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, 'extracted')
         expected = "def a_func(b):\n" \
                    "    a = extracted(b)\n" \
-                   "    print a\n\n" \
+                   "    print(a)\n\n" \
                    "def extracted(b):\n" \
                    "    if b > 0:\n" \
                    "        a = 2\n" \
