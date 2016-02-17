@@ -5,7 +5,6 @@ except ImportError:
 
 from rope.base import ast
 from rope.base.utils import pycompat
-from rope.base.utils import pycompat
 from rope.refactor import patchedast
 from ropetest import testutils
 
@@ -161,6 +160,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children('Module', ['', 'Expr', '\n', 'Expr', '\n'])
 
+    @testutils.only_for_versions_lower('3')
     def test_long_integer_literals(self):
         source = "0x1L + a"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -233,6 +233,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'AugAssign', ['Name', ' ', '+', '', '=', ' ', 'Num'])
 
+    @testutils.only_for_versions_lower('3')
     def test_back_quotenode(self):
         source = '`1`\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -381,6 +382,7 @@ class PatchedASTTest(unittest.TestCase):
             'arguments', [expected_child, '', ',',
                           ' ', '**', '', 'p2'])
 
+    @testutils.only_for_versions_lower('3')
     def test_function_node_and_tuple_parameters(self):
         source = 'def f(a, (b, c)):\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -408,6 +410,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('BinOp', 0, len(source) - 1)
         checker.check_children('BinOp', ['Num', ' ', '/', ' ', 'Num'])
 
+    @testutils.only_for_versions_lower('3')
     def test_simple_exec_node(self):
         source = 'exec ""\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -415,6 +418,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('Exec', 0, len(source) - 1)
         checker.check_children('Exec', ['exec', ' ', 'Str'])
 
+    @testutils.only_for_versions_lower('3')
     def test_exec_node(self):
         source = 'exec "" in locals(), globals()\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -666,6 +670,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children('Expr', ['BoolOp'])
         checker.check_children('BoolOp', ['UnaryOp', ' ', 'or', ' ', 'Name'])
 
+    @testutils.only_for_versions_lower('3')
     def test_print_node(self):
         source = 'print >>out, 1,\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -674,6 +679,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children('Print', ['print', ' ', '>>', '', 'Name', '',
                                          ',', ' ', 'Num', '', ','])
 
+    @testutils.only_for_versions_lower('3')
     def test_printnl_node(self):
         source = 'print 1\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -681,7 +687,8 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('Print', 0, len(source) - 1)
         checker.check_children('Print', ['print', ' ', 'Num'])
 
-    def test_raise_node(self):
+    @testutils.only_for_versions_lower('3')
+    def test_raise_node_for_python2(self):
         source = 'raise x, y, z\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -697,8 +704,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Raise', 0, len(source) - 1)
         checker.check_children(
-            'Raise', ['raise', ' ', 'Call']
-        )
+            'Raise', ['raise', ' ', 'Call'])
 
     def test_return_node(self):
         source = 'def f():\n    return None\n'
@@ -797,8 +803,10 @@ class PatchedASTTest(unittest.TestCase):
                                  '', ':', '\n    ', 'Pass']
         else:
             expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally', '', ':', '\n    ', 'Pass']
-        checker.check_children(node_to_test, expected_children)
+        checker.check_children(
+            node_to_test, expected_children)
 
+    @testutils.only_for_versions_lower('3')
     def test_try_except_node(self):
         source = 'try:\n    pass\nexcept Exception, e:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -821,7 +829,7 @@ class PatchedASTTest(unittest.TestCase):
                            ('excepthandler', 'ExceptHandler')])
         expected_child = 'e' if pycompat.PY3 else 'Name'
         checker.check_children(
-            ('excepthandler', 'ExceptHandler')
+            ('excepthandler', 'ExceptHandler'),
             ['except', ' ', 'Name', ' ', 'as', ' ', expected_child, '', ':',
              '\n    ', 'Pass'])
 
@@ -862,6 +870,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Module', ['', 'Expr', '\n', 'Expr', '\n'])
 
+    @testutils.only_for_versions_lower('3')
     def test_how_to_handle_old_not_equals(self):
         source = '1 <> 2\n'
         ast_frag = patchedast.get_patched_ast(source, True)
