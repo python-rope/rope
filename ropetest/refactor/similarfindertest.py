@@ -259,11 +259,11 @@ class TemplateTest(unittest.TestCase):
 
     def test_ignoring_matches_in_comments(self):
         template = similarfinder.CodeTemplate('#${a}\n')
-        self.assertEquals([], template.get_names())
+        self.assertEquals({}.keys(), template.get_names())
 
     def test_ignoring_matches_in_strings(self):
         template = similarfinder.CodeTemplate("'${a}'\n")
-        self.assertEquals([], template.get_names())
+        self.assertEquals({}.keys(), template.get_names())
 
     def test_simple_substitution(self):
         template = similarfinder.CodeTemplate('${a}\n')
