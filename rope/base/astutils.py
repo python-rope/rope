@@ -40,6 +40,9 @@ class _NodeNameCollector(object):
     def _Name(self, node):
         self._add_node(node)
 
+    def _ExceptHandler(self, node):
+        self.names.append((node.name, []))
+
     def _Tuple(self, node):
         new_levels = []
         if self.levels is not None:

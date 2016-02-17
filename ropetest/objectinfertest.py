@@ -289,7 +289,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_we_know_the_type_of_catched_exceptions(self):
         code = 'class MyError(Exception):\n    pass\n' \
                'try:\n    raise MyError()\n' \
-               'except MyError, e:\n    pass\n'
+               'except MyError as e:\n    pass\n'
         mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
@@ -298,7 +298,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_we_know_the_type_of_catched_multiple_excepts(self):
         code = 'class MyError(Exception):\n    pass\n' \
                'try:\n    raise MyError()\n' \
-               'except (MyError, Exception), e:\n    pass\n'
+               'except (MyError, Exception) as e:\n    pass\n'
         mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
