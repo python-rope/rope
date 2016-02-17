@@ -10,6 +10,8 @@ import os
 import shutil
 import subprocess
 
+import rope.base.utils.pycompat as pycompat
+
 try:
     unicode
 except NameError:
@@ -261,23 +263,26 @@ def read_str_coding(source):
 
 
 def _find_coding(text):
-    if type(text) == bytes:
-        coding = b'coding'
-    else:
-        coding = "coding"
+    if isinstance(text, pycompat.str):
+        text = text.encode('utf-8')
+    coding = b'coding'
+    to_chr = chr if pycompat.PY3 else lambda x: x
     try:
         start = text.index(coding) + len(coding)
-        if text[start] not in '=:':
+        if text[start] not in b'=:':
             return
         start += 1
-        while start < len(text) and text[start].isspace():
+        while start < len(text) and to_chr(text[start]).isspace():
             start += 1
         end = start
         while end < len(text):
             c = text[end]
-            if not c.isalnum() and c not in '-_':
+            if not to_chr(c).isalnum() and c not in b'-_':
                 break
             end += 1
-        return text[start:end]
+        result = text[start:end]
+        if isinstance(result, bytes):
+            result = result.decode('utf-8')
+        return result
     except ValueError:
         pass

@@ -561,7 +561,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_no_exceptions_on_module_encoding_problems(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\nsdsdsd\n\xa9\n'
+        contents = b'\nsdsdsd\n\xa9\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -569,7 +569,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_cannot_decode_file2(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n\xa9\n'
+        contents = b'\n\xa9\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -578,7 +578,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_null_bytes(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n\x00\n'
+        contents = b'\n\x00\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -587,7 +587,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_when_bad_strs(self):
         mod = testutils.create_module(self.project, 'mod')
-        contents = '\n"\\x0"\n'
+        contents = b'\n"\\x0"\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
