@@ -26,6 +26,9 @@ except NameError:  # PY3
             return node
         return node.arg
 
+    def get_ast_with_items(node):
+        return node.items
+
 else:  # PY2
 
     string_types = (basestring,)
@@ -37,3 +40,6 @@ else:  # PY2
         if isinstance(node, string_types):  # Python2 arguments.vararg, arguments.kwarg
             return node
         return node.id
+
+    def get_ast_with_items(node):
+        return [node]
