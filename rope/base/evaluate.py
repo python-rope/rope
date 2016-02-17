@@ -2,6 +2,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import ast, astutils, exceptions, pyobjects, arguments, worder
+from rope.base.utils import pycompat
 
 
 BadIdentifierError = exceptions.BadIdentifierError
@@ -290,7 +291,11 @@ class StatementEvaluator(object):
             self._call_function(node.value, '__getitem__',
                                 [node.slice.value])
         elif isinstance(node.slice, ast.Slice):
-            self._call_function(node.value, '__getslice__')
+            self._call_function(node.value, '__getitem__',
+                                [node.slice])
+
+    def _Slice(self, node):
+        self.result = self._get_builtin_name('slice')
 
     def _call_function(self, node, function_name, other_args=None):
         pyname = eval_node(self.scope, node)
