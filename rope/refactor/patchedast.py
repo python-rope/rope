@@ -686,9 +686,11 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _With(self, node):
-        children = ['with', node.context_expr]
-        if node.optional_vars:
-            children.extend(['as', node.optional_vars])
+        children = []
+        for item in pycompat.get_ast_with_items(node):
+            children.extend(['with', item.context_expr])
+            if item.optional_vars:
+                children.extend(['as', item.optional_vars])
         children.append(':')
         children.extend(node.body)
         self._handle(node, children)
