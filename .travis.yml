@@ -6,7 +6,6 @@ python:
   - "pypy"
   - "3.3"
   - "3.4"
-  - "3.5"
   - "pypy3"
 matrix:
   allow_failures:
