@@ -1,12 +1,3 @@
-try:
-    execfile
-except NameError:
-    def execfile(fn, global_vars, local_vars):
-        with open(fn) as f:
-            code = compile(f.read(), fn, 'exec')
-            exec(code, global_vars, local_vars)
-
-
 def __rope_start_everything():
     import os
     import sys
@@ -149,7 +140,9 @@ def __rope_start_everything():
                 keys = None
                 values = None
                 if len(object_) > 0:
-                    keys = object_.keys()[0]
+                    # @todo - fix it properly, why is __locals__ being
+                    # duplicated ?
+                    keys = [key for key in object_.keys() if key != '__locals__'][0]
                     values = object_[keys]
                 return ('builtin', 'dict',
                         self._object_to_persisted_form(keys),
@@ -220,7 +213,7 @@ def __rope_start_everything():
     if send_info != '-':
         data_sender = _FunctionCallDataSender(send_info, project_root)
     del sys.argv[1:4]
-    execfile(file_to_run, run_globals)
+    pycompat.execfile(file_to_run, run_globals)
     if send_info != '-':
         data_sender.close()
 
