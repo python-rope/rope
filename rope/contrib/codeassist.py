@@ -21,7 +21,7 @@ from rope.refactor import functionutils
 
 def code_assist(project, source_code, offset, resource=None,
                 templates=None, maxfixes=1, later_locals=True,
-                case_sensitive=False):
+                case_sensitive=True):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
