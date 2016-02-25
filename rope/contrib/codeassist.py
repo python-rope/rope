@@ -4,6 +4,7 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
+
 from rope.base import builtins
 from rope.base import exceptions
 from rope.base import libutils
@@ -12,8 +13,8 @@ from rope.base import pynamesdef
 from rope.base import pyobjects
 from rope.base import pyobjectsdef
 from rope.base import pyscopes
-from rope.base import worder
 from rope.base import utils
+from rope.base import worder
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
@@ -167,7 +168,7 @@ def get_canonical_path(project, resource, offset):
     names = []
     if isinstance(pyname, pynamesdef.ParameterName):
         names = [(worder.get_name_at(pymod.get_resource(), offset),
-                  'PARAMETER') ]
+                  'PARAMETER')]
     elif isinstance(pyname, pynamesdef.AssignedName):
         names = [(worder.get_name_at(pymod.get_resource(), offset),
                   'VARIABLE')]
@@ -547,14 +548,14 @@ class _ProposalSorter(object):
 
     def _proposal_key(self, proposal1):
         def _underline_count(name):
-             return sum(1 for c in name if c == "_")
+            return sum(1 for c in name if c == "_")
         return (self.typerank.get(proposal1.type, 100),
                 _underline_count(proposal1.name),
                 proposal1.name)
-        #if proposal1.type != proposal2.type:
+        # if proposal1.type != proposal2.type:
         #    return cmp(self.typerank.get(proposal1.type, 100),
         #               self.typerank.get(proposal2.type, 100))
-        #return self._compare_underlined_names(proposal1.name,
+        # return self._compare_underlined_names(proposal1.name,
         #                                      proposal2.name)
 
 
