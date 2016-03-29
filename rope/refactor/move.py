@@ -211,6 +211,19 @@ class MoveGlobal(object):
         self.import_tools = self.tools.import_tools
         self._check_exceptional_conditions()
 
+    def _import_filter(self, stmt):
+      module_name = libutils.modname(self.source)
+      if isinstance(stmt.import_info, importutils.NormalImport):
+          return any(module_name == name
+                     for name, alias in stmt.import_info.names_and_aliases)
+      elif isinstance(stmt.import_info, importutils.FromImport):
+          if '.' in module_name:
+              package_name = '.'.join(module_name.split('.')[:-1])
+              if stmt.import_info.module_name == package_name:
+                  return True
+          return stmt.import_info.module_name == module_name
+      return False
+
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
            not isinstance(self.old_pyname.get_object(),
@@ -262,7 +275,8 @@ class MoveGlobal(object):
                 should_import = source is not None
                 # Removing out of date imports
                 pymodule = self.tools.new_pymodule(pymodule, source)
-                source = self.tools.remove_old_imports(pymodule)
+                source = self.import_tools.organize_imports(
+                    pymodule, sort=False, import_filter=self._import_filter)
                 # Adding new import
                 if should_import:
                     pymodule = self.tools.new_pymodule(pymodule, source)
@@ -285,6 +299,8 @@ class MoveGlobal(object):
         renamer = ModuleSkipRenamer(occurrence_finder, self.source,
                                     handle, start, end)
         source = renamer.get_changed_module()
+        pymodule = libutils.get_string_module(self.project, source, self.source)
+        source = self.import_tools.organize_imports(pymodule, sort=False)
         if handle.occurred:
             pymodule = libutils.get_string_module(
                 self.project, source, self.source)
@@ -304,8 +320,6 @@ class MoveGlobal(object):
         pymodule = self.tools.new_pymodule(pymodule, source)
 
         moving, imports = self._get_moving_element_with_imports()
-        source = self.tools.remove_old_imports(pymodule)
-        pymodule = self.tools.new_pymodule(pymodule, source)
         pymodule, has_changed = self._add_imports2(pymodule, imports)
 
         module_with_imports = self.import_tools.module_imports(pymodule)
@@ -329,6 +343,11 @@ class MoveGlobal(object):
         pymodule = libutils.get_string_module(self.project, source, dest)
         source = self.import_tools.organize_imports(pymodule, sort=False,
                                                     unused=False)
+        # Remove unused imports of the old module
+        pymodule = libutils.get_string_module(self.project, source, dest)
+        source = self.import_tools.organize_imports(
+            pymodule, sort=False, selfs=False, unused=True,
+            import_filter=self._import_filter)
         return ChangeContents(dest, source)
 
     def _get_moving_element_with_imports(self):
@@ -446,7 +465,6 @@ class MoveModule(object):
         new_name = self._new_modname(dest)
         module_imports = importutils.get_module_imports(self.project, pymodule)
         changed = False
-
         source = None
         if libutils.modname(dest):
             changed = self._change_import_statements(dest, new_name,
@@ -471,7 +489,6 @@ class MoveModule(object):
         if source is not None and source != pymodule.resource.read():
             return source
         return None
-
 
     def _change_import_statements(self, dest, new_name, module_imports):
         moving_module = self.source

@@ -37,13 +37,23 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\n',
                           self.mod2.read())
 
-    def test_changing_other_modules_adding_normal_imports(self):
+    def test_changing_other_modules_replacing_normal_imports(self):
         self.mod1.write('class AClass(object):\n    pass\n')
         self.mod3.write('import mod1\na_var = mod1.AClass()\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                    self.mod2)
-        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n',
+        self.assertEquals('import mod2\na_var = mod2.AClass()\n',
                           self.mod3.read())
+
+    def test_changing_other_modules_adding_normal_imports(self):
+        self.mod1.write('class AClass(object):\n    pass\n'
+                        'def a_function():\n    pass\n')
+        self.mod3.write('import mod1\na_var = mod1.AClass()\n'
+                        'mod1.a_function()')
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod2)
+        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n' +
+                          'mod1.a_function()', self.mod3.read())
 
     def test_adding_imports_prefer_from_module(self):
         self.project.prefs['prefer_module_from_imports'] = True
@@ -79,9 +89,8 @@ class MoveRefactoringTest(unittest.TestCase):
                         'mod1.a_function()')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                    self.mod2)
-        self.assertEquals('import mod1\nimport mod2\n'
-                          'a_var = mod2.AClass()\nmod1.a_function()',
-                          self.mod3.read())
+        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n' +
+                          'mod1.a_function()', self.mod3.read())
 
     def test_changing_other_modules_removing_from_imports(self):
         self.mod1.write('class AClass(object):\n    pass\n')
@@ -171,6 +180,7 @@ class MoveRefactoringTest(unittest.TestCase):
                    'def a_func():\n' \
                    '    print(pkg.mod5)\n'
         self.assertEquals(expected, self.mod1.read())
+        self.assertEquals('', self.mod4.read())
 
     def test_moving_modules(self):
         code = 'import mod1\nprint(mod1)'
@@ -404,7 +414,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     'print(mod4)')
         self.assertEquals(expected, self.mod1.read())
 
-    def test_moving_funtions_to_imported_module(self):
+    def test_moving_functions_to_imported_module(self):
         code = 'import mod1\n' \
                'def a_func():\n' \
                '    var = mod1.a_var\n'
