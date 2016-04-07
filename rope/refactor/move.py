@@ -213,13 +213,18 @@ class MoveGlobal(object):
 
     def _import_filter(self, stmt):
       module_name = libutils.modname(self.source)
+
       if isinstance(stmt.import_info, importutils.NormalImport):
+          # Affect any statement that imports the source module
           return any(module_name == name
                      for name, alias in stmt.import_info.names_and_aliases)
       elif isinstance(stmt.import_info, importutils.FromImport):
+          # Affect statements importing from the source package
           if '.' in module_name:
-              package_name = '.'.join(module_name.split('.')[:-1])
-              if stmt.import_info.module_name == package_name:
+              package_name, basename = module_name.rsplit('.', 1)
+              if (stmt.import_info.module_name == package_name and
+                  any(basename == name
+                      for name, alias in stmt.import_info.names_and_aliases)):
                   return True
           return stmt.import_info.module_name == module_name
       return False
