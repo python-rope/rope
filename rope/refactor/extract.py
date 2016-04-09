@@ -756,7 +756,11 @@ class _UnmatchedBreakOrContinueFinder(object):
             ast.walk(child, self)
         self.loop_count -= 1
         if node.orelse:
-            ast.walk(node.orelse, self)
+            if isinstance(node.orelse,(list,tuple)):
+                for node_ in node.orelse:
+                    ast.walk(node_, self)
+            else:
+                ast.walk(node.orelse, self)
 
     def _Break(self, node):
         self.check_loop()
