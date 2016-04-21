@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.refactor import multiproject, rename, move
 from ropetest import testutils
@@ -48,9 +51,8 @@ class MultiProjectRefactoringTest(unittest.TestCase):
         multiproject.perform(renamer.get_all_changes(self.other))
         self.assertEquals('', self.mod1.read())
         self.assertEquals('def a_func():\n    pass\n', self.other.read())
-        self.assertEquals(
-            'import mod1\nimport other\nmyvar = other.a_func()\n',
-            self.mod2.read())
+        self.assertEquals('import other\nmyvar = other.a_func()\n',
+                          self.mod2.read())
 
     def test_rename_from_the_project_not_containing_the_change(self):
         self.project2.get_prefs().add('python_path', self.project1.address)

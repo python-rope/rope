@@ -1,8 +1,12 @@
 import sys
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import ropetest.projecttest
 import ropetest.codeanalyzetest
+import ropetest.docstringstest
 import ropetest.pycoretest
 import ropetest.pyscopestest
 import ropetest.objectinfertest
@@ -21,6 +25,7 @@ def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.projecttest.suite())
     result.addTests(ropetest.codeanalyzetest.suite())
+    result.addTests(ropetest.docstringstest.suite())
     result.addTests(ropetest.pycoretest.suite())
     result.addTests(ropetest.pyscopestest.suite())
     result.addTests(ropetest.objectinfertest.suite())

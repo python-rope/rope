@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.refactor.importutils import ImportTools, importinfo, add_import
 from ropetest import testutils
@@ -104,7 +107,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1 import *',
                           imports[0].import_info.get_import_statement())
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_get_import_statements_for_new_relatives(self):
         self.mod2.write('from .mod3 import x\n')
         pymod = self.project.get_module('pkg2.mod2')
@@ -587,7 +590,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg2.mod3 import a_func\n',
                           self.import_tools.relatives_to_absolutes(pymod))
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_transform_rel_imports_to_abs_imports_for_new_relatives(self):
         self.mod3.write('def a_func():\n    pass\n')
         self.mod2.write('from .mod3 import a_func\n')
@@ -855,6 +858,26 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals(
             '"""\ndocs\n"""\nimport mod\n\n\ndef f():\n    print(mod)\n',
             self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_moving_to_top_and_module_docs2(self):
+        self.mod.write('"""\ndocs\n"""\n\n\nimport bbb\nimport aaa\n'
+                       'def f():\n    print(mod)\nimport mod\n')
+        pymod = self.project.get_module('mod')
+        self.assertEquals(
+            '"""\ndocs\n"""\n\n\nimport aaa\nimport bbb\n\n'
+            'import mod\n\n\ndef f():\n    print(mod)\n',
+            self.import_tools.sort_imports(pymod))
+
+    def test_get_changed_source_preserves_blank_lines(self):
+        self.mod.write(
+            '__author__ = "author"\n\nimport aaa\n\nimport bbb\n\n'
+            'def f():\n    print(mod)\n')
+        pymod = self.project.get_module('mod')
+        module_with_imports = self.import_tools.module_imports(pymod)
+        self.assertEquals(
+            'import aaa\n\nimport bbb\n\n__author__ = "author"\n\n'
+            'def f():\n    print(mod)\n',
+            module_with_imports.get_changed_source())
 
     def test_sorting_future_imports(self):
         self.mod.write('import os\nfrom __future__ import devision\n')

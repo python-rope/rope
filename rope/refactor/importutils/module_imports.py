@@ -97,24 +97,22 @@ class ModuleImports(object):
     def _remove_imports(self, imports):
         lines = self.pymodule.source_code.splitlines(True)
         after_removing = []
+        first_import_line = self._first_import_line()
         last_index = 0
         for stmt in imports:
             start, end = stmt.get_old_location()
-            after_removing.extend(lines[last_index:start - 1])
+            blank_lines = 0
+            if start != first_import_line:
+                blank_lines = _count_blank_lines(lines.__getitem__, start - 2,
+                                                 last_index - 1, -1)
+            after_removing.extend(lines[last_index:start - 1 - blank_lines])
             last_index = end - 1
-            for i in range(start, end):
-                after_removing.append('')
         after_removing.extend(lines[last_index:])
         return after_removing
 
     def _first_non_blank_line(self, lines, lineno):
-        result = lineno
-        for line in lines[lineno:]:
-            if line.strip() == '':
-                result += 1
-            else:
-                break
-        return result
+        return lineno + _count_blank_lines(lines.__getitem__, lineno,
+                                           len(lines))
 
     def add_import(self, import_info):
         visitor = actions.AddingVisitor(self.project, [import_info])
@@ -223,17 +221,16 @@ class ModuleImports(object):
         if self.pymodule.get_doc() is not None:
             lineno = 1
         if len(nodes) > lineno:
+            if (isinstance(nodes[lineno], ast.Import) or
+                isinstance(nodes[lineno], ast.ImportFrom)):
+                return nodes[lineno].lineno
             lineno = self.pymodule.logical_lines.logical_line_in(
                 nodes[lineno].lineno)[0]
         else:
             lineno = self.pymodule.lines.length()
-        while lineno > 1:
-            line = self.pymodule.lines.get_line(lineno - 1)
-            if line.strip() == '':
-                lineno -= 1
-            else:
-                break
-        return lineno
+
+        return lineno - _count_blank_lines(self.pymodule.lines.get_line,
+                                           lineno - 1, 1, -1)
 
     def _get_import_name(self, import_stmt):
         import_info = import_stmt.import_info
@@ -281,6 +278,16 @@ class ModuleImports(object):
                                               pyname, self._current_folder())
         for import_stmt in self.imports:
             import_stmt.accept(visitor)
+
+
+def _count_blank_lines(get_line, start, end, step=1):
+    count = 0
+    for idx in range(start, end, step):
+        if get_line(idx).strip() == '':
+            count += 1
+        else:
+            break
+    return count
 
 
 class _OneTimeSelector(object):
@@ -430,24 +437,11 @@ class _GlobalImportFinder(object):
         self.imports.append(import_statement)
 
     def _count_empty_lines_before(self, lineno):
-        result = 0
-        for current in range(lineno - 1, 0, -1):
-            line = self.lines.get_line(current)
-            if line.strip() == '':
-                result += 1
-            else:
-                break
-        return result
+        return _count_blank_lines(self.lines.get_line, lineno - 1, 0, -1)
 
     def _count_empty_lines_after(self, lineno):
-        result = 0
-        for current in range(lineno + 1, self.lines.length()):
-            line = self.lines.get_line(current)
-            if line.strip() == '':
-                result += 1
-            else:
-                break
-        return result
+        return _count_blank_lines(self.lines.get_line, lineno + 1,
+                                  self.lines.length())
 
     def get_separating_line_count(self):
         if not self.imports:

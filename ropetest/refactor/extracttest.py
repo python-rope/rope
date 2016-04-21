@@ -954,5 +954,47 @@ class ExtractMethodTest(unittest.TestCase):
                    "            e[42] = 1\n"
         self.assertEquals(expected, refactored)
 
+    def test_extract_function_with_for_else_statemant(self):
+        code = 'def a_func():\n    for i in range(10):\n        a = i\n    else:\n        a = None\n'
+        start = code.index('for')
+        end = len(code) - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    new_func()\n\n' \
+                   'def new_func():\n' \
+                   '    for i in range(10):\n        a = i\n    else:\n        a = None\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_function_with_for_else_statemant_more(self):
+        """TODO: fixed code to test passed """
+        code = 'def a_func():\n'\
+               '    for i in range(10):\n'\
+               '        a = i\n'\
+               '    else:\n'\
+               '        for i in range(5):\n'\
+               '            b = i\n'\
+               '        else:\n'\
+               '            b = None\n'\
+               '    a = None\n'
+
+        start = code.index('for')
+        end = len(code) - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    new_func()\n\n' \
+                   'def new_func():\n' \
+                   '    for i in range(10):\n'\
+		   '        a = i\n'\
+		   '    else:\n'\
+		   '        for i in range(5):\n'\
+		   '            b = i\n'\
+		   '        else:\n'\
+		   '            b = None\n'\
+		   '    a = None\n'
+        self.assertEquals(expected, refactored)
+    def test_extract_function_with_for_else_statemant_outside_loops(self):
+	code = 'def a_func():\n    for i in range(10):\n        a = i\n    else:\n        a=None\n'
+        start = code.index('a = i')
+        end = len(code) - 1
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 if __name__ == '__main__':
     unittest.main()

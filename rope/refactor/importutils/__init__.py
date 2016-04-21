@@ -278,6 +278,7 @@ def add_import(project, pymodule, module_name, name=None):
     imports = get_module_imports(project, pymodule)
     candidates = []
     names = []
+    selected_import = None
     # from mod import name
     if name is not None:
         from_import = FromImport(module_name, 0, [(name, None)])
@@ -286,7 +287,10 @@ def add_import(project, pymodule, module_name, name=None):
     # from pkg import mod
     if '.' in module_name:
         pkg, mod = module_name.rsplit('.', 1)
-        candidates.append(FromImport(pkg, 0, [(mod, None)]))
+        from_import = FromImport(pkg, 0, [(mod, None)])
+        if project.prefs.get('prefer_module_from_imports'):
+            selected_import = from_import
+        candidates.append(from_import)
         if name:
             names.append(mod + '.' + name)
         else:
@@ -301,7 +305,8 @@ def add_import(project, pymodule, module_name, name=None):
     candidates.append(normal_import)
 
     visitor = actions.AddingVisitor(project, candidates)
-    selected_import = normal_import
+    if selected_import is None:
+        selected_import = normal_import
     for import_statement in imports.imports:
         if import_statement.accept(visitor):
             selected_import = visitor.import_info

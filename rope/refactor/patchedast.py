@@ -524,11 +524,15 @@ class _PatchingASTWalker(object):
         children.append(']')
         self._handle(node, children)
 
-    def _DictComp(self, node):
-        children = ['{', node.key, ':', node.value]
-        children.extend(node.generators)
-        children.append('}')
-        self._handle(node, children)
+    def _Set(self, node):
+        if node.elts:
+            self._handle(node,
+                         ['{'] + self._child_nodes(node.elts, ',') + ['}'])
+            return
+        # Python doesn't have empty set literals
+        warnings.warn('Tried to handle empty <Set> literal; please report!',
+                      RuntimeWarning)
+        self._handle(node, ['set(', ')'])
 
     def _SetComp(self, node):
         children = ['{', node.elt]
@@ -536,6 +540,13 @@ class _PatchingASTWalker(object):
         children.append('}')
         self._handle(node, children)
 
+    def _DictComp(self, node):
+        children = ['{']
+        children.extend([node.key, ':', node.value])
+        children.extend(node.generators)
+        children.append('}')
+        self._handle(node, children)
+    
     def _Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 

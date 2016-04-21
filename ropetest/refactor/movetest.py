@@ -37,13 +37,60 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\n',
                           self.mod2.read())
 
-    def test_changing_other_modules_adding_normal_imports(self):
+    def test_changing_other_modules_replacing_normal_imports(self):
         self.mod1.write('class AClass(object):\n    pass\n')
         self.mod3.write('import mod1\na_var = mod1.AClass()\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                    self.mod2)
-        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n',
+        self.assertEquals('import mod2\na_var = mod2.AClass()\n',
                           self.mod3.read())
+
+    def test_changing_other_modules_adding_normal_imports(self):
+        self.mod1.write('class AClass(object):\n    pass\n'
+                        'def a_function():\n    pass\n')
+        self.mod3.write('import mod1\na_var = mod1.AClass()\n'
+                        'mod1.a_function()')
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod2)
+        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n' +
+                          'mod1.a_function()', self.mod3.read())
+
+    def test_adding_imports_prefer_from_module(self):
+        self.project.prefs['prefer_module_from_imports'] = True
+        self.mod1.write('class AClass(object):\n    pass\n'
+                        'def a_function():\n    pass\n')
+        self.mod3.write('import mod1\na_var = mod1.AClass()\n'
+                        'mod1.a_function()')
+        # Move to mod4 which is in a different package
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod4)
+        self.assertEquals('import mod1\nfrom pkg import mod4\n'
+                          'a_var = mod4.AClass()\nmod1.a_function()',
+                          self.mod3.read())
+
+    def test_adding_imports_noprefer_from_module(self):
+        self.project.prefs['prefer_module_from_imports'] = False
+        self.mod1.write('class AClass(object):\n    pass\n'
+                        'def a_function():\n    pass\n')
+        self.mod3.write('import mod1\na_var = mod1.AClass()\n'
+                        'mod1.a_function()')
+        # Move to mod4 which is in a different package
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod4)
+        self.assertEquals('import mod1\nimport pkg.mod4\n'
+                          'a_var = pkg.mod4.AClass()\nmod1.a_function()',
+                          self.mod3.read())
+
+    def test_adding_imports_prefer_from_module_top_level_module(self):
+        self.project.prefs['prefer_module_from_imports'] = True
+        self.mod1.write('class AClass(object):\n    pass\n'
+                        'def a_function():\n    pass\n')
+        self.mod3.write('import mod1\na_var = mod1.AClass()\n'
+                        'mod1.a_function()')
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod2)
+        self.assertEquals('import mod1\nimport mod2\na_var = mod2.AClass()\n' +
+                          'mod1.a_function()', self.mod3.read())
 
     def test_changing_other_modules_removing_from_imports(self):
         self.mod1.write('class AClass(object):\n    pass\n')
@@ -133,6 +180,7 @@ class MoveRefactoringTest(unittest.TestCase):
                    'def a_func():\n' \
                    '    print(pkg.mod5)\n'
         self.assertEquals(expected, self.mod1.read())
+        self.assertEquals('', self.mod4.read())
 
     def test_moving_modules(self):
         code = 'import mod1\nprint(mod1)'
@@ -172,6 +220,15 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.mod2, code.index('mod4') + 1, self.project.root)
         moved = self.project.find_module('mod4')
         expected = 'import pkg.mod5\nprint(pkg.mod5)\n'
+        self.assertEquals(expected, moved.read())
+
+    def test_moving_module_kwarg_same_name_as_old(self):
+        self.mod1.write('def foo(mod1=0):\n    pass')
+        code = 'import mod1\nmod1.foo(mod1=1)'
+        self.mod2.write(code)
+        self._move(self.mod1, None, self.pkg)
+        moved = self.project.find_module('mod2')
+        expected = 'import pkg.mod1\npkg.mod1.foo(mod1=1)'
         self.assertEquals(expected, moved.read())
 
     def test_moving_packages(self):
@@ -335,7 +392,8 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_package_and_retaining_blank_lines(self):
         pkg2 = testutils.create_package(self.project, 'pkg2', self.pkg)
-        code = ('import pkg.mod4\n\n'
+        code = ('"""Docstring followed by blank lines."""\n\n'
+                'import pkg.mod4\n\n'
                 'from pkg import mod4\n'
                 'from x import y\n'
                 'from y import z\n'
@@ -345,7 +403,8 @@ class MoveRefactoringTest(unittest.TestCase):
                 'print(mod4)')
         self.mod1.write(code)
         self._move(self.mod4, None, pkg2)
-        expected = ('import pkg.pkg2.mod4\n\n'
+        expected = ('"""Docstring followed by blank lines."""\n\n'
+                    'import pkg.pkg2.mod4\n\n'
                     'from x import y\n'
                     'from y import z\n'
                     'from a import b\n'
@@ -355,7 +414,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     'print(mod4)')
         self.assertEquals(expected, self.mod1.read())
 
-    def test_moving_funtions_to_imported_module(self):
+    def test_moving_functions_to_imported_module(self):
         code = 'import mod1\n' \
                'def a_func():\n' \
                '    var = mod1.a_var\n'

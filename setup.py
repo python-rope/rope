@@ -1,6 +1,10 @@
 from distutils.core import setup, Command
 import sys
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 
 import rope
 import ropetest
@@ -52,7 +56,7 @@ setup(name='rope',
       long_description=get_long_description(),
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
-      url='http://rope.sf.net/',
+      url='https://github.com/python-rope/rope',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
                 'rope.refactor.importutils', 'rope.contrib'],
       license='GNU GPL',

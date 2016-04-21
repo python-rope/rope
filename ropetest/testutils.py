@@ -4,6 +4,10 @@ import sys
 import logging
 logging.basicConfig(format='%(levelname)s:%(funcName)s:%(message)s',
                     level=logging.INFO)
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.project
 from rope.contrib import generate
@@ -17,9 +21,9 @@ def sample_project(root=None, foldername=None, **kwds):
         # HACK: Using ``/dev/shm/`` for faster tests
         if os.name == 'posix':
             if os.path.isdir('/dev/shm') and os.access('/dev/shm', os.W_OK):
-                    root = '/dev/shm/' + root
+                root = '/dev/shm/' + root
             elif os.path.isdir('/tmp') and os.access('/tmp', os.W_OK):
-                    root = '/tmp/' + root
+                root = '/tmp/' + root
     logging.debug("Using %s as root of the project.", root)
     # Using these prefs for faster tests
     prefs = {'save_objectdb': False, 'save_history': False,
@@ -66,33 +70,13 @@ def _remove_recursively(path):
         shutil.rmtree(path)
 
 
-def run_only_for_25(func):
-    """Should be used as a decorator for a unittest.TestCase test method"""
-    if sys.version_info >= (2, 5, 0):
-        return func
-    else:
-        def do_nothing(self):
-            pass
-        return do_nothing
-
-
 def only_for(version):
     """Should be used as a decorator for a unittest.TestCase test method"""
-    def decorator(func):
-        if sys.version >= version:
-            return func
-        else:
-            def do_nothing(self):
-                pass
-            return do_nothing
-    return decorator
+    return unittest.skipIf(
+        sys.version < version,
+        'This test requires at lest {0} version of Python.'.format(version))
 
 
-def run_only_for_unix(func):
-    """Should be used as a decorator for a unittest.TestCase test method"""
-    if os.name == 'posix':
-        return func
-    else:
-        def do_nothing(self):
-            pass
-        return do_nothing
+def skipNotPOSIX():
+    return unittest.skipIf(os.name != 'posix',
+                           'This test works only on POSIX')
