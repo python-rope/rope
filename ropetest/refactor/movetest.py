@@ -129,6 +129,13 @@ class MoveRefactoringTest(unittest.TestCase):
             self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                        self.mod2)
 
+    def test_raising_exception_for_moving_variable(self):
+        code = 'CONSTANT = 5\n'
+        self.mod1.write(code)
+        with self.assertRaises(exceptions.RefactoringError):
+            mover = move.create_move(self.project, self.mod1,
+                                     code.index('CONSTANT') + 1)
+
     def test_raising_exception_for_mov_glob_elemnts_to_the_same_module(self):
         self.mod1.write('def a_func():\n    pass\n')
         with self.assertRaises(exceptions.RefactoringError):
