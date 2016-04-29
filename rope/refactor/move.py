@@ -203,13 +203,13 @@ class MoveGlobal(object):
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
+        self._check_exceptional_conditions()
         self.old_name = self.old_pyname.get_object().get_name()
         pymodule = self.old_pyname.get_object().get_module()
         self.source = pymodule.get_resource()
         self.tools = _MoveTools(self.project, self.source,
                                 self.old_pyname, self.old_name)
         self.import_tools = self.tools.import_tools
-        self._check_exceptional_conditions()
 
     def _import_filter(self, stmt):
       module_name = libutils.modname(self.source)
