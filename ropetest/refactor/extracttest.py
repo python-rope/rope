@@ -995,8 +995,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEquals(expected, refactored)
 
     def test_extract_function_with_for_else_statemant_outside_loops(self):
-        code = 'def a_func():\n    for i in range(10):\n        a = i\n' \
-            '    else:\n        a=None\n'
+        code = 'def a_func():\n    for i in range(10):\n        a = i\n    else:\n        a=None\n'
         start = code.index('a = i')
         end = len(code) - 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
