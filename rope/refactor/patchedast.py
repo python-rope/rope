@@ -271,11 +271,11 @@ class _PatchingASTWalker(object):
         children = [node.func, '(']
         args = list(node.args) + node.keywords
         children.extend(self._child_nodes(args, ','))
-        if node.starargs is not None:
+        if getattr(node, 'starargs', None):
             if args:
                 children.append(',')
             children.extend(['*', node.starargs])
-        if node.kwargs is not None:
+        if getattr(node, 'kwargs', None):
             if args or node.starargs is not None:
                 children.append(',')
             children.extend(['**', node.kwargs])
