@@ -294,9 +294,15 @@ class PatchedASTTest(unittest.TestCase):
         source = 'f(*args, **kwds)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
+        try:
+            ast.Starred()
+            expectedResult = ['Name', '', '(', '*', 'Starred', '', ',',
+                    ' **', 'keyword', '', ')']
+        except AttributeError:
+            expectedResult = ['Name', '', '(', '', '*', '', 'Name', '', ',',
+                    ' ', '**', '', 'Name', '', ')']
         checker.check_children(
-            'Call', ['Name', '', '(', '', '*', '', 'Name', '', ',',
-                     ' ', '**', '', 'Name', '', ')'])
+           'Call', expectedResult)
 
     def test_class_node(self):
         source = 'class A(object):\n    """class docs"""\n    pass\n'
