@@ -6,3 +6,4 @@ docs/build/
 build/
 dist/
 MANIFEST
+.vscode/
