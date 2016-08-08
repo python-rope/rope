@@ -275,6 +275,7 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', 'Num', '', ',',
                      ' ', 'keyword', '', ')'])
 
+    @testutils.only_for_versions_lower('3.5')
     def test_call_func_and_start_args(self):
         source = 'f(1, *args)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -283,6 +284,16 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', 'Num', '', ',',
                      ' ', '*', '', 'Name', '', ')'])
 
+    @testutils.only_for('3.5')
+    def test_call_func_and_start_argspython35(self):
+        source = 'f(1, *args)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', 'Num', '', ',',
+                ' *', 'Starred', '', ')'])
+ 
+    @testutils.only_for_versions_lower('3.5')
     def test_call_func_and_only_dstart_args(self):
         source = 'f(**kwds)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -290,6 +301,15 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', '**', '', 'Name', '', ')'])
 
+    @testutils.only_for('3.5')
+    def test_call_func_and_only_dstart_args_python35(self):
+        source = 'f(**kwds)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '**', 'keyword', '', ')'])
+
+    @testutils.only_for_versions_lower('3.5')
     def test_call_func_and_both_varargs_and_kwargs(self):
         source = 'f(*args, **kwds)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -297,6 +317,15 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', '*', '', 'Name', '', ',',
                      ' ', '**', '', 'Name', '', ')'])
+
+    @testutils.only_for('3.5')
+    def test_call_func_and_both_varargs_and_kwargs_python35(self):
+        source = 'f(*args, **kwds)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '*', 'Starred', '', ',',
+                     ' **', 'keyword', '', ')'])
 
     def test_class_node(self):
         source = 'class A(object):\n    """class docs"""\n    pass\n'
