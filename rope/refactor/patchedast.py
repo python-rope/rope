@@ -271,11 +271,11 @@ class _PatchingASTWalker(object):
         children = [node.func, '(']
         args = list(node.args) + node.keywords
         children.extend(self._child_nodes(args, ','))
-        if node.starargs is not None:
+        if getattr(node, 'starargs', None):
             if args:
                 children.append(',')
             children.extend(['*', node.starargs])
-        if node.kwargs is not None:
+        if getattr(node, 'kwargs', None):
             if args or node.starargs is not None:
                 children.append(',')
             children.extend(['**', node.kwargs])
@@ -481,7 +481,12 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _keyword(self, node):
-        self._handle(node, [node.arg, '=', node.value])
+        children = []
+        if node.arg is None:
+            children.append(node.value)
+        else:
+            children.extend([node.arg, '=', node.value])
+        self._handle(node, children)
 
     def _Lambda(self, node):
         self._handle(node, ['lambda', node.args, ':', node.body])
@@ -703,6 +708,8 @@ class _PatchingASTWalker(object):
                 children.append(separator)
         return children
 
+    def _Starred(self, node):
+        self._handle(node, [node.value])
 
 class _Source(object):
 
