@@ -29,6 +29,35 @@ class MoveRefactoringTest(unittest.TestCase):
             get_changes(dest_resource)
         self.project.do(changes)
 
+    def test_move_constant(self):
+        self.mod1.write('foo = 123\n')
+        self._move(self.mod1, self.mod1.read().index('foo') + 1,
+                   self.mod2)
+        self.assertEquals('', self.mod1.read())
+        self.assertEquals('foo = 123\n', self.mod2.read())
+
+    def test_move_constant_2(self):
+        self.mod1.write('bar = 321\nfoo = 123\n')
+        self._move(self.mod1, self.mod1.read().index('foo') + 1,
+                   self.mod2)
+        self.assertEquals('bar = 321\n', self.mod1.read())
+        self.assertEquals('foo = 123\n', self.mod2.read())
+
+    def test_move_constant_multiline(self):
+        self.mod1.write('foo = (\n    123\n)\n')
+        self._move(self.mod1, self.mod1.read().index('foo') + 1,
+                   self.mod2)
+        self.assertEquals('', self.mod1.read())
+        self.assertEquals('foo = (\n    123\n)\n', self.mod2.read())
+
+    def test_move_constant_multiple_statements(self):
+        self.mod1.write('foo = 123\nfoo += 3\nfoo = 4\n')
+        self._move(self.mod1, self.mod1.read().index('foo') + 1,
+                   self.mod2)
+        self.assertEquals('import mod2\nmod2.foo += 3\nmod2.foo = 4\n',
+                          self.mod1.read())
+        self.assertEquals('foo = 123\n', self.mod2.read())
+
     def test_simple_moving(self):
         self.mod1.write('class AClass(object):\n    pass\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
@@ -129,8 +158,8 @@ class MoveRefactoringTest(unittest.TestCase):
             self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                        self.mod2)
 
-    def test_raising_exception_for_moving_variable(self):
-        code = 'CONSTANT = 5\n'
+    def test_raising_an_exception_for_moving_non_global_variable(self):
+        code = 'class TestClass:\n    CONSTANT = 5\n'
         self.mod1.write(code)
         with self.assertRaises(exceptions.RefactoringError):
             mover = move.create_move(self.project, self.mod1,
