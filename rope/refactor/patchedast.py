@@ -73,6 +73,7 @@ class _PatchingASTWalker(object):
     Number = object()
     String = object()
     semicolon_or_as_in_except = object()
+    Not_multiline_string = object()
 
     def __call__(self, node):
         method = getattr(self, '_' + node.__class__.__name__, None)
@@ -110,7 +111,11 @@ class _PatchingASTWalker(object):
             else:
                 if child is self.String:
                     region = self.source.consume_string(
-                        end=self._find_next_statement_start())
+                        end=self._find_next_statement_start(), not_multiline = False)
+                elif child is self.Not_multiline_string:
+                    region = self.source.consume_string(
+                        end=self._find_next_statement_start(), not_multiline = True)
+                                
                 elif child is self.Number:
                     region = self.source.consume_number()
                 elif child == '!=':
@@ -259,24 +264,54 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _BoolOp(self, node):
-        self._handle(node, self._child_nodes(node.values,
+        children = []
+        for no in node.values:
+            if isinstance(no, ast.Str):
+                children.append(self.Not_multiline_string)
+            else:
+                children.append(no)
+
+        self._handle(node, self._child_nodes(children,
                                              self._get_op(node.op)[0]))
 
     def _Break(self, node):
         self._handle(node, ['break'])
 
     def _Call(self, node):
-        children = [node.func, '(']
-        args = list(node.args) + node.keywords
-        children.extend(self._child_nodes(args, ','))
+        import itertools
+        def get_offset(n):
+            return self.lines.get_line_start(n.lineno) + n.col_offset
+
+
+        args = []
         if node.starargs is not None:
-            if args:
-                children.append(',')
-            children.extend(['*', node.starargs])
+            args.append(('starargs', node.starargs, get_offset(node.starargs)))
         if node.kwargs is not None:
-            if args or node.starargs is not None:
-                children.append(',')
-            children.extend(['**', node.kwargs])
+            args.append(('kwargs', node.kwargs, get_offset(node.kwargs)))
+        for arg in node.args:
+            args.append(('arg', arg, get_offset(arg)))
+        for kw in node.keywords:
+            args.append(('kw', kw, get_offset(kw.value)))
+
+        args.sort(key=lambda x: x[2])
+        # print args
+
+        children = [node.func, '(']
+
+        arguments = []
+        for type, child_node, _ in args:
+            if type == 'starargs':
+                arguments.append(['*', child_node])
+            elif type == 'kwargs':
+                arguments.append(['**', child_node])
+            elif type == 'arg':
+                arguments.append([child_node])
+            elif type == 'kw':
+                arguments.append([child_node])
+
+        nodes = itertools.chain(*self._child_nodes(arguments, ','))
+
+        children.extend(nodes)
         children.append(')')
         self._handle(node, children)
 
@@ -330,7 +365,11 @@ class _PatchingASTWalker(object):
         self._handle(node, ['...'])
 
     def _Expr(self, node):
-        self._handle(node, [node.value])
+        if isinstance(node.value, ast.Str):
+            # docstrings
+            self._handle(node, [self.Not_multiline_string])
+        else:                
+            self._handle(node, [node.value])
 
     def _Exec(self, node):
         children = []
@@ -453,7 +492,7 @@ class _PatchingASTWalker(object):
         children.extend([node.test, ':'])
         children.extend(node.body)
         if node.orelse:
-            if len(node.orelse) == 1 and self._is_elif(node.orelse[0]):
+            if len(node.orelse) == 1: # and self._is_elif(node.orelse[0]):
                 pass
             else:
                 children.extend(['else', ':'])
@@ -603,7 +642,6 @@ class _PatchingASTWalker(object):
         self._excepthandler(node)
 
     def _excepthandler(self, node):
-        # self._handle(node, [self.semicolon_or_as_in_except])
         children = ['except']
         if node.type:
             children.append(node.type)
@@ -616,11 +654,53 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Tuple(self, node):
-        if node.elts:
+        import tokenize
+        from StringIO import StringIO
+        fun = StringIO(self.source[self.source.offset:self._find_next_statement_start()]).readline
+        tokens = tokenize.generate_tokens(fun)
+        
+
+        if len(node.elts) > 1:
             self._handle(node, self._child_nodes(node.elts, ','),
                          eat_parens=True)
+        elif len(node.elts) == 1:
+            self._handle(node, [node.elts[0], ','], eat_parens=True)
         else:
-            self._handle(node, ['(', ')'])
+
+            opened = False
+            surround = []
+            children = []
+            counter = 0
+            while True:
+                try:
+                    op, tok, _1, _2, _3 = tokens.next()
+                    # print 'ttt', tok
+                    if opened == False:
+                        if tok == '(':
+                            opened = True
+                            children.append(tok)
+                        elif tok == ' ':
+                            pass
+                        else:
+                            surround.append(tok)
+                    elif opened == True:
+                        if tok == ')':
+                            children.append(tok)
+                            break
+                        elif tok == '(':
+                            surround = children
+                            children= [tok]
+                        else:
+                            children.append(tok)
+                        # if tok == '(':
+                        #     children = [tok]
+                except tokenize.TokenError:
+                    pass
+
+            for tok in surround:
+                self.source.consume(tok)
+
+            self._handle(node, children)
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
@@ -679,14 +759,66 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def consume_string(self, end=None):
-        if _Source._string_pattern is None:
-            original = codeanalyze.get_string_pattern()
-            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
-                      (original, original)
-            _Source._string_pattern = re.compile(pattern)
-        repattern = _Source._string_pattern
-        return self._consume_pattern(repattern, end)
+    def consume_string(self, end=None, not_multiline=False):
+        import tokenize
+        from StringIO import StringIO
+        fun = StringIO(self[self.offset:]).readline
+        tokens = tokenize.generate_tokens(fun)
+
+        started = False
+        if not_multiline:
+            multiline = False
+        else:
+            multiline = True
+        start_point = None
+        end_point = None 
+
+        while True:
+            if not started:
+                type, token, start, _end, _ = tokens.next()
+
+                if type == tokenize.STRING:
+                    started = True
+                    start_point = start
+                    end_point = _end
+                elif token == '(':
+                    # started = True
+                    # start_point = start
+                    multiline = True
+            else:
+                if multiline == False:
+                    try:
+                        type, token, start, _eend, _ = tokens.next()
+                    except:
+                        break
+                    if type in (4, 5, 53): #(5, 4, 54):
+                        end_point = _eend
+                    else:
+                        break
+                else: # multiline
+                    try:
+                        type, token, start, _eend, _ = tokens.next()
+                    except IndentationError:
+                        break
+                    if type == tokenize.STRING:
+                        if start_point is None:
+                            start_point = start
+                        end_point = _eend
+                    elif type in (5, 4, 53, 56, 54):
+                        pass
+                        # end_point = _eend
+                    elif token == ')':
+                        break
+                    else:
+                        break
+
+        local_code = codeanalyze.SourceLinesAdapter(self[self.offset:])
+
+        start = self.offset + (start_point[1] + local_code.get_line_start(start_point[0]))
+        end = self.offset + (end_point[1] + local_code.get_line_start(end_point[0]))
+        self.offset = (self.offset + (end_point[1] + local_code.get_line_start(end_point[0])))
+
+        return (start, end)
 
     def consume_number(self):
         if _Source._number_pattern is None:
