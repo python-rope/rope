@@ -393,6 +393,13 @@ class MoveGlobal(object):
             scope = self.old_pyname.get_object().get_scope()
             start = lines.get_line_start(scope.get_start())
             end_line = scope.get_end()
+
+        # Include comment lines before the definition
+        start_line = lines.get_line_number(start)
+        while start_line > 1 and lines.get_line(start_line - 1).startswith('#'):
+          start_line -= 1
+        start = lines.get_line_start(start_line)
+
         while end_line < lines.length() and \
                 lines.get_line(end_line + 1).strip() == '':
             end_line += 1
