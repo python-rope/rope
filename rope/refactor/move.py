@@ -685,6 +685,17 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 def moving_code_with_imports(project, resource, source):
     import_tools = importutils.ImportTools(project)
     pymodule = libutils.get_string_module(project, source, resource)
+
+    # Strip comment prefix, if any. These need to stay before the moving
+    # section, but imports would be added between them.
+    lines = codeanalyze.SourceLinesAdapter(source)
+    start = 1
+    while start < lines.length() and lines.get_line(start).startswith('#'):
+        start += 1
+    moving_prefix = source[:lines.get_line_start(start)]
+    pymodule = libutils.get_string_module(
+        project, source[lines.get_line_start(start):], resource)
+
     origin = project.get_pymodule(resource)
 
     imports = []
@@ -715,7 +726,9 @@ def moving_code_with_imports(project, resource, source):
     lines = codeanalyze.SourceLinesAdapter(source)
     while start < lines.length() and not lines.get_line(start).strip():
         start += 1
-    moving = source[lines.get_line_start(start):]
+
+    # Reinsert the prefix which was removed at the beginning
+    moving = moving_prefix + source[lines.get_line_start(start):]
     return moving, imports
 
 
