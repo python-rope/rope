@@ -74,6 +74,16 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('# 1\n# 2\nclass AClass(object):\n    pass\n',
                           self.mod2.read())
 
+    def test_moving_with_comment_prefix_imports(self):
+        self.mod1.write('import foo\na = 1\n# 1\n# 2\n'
+                        'class AClass(foo.FooClass):\n    pass\n')
+        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                   self.mod2)
+        self.assertEquals('a = 1\n', self.mod1.read())
+        self.assertEquals('import foo\n\n\n# 1\n# 2\n'
+                          'class AClass(foo.FooClass):\n    pass\n',
+                          self.mod2.read())
+
     def test_changing_other_modules_replacing_normal_imports(self):
         self.mod1.write('class AClass(object):\n    pass\n')
         self.mod3.write('import mod1\na_var = mod1.AClass()\n')
