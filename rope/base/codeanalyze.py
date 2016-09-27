@@ -129,13 +129,17 @@ class _CustomGenerator(object):
                 i += 1
         return result
 
-    # Doesn't match quotes which are escaped
-    _main_tokens = re.compile(r'((?<!\\)(\'\'\'|"""|\'|")|#|\[|\]|\{|\}|\(|\))')
+    # Matches all backslashes before the token, to detect escaped quotes
+    _main_tokens = re.compile(r'(\\*)((\'\'\'|"""|\'|")|#|\[|\]|\{|\}|\(|\))')
 
     def _analyze_line(self, line):
         token = None
         for match in self._main_tokens.finditer(line):
-            token = match.group()
+            prefix = match.group(1)
+            token = match.group(2)
+            # Skip any tokens which are escaped
+            if len(prefix) % 2 == 1:
+                continue
             if token in ["'''", '"""', "'", '"']:
                 if not self.in_string:
                     self.in_string = token
