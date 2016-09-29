@@ -35,16 +35,32 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         start = source.index('-10')
-        checker.check_region('Num', start, start + 3)
+        end = start + 3
+        # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
+        if pycompat.PY3:
+          start += 1
+        checker.check_region('Num', start, end)
 
     def test_scientific_integer_literals_and_region(self):
         source = 'a = -1.0e-3\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         start = source.index('-1.0e-3')
-        checker.check_region('Num', start, start + 7)
+        end = start + 7
+        # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
+        if pycompat.PY3:
+          start += 1
+        checker.check_region('Num', start, end)
 
     def test_hex_integer_literals_and_region(self):
+        source = 'a = 0x1\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('0x1')
+        checker.check_region('Num', start, start + 3)
+
+    @testutils.only_for_versions_lower('3')
+    def test_long_literals_and_region(self):
         source = 'a = 0x1L\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -56,7 +72,11 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         start = source.index('-0125e1')
-        checker.check_region('Num', start, start + 7)
+        end = start + 7
+        # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
+        if pycompat.PY3:
+          start += 1
+        checker.check_region('Num', start, end)
 
     def test_integer_literals_and_sorted_children(self):
         source = 'a = 10\n'
