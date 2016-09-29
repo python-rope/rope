@@ -388,29 +388,29 @@ class ProjectTest(unittest.TestCase):
 
     def test_file_encoding_reading(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = u'# -*- coding: utf-8 -*-\n' \
-            '#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
-        file = open(sample_file.real_path, 'w')
+        contents = (b'# -*- coding: utf-8 -*-\n' +
+                    b'#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
+        file = open(sample_file.real_path, 'wb')
         file.write(contents.encode('utf-8'))
         file.close()
         self.assertEquals(contents, sample_file.read())
 
     def test_file_encoding_writing(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = u'# -*- coding: utf-8 -*-\n' \
-            '\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        contents = (b'# -*- coding: utf-8 -*-\n' +
+                    b'\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
         sample_file.write(contents)
         self.assertEquals(contents, sample_file.read())
 
     def test_using_utf8_when_writing_in_case_of_errors(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = u'\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        contents = b'\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'.decode('utf8')
         sample_file.write(contents)
         self.assertEquals(contents, sample_file.read())
 
     def test_encoding_declaration_in_the_second_line(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = '\n# -*- coding: latin-1 -*-\n\xa9\n'
+        contents = b'\n# -*- coding: latin-1 -*-\n\xa9\n'
         file = open(sample_file.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -418,7 +418,7 @@ class ProjectTest(unittest.TestCase):
 
     def test_read_bytes(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = '\n# -*- coding: latin-1 -*-\n\xa9\n'
+        contents = b'\n# -*- coding: latin-1 -*-\n\xa9\n'
         file = open(sample_file.real_path, 'wb')
         file.write(contents)
         file.close()
@@ -427,7 +427,7 @@ class ProjectTest(unittest.TestCase):
     # TODO: Detecting utf-16 encoding
     def xxx_test_using_utf16(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = '# -*- coding: utf-16 -*-\n# This is a sample file ...\n'
+        contents = b'# -*- coding: utf-16 -*-\n# This is a sample file ...\n'
         file = open(sample_file.real_path, 'w')
         file.write(contents.encode('utf-16'))
         file.close()

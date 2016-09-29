@@ -1,12 +1,16 @@
-from distutils.core import setup, Command
 import sys
+
+try:
+    from setuptools import Command, setup
+except ImportError:
+    from distutils.core import Command, setup
 try:
     import unittest2 as unittest
 except ImportError:
     import unittest
 
-
 import rope
+
 import ropetest
 import ropetest.contrib
 import ropetest.refactor
@@ -42,6 +46,13 @@ classifiers = [
     'License :: OSI Approved :: GNU General Public License (GPL)',
     'Natural Language :: English',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
     'Topic :: Software Development']
 
 
