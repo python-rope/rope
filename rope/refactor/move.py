@@ -22,21 +22,21 @@ def create_move(project, resource, offset=None):
         return MoveModule(project, resource)
     this_pymodule = project.get_pymodule(resource)
     pyname = evaluate.eval_location(this_pymodule, offset)
-    if pyname is None:
-        raise exceptions.RefactoringError(
-            'Move only works on classes, functions, modules and methods.')
-    pyobject = pyname.get_object()
-    if isinstance(pyobject, pyobjects.PyModule) or \
-       isinstance(pyobject, pyobjects.PyPackage):
-        return MoveModule(project, pyobject.get_resource())
-    if isinstance(pyobject, pyobjects.PyFunction) and \
-       isinstance(pyobject.parent, pyobjects.PyClass):
-        return MoveMethod(project, resource, offset)
-    if isinstance(pyobject, pyobjects.PyDefinedObject) and \
-       isinstance(pyobject.parent, pyobjects.PyModule):
-        return MoveGlobal(project, resource, offset)
+    if pyname is not None:
+        pyobject = pyname.get_object()
+        if isinstance(pyobject, pyobjects.PyModule) or \
+           isinstance(pyobject, pyobjects.PyPackage):
+            return MoveModule(project, pyobject.get_resource())
+        if isinstance(pyobject, pyobjects.PyFunction) and \
+           isinstance(pyobject.parent, pyobjects.PyClass):
+            return MoveMethod(project, resource, offset)
+        if isinstance(pyobject, pyobjects.PyDefinedObject) and \
+           isinstance(pyobject.parent, pyobjects.PyModule) or \
+           isinstance(pyname, pynames.AssignedName):
+            return MoveGlobal(project, resource, offset)
     raise exceptions.RefactoringError(
-        'Move only works on global classes/functions, modules and methods.')
+        'Move only works on global classes/functions/variables, modules and '
+        'methods.')
 
 
 class MoveMethod(object):
@@ -203,9 +203,17 @@ class MoveGlobal(object):
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
+        if self.old_pyname is None:
+            raise exceptions.RefactoringError(
+                'Move refactoring should be performed on a '
+                'class/function/variable.')
+        if self._is_variable(self.old_pyname):
+            self.old_name = worder.get_name_at(resource, offset)
+            pymodule = this_pymodule
+        else:
+            self.old_name = self.old_pyname.get_object().get_name()
+            pymodule = self.old_pyname.get_object().get_module()
         self._check_exceptional_conditions()
-        self.old_name = self.old_pyname.get_object().get_name()
-        pymodule = self.old_pyname.get_object().get_module()
         self.source = pymodule.get_resource()
         self.tools = _MoveTools(self.project, self.source,
                                 self.old_pyname, self.old_name)
@@ -213,31 +221,44 @@ class MoveGlobal(object):
 
     def _import_filter(self, stmt):
       module_name = libutils.modname(self.source)
+
       if isinstance(stmt.import_info, importutils.NormalImport):
+          # Affect any statement that imports the source module
           return any(module_name == name
                      for name, alias in stmt.import_info.names_and_aliases)
       elif isinstance(stmt.import_info, importutils.FromImport):
+          # Affect statements importing from the source package
           if '.' in module_name:
-              package_name = '.'.join(module_name.split('.')[:-1])
-              if stmt.import_info.module_name == package_name:
+              package_name, basename = module_name.rsplit('.', 1)
+              if (stmt.import_info.module_name == package_name and
+                  any(basename == name
+                      for name, alias in stmt.import_info.names_and_aliases)):
                   return True
           return stmt.import_info.module_name == module_name
       return False
 
     def _check_exceptional_conditions(self):
-        if self.old_pyname is None or \
-           not isinstance(self.old_pyname.get_object(),
-                          pyobjects.PyDefinedObject):
-            raise exceptions.RefactoringError(
-                'Move refactoring should be performed on a class/function.')
-        moving_pyobject = self.old_pyname.get_object()
-        if not self._is_global(moving_pyobject):
-            raise exceptions.RefactoringError(
-                'Move refactoring should be performed ' +
-                'on a global class/function.')
+        if self._is_variable(self.old_pyname):
+            pymodule = self.old_pyname.get_definition_location()[0]
+            try:
+                pymodule.get_scope().get_name(self.old_name)
+            except exceptions.NameNotFoundError:
+                self._raise_refactoring_error()
+        elif not (isinstance(self.old_pyname.get_object(),
+                             pyobjects.PyDefinedObject) and
+                  self._is_global(self.old_pyname.get_object())):
+            self._raise_refactoring_error()
+
+    def _raise_refactoring_error(self):
+        raise exceptions.RefactoringError(
+            'Move refactoring should be performed on a global class, function '
+            'or variable.')
 
     def _is_global(self, pyobject):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
+
+    def _is_variable(self, pyname):
+      return isinstance(pyname, pynames.AssignedName)
 
     def get_changes(self, dest, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
@@ -367,9 +388,23 @@ class MoveGlobal(object):
     def _get_moving_region(self):
         pymodule = self.project.get_pymodule(self.source)
         lines = pymodule.lines
-        scope = self.old_pyname.get_object().get_scope()
-        start = lines.get_line_start(scope.get_start())
-        end_line = scope.get_end()
+        if self._is_variable(self.old_pyname):
+            logical_lines = pymodule.logical_lines
+            lineno = logical_lines.logical_line_in(
+                self.old_pyname.get_definition_location()[1])[0]
+            start = lines.get_line_start(lineno)
+            end_line = logical_lines.logical_line_in(lineno)[1]
+        else:
+            scope = self.old_pyname.get_object().get_scope()
+            start = lines.get_line_start(scope.get_start())
+            end_line = scope.get_end()
+
+        # Include comment lines before the definition
+        start_line = lines.get_line_number(start)
+        while start_line > 1 and lines.get_line(start_line - 1).startswith('#'):
+          start_line -= 1
+        start = lines.get_line_start(start_line)
+
         while end_line < lines.length() and \
                 lines.get_line(end_line + 1).strip() == '':
             end_line += 1
@@ -650,6 +685,17 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 def moving_code_with_imports(project, resource, source):
     import_tools = importutils.ImportTools(project)
     pymodule = libutils.get_string_module(project, source, resource)
+
+    # Strip comment prefix, if any. These need to stay before the moving
+    # section, but imports would be added between them.
+    lines = codeanalyze.SourceLinesAdapter(source)
+    start = 1
+    while start < lines.length() and lines.get_line(start).startswith('#'):
+        start += 1
+    moving_prefix = source[:lines.get_line_start(start)]
+    pymodule = libutils.get_string_module(
+        project, source[lines.get_line_start(start):], resource)
+
     origin = project.get_pymodule(resource)
 
     imports = []
@@ -680,7 +726,9 @@ def moving_code_with_imports(project, resource, source):
     lines = codeanalyze.SourceLinesAdapter(source)
     while start < lines.length() and not lines.get_line(start).strip():
         start += 1
-    moving = source[lines.get_line_start(start):]
+
+    # Reinsert the prefix which was removed at the beginning
+    moving = moving_prefix + source[lines.get_line_start(start):]
     return moving, imports
 
 

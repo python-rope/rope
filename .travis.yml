@@ -6,6 +6,7 @@ python:
   - "pypy"
   - "3.3"
   - "3.4"
+  - "3.5"
   - "pypy3"
 matrix:
   allow_failures:
@@ -13,4 +14,6 @@ matrix:
     - python: "pypy3"
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install importlib unittest2; fi
+notifications:
+    irc: "chat.freenode.net#rope"
 script: python setup.py test

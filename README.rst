@@ -15,13 +15,12 @@ Overview
 .. _`rope`: https://github.com/python-rope/rope
 
 
-New Features
+Notes
 ============
 
-* Under new management! Matěj Cepl <mcepl@cepl.eu> takes it hesitantly
-  over
-* Merged all availables pull requests and patches to the main codebase
-* Tests are green again
+* Nick Smith <nicks@fastmail.fm> takes over maintaining rope. Many thanks to
+  Matěj Cepl for his work maintaining rope for the past few years!!
+* Full python3 support is in progress... stay tuned
 
 Getting Started
 ===============

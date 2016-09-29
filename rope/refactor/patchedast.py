@@ -821,8 +821,8 @@ class _Source(object):
 
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
-        integer = r'(0|0x)?[\da-fA-F]+[lL]?'
-        return r'(%s(\.\d*)?|(\.\d+))([eE][-+]?\d*)?[jJ]?' % integer
+        integer = r'\-?(0x[\da-fA-F]+|\d+)[lL]?'
+        return r'(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?' % integer
 
     _string_pattern = None
     _number_pattern = None
