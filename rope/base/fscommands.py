@@ -58,19 +58,19 @@ class FileSystemCommands(object):
             file_.close()
 
 
-class SubversionCommands(object):
+class SubversionCommands(FileSystemCommands):
 
     def __init__(self, *args):
-        self.normal_actions = FileSystemCommands()
+        super(SubversionCommands, self).__init__()
         import pysvn
         self.client = pysvn.Client()
 
     def create_file(self, path):
-        self.normal_actions.create_file(path)
+        super(SubversionCommands, self).create_file(path)
         self.client.add(path, force=True)
 
     def create_folder(self, path):
-        self.normal_actions.create_folder(path)
+        super(SubversionCommands, self).create_folder(path)
         self.client.add(path, force=True)
 
     def move(self, path, new_location):
@@ -79,15 +79,12 @@ class SubversionCommands(object):
     def remove(self, path):
         self.client.remove(path, force=True)
 
-    def write(self, path, data):
-        self.normal_actions.write(path, data)
 
-
-class MercurialCommands(object):
+class MercurialCommands(FileSystemCommands):
 
     def __init__(self, root):
+        super(MercurialCommands, self).__init__()
         self.hg = self._import_mercurial()
-        self.normal_actions = FileSystemCommands()
         try:
             self.ui = self.hg.ui.ui(
                 verbose=False, debug=False, quiet=True,
@@ -110,11 +107,8 @@ class MercurialCommands(object):
         return mercurial
 
     def create_file(self, path):
-        self.normal_actions.create_file(path)
+        super(MercurialCommands, self).create_file(path)
         self.hg.commands.add(self.ui, self.repo, path)
-
-    def create_folder(self, path):
-        self.normal_actions.create_folder(path)
 
     def move(self, path, new_location):
         self.hg.commands.rename(self.ui, self.repo, path,
@@ -123,33 +117,23 @@ class MercurialCommands(object):
     def remove(self, path):
         self.hg.commands.remove(self.ui, self.repo, path)
 
-    def write(self, path, data):
-        self.normal_actions.write(path, data)
 
-
-class GITCommands(object):
+class GITCommands(FileSystemCommands):
 
     def __init__(self, root):
+        super(GITCommands, self).__init__()
         self.root = root
         self._do(['version'])
-        self.normal_actions = FileSystemCommands()
 
     def create_file(self, path):
-        self.normal_actions.create_file(path)
+        super(GITCommands, self).create_file(path)
         self._do(['add', self._in_dir(path)])
-
-    def create_folder(self, path):
-        self.normal_actions.create_folder(path)
 
     def move(self, path, new_location):
         self._do(['mv', self._in_dir(path), self._in_dir(new_location)])
 
     def remove(self, path):
         self._do(['rm', self._in_dir(path)])
-
-    def write(self, path, data):
-        # XXX: should we use ``git add``?
-        self.normal_actions.write(path, data)
 
     def _do(self, args):
         _execute(['git'] + args, cwd=self.root)
@@ -160,28 +144,22 @@ class GITCommands(object):
         return self.root
 
 
-class DarcsCommands(object):
+class DarcsCommands(FileSystemCommands):
 
     def __init__(self, root):
+        super(DarcsCommands, self).__init__()
         self.root = root
-        self.normal_actions = FileSystemCommands()
 
     def create_file(self, path):
-        self.normal_actions.create_file(path)
+        super(DarcsCommands, self).create_file(path)
         self._do(['add', path])
 
     def create_folder(self, path):
-        self.normal_actions.create_folder(path)
+        super(DarcsCommands, self).create_folder(path)
         self._do(['add', path])
 
     def move(self, path, new_location):
         self._do(['mv', path, new_location])
-
-    def remove(self, path):
-        self.normal_actions.remove(path)
-
-    def write(self, path, data):
-        self.normal_actions.write(path, data)
 
     def _do(self, args):
         _execute(['darcs'] + args, cwd=self.root)
