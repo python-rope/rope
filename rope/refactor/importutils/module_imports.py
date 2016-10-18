@@ -162,7 +162,7 @@ class ModuleImports(object):
         """force a single import per statement"""
         for import_stmt in self.imports[:]:
             import_info = import_stmt.import_info
-            if import_info.is_empty():
+            if import_info.is_empty() or import_stmt.readonly:
                 continue
             if len(import_info.names_and_aliases) > 1:
                 for name_and_alias in import_info.names_and_aliases:

@@ -633,6 +633,21 @@ class ImportUtilsTest(unittest.TestCase):
                           self.import_tools.organize_imports(pymod,
                                                              unused=False))
 
+    def test_splitting_imports_with_filter(self):
+        self.mod.write('from pkg1 import mod1, mod2\n'
+                       'from pkg2 import mod3, mod4\n')
+        pymod = self.project.get_pymodule(self.mod)
+        self.project.prefs['split_imports'] = True
+
+        def import_filter(stmt):
+          return stmt.import_info.module_name == 'pkg1'
+
+        self.assertEquals(
+            'from pkg1 import mod1\nfrom pkg1 import mod2\n'
+            'from pkg2 import mod3, mod4\n',
+            self.import_tools.organize_imports(pymod, unused=False,
+                                               import_filter=import_filter))
+
     def test_splitting_duplicate_imports(self):
         self.mod.write('from pkg2 import mod1\nfrom pkg2 import mod1, mod2\n')
         pymod = self.project.get_pymodule(self.mod)
