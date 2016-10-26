@@ -64,6 +64,22 @@ class HintingTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('isAlive', 'attribute', result)
 
+    def test_hierarchical_hint_for_mutable_attr_type(self):
+        """Test for #157, AttributeError: 'PyObject' object has no attribute 'get_doc'"""
+        code = 'class SuperClass(object):\n' \
+               '    def __init__(self):\n' \
+               '        self.foo = None\n' \
+               '\n\n' \
+               'class SubClass(SuperClass):\n' \
+               '    def __init__(self):\n' \
+               '        super(SubClass, self).__init__()\n' \
+               '        self.bar = 3\n' \
+               '\n\n' \
+               '    def foo(self):\n' \
+               '        return self.bar'
+        result = self._assist(code)
+        self.assert_completion_in_result('bar', 'attribute', result)
+
     def test_hint_attr(self):
         code = 'class Sample(object):\n' \
                '    """:type a_attr: threading.Thread"""\n' \
