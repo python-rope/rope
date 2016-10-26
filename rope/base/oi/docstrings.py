@@ -26,7 +26,7 @@ from ast import literal_eval
 
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.evaluate import ScopeNameFinder
-from rope.base.pyobjects import PyClass
+from rope.base.pyobjects import PyClass, PyFunction
 
 PEP0484_PATTERNS = [
     re.compile(r'type:\s*([^\n, ]+)'),
@@ -111,9 +111,12 @@ def _get_superfunc(pyfunc):
 
     for cls in _get_mro(pyfunc.parent)[1:]:
         try:
-            return cls.get_attribute(pyfunc.get_name()).get_object()
+            superfunc = cls.get_attribute(pyfunc.get_name()).get_object()
         except AttributeNotFoundError:
             pass
+        else:
+            if isinstance(superfunc, PyFunction):
+                return superfunc
 
 
 def _get_mro(pyclass):
