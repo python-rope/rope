@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import hint_return, hint_param, hint_attr, hint_pep0484
+from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -32,6 +32,7 @@ def infer_returned_object(pyfunction, args):
     result = object_info.get_returned(pyfunction, args)
     if result is not None:
         return result
+    hint_return = get_type_hinting_factory(pyfunction.pycore.project).make_return_provider()
     type_ = hint_return(pyfunction)
     if type_ is not None:
         return rope.base.pyobjects.PyObject(type_)
@@ -75,7 +76,8 @@ def infer_assigned_object(pyname):
         elif result is not None:
             return result
 
-    hinting_result = hint_pep0484(pyname)
+    hint_assignment = get_type_hinting_factory(pyname.module.pycore.project).make_assignment_provider()
+    hinting_result = hint_assignment(pyname)
     if hinting_result is not None:
         return hinting_result
 
@@ -97,6 +99,7 @@ def _infer_assigned_object_by_hint(pyname):
         pyclass = pyobject.parent
     else:
         return
+    hint_attr = get_type_hinting_factory(pyname.module.pycore.project).make_attr_provider()
     for name, attr in pyclass.get_attributes().items():
         if attr is pyname:
             type_ = hint_attr(pyclass, name)
@@ -147,6 +150,7 @@ def _infer_returned(pyobject, args):
 def _parameter_objects(pyobject):
     result = []
     params = pyobject.get_param_names(special_args=False)
+    hint_param = get_type_hinting_factory(pyobject.pycore.project).make_param_provider()
     for name in params:
         type_ = hint_param(pyobject, name)
         if type_ is not None:

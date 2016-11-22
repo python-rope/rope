@@ -6,7 +6,7 @@ except ImportError:
 
 import ropetest.projecttest
 import ropetest.codeanalyzetest
-import ropetest.docstringstest
+import ropetest.type_hinting_test
 import ropetest.pycoretest
 import ropetest.pyscopestest
 import ropetest.objectinfertest
@@ -25,7 +25,7 @@ def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.projecttest.suite())
     result.addTests(ropetest.codeanalyzetest.suite())
-    result.addTests(ropetest.docstringstest.suite())
+    result.addTests(ropetest.type_hinting_test.suite())
     result.addTests(ropetest.pycoretest.suite())
     result.addTests(ropetest.pyscopestest.suite())
     result.addTests(ropetest.objectinfertest.suite())
