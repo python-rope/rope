@@ -79,33 +79,8 @@ def infer_assigned_object(pyname):
     hint_assignment = get_type_hinting_factory(pyname.module.pycore.project).make_assignment_provider()
     hinting_result = hint_assignment(pyname)
     if hinting_result is not None:
-        return hinting_result
-
-    hinting_result = _infer_assigned_object_by_hint(pyname)
-    if hinting_result is not None:
-        return hinting_result
-
+        return rope.base.pyobjects.PyObject(hinting_result)
     return result
-
-
-def _infer_assigned_object_by_hint(pyname):
-    lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
-    holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
-    pyobject = holding_scope.pyobject
-    if isinstance(pyobject, rope.base.pyobjects.PyClass):
-        pyclass = pyobject
-    elif (isinstance(pyobject, rope.base.pyobjectsdef.PyFunction) and
-          isinstance(pyobject.parent, rope.base.pyobjects.PyClass)):
-        pyclass = pyobject.parent
-    else:
-        return
-    hint_attr = get_type_hinting_factory(pyname.module.pycore.project).make_attr_provider()
-    for name, attr in pyclass.get_attributes().items():
-        if attr is pyname:
-            type_ = hint_attr(pyclass, name)
-            if type_ is not None:
-                return rope.base.pyobjects.PyObject(type_)
-            break
 
 
 def get_passed_objects(pyfunction, parameter_index):

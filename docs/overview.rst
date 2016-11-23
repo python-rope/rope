@@ -1216,7 +1216,7 @@ Currently supported type hinting for:
 
 - function parameter type, using function doctring (:type or @type)
 - function return type, using function doctring (:rtype or @rtype)
-- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class or constructor of class.
+- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class.
 - any assignment, using type comments of PEP 0484 (in limited form).
 
 If rope cannot detect the type of a function argument correctly (due to the
