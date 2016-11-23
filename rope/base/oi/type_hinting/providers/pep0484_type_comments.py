@@ -1,9 +1,9 @@
 import re
-from rope.base.oi.type_hinting.providers.interfaces import IAssignmentProvider
-from rope.base.oi.type_hinting.utils import resolve_type
+from rope.base.oi.type_hinting import utils
+from rope.base.oi.type_hinting.providers import interfaces
 
 
-class AssignmentProvider(IAssignmentProvider):
+class AssignmentProvider(interfaces.IAssignmentProvider):
 
     PEP0484_TYPE_COMMENT_PATTERNS = (
         re.compile(r'type:\s*([^\n, ]+)'),
@@ -21,7 +21,7 @@ class AssignmentProvider(IAssignmentProvider):
         if '#' in line:
             type_strs = self._search_type_in_type_comment(line.split('#', 1)[1])
             if type_strs:
-                return resolve_type(type_strs[0], holding_scope.pyobject)
+                return utils.resolve_type(type_strs[0], holding_scope.pyobject)
 
     def _search_type_in_type_comment(self, code):
         """ For more info see:

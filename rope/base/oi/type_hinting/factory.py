@@ -16,20 +16,20 @@ class TypeHintingFactory(interfaces.ITypeHintingFactory):
         return inheritance.ParamProvider(composite.ParamProvider(*providers))
 
     @utils.saveit
-    def make_attr_provider(self):
-        providers = [
-            docstrings.AttrProvider(docstrings.DocstringParamParser()),
-            docstrings.AttrProvider(numpydocstrings.NumPyDocstringParamParser()),
-        ]
-        return inheritance.AttrProvider(composite.AttrProvider(*providers))
-
-    @utils.saveit
     def make_return_provider(self):
-        return inheritance.ReturnProvider(docstrings.ReturnProvider(docstrings.DocstringReturnParser()))
+        providers = [
+            docstrings.ReturnProvider(docstrings.DocstringReturnParser()),
+        ]
+        return inheritance.ReturnProvider(composite.ReturnProvider(*providers))
 
     @utils.saveit
     def make_assignment_provider(self):
-        return pep0484_type_comments.AssignmentProvider()
+        providers = [
+            pep0484_type_comments.AssignmentProvider(),
+            docstrings.AssignmentProvider(docstrings.DocstringParamParser()),
+            docstrings.AssignmentProvider(numpydocstrings.NumPyDocstringParamParser()),
+        ]
+        return inheritance.AssignmentProvider(composite.AssignmentProvider(*providers))
 
 default_type_hinting_factory = TypeHintingFactory()
 

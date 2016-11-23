@@ -3,7 +3,7 @@ from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyFunction
 
 
-def get_superfunc(pyfunc):
+def get_super_func(pyfunc):
 
     if not isinstance(pyfunc.parent, PyClass):
         return
@@ -16,6 +16,48 @@ def get_superfunc(pyfunc):
         else:
             if isinstance(superfunc, PyFunction):
                 return superfunc
+
+
+def get_super_assignment(pyname):
+    """
+    :type pyname: rope.base.pynamesdef.AssignedName
+    :type: rope.base.pynamesdef.AssignedName
+    """
+    try:
+        pyclass, attr_name = get_class_with_attr_name(pyname)
+    except TypeError:
+        return
+    else:
+        for super_pyclass in get_mro(pyclass)[1:]:
+            if attr_name in super_pyclass:
+                return super_pyclass[attr_name]
+
+
+def get_class_with_attr_name(pyname):
+    """
+    :type pyname: rope.base.pynamesdef.AssignedName
+    :type: rope.base.pyobjectsdef.PyClass, str
+    """
+    lineno = get_lineno_for_node(pyname.assignments[0].ast_node)
+    holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
+    pyobject = holding_scope.pyobject
+    if isinstance(pyobject, PyClass):
+        pyclass = pyobject
+    elif (isinstance(pyobject, PyFunction) and
+          isinstance(pyobject.parent, PyClass)):
+        pyclass = pyobject.parent
+    else:
+        return
+    for name, attr in pyclass.get_attributes().items():
+        if attr is pyname:
+            return (pyclass, name)
+
+
+def get_lineno_for_node(assign_node):
+    if hasattr(assign_node, 'lineno') and \
+       assign_node.lineno is not None:
+        return assign_node.lineno
+    return 1
 
 
 def get_mro(pyclass):

@@ -40,26 +40,6 @@ class ReturnProvider(interfaces.IReturnProvider):
                 return result
 
 
-class AttrProvider(interfaces.IAttrProvider):
-
-    def __init__(self, *delegates):
-        """
-        :type delegates: list[rope.base.oi.type_hinting.providers.interfaces.IAttrProvider]
-        """
-        self._delegates = delegates
-
-    def __call__(self, pyclass, attr_name):
-        """
-        :type pyclass: rope.base.pyobjectsdef.PyClass
-        :type attr_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
-        """
-        for delegate in self._delegates:
-            result = delegate(pyclass, attr_name)
-            if result:
-                return result
-
-
 class AssignmentProvider(interfaces.IAssignmentProvider):
 
     def __init__(self, *delegates):

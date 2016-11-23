@@ -23,8 +23,8 @@ Discussions:
 """
 import re
 
+from rope.base.oi.type_hinting import utils
 from rope.base.oi.type_hinting.providers import interfaces
-from rope.base.oi.type_hinting.utils import resolve_type
 
 
 class ParamProvider(interfaces.IParamProvider):
@@ -43,26 +43,7 @@ class ParamProvider(interfaces.IParamProvider):
         """
         type_strs = self._parse_docstring(pyfunc.get_doc(), param_name)
         if type_strs:
-            return resolve_type(type_strs[0], pyfunc)
-
-
-class AttrProvider(interfaces.IAttrProvider):
-
-    def __init__(self, docstring_parser):
-        """
-        :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
-        """
-        self._parse_docstring = docstring_parser
-
-    def __call__(self, pyclass, attr_name):
-        """
-        :type pyclass: rope.base.pyobjectsdef.PyClass
-        :type attr_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
-        """
-        type_strs = self._parse_docstring(pyclass.get_doc(), attr_name)
-        if type_strs:
-            return resolve_type(type_strs[0], pyclass)
+            return utils.resolve_type(type_strs[0], pyfunc)
 
 
 class ReturnProvider(interfaces.IReturnProvider):
@@ -78,9 +59,32 @@ class ReturnProvider(interfaces.IReturnProvider):
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
         :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
         """
-        type_str = self._parse_docstring(pyfunc.get_doc())
-        if type_str:
-            return resolve_type(type_str[0], pyfunc)
+        type_strs = self._parse_docstring(pyfunc.get_doc())
+        if type_strs:
+            return utils.resolve_type(type_strs[0], pyfunc)
+
+
+class AssignmentProvider(interfaces.IAssignmentProvider):
+
+    def __init__(self, docstring_parser):
+        """
+        :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
+        """
+        self._parse_docstring = docstring_parser
+
+    def __call__(self, pyname):
+        """
+        :type pyname: rope.base.pynamesdef.AssignedName
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        """
+        try:
+            pyclass, attr_name = utils.get_class_with_attr_name(pyname)
+        except TypeError:
+            return
+        else:
+            type_strs = self._parse_docstring(pyclass.get_doc(), attr_name)
+            if type_strs:
+                return utils.resolve_type(type_strs[0], pyclass)
 
 
 class IParamParser(object):

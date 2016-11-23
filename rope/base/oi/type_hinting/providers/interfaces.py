@@ -19,17 +19,6 @@ class IReturnProvider(object):
         raise NotImplementedError
 
 
-class IAttrProvider(object):
-
-    def __call__(self, pyclass, attr_name):
-        """
-        :type pyclass: rope.base.pyobjectsdef.PyClass
-        :type attr_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
-        """
-        raise NotImplementedError
-
-
 class IAssignmentProvider(object):
 
     def __call__(self, pyname):

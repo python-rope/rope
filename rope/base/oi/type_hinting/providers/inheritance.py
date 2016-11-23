@@ -1,5 +1,5 @@
+from rope.base.oi.type_hinting import utils
 from rope.base.oi.type_hinting.providers import interfaces
-from rope.base.oi.type_hinting.utils import get_superfunc, get_mro
 
 
 class ParamProvider(interfaces.IParamProvider):
@@ -21,7 +21,7 @@ class ParamProvider(interfaces.IParamProvider):
             result = self._delegate(superfunc, param_name)
             if result:
                 return result
-            superfunc = get_superfunc(superfunc)
+            superfunc = utils.get_super_func(superfunc)
 
 
 class ReturnProvider(interfaces.IReturnProvider):
@@ -42,24 +42,25 @@ class ReturnProvider(interfaces.IReturnProvider):
             result = self._delegate(superfunc)
             if result:
                 return result
-            superfunc = get_superfunc(superfunc)
+            superfunc = utils.get_super_func(superfunc)
 
 
-class AttrProvider(interfaces.IAttrProvider):
+class AssignmentProvider(interfaces.IAssignmentProvider):
 
     def __init__(self, delegate):
         """
-        :type delegate: rope.base.oi.type_hinting.providers.interfaces.IAttrProvider
+        :type delegate: rope.base.oi.type_hinting.providers.interfaces.IAssignmentProvider
         """
         self._delegate = delegate
 
-    def __call__(self, pyclass, attr_name):
+    def __call__(self, pyname):
         """
-        :type pyclass: rope.base.pyobjectsdef.PyClass
-        :type attr_name: str
+        :type pyname: rope.base.pynamesdef.AssignedName
         :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
         """
-        for supercls in get_mro(pyclass):
-            result = self._delegate(supercls, attr_name)
+        super_pyname = pyname
+        while super_pyname:
+            result = self._delegate(super_pyname)
             if result:
                 return result
+            super_pyname = utils.get_super_assignment(super_pyname)
