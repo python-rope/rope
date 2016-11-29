@@ -1301,6 +1301,37 @@ https://www.python.org/dev/peps/pep-0484/#type-comments
            self.x.| # complete here
 
 
+Supported syntax of type hinting
+''''''''''''''''''''''''''''''''
+
+Currently rope supports the following syntax of type-hinting.
+
+Parametrized objects:
+
+- Foo
+- foo.bar.Baz
+- list[Foo] or list[foo.bar.Baz] etc.
+- set[Foo]
+- tuple[Foo]
+- dict[Foo, Bar]
+- collections.Iterable[Foo]
+- collections.Iterator[Foo]
+
+Nested expressions also allowed:
+
+- collections.Iterable[list[Foo]]
+
+TODO:
+
+Callable objects:
+
+- (Foo, Bar) -> Baz
+
+Multiple interfaces implementation:
+
+- Foo | Bar
+
+
 Custom Source Folders
 =====================
 

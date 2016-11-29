@@ -13,7 +13,7 @@ class ParamProvider(interfaces.IParamProvider):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
         :type param_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         for delegate in self._delegates:
             result = delegate(pyfunc, param_name)
@@ -32,7 +32,7 @@ class ReturnProvider(interfaces.IReturnProvider):
     def __call__(self, pyfunc):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         for delegate in self._delegates:
             result = delegate(pyfunc)
@@ -51,7 +51,7 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
     def __call__(self, pyname):
         """
         :type pyname: rope.base.pynamesdef.AssignedName
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         for delegate in self._delegates:
             result = delegate(pyname)

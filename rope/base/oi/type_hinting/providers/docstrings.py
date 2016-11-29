@@ -29,53 +29,59 @@ from rope.base.oi.type_hinting.providers import interfaces
 
 class ParamProvider(interfaces.IParamProvider):
 
-    def __init__(self, docstring_parser):
+    def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
+        :type resolver: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
         """
         self._parse_docstring = docstring_parser
+        self._resolve = resolver
 
     def __call__(self, pyfunc, param_name):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
         :type param_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         type_strs = self._parse_docstring(pyfunc.get_doc(), param_name)
         if type_strs:
-            return utils.resolve_type(type_strs[0], pyfunc)
+            return self._resolve(type_strs[0], pyfunc)
 
 
 class ReturnProvider(interfaces.IReturnProvider):
 
-    def __init__(self, docstring_parser):
+    def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IReturnParser
+        :type resolver: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
         """
         self._parse_docstring = docstring_parser
+        self._resolve = resolver
 
     def __call__(self, pyfunc):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         type_strs = self._parse_docstring(pyfunc.get_doc())
         if type_strs:
-            return utils.resolve_type(type_strs[0], pyfunc)
+            return self._resolve(type_strs[0], pyfunc)
 
 
 class AssignmentProvider(interfaces.IAssignmentProvider):
 
-    def __init__(self, docstring_parser):
+    def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
+        :type resolver: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
         """
         self._parse_docstring = docstring_parser
+        self._resolve = resolver
 
     def __call__(self, pyname):
         """
         :type pyname: rope.base.pynamesdef.AssignedName
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         try:
             pyclass, attr_name = utils.get_class_with_attr_name(pyname)
@@ -84,7 +90,7 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
         else:
             type_strs = self._parse_docstring(pyclass.get_doc(), attr_name)
             if type_strs:
-                return utils.resolve_type(type_strs[0], pyclass)
+                return self._resolve(type_strs[0], pyclass)
 
 
 class IParamParser(object):
@@ -107,9 +113,9 @@ class IReturnParser(object):
 class DocstringParamParser(IParamParser):
 
     DOCSTRING_PARAM_PATTERNS = [
-        r'\s*:type\s+%s:\s*([^\n, ]+)',  # Sphinx
+        r'\s*:type\s+%s:\s*([^\n]+)',  # Sphinx
         r'\s*:param\s+(\w+)\s+%s:[^\n]+',  # Sphinx param with type
-        r'\s*@type\s+%s:\s*([^\n, ]+)',  # Epydoc
+        r'\s*@type\s+%s:\s*([^\n]+)',  # Epydoc
     ]
 
     def __init__(self):
@@ -144,8 +150,8 @@ class DocstringParamParser(IParamParser):
 class DocstringReturnParser(IReturnParser):
 
     DOCSTRING_RETURN_PATTERNS = [
-        re.compile(r'\s*:rtype:\s*([^\n, ]+)', re.M),  # Sphinx
-        re.compile(r'\s*@rtype:\s*([^\n, ]+)', re.M),  # Epydoc
+        re.compile(r'\s*:rtype:\s*([^\n]+)', re.M),  # Sphinx
+        re.compile(r'\s*@rtype:\s*([^\n]+)', re.M),  # Epydoc
     ]
 
     def __init__(self):
