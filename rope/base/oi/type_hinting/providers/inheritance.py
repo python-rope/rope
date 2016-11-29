@@ -14,7 +14,7 @@ class ParamProvider(interfaces.IParamProvider):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
         :type param_name: str
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         superfunc = pyfunc
         while superfunc:
@@ -35,7 +35,7 @@ class ReturnProvider(interfaces.IReturnProvider):
     def __call__(self, pyfunc):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         superfunc = pyfunc
         while superfunc:
@@ -56,7 +56,7 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
     def __call__(self, pyname):
         """
         :type pyname: rope.base.pynamesdef.AssignedName
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         super_pyname = pyname
         while super_pyname:

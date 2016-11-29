@@ -5,14 +5,20 @@ from rope.base.oi.type_hinting.providers import interfaces
 
 class AssignmentProvider(interfaces.IAssignmentProvider):
 
+    def __init__(self, resolver):
+        """
+        :type resolver: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
+        """
+        self._resolve = resolver
+
     PEP0484_TYPE_COMMENT_PATTERNS = (
-        re.compile(r'type:\s*([^\n, ]+)'),
+        re.compile(r'type:\s*([^\n]+)'),
     )
 
     def __call__(self, pyname):
         """
         :type pyname: rope.base.pynamesdef.AssignedName
-        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         from rope.base.oi.soi import _get_lineno_for_node
         lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
@@ -21,7 +27,7 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
         if '#' in line:
             type_strs = self._search_type_in_type_comment(line.split('#', 1)[1])
             if type_strs:
-                return utils.resolve_type(type_strs[0], holding_scope.pyobject)
+                return self._resolve(type_strs[0], holding_scope.pyobject)
 
     def _search_type_in_type_comment(self, code):
         """ For more info see:

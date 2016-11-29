@@ -1,6 +1,9 @@
+import rope.base.builtins
+import rope.base.utils as base_utils
 from rope.base.evaluate import ScopeNameFinder
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyFunction
+from rope.base.utils import pycompat
 
 
 def get_super_func(pyfunc):
@@ -36,7 +39,8 @@ def get_super_assignment(pyname):
 def get_class_with_attr_name(pyname):
     """
     :type pyname: rope.base.pynamesdef.AssignedName
-    :type: rope.base.pyobjectsdef.PyClass, str
+    :return: rope.base.pyobjectsdef.PyClass, str
+    :rtype: tuple
     """
     lineno = get_lineno_for_node(pyname.assignments[0].ast_node)
     holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
@@ -70,19 +74,63 @@ def get_mro(pyclass):
     return l
 
 
-def resolve_type(type_name, pyobj):
-    type_ = None
+def resolve_type(type_name, pyobject):
+    """
+    :type type_name: str
+    :type pyobject: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject
+    :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
+    """
     if '.' not in type_name:
         try:
-            type_ = pyobj.get_module().get_scope().get_name(type_name).get_object()
+            return pyobject.get_module().get_scope().get_name(type_name).get_object()
         except Exception:
             pass
     else:
         mod_name, attr_name = type_name.rsplit('.', 1)
         try:
-            mod_finder = ScopeNameFinder(pyobj.get_module())
+            mod_finder = ScopeNameFinder(pyobject.get_module())
             mod = mod_finder._find_module(mod_name).get_object()
-            type_ = mod.get_attribute(attr_name).get_object()
+            return mod.get_attribute(attr_name).get_object()
         except Exception:
             pass
-    return type_
+
+
+class ParametrizeType(object):
+
+    _supported_mapping = {
+        'builtins.list': 'rope.base.builtins.get_list',
+        'builtins.tuple': 'rope.base.builtins.get_tuple',
+        'builtins.set': 'rope.base.builtins.get_set',
+        'builtins.dict': 'rope.base.builtins.get_dict',
+        '_collections_abc.Iterable': 'rope.base.builtins.get_iterator',
+        '_collections_abc.Iterator': 'rope.base.builtins.get_iterator',
+        'collections.abc.Iterable': 'rope.base.builtins.get_iterator',  # Python3.3
+        'collections.abc.Iterator': 'rope.base.builtins.get_iterator',  # Python3.3
+    }
+    if pycompat.PY2:
+        _supported_mapping = dict((
+            (k.replace('builtins.', '__builtin__.').replace('_collections_abc.', '_abcoll.'), v)
+            for k, v in _supported_mapping.items()
+        ))
+
+    def __call__(self, pyobject, *args, **kwargs):
+        """
+        :type pyobject: rope.base.pyobjects.PyObject
+        :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
+        """
+        type_factory = self._get_type_factory(pyobject)
+        if type_factory:
+            parametrized_type = type_factory(*args, **kwargs)
+            if parametrized_type:
+                return parametrized_type
+        return pyobject
+
+    def _get_type_factory(self, pyobject):
+        type_str = '{0}.{1}'.format(
+            pyobject.get_module().get_name(),
+            pyobject.get_name(),
+        )
+        if type_str in self._supported_mapping:
+            return base_utils.resolve(self._supported_mapping[type_str])
+
+parametrize_type = ParametrizeType()
