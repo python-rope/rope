@@ -278,6 +278,18 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import pkg1.mod1\n',
                           module_with_imports.get_changed_source())
 
+    def test_adding_imports_no_sort(self):
+        self.mod.write('import pkg2.mod3\nclass A(object):\n    pass\n\n'
+                       'import pkg2.mod2\n')
+        pymod = self.project.get_module('mod')
+        self.project.prefs['sort_imports_at_top'] = False
+        module_with_imports = self.import_tools.module_imports(pymod)
+        new_import = self.import_tools.get_import(self.mod1)
+        module_with_imports.add_import(new_import)
+        self.assertEquals('import pkg2.mod3\nclass A(object):\n    pass\n\n'
+                          'import pkg2.mod2\nimport pkg1.mod1\n',
+                          module_with_imports.get_changed_source())
+
     def test_adding_from_imports(self):
         self.mod1.write('def a_func():\n    pass\n'
                         'def another_func():\n    pass\n')
@@ -633,6 +645,17 @@ class ImportUtilsTest(unittest.TestCase):
                           self.import_tools.organize_imports(pymod,
                                                              unused=False))
 
+    def test_splitting_imports_no_sort(self):
+        self.mod.write('from pkg2 import mod3, mod4\n'
+                       'from pkg1 import mod2\nfrom pkg1 import mod1\n')
+        pymod = self.project.get_pymodule(self.mod)
+        self.project.prefs['split_imports'] = True
+        self.project.prefs['sort_imports_at_top'] = False
+        self.assertEquals('from pkg1 import mod2\nfrom pkg1 import mod1\n'
+                          'from pkg2 import mod3\nfrom pkg2 import mod4\n',
+                          self.import_tools.organize_imports(pymod,
+                                                             unused=False))
+
     def test_splitting_imports_with_filter(self):
         self.mod.write('from pkg1 import mod1, mod2\n'
                        'from pkg2 import mod3, mod4\n')
@@ -865,6 +888,14 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_module('mod')
         self.assertEquals('import mod\n\n\ndef f():\n    print(mod)\n',
                           self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_with_sort_disabled(self):
+        code = ('import mod\ndef f():\n    print(mod, pkg1, pkg2)\n'
+                'import pkg1\nimport pkg2\n')
+        self.mod.write(code)
+        pymod = self.project.get_module('mod')
+        self.project.prefs['sort_imports_at_top'] = False
+        self.assertEquals(code, self.import_tools.sort_imports(pymod))
 
     def test_sorting_imports_moving_to_top_and_module_docs(self):
         self.mod.write('"""\ndocs\n"""\ndef f():'

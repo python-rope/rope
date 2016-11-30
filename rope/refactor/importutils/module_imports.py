@@ -50,6 +50,9 @@ class ModuleImports(object):
         return result
 
     def get_changed_source(self):
+        if not self.project.prefs.get("sort_imports_at_top"):
+            return ''.join(self._rewrite_imports(self.imports))
+
         # Make sure we forward a removed import's preceding blank
         # lines count to the following import statement.
         prev_stmt = None
@@ -109,6 +112,19 @@ class ModuleImports(object):
             last_index = end - 1
         after_removing.extend(lines[last_index:])
         return after_removing
+
+    def _rewrite_imports(self, imports):
+        lines = self.pymodule.source_code.splitlines(True)
+        after_rewriting = []
+        last_index = 0
+        for stmt in imports:
+            start, end = stmt.get_old_location()
+            after_rewriting.extend(lines[last_index:start - 1])
+            if not stmt.import_info.is_empty():
+                after_rewriting.append(stmt.get_import_statement() + '\n')
+            last_index = end - 1
+        after_rewriting.extend(lines[last_index:])
+        return after_rewriting
 
     def _first_non_blank_line(self, lines, lineno):
         return lineno + _count_blank_lines(lines.__getitem__, lineno,
@@ -195,6 +211,8 @@ class ModuleImports(object):
         return self.pymodule.get_resource().parent
 
     def sort_imports(self):
+        if not self.project.prefs.get("sort_imports_at_top"):
+            return
         if self.project.prefs.get("sort_imports_alphabetically"):
             sort_kwargs = dict(key=self._get_import_name)
         else:
