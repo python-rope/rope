@@ -12,6 +12,7 @@ class ModuleImports(object):
         self.pymodule = pymodule
         self.separating_lines = 0
         self.filter = import_filter
+        self.sorted = False
 
     @property
     @utils.saveit
@@ -50,7 +51,8 @@ class ModuleImports(object):
         return result
 
     def get_changed_source(self):
-        if not self.project.prefs.get("sort_imports_at_top"):
+        if (not self.project.prefs.get("pull_imports_to_top") and
+            not self.sorted):
             return ''.join(self._rewrite_imports(self.imports))
 
         # Make sure we forward a removed import's preceding blank
@@ -211,8 +213,6 @@ class ModuleImports(object):
         return self.pymodule.get_resource().parent
 
     def sort_imports(self):
-        if not self.project.prefs.get("sort_imports_at_top"):
-            return
         if self.project.prefs.get("sort_imports_alphabetically"):
             sort_kwargs = dict(key=self._get_import_name)
         else:
@@ -232,6 +232,7 @@ class ModuleImports(object):
         last_index = self._move_imports(third_party, last_index, 1)
         last_index = self._move_imports(in_projects, last_index, 1)
         self.separating_lines = 2
+        self.sorted = True
 
     def _first_import_line(self):
         nodes = self.pymodule.get_ast().body

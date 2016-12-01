@@ -278,11 +278,11 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import pkg1.mod1\n',
                           module_with_imports.get_changed_source())
 
-    def test_adding_imports_no_sort(self):
+    def test_adding_imports_no_pull_to_top(self):
         self.mod.write('import pkg2.mod3\nclass A(object):\n    pass\n\n'
                        'import pkg2.mod2\n')
         pymod = self.project.get_module('mod')
-        self.project.prefs['sort_imports_at_top'] = False
+        self.project.prefs['pull_imports_to_top'] = False
         module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_import(self.mod1)
         module_with_imports.add_import(new_import)
@@ -645,15 +645,16 @@ class ImportUtilsTest(unittest.TestCase):
                           self.import_tools.organize_imports(pymod,
                                                              unused=False))
 
-    def test_splitting_imports_no_sort(self):
+    def test_splitting_imports_no_pull_to_top(self):
         self.mod.write('from pkg2 import mod3, mod4\n'
                        'from pkg1 import mod2\nfrom pkg1 import mod1\n')
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['split_imports'] = True
-        self.project.prefs['sort_imports_at_top'] = False
+        self.project.prefs['pull_imports_to_top'] = False
         self.assertEquals('from pkg1 import mod2\nfrom pkg1 import mod1\n'
                           'from pkg2 import mod3\nfrom pkg2 import mod4\n',
                           self.import_tools.organize_imports(pymod,
+                                                             sort=False,
                                                              unused=False))
 
     def test_splitting_imports_with_filter(self):
@@ -889,13 +890,17 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import mod\n\n\ndef f():\n    print(mod)\n',
                           self.import_tools.sort_imports(pymod))
 
-    def test_sorting_imports_with_sort_disabled(self):
-        code = ('import mod\ndef f():\n    print(mod, pkg1, pkg2)\n'
-                'import pkg1\nimport pkg2\n')
+    # Sort pulls imports to the top anyway
+    def test_sorting_imports_no_pull_to_top(self):
+        code = ('import pkg2\ndef f():\n    print(mod, pkg1, pkg2)\n'
+                'import pkg1\nimport mod\n')
         self.mod.write(code)
         pymod = self.project.get_module('mod')
-        self.project.prefs['sort_imports_at_top'] = False
-        self.assertEquals(code, self.import_tools.sort_imports(pymod))
+        self.project.prefs['pull_imports_to_top'] = False
+        self.assertEquals(
+            'import mod\nimport pkg1\nimport pkg2\n\n\n'
+            'def f():\n    print(mod, pkg1, pkg2)\n',
+            self.import_tools.sort_imports(pymod))
 
     def test_sorting_imports_moving_to_top_and_module_docs(self):
         self.mod.write('"""\ndocs\n"""\ndef f():'
