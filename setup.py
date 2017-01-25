@@ -1,10 +1,6 @@
 
 from setuptools import setup, find_packages
 
-import rope
-
-
-
 classifiers = [
     'Development Status :: 4 - Beta',
     'Operating System :: OS Independent',
