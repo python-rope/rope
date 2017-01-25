@@ -6,3 +6,5 @@ docs/build/
 build/
 dist/
 MANIFEST
+rope/_version.py
+.eggs/
