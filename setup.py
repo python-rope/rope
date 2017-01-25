@@ -32,7 +32,8 @@ def get_long_description():
 
 setup(
   name='rope',
-  version=rope.VERSION,
+  setup_requires=['setuptools_scm'],
+  use_scm_version={'write_to': 'rope/_version.py'},
   description='a python refactoring library...',
   long_description=get_long_description(),
   author='Ali Gholami Rudi',
