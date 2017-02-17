@@ -983,6 +983,30 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Delete', ['del', ' ', 'Name', '', ',', ' ', 'Name'])
 
+    def test_starargs_before_keywords(self):
+        source = 'foo(*args, a=1)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', '*', '', 'Name', '', ',', ' ',
+                     'keyword', '', ')'])
+
+    def test_starargs_in_keywords(self):
+        source = 'foo(a=1, *args, b=2)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', 'keyword', '', ',', ' ', '*', '',
+                     'Name', '', ',', ' ', 'keyword', '',')'])
+
+    def test_starargs_after_keywords(self):
+        source = 'foo(a=1, *args)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', 'keyword', '', ',', ' ', '*', '',
+                     'Name', '', ')'])
+
 
 class _ResultChecker(object):
 
