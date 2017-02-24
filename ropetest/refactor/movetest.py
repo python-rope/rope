@@ -410,6 +410,12 @@ class MoveRefactoringTest(unittest.TestCase):
                     'print(pkg2.pkg3.pkg4.mod4)')
         self.assertEquals(expected, self.mod1.read())
 
+    def test_moving_module_referenced_by_relative_import(self):
+        self.mod1.write('from .mod2 import a\nprint a\n')
+        self.mod2.write('a = 1\n')
+        self._move(self.mod2, None, self.pkg)
+        self.assertEquals('from pkg.mod2 import a\nprint a\n', self.mod1.read())
+
     def test_moving_package_with_from_and_normal_imports(self):
         pkg2 = testutils.create_package(self.project, 'pkg2')
         code = ('from pkg import mod4\n'
