@@ -57,7 +57,7 @@ classifiers = [
 
 
 def get_long_description():
-    lines = open('README.rst', encoding='utf8').read().splitlines(False)
+    lines = open('README.rst', 'rb').read().decode('UTF8').splitlines(False)
     end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
