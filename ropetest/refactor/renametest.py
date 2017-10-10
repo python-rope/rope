@@ -165,6 +165,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def new_func():\n    pass\nnew_func()\n',
                           refactored)
 
+    @testutils.only_for('3.5')
     def test_renaming_async_function(self):
         code = 'async def a_func():\n    pass\na_func()'
         refactored = self._local_rename(code, len(code) - 5, 'new_func')
