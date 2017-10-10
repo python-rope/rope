@@ -357,6 +357,13 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('for new_var in range(10):\n    print(new_var)\n',
                           refactored)
 
+    @testutils.only_for('3.5')
+    def test_renaming_async_for_loop_variable(self):
+        code = 'async def func():\n    async for var in range(10):\n        print(var)\n'
+        refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
+        self.assertEquals('async def func():\n    async for new_var in range(10):\n        print(new_var)\n',
+                          refactored)
+
     def test_renaming_parameters(self):
         code = 'def a_func(param):\n    print(param)\na_func(param=hey)\n'
         refactored = self._local_rename(code, code.find('param') + 1,

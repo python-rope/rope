@@ -369,6 +369,9 @@ class _ScopeVisitor(object):
         for child in node.body + node.orelse:
             ast.walk(child, self)
 
+    def _AsyncFor(self, node):
+        return self._For(node)
+
     def _assigned(self, name, assignment):
         pyname = self.names.get(name, None)
         if pyname is None:
