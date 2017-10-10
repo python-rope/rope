@@ -172,6 +172,14 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('async def new_func():\n    pass\nnew_func()',
                           refactored)
 
+    @testutils.only_for('3.5')
+    def test_renaming_await(self):
+        code = 'async def b_func():\n    pass\nasync def a_func():\n    await b_func()'
+        refactored = self._local_rename(code, len(code) - 5, 'new_func')
+        self.assertEquals('async def new_func():\n    pass\nasync def a_func():\n    await new_func()',
+                          refactored)
+
+
     def test_renaming_functions_across_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
