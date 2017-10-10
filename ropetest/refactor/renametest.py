@@ -364,6 +364,22 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('async def func():\n    async for new_var in range(10):\n        print(new_var)\n',
                           refactored)
 
+    @testutils.only_for('3.5')
+    def test_renaming_async_with_context_manager(self):
+        code = 'def a_cm(): pass\n'\
+               'async def a_func():\n    async with a_cm() as x: pass'
+        refactored = self._local_rename(code, code.find('a_cm') + 1, 'another_cm')
+        expected = 'def another_cm(): pass\n'\
+                   'async def a_func():\n    async with another_cm() as x: pass'
+        self.assertEquals(refactored, expected)
+
+    @testutils.only_for('3.5')
+    def test_renaming_async_with_as_variable(self):
+        code = 'async def func():\n    async with a_func() as var:\n        print(var)\n'
+        refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
+        self.assertEquals('async def func():\n    async with a_func() as new_var:\n        print(new_var)\n',
+                          refactored)
+
     def test_renaming_parameters(self):
         code = 'def a_func(param):\n    print(param)\na_func(param=hey)\n'
         refactored = self._local_rename(code, code.find('param') + 1,

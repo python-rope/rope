@@ -404,6 +404,9 @@ class _ScopeVisitor(object):
         for child in node.body:
             ast.walk(child, self)
 
+    def _AsyncWith(self, node):
+        return self._With(node)
+
     def _excepthandler(self, node):
         node_name_type = str if pycompat.PY3 else ast.Name
         if node.name is not None and isinstance(node.name, node_name_type):
