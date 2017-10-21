@@ -1,5 +1,5 @@
 import sys
-
+sys.path.append(".")
 try:
     from setuptools import Command, setup
 except ImportError:
