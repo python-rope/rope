@@ -465,7 +465,7 @@ class _PatchingASTWalker(object):
     def _is_elif(self, node):
         if not isinstance(node, ast.If):
             return False
-        offset = self.lines.get_line_start(node.lineno) + node.col_offset
+        offset = self.lines.get_line_start(node.lineno) + node.col_offset - 4
         word = self.source[offset:offset + 4]
         # XXX: This is a bug; the offset does not point to the first
         alt_word = self.source[offset - 5:offset - 1]
