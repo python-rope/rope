@@ -268,25 +268,36 @@ class _PatchingASTWalker(object):
         self._handle(node, ['break'])
 
     def _Call(self, node):
+        def _arg_sort_key(node):
+          if isinstance(node, ast.keyword):
+            return (node.value.lineno, node.value.col_offset)
+          return (node.lineno, node.col_offset)
+
         children = [node.func, '(']
-        children.extend(self._child_nodes(node.args, ','))
+        unstarred_args = []
+        starred_and_keywords = list(node.keywords)
+        for i, arg in enumerate(node.args):
+          if hasattr(ast, 'Starred') and isinstance(arg, ast.Starred):
+            starred_and_keywords.append(arg)
+          else:
+            unstarred_args.append(arg)
+        if getattr(node, 'starargs', None):
+          starred_and_keywords.append(node.starargs)
+        starred_and_keywords.sort(key=_arg_sort_key)
+        children.extend(self._child_nodes(unstarred_args, ','))
+
         # positional args come before keywords, *args comes after all
         # positional args, and **kwargs comes last
-        if getattr(node, 'starargs', None):
-            loc = (node.starargs.lineno, node.starargs.col_offset)
-            kws_before = list(kw for kw in node.keywords
-                              if (kw.value.lineno, kw.value.col_offset) < loc)
-            kws_after = node.keywords[len(kws_before):]
-            children.extend(self._child_nodes(kws_before, ','))
-            if node.args or kws_before:
-                children.append(',')
-            children.extend(['*', node.starargs])
-            if kws_after:
-                children.append(',')
-                children.extend(self._child_nodes(kws_after, ','))
-        elif node.keywords:
+        if starred_and_keywords:
+          if len(children) > 2:
             children.append(',')
-            children.extend(self._child_nodes(node.keywords, ','))
+          for i, arg in enumerate(starred_and_keywords):
+            if arg == getattr(node, 'starargs', None):
+              children.append('*')
+            children.append(arg)
+            if i + 1 < len(starred_and_keywords):
+              children.append(',')
+
         if getattr(node, 'kwargs', None):
             if len(children) > 2:
                 children.append(',')

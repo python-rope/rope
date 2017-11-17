@@ -324,7 +324,7 @@ class PatchedASTTest(unittest.TestCase):
                      ' ', 'keyword', '', ')'])
 
     @testutils.only_for_versions_lower('3.5')
-    def test_call_func_and_start_args(self):
+    def test_call_func_and_star_args(self):
         source = 'f(1, *args)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -333,7 +333,7 @@ class PatchedASTTest(unittest.TestCase):
                      ' ', '*', '', 'Name', '', ')'])
 
     @testutils.only_for('3.5')
-    def test_call_func_and_start_argspython35(self):
+    def test_call_func_and_star_argspython35(self):
         source = 'f(1, *args)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -342,7 +342,7 @@ class PatchedASTTest(unittest.TestCase):
                 ' *', 'Starred', '', ')'])
  
     @testutils.only_for_versions_lower('3.5')
-    def test_call_func_and_only_dstart_args(self):
+    def test_call_func_and_only_dstar_args(self):
         source = 'f(**kwds)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -350,7 +350,7 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', '**', '', 'Name', '', ')'])
 
     @testutils.only_for('3.5')
-    def test_call_func_and_only_dstart_args_python35(self):
+    def test_call_func_and_only_dstar_args_python35(self):
         source = 'f(**kwds)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -983,6 +983,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Delete', ['del', ' ', 'Name', '', ',', ' ', 'Name'])
 
+    @testutils.only_for_versions_lower('3.5')
     def test_starargs_before_keywords(self):
         source = 'foo(*args, a=1)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -991,6 +992,7 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', '*', '', 'Name', '', ',', ' ',
                      'keyword', '', ')'])
 
+    @testutils.only_for_versions_lower('3.5')
     def test_starargs_in_keywords(self):
         source = 'foo(a=1, *args, b=2)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -999,6 +1001,7 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', 'keyword', '', ',', ' ', '*', '',
                      'Name', '', ',', ' ', 'keyword', '',')'])
 
+    @testutils.only_for_versions_lower('3.5')
     def test_starargs_after_keywords(self):
         source = 'foo(a=1, *args)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1006,6 +1009,33 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', 'keyword', '', ',', ' ', '*', '',
                      'Name', '', ')'])
+
+    @testutils.only_for('3.5')
+    def test_starargs_before_keywords(self):
+        source = 'foo(*args, a=1)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '*', 'Starred', '', ',', ' ',
+                     'keyword', '', ')'])
+
+    @testutils.only_for('3.5')
+    def test_starargs_in_keywords(self):
+        source = 'foo(a=1, *args, b=2)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', 'keyword', '', ',', ' *',
+                     'Starred', '', ',', ' ', 'keyword', '',')'])
+
+    @testutils.only_for('3.5')
+    def test_starargs_after_keywords(self):
+        source = 'foo(a=1, *args)\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', 'keyword', '', ',', ' *',
+                     'Starred', '', ')'])
 
 
 class _ResultChecker(object):
