@@ -65,6 +65,9 @@ class Worder(object):
     def is_from_aliased(self, offset):
         return self.code_finder.is_from_aliased(offset)
 
+    def is_import_statement_aliased_module(self, offset):
+        return self.code_finder.is_import_statement_aliased_module(offset)
+
     def find_parens_start_from_inside(self, offset):
         return self.code_finder.find_parens_start_from_inside(offset)
 
@@ -317,7 +320,9 @@ class _RealFinder(object):
             last_import = self.code.rindex('import ', 0, offset)
         except ValueError:
             return False
-        return self._find_import_end(last_import + 7) >= offset
+        line_start = self._get_line_start(last_import)
+        return (self._find_import_end(last_import + 7) >= offset and
+                self._find_word_start(line_start) == last_import)
 
     def is_from_statement(self, offset):
         try:
@@ -336,6 +341,27 @@ class _RealFinder(object):
         line_start = self._get_line_start(stmt_start)
         prev_word = self.code[line_start:stmt_start].strip()
         return prev_word == 'from'
+
+    def is_import_statement_aliased_module(self, offset):
+        if not self.is_import_statement(offset):
+            return False
+        try:
+            line_start = self._get_line_start(offset)
+            import_idx = self.code.rindex('import', line_start, offset)
+            imported_names = import_idx + 7
+        except ValueError:
+            return False
+        # Check if the offset is within the imported names
+        if (imported_names - 1 > offset or
+            self._find_import_end(imported_names) < offset):
+            return False
+        try:
+            end = self._find_word_end(offset)
+            as_end = min(self._find_word_end(end + 1), len(self.code))
+            as_start = self._find_word_start(as_end)
+            return self.code[as_start:as_end + 1] == 'as'
+        except ValueError:
+            return False
 
     def is_a_name_after_from_import(self, offset):
         try:
@@ -368,8 +394,7 @@ class _RealFinder(object):
             end = self._find_word_end(offset)
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
-            if self.code[as_start:as_end + 1] == 'as':
-                return True
+            return self.code[as_start:as_end + 1] == 'as'
         except ValueError:
             return False
 
