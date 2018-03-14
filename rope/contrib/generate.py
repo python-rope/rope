@@ -42,15 +42,16 @@ def create_package(project, name, sourcefolder=None):
 
 class _Generate(object):
 
-    def __init__(self, project, resource, offset):
+    def __init__(self, project, resource, offset, goal_resource=None):
         self.project = project
         self.resource = resource
+        self.goal_resource = goal_resource
         self.info = self._generate_info(project, resource, offset)
         self.name = self.info.get_name()
         self._check_exceptional_conditions()
 
     def _generate_info(self, project, resource, offset):
-        return _GenerationInfo(project.pycore, resource, offset)
+        return _GenerationInfo(project.pycore, resource, offset, self.goal_resource)
 
     def _check_exceptional_conditions(self):
         if self.info.element_already_exists():
@@ -77,6 +78,9 @@ class _Generate(object):
         collector.add_change(start, end, definition)
         changes.add_change(change.ChangeContents(
                            resource, collector.get_changed()))
+        if self.goal_resource:
+            relative_import = _add_relative_import_to_module(self.project, self.resource, self.goal_resource, self.name)
+            changes.add_change(relative_import)
         return changes
 
     def get_location(self):
@@ -183,12 +187,22 @@ def _add_import_to_module(project, resource, imported):
     return change.ChangeContents(resource, module_imports.get_changed_source())
 
 
+def _add_relative_import_to_module(project, resource, imported, name):
+    pymodule = project.get_pymodule(resource)
+    import_tools = importutils.ImportTools(project)
+    module_imports = import_tools.module_imports(pymodule)
+    new_import = import_tools.get_from_import(imported, name)
+    module_imports.add_import(new_import)
+    return change.ChangeContents(resource, module_imports.get_changed_source())
+
+
 class _GenerationInfo(object):
 
-    def __init__(self, pycore, resource, offset):
+    def __init__(self, pycore, resource, offset, goal_resource=None):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
+        self.goal_resource = goal_resource
         self.source_pymodule = self.pycore.project.get_pymodule(resource)
         finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
@@ -201,7 +215,10 @@ class _GenerationInfo(object):
 
     def _get_goal_scope(self):
         if self.primary is None:
-            return self._get_source_scope()
+            if self.goal_resource:
+                return self.pycore.project.get_pymodule(self.goal_resource).get_scope()
+            else:
+                return self._get_source_scope()
         pyobject = self.primary.get_object()
         if isinstance(pyobject, pyobjects.PyDefinedObject):
             return pyobject.get_scope()
