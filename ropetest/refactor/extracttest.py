@@ -636,6 +636,27 @@ class ExtractMethodTest(unittest.TestCase):
                    '        self.attr = self.new_func(p2)\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_and_similar_sttemnts_overlapping_regions(self):
+        code = 'def func(p):\n' \
+               '    a = p\n' \
+               '    b = a\n' \
+               '    c = b\n' \
+               '    d = c\n' \
+               '    return d'
+        start = code.index('a')
+        end = code.rindex('a') + 1
+        refactored = self.do_extract_method(
+            code, start, end, 'new_func', similar=True)
+        expected = 'def func(p):\n' \
+                   '    b = new_func(p)\n' \
+                   '    d = new_func(b)\n' \
+                   '    return d\n' \
+                   'def new_func(p):\n' \
+                   '    a = p\n' \
+                   '    b = a\n' \
+                   '    return b\n'
+        self.assertEquals(expected, refactored)
+
     def test_definition_should_appear_where_it_is_visible(self):
         code = 'if True:\n    a = 1\nelse:\n    b = 1\n'
         start = code.rindex('1')
