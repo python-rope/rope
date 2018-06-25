@@ -217,6 +217,13 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('print(1, 3)\n', self.mod.read())
 
+    def test_arguments_containing_comparisons(self):
+        self.mod.write('def a_func(param1, param2, param3):'
+                       '\n    param2.name\n'
+                       'a_func(2 <= 1, item, True)\n')
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        self.assertEquals('item.name\n', self.mod.read())
+
     def test_badly_formatted_text(self):
         self.mod.write('def a_func  (  param1 =  1 ,param2 = 2 )  :'
                        '\n    print(param1, param2)\n'

@@ -488,7 +488,8 @@ class _RealFinder(object):
         while current > first:
             primary_start = current
             current = self._find_primary_start(current)
-            while current != first and self.code[current] not in '=,':
+            while current != first and (self.code[current] not in '=,'
+                    or self.code[current-1] in '=!<>'):
                 current = self._find_last_non_space_char(current - 1)
             primary = self.raw[current + 1:primary_start + 1].strip()
             if self.code[current] == '=':
