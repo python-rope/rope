@@ -21,6 +21,7 @@ class DynamicOITest(unittest.TestCase):
         super(DynamicOITest, self).tearDown()
 
     def test_simple_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(a_func)\n'
@@ -31,6 +32,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object())
 
     def test_module_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')
         code = 'import mod1\ndef a_func(arg):\n    return eval("arg")\n' \
@@ -42,6 +44,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod2['a_var'].get_object())
 
     def test_class_from_another_module_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')
         code1 = 'class AClass(object):\n    pass\n'
@@ -58,6 +61,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_class_dti(self):
         mod = testutils.create_module(self.project, 'mod')
+        self.project.prefs['perform_doa'] = True
         code = 'class AClass(object):\n    pass\n' \
                '\ndef a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(AClass)\n'
@@ -68,6 +72,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object())
 
     def test_instance_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class AClass(object):\n    pass\n' \
                '\ndef a_func(arg):\n    return eval("arg()")\n' \
@@ -79,6 +84,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object().get_type())
 
     def test_method_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class AClass(object):\n    def a_method(self, arg):\n' \
                '        return eval("arg()")\n' \
@@ -91,6 +97,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object().get_type())
 
     def test_function_argument_dti(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg):\n    pass\n' \
                'a_func(a_func)\n'
@@ -101,6 +108,7 @@ class DynamicOITest(unittest.TestCase):
                           pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_classes_with_the_same_name(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg):\n    class AClass(object):\n' \
                '        pass\n    return eval("arg")\n' \
@@ -113,6 +121,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object())
 
     def test_nested_classes(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func():\n    class AClass(object):\n' \
                '        pass\n    return AClass\n' \
@@ -125,6 +134,7 @@ class DynamicOITest(unittest.TestCase):
                           pyscope['a_var'].get_object())
 
     def test_function_argument_dti2(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg, a_builtin_type):\n    pass\n' \
                'a_func(a_func, [])\n'
@@ -135,6 +145,7 @@ class DynamicOITest(unittest.TestCase):
                           pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_dti_and_concluded_data_invalidation(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(a_func)\n'
@@ -146,6 +157,7 @@ class DynamicOITest(unittest.TestCase):
                           pymod['a_var'].get_object())
 
     def test_list_objects_and_dynamicoi(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
@@ -158,6 +170,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_for_loops_and_dynamicoi(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
@@ -170,6 +183,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_objects_and_dynamicoi(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
@@ -182,6 +196,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         if pycompat.PY3:
             code = 'class C(object):\n    pass\n' \
@@ -199,6 +214,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi2(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
@@ -214,6 +230,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_strs_and_dynamicoi(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func("hey")\n'
@@ -248,6 +265,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_arguments_with_keywords(self):
         mod = testutils.create_module(self.project, 'mod')
+        self.project.prefs['perform_doa'] = True
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
                'a = a_func(arg=C1())\nb = a_func(arg=C2())\n'
@@ -263,6 +281,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_a_function_with_different_returns(self):
         mod = testutils.create_module(self.project, 'mod')
+        self.project.prefs['perform_doa'] = True
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(arg):\n    return eval("arg")\n' \
                'a = a_func(C1())\nb = a_func(C2())\n'
@@ -278,6 +297,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_a_function_with_different_returns2(self):
         mod = testutils.create_module(self.project, 'mod')
+        self.project.prefs['perform_doa'] = True
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(p):\n    if p == C1:\n        return C1()\n' \
                '    else:\n        return C2()\n' \
@@ -293,6 +313,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_ignoring_star_args(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(p, *args):' \
@@ -310,6 +331,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_ignoring_double_star_args(self):
+        self.project.prefs['perform_doa'] = True
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(p, *kwds, **args):\n    ' \
@@ -339,6 +361,7 @@ class DynamicOITest(unittest.TestCase):
                              pymod['a_var'].get_object())
 
     def test_invalidating_data_after_moving(self):
+        self.project.prefs['perform_doa'] = True
         mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('class C(object):\n    pass\n')
         mod = testutils.create_module(self.project, 'mod')

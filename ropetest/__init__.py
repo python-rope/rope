@@ -20,6 +20,8 @@ import ropetest.simplifytest
 import ropetest.contrib
 import ropetest.refactor
 
+import ropetest.CVE20143539
+
 
 def suite():
     result = unittest.TestSuite()
@@ -38,6 +40,7 @@ def suite():
 
     result.addTests(ropetest.refactor.suite())
     result.addTests(ropetest.contrib.suite())
+    result.addTests(ropetest.CVE20143539.suite())
 
     return result
 

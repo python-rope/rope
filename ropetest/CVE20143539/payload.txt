@@ -1,0 +1,9 @@
+csubprocess
+Popen
+p1
+((S'/bin/uptime'
+p2
+tp3
+tp4
+Rp5
+.
