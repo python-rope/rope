@@ -2,9 +2,9 @@ import base64
 import hashlib
 import hmac
 try:
-    import pickle
-except ImportError:
     import cPickle as pickle
+except ImportError:
+    import pickle
 import marshal
 import os
 import socket
@@ -12,7 +12,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-import uuid
 
 
 class PythonFileRunner(object):
@@ -118,11 +117,11 @@ class _SocketReceiver(_MessageReceiver):
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_port = 3037
-        self.key = uuid.uuid4().bytes
+        self.key = bytes(os.urandom(32))
 
         while self.data_port < 4000:
             try:
-                self.server_socket.bind(('127.0.0.1', self.data_port))
+                self.server_socket.bind(('localhost', self.data_port))
                 break
             except socket.error:
                 self.data_port += 1

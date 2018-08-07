@@ -3,9 +3,9 @@ import hashlib
 import hmac
 import multiprocessing
 try:
-    import pickle
-except ImportError:
     import cPickle as pickle
+except ImportError:
+    import pickle
 import socket
 try:
     import unittest2 as unittest
@@ -62,7 +62,7 @@ class DOATest(unittest.TestCase):
         self.assertEqual(0, len(received_objs))
         
     def test_CVE_2014_3539_sanity(self):
-        # Tests that sending valid, encrypted data on the socket does work.
+        # Tests that sending valid, signed data on the socket does work.
         receiver = doa._SocketReceiver()
 
         pickled_data = base64.b64encode(

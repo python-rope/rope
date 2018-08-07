@@ -3,9 +3,9 @@ def __rope_start_everything():
     import sys
     import socket
     try:
-        import pickle
-    except ImportError:
         import cPickle as pickle
+    except ImportError:
+        import pickle
     import marshal
     import inspect
     import types
