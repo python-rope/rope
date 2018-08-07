@@ -14,6 +14,20 @@ import tempfile
 import threading
 
 
+def _compat_compare_digest(a, b):
+    if len(a) != len(b):
+        return False
+    difference = 0
+    for (a_char, b_char) in zip(a, b):
+        difference |= ord(a_char) ^ ord(b_char)
+    return difference == 0
+
+try:
+    from hmac import compare_digest
+except ImportError:
+    compare_digest = _compat_compare_digest
+
+
 class PythonFileRunner(object):
     """A class for running python project files"""
 
@@ -117,7 +131,7 @@ class _SocketReceiver(_MessageReceiver):
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_port = 3037
-        self.key = bytes(os.urandom(32))
+        self.key = os.urandom(32)
 
         while self.data_port < 4000:
             try:
@@ -160,7 +174,7 @@ class _SocketReceiver(_MessageReceiver):
                     continue
 
                 digest = hmac.new(self.key, buf_data, hashlib.sha256).digest()
-                if buf_digest != digest:
+                if not compare_digest(buf_digest, digest):
                     # Signature mismatch; the payload cannot be trusted and just
                     # has to be dropped. See CVE-2014-3539.
                     continue

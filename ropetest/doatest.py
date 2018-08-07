@@ -75,6 +75,12 @@ class DOATest(unittest.TestCase):
         # Make sure the exploit did not run
         self.assertEqual(1, len(received_objs))
 
+    def test_compare_digest_compat(self):
+        self.assertTrue(doa._compat_compare_digest('', ''))
+        self.assertTrue(doa._compat_compare_digest('abc', 'abc'))
+        self.assertFalse(doa._compat_compare_digest('abc', 'abd'))
+        self.assertFalse(doa._compat_compare_digest('abc', 'abcd'))
+
 
 def suite():
     result = unittest.TestSuite()
