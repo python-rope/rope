@@ -15,8 +15,16 @@ import threading
 
 
 def _compat_compare_digest(a, b):
+    """Implementation of hmac.compare_digest for python < 2.7.7.
+
+    This function uses an approach designed to prevent timing analysis by
+    avoiding content-based short circuiting behaviour, making it appropriate
+    for cryptography.
+    """
     if len(a) != len(b):
         return False
+    # Computes the bitwise difference of all characters in the two strings
+    # before returning whether or not they are equal.
     difference = 0
     for (a_char, b_char) in zip(a, b):
         difference |= ord(a_char) ^ ord(b_char)
