@@ -1,7 +1,10 @@
+import base64
+import hashlib
+import hmac
 try:
-    import pickle
-except ImportError:
     import cPickle as pickle
+except ImportError:
+    import pickle
 import marshal
 import os
 import socket
@@ -9,6 +12,28 @@ import subprocess
 import sys
 import tempfile
 import threading
+
+
+def _compat_compare_digest(a, b):
+    """Implementation of hmac.compare_digest for python < 2.7.7.
+
+    This function uses an approach designed to prevent timing analysis by
+    avoiding content-based short circuiting behaviour, making it appropriate
+    for cryptography.
+    """
+    if len(a) != len(b):
+        return False
+    # Computes the bitwise difference of all characters in the two strings
+    # before returning whether or not they are equal.
+    difference = 0
+    for (a_char, b_char) in zip(a, b):
+        difference |= ord(a_char) ^ ord(b_char)
+    return difference == 0
+
+try:
+    from hmac import compare_digest
+except ImportError:
+    compare_digest = _compat_compare_digest
 
 
 class PythonFileRunner(object):
@@ -114,24 +139,55 @@ class _SocketReceiver(_MessageReceiver):
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_port = 3037
+        self.key = os.urandom(32)
+
         while self.data_port < 4000:
             try:
-                self.server_socket.bind(('', self.data_port))
+                self.server_socket.bind(('localhost', self.data_port))
                 break
             except socket.error:
                 self.data_port += 1
         self.server_socket.listen(1)
 
     def get_send_info(self):
-        return str(self.data_port)
+        return '%d:%s' % (self.data_port,
+                          base64.b64encode(self.key).decode('utf-8'))
 
     def receive_data(self):
         conn, addr = self.server_socket.accept()
         self.server_socket.close()
         my_file = conn.makefile('rb')
         while True:
+            # Received messages must meet the following criteria:
+            # 1. Must be contained on a single line.
+            # 2. Must be prefixed with a base64 encoded sha256 message digest 
+            #    of the base64 encoded pickle data.
+            # 3. Message digest must be computed using the correct key.
+            #
+            # Any messages received that do not meet these criteria will never
+            # be unpickled and will be dropped silently.
             try:
-                yield pickle.load(my_file)
+                buf = my_file.readline()
+                if len(buf) == 0:
+                    break
+
+                try:
+                    digest_end = buf.index(b':')
+                    buf_digest = base64.b64decode(buf[:digest_end])
+                    buf_data = buf[digest_end + 1:-1]
+                    decoded_buf_data = base64.b64decode(buf_data)
+                except:
+                    # Corrupted data; the payload cannot be trusted and just has
+                    # to be dropped. See CVE-2014-3539.
+                    continue
+
+                digest = hmac.new(self.key, buf_data, hashlib.sha256).digest()
+                if not compare_digest(buf_digest, digest):
+                    # Signature mismatch; the payload cannot be trusted and just
+                    # has to be dropped. See CVE-2014-3539.
+                    continue
+
+                yield pickle.loads(decoded_buf_data)
             except EOFError:
                 break
         my_file.close()

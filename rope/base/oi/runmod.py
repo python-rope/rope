@@ -3,14 +3,17 @@ def __rope_start_everything():
     import sys
     import socket
     try:
-        import pickle
-    except ImportError:
         import cPickle as pickle
+    except ImportError:
+        import pickle
     import marshal
     import inspect
     import types
     import threading
     import rope.base.utils.pycompat as pycompat
+    import base64
+    import hashlib
+    import hmac
 
     class _MessageSender(object):
 
@@ -19,15 +22,19 @@ def __rope_start_everything():
 
     class _SocketSender(_MessageSender):
 
-        def __init__(self, port):
+        def __init__(self, port, key):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('127.0.0.1', port))
             self.my_file = s.makefile('wb')
+            self.key = base64.b64decode(key)
 
         def send_data(self, data):
             if not self.my_file.closed:
-                pickle.dump(data, self.my_file)
-
+                pickled_data = base64.b64encode(
+                    pickle.dumps(data, pickle.HIGHEST_PROTOCOL))
+                dgst = hmac.new(self.key, pickled_data, hashlib.sha256).digest()
+                self.my_file.write(base64.b64encode(dgst) + b':' +
+                                   pickled_data + b'\n')
         def close(self):
             self.my_file.close()
 
@@ -58,8 +65,9 @@ def __rope_start_everything():
 
         def __init__(self, send_info, project_root):
             self.project_root = project_root
-            if send_info.isdigit():
-                self.sender = _SocketSender(int(send_info))
+            if send_info[0].isdigit():
+                port, key = send_info.split(':', 1)
+                self.sender = _SocketSender(int(port), key)
             else:
                 self.sender = _FileSender(send_info)
 
