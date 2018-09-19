@@ -113,7 +113,11 @@ class File(Resource):
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):
-        return open(self.real_path, 'rb').read()
+        handle = open(self.real_path, 'rb')
+        try:
+            return handle.read()
+        finally:
+            handle.close()
 
     def write(self, contents):
         try:
