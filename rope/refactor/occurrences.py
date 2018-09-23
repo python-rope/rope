@@ -35,6 +35,7 @@ calling the `create_finder()` function.
     arguments
 """
 
+import ast
 import re
 
 from rope.base import codeanalyze
@@ -300,6 +301,8 @@ class _TextualFinder(object):
         self.comment_pattern = _TextualFinder.any('comment', [r'#[^\n]*'])
         self.string_pattern = _TextualFinder.any(
             'string', [codeanalyze.get_string_pattern()])
+        self.f_string_pattern = _TextualFinder.any(
+            'fstring', [codeanalyze.get_formatted_string_pattern()])
         self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source):
@@ -314,9 +317,15 @@ class _TextualFinder(object):
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
-            for key, value in match.groupdict().items():
-                if value and key == 'occurrence':
-                    yield match.start(key)
+            if match.groupdict()['occurrence']:
+                yield match.start('occurrence')
+            elif utils.pycompat.PY36 and match.groupdict()['fstring']:
+                parsed = ast.parse(match.groupdict()['fstring'])
+                for v in parsed.body[0].value.values:
+                    if type(v) is ast.FormattedValue and \
+                            type(v.value) is ast.Name and \
+                            v.value.id == self.name:
+                        yield match.start('fstring') + v.value.col_offset
 
     def _normal_search(self, source):
         current = 0
@@ -352,7 +361,8 @@ class _TextualFinder(object):
         occurrence_pattern = _TextualFinder.any('occurrence',
                                                 ['\\b' + name + '\\b'])
         pattern = re.compile(occurrence_pattern + '|' + self.comment_pattern +
-                             '|' + self.string_pattern)
+                             '|' + self.string_pattern + '|' +
+                             self.f_string_pattern)
         return pattern
 
     @staticmethod
