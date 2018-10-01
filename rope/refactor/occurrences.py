@@ -320,12 +320,15 @@ class _TextualFinder(object):
             if match.groupdict()['occurrence']:
                 yield match.start('occurrence')
             elif utils.pycompat.PY36 and match.groupdict()['fstring']:
-                parsed = ast.parse(match.groupdict()['fstring'])
-                for v in parsed.body[0].value.values:
-                    if type(v) is ast.FormattedValue and \
-                            type(v.value) is ast.Name and \
-                            v.value.id == self.name:
-                        yield match.start('fstring') + v.value.col_offset
+                f_string = match.groupdict()['fstring']
+                for occurrence_node in self._search_in_f_string(f_string):
+                    yield match.start('fstring') + occurrence_node.col_offset
+
+    def _search_in_f_string(self, f_string):
+        tree = ast.parse(f_string)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and node.id == self.name:
+                yield node
 
     def _normal_search(self, source):
         current = 0

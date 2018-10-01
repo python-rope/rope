@@ -106,7 +106,7 @@ class RenameRefactoringTest(unittest.TestCase):
             'a_var = A(new_param=1)\n'
         self.assertEquals(expected, refactored)
 
-    def test_renam_functions_parameters_and_occurances_in_other_modules(self):
+    def test_rename_functions_parameters_and_occurences_in_other_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')
         mod1.write('def a_func(a_param):\n    print(a_param)\n')
@@ -121,6 +121,29 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(
             "replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')
         self.assertEquals("is_replace = True\n'ali'.\\\nreplace\n",
+                          refactored)
+
+    @testutils.only_for('3.6')
+    def test_renaming_occurrence_in_f_string(self):
+        refactored = self._local_rename(
+            "a_var = 20\na_string=f'value: {a_var}'\n", 2, 'new_var')
+        self.assertEquals("new_var = 20\na_string=f'value: {new_var}'\n",
+                          refactored)
+        return f'{refactored}'
+
+    @testutils.only_for('3.6')
+    def test_renaming_occurrence_in_nested_f_string(self):
+        refactored = self._local_rename(
+            "a_var = 20\na_string=f'{f\"{a_var}\"}'\n", 2, 'new_var')
+        self.assertEquals(
+            "new_var = 20\na_string=f'{f\"{new_var}\"}'\n",
+            refactored)
+
+    @testutils.only_for('3.6')
+    def test_not_renaming_string_contents_in_f_string(self):
+        refactored = self._local_rename(
+            "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, 'new_var')
+        self.assertEquals("new_var = 20\na_string=f'{\"a_var\"}'\n",
                           refactored)
 
     def test_not_renaming_string_contents(self):
