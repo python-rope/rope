@@ -19,8 +19,9 @@ Notes
 ============
 
 * Nick Smith <nicks@fastmail.fm> takes over maintaining rope. Many thanks to
-  Matěj Cepl for his work maintaining rope for the past few years!!
-* Full python3 support is in progress... stay tuned
+  Matej Cepl for his work maintaining rope for the past few years!!
+* Partial Python3 support, please file bugs and contribute patches if you
+  encounter gaps.
 
 Getting Started
 ===============
