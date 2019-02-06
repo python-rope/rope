@@ -42,12 +42,6 @@ about them, don't hesitate to discuss it in the mailing list.
 
 .. _`dev/issues.rst`: dev/issues.rst
 
-Getting Ready For Python 3.0
-----------------------------
-
-Checkout http://bitbucket.org/agr/rope_py3k Mercurial_ repository.
-Contributions are welcome.
-
 Write Plugins For Other IDEs
 ----------------------------
 

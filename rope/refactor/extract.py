@@ -251,8 +251,15 @@ class _ExtractPerformer(object):
         finder = similarfinder.SimilarFinder(self.info.pymodule)
         matches = []
         for start, end in regions:
-            matches.extend((finder.get_matches(collector.body_pattern,
-                                               collector.checks, start, end)))
+            region_matches = finder.get_matches(collector.body_pattern,
+                                               collector.checks, start, end)
+            # Don't extract overlapping regions
+            last_match_end = -1
+            for region_match in region_matches:
+                start, end = region_match.get_region()
+                if last_match_end < start:
+                    matches.append(region_match)
+                    last_match_end = end
         collector.matches = matches
 
     def _where_to_search(self):

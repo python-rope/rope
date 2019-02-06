@@ -25,8 +25,8 @@ class GenerateTest(unittest.TestCase):
     def _get_generate(self, offset):
         return generate.GenerateVariable(self.project, self.mod, offset)
 
-    def _get_generate_class(self, offset):
-        return generate.GenerateClass(self.project, self.mod, offset)
+    def _get_generate_class(self, offset, goal_mod=None):
+        return generate.GenerateClass(self.project, self.mod, offset, goal_resource=goal_mod)
 
     def _get_generate_module(self, offset):
         return generate.GenerateModule(self.project, self.mod, offset)
@@ -107,6 +107,16 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_class(code.index('C')).get_changes()
         self.project.do(changes)
         self.assertEquals('class C(object):\n    pass\n\n\nc = C()\n',
+                          self.mod.read())
+
+    def test_generating_classes_in_other_module(self):
+        code = 'c = C()\n'
+        self.mod.write(code)
+        changes = self._get_generate_class(code.index('C'), self.mod2).get_changes()
+        self.project.do(changes)
+        self.assertEquals('class C(object):\n    pass\n',
+                          self.mod2.read())
+        self.assertEquals('from mod2 import C\nc = C()\n',
                           self.mod.read())
 
     def test_generating_modules(self):

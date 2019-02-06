@@ -101,8 +101,9 @@ class ScopeNameFinder(object):
                                                      offset, lineno):
             name = self.worder.get_primary_at(offset).strip()
             return (None, holding_scope.parent[name])
-        # from statement module
-        if self.worder.is_from_statement_module(offset):
+        # module in a from statement or an imported name that is aliased
+        if (self.worder.is_from_statement_module(offset) or
+            self.worder.is_import_statement_aliased_module(offset)):
             module = self.worder.get_primary_at(offset)
             module_pyname = self._find_module(module)
             return (None, module_pyname)

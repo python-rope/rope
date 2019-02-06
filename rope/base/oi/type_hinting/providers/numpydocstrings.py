@@ -17,6 +17,8 @@ class NumPyDocstringParamParser(docstrings.IParamParser):
 
     def __call__(self, docstring, param_name):
         """Search `docstring` (in numpydoc format) for type(-s) of `param_name`."""
+        if not docstring:
+          return []
         params = NumpyDocString(docstring)._parsed_data['Parameters']
         for p_name, p_type, p_descr in params:
             if p_name == param_name:

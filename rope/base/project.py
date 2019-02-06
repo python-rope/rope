@@ -11,9 +11,9 @@ from rope.base.exceptions import ModuleNotFoundError
 from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
-    import pickle
-except ImportError:
     import cPickle as pickle
+except ImportError:
+    import pickle
 
 
 class _Project(object):

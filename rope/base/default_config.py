@@ -21,7 +21,7 @@ def set_prefs(prefs):
     # useful when you have scripts inside your project.  Only files
     # ending with ``.py`` are considered to be python files by
     # default.
-    #prefs['python_files'] = ['*.py']
+    # prefs['python_files'] = ['*.py']
 
     # Custom source folders:  By default rope searches the project
     # for finding source folders (folders that should be searched
@@ -31,10 +31,10 @@ def set_prefs(prefs):
     # The folders should be relative to project root and use '/' for
     # separating folders regardless of the platform rope is running on.
     # 'src/my_source_folder' for instance.
-    #prefs.add('source_folders', 'src')
+    # prefs.add('source_folders', 'src')
 
     # You can extend python path for looking up modules
-    #prefs.add('python_path', '~/python/')
+    # prefs.add('python_path', '~/python/')
 
     # Should rope save object information or not.
     prefs['save_objectdb'] = True
@@ -93,18 +93,20 @@ def set_prefs(prefs):
     # reinsert them at the top of the module when making changes.
     prefs['pull_imports_to_top'] = True
 
-    # If `True`, rope will sort imports alphabetically by module name instead of
-    # alphabetically by import statement, with from imports after normal
+    # If `True`, rope will sort imports alphabetically by module name instead
+    # of alphabetically by import statement, with from imports after normal
     # imports.
     prefs['sort_imports_alphabetically'] = False
 
-    # Location of implementation of rope.base.oi.type_hinting.interfaces.ITypeHintingFactory
-    # In general case, you don't have to change this value, unless you're an rope expert.
+    # Location of implementation of
+    # rope.base.oi.type_hinting.interfaces.ITypeHintingFactory In general
+    # case, you don't have to change this value, unless you're an rope expert.
     # Change this value to inject you own implementations of interfaces
     # listed in module rope.base.oi.type_hinting.providers.interfaces
-    # For example, you can add you own providers for Django Models, or disable the search
-    # type-hinting in a class hierarchy, etc.
-    prefs['type_hinting_factory'] = 'rope.base.oi.type_hinting.factory.default_type_hinting_factory'
+    # For example, you can add you own providers for Django Models, or disable
+    # the search type-hinting in a class hierarchy, etc.
+    prefs['type_hinting_factory'] = (
+        'rope.base.oi.type_hinting.factory.default_type_hinting_factory')
 
 
 def project_opened(project):
