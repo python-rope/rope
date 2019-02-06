@@ -165,6 +165,13 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def new_func():\n    pass\nnew_func()\n',
                           refactored)
 
+    @testutils.only_for('3.5')
+    def test_renaming_async_function(self):
+        code = 'async def a_func():\n    pass\na_func()'
+        refactored = self._local_rename(code, len(code) - 5, 'new_func')
+        self.assertEquals('async def new_func():\n    pass\nnew_func()',
+                          refactored)
+
     def test_renaming_functions_across_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
@@ -215,6 +222,16 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertTrue(not mod1.exists() and
                         self.project.find_module('newmod') is not None)
         self.assertEquals('from newmod import a_func\n', mod2.read())
+
+    def test_renaming_modules_aliased(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('def a_func():\n    pass\n')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod2.write('import mod1 as m\nm.a_func()\n')
+        self._rename(mod1, None, 'newmod')
+        self.assertTrue(not mod1.exists() and
+                        self.project.find_module('newmod') is not None)
+        self.assertEquals('import newmod as m\nm.a_func()\n', mod2.read())
 
     def test_renaming_packages(self):
         pkg = testutils.create_package(self.project, 'pkg')

@@ -502,6 +502,11 @@ class BuiltinModulesTest(unittest.TestCase):
         import rope.base.stdmods
         self.assertTrue('time' in rope.base.stdmods.standard_modules())
 
+    def test_timemodule_normalizes_to_time(self):
+        import rope.base.stdmods
+        self.assertEqual(
+            rope.base.stdmods.normalize_so_name('timemodule.so'), 'time')
+
 
 def suite():
     result = unittest.TestSuite()

@@ -354,6 +354,9 @@ class _ScopeVisitor(object):
             self.names[node.name] = pynames.DefinedName(pyfunction)
         self.defineds.append(pyfunction)
 
+    def _AsyncFunctionDef(self, node):
+        return self._FunctionDef(node)
+
     def _Assign(self, node):
         ast.walk(node, _AssignVisitor(self))
 

@@ -43,6 +43,10 @@ def normalize_so_name(name):
     """
     if "cpython" in name:
         return os.path.splitext(os.path.splitext(name)[0])[0]
+    # XXX: Special handling for Fedora python2 distribution
+    # See: https://github.com/python-rope/rope/issues/211
+    if name == "timemodule.so":
+        return "time"
     return os.path.splitext(name)[0]
 
 
