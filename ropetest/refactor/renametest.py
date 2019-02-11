@@ -129,7 +129,6 @@ class RenameRefactoringTest(unittest.TestCase):
             "a_var = 20\na_string=f'value: {a_var}'\n", 2, 'new_var')
         self.assertEquals("new_var = 20\na_string=f'value: {new_var}'\n",
                           refactored)
-        return f'{refactored}'
 
     @testutils.only_for('3.6')
     def test_renaming_occurrence_in_nested_f_string(self):
