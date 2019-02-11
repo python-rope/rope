@@ -1,3 +1,4 @@
+import io
 import sys
 
 try:
@@ -57,9 +58,9 @@ classifiers = [
 
 
 def get_long_description():
-    lines = open('README.rst', 'rb').read().splitlines(False)
-    end = lines.index(b'Getting Started')
-    return '\n' + str(b'\n'.join(lines[:end])) + '\n'
+    lines = io.open('README.rst', 'r', encoding='utf8').read().splitlines(False)
+    end = lines.index('Getting Started')
+    return '\n' + '\n'.join(lines[:end]) + '\n'
 
 setup(name='rope',
       version=rope.VERSION,
