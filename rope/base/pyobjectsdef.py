@@ -369,6 +369,9 @@ class _ScopeVisitor(object):
         for child in node.body + node.orelse:
             ast.walk(child, self)
 
+    def _AsyncFor(self, node):
+        return self._For(node)
+
     def _assigned(self, name, assignment):
         pyname = self.names.get(name, None)
         if pyname is None:
@@ -400,6 +403,9 @@ class _ScopeVisitor(object):
                                        item.context_expr, '.__enter__()')
         for child in node.body:
             ast.walk(child, self)
+
+    def _AsyncWith(self, node):
+        return self._With(node)
 
     def _excepthandler(self, node):
         node_name_type = str if pycompat.PY3 else ast.Name

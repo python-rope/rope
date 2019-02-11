@@ -172,6 +172,14 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('async def new_func():\n    pass\nnew_func()',
                           refactored)
 
+    @testutils.only_for('3.5')
+    def test_renaming_await(self):
+        code = 'async def b_func():\n    pass\nasync def a_func():\n    await b_func()'
+        refactored = self._local_rename(code, len(code) - 5, 'new_func')
+        self.assertEquals('async def new_func():\n    pass\nasync def a_func():\n    await new_func()',
+                          refactored)
+
+
     def test_renaming_functions_across_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
@@ -357,6 +365,29 @@ class RenameRefactoringTest(unittest.TestCase):
         code = 'for var in range(10):\n    print(var)\n'
         refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
         self.assertEquals('for new_var in range(10):\n    print(new_var)\n',
+                          refactored)
+
+    @testutils.only_for('3.5')
+    def test_renaming_async_for_loop_variable(self):
+        code = 'async def func():\n    async for var in range(10):\n        print(var)\n'
+        refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
+        self.assertEquals('async def func():\n    async for new_var in range(10):\n        print(new_var)\n',
+                          refactored)
+
+    @testutils.only_for('3.5')
+    def test_renaming_async_with_context_manager(self):
+        code = 'def a_cm(): pass\n'\
+               'async def a_func():\n    async with a_cm() as x: pass'
+        refactored = self._local_rename(code, code.find('a_cm') + 1, 'another_cm')
+        expected = 'def another_cm(): pass\n'\
+                   'async def a_func():\n    async with another_cm() as x: pass'
+        self.assertEquals(refactored, expected)
+
+    @testutils.only_for('3.5')
+    def test_renaming_async_with_as_variable(self):
+        code = 'async def func():\n    async with a_func() as var:\n        print(var)\n'
+        refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
+        self.assertEquals('async def func():\n    async with a_func() as new_var:\n        print(new_var)\n',
                           refactored)
 
     def test_renaming_parameters(self):
