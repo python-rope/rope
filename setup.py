@@ -1,4 +1,5 @@
 import io
+import os.path
 import sys
 
 try:
@@ -9,12 +10,6 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
-
-import rope
-
-import ropetest
-import ropetest.contrib
-import ropetest.refactor
 
 
 class RunTests(Command):
@@ -31,6 +26,7 @@ class RunTests(Command):
         pass
 
     def run(self):
+        import ropetest
         tests = unittest.TestSuite(ropetest.suite())
         runner = unittest.TextTestRunner(verbosity=2)
         results = runner.run(tests)
@@ -58,12 +54,25 @@ classifiers = [
 
 
 def get_long_description():
-    lines = io.open('README.rst', 'r', encoding='utf8').read().splitlines(False)
+    lines = io.open('README.rst', 'r',
+                    encoding='utf8').read().splitlines(False)
     end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
+
+def get_version():
+    version = None
+    with io.open(os.path.join(
+            os.path.dirname(__file__), 'rope', '__init__.py')) as inif:
+        for line in inif:
+            if line.startswith('VERSION'):
+                version = line.split('=')[1].strip(" \t'")
+                break
+    return version
+
+
 setup(name='rope',
-      version=rope.VERSION,
+      version=get_version(),
       description='a python refactoring library...',
       long_description=get_long_description(),
       author='Ali Gholami Rudi',
