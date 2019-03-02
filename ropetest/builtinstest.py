@@ -3,10 +3,9 @@ try:
 except ImportError:
     import unittest
 
-from rope.base import libutils
-from rope.base import pyobjects, builtins
+from rope.base import builtins, libutils, pyobjects
 from ropetest import testutils
-
+from rope.base.builtins import Dict
 
 class BuiltinTypesTest(unittest.TestCase):
 
@@ -84,6 +83,13 @@ class BuiltinTypesTest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
+
+    def test_dict_function_parent(self):
+        self.mod.write('d = {1: 2}\n'
+                       'a_var = d.keys()')
+        pymod = self.project.get_pymodule(self.mod)
+        a_var = pymod['d'].get_object()['keys'].get_object()
+        self.assertEquals(type(a_var.parent), Dict)
 
     def test_popping_dicts(self):
         self.mod.write('class C(object):\n    pass\n'

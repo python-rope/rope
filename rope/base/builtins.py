@@ -237,7 +237,8 @@ class _AttributeCollector(object):
         self.type = type
 
     def __call__(self, name, returned=None, function=None,
-                 argnames=['self'], check_existence=True):
+                 argnames=['self'], check_existence=True,
+                 parent=None):
         try:
             builtin = getattr(self.type, name)
         except AttributeError:
@@ -246,7 +247,8 @@ class _AttributeCollector(object):
             builtin = None
         self.attributes[name] = BuiltinName(
             BuiltinFunction(returned=returned, function=function,
-                            argnames=argnames, builtin=builtin))
+                            argnames=argnames, builtin=builtin,
+                            parent=parent))
 
     def __setitem__(self, name, value):
         self.attributes[name] = value
@@ -258,22 +260,22 @@ class List(BuiltinClass):
         self.holding = holding
         collector = _AttributeCollector(list)
 
-        collector('__iter__', function=self._iterator_get)
-        collector('__new__', function=self._new_list)
+        collector('__iter__', function=self._iterator_get, parent=self)
+        collector('__new__', function=self._new_list, parent=self)
 
         # Adding methods
         collector('append', function=self._list_add,
-                  argnames=['self', 'value'])
+                  argnames=['self', 'value'], parent=self)
         collector('__setitem__', function=self._list_add,
-                  argnames=['self', 'index', 'value'])
+                  argnames=['self', 'index', 'value'], parent=self)
         collector('insert', function=self._list_add,
-                  argnames=['self', 'index', 'value'])
+                  argnames=['self', 'index', 'value'], parent=self)
         collector('extend', function=self._self_set,
-                  argnames=['self', 'iterable'])
+                  argnames=['self', 'iterable'], parent=self)
 
         # Getting methods
-        collector('__getitem__', function=self._list_get)
-        collector('pop', function=self._list_get)
+        collector('__getitem__', function=self._list_get, parent=self)
+        collector('pop', function=self._list_get, parent=self)
         try:
             collector('__getslice__', function=self._list_get)
         except AttributeError:
@@ -325,18 +327,18 @@ class Dict(BuiltinClass):
         self.keys = keys
         self.values = values
         collector = _AttributeCollector(dict)
-        collector('__new__', function=self._new_dict)
-        collector('__setitem__', function=self._dict_add)
-        collector('popitem', function=self._item_get)
-        collector('pop', function=self._value_get)
-        collector('get', function=self._key_get)
-        collector('keys', function=self._key_list)
-        collector('values', function=self._value_list)
-        collector('items', function=self._item_list)
-        collector('copy', function=self._self_get)
-        collector('__getitem__', function=self._value_get)
-        collector('__iter__', function=self._key_iter)
-        collector('update', function=self._self_set)
+        collector('__new__', function=self._new_dict, parent=self)
+        collector('__setitem__', function=self._dict_add, parent=self)
+        collector('popitem', function=self._item_get, parent=self)
+        collector('pop', function=self._value_get, parent=self)
+        collector('get', function=self._key_get, parent=self)
+        collector('keys', function=self._key_list, parent=self)
+        collector('values', function=self._value_list, parent=self)
+        collector('items', function=self._item_list, parent=self)
+        collector('copy', function=self._self_get, parent=self)
+        collector('__getitem__', function=self._value_get, parent=self)
+        collector('__iter__', function=self._key_iter, parent=self)
+        collector('update', function=self._self_set, parent=self)
         super(Dict, self).__init__(dict, collector.attributes)
 
     def _new_dict(self, args):
@@ -450,15 +452,16 @@ class Set(BuiltinClass):
         self_methods = ['copy', 'difference', 'intersection',
                         'symmetric_difference', 'union']
         for method in self_methods:
-            collector(method, function=self._self_get)
-        collector('add', function=self._set_add)
-        collector('update', function=self._self_set)
-        collector('update', function=self._self_set)
-        collector('symmetric_difference_update', function=self._self_set)
-        collector('difference_update', function=self._self_set)
+            collector(method, function=self._self_get, parent=self)
+        collector('add', function=self._set_add, parent=self)
+        collector('update', function=self._self_set, parent=self)
+        collector('update', function=self._self_set, parent=self)
+        collector('symmetric_difference_update', function=self._self_set,
+                  parent=self)
+        collector('difference_update', function=self._self_set, parent=self)
 
-        collector('pop', function=self._set_get)
-        collector('__iter__', function=self._iterator_get)
+        collector('pop', function=self._set_get, parent=self)
+        collector('__iter__', function=self._iterator_get, parent=self)
         super(Set, self).__init__(set, collector.attributes)
 
     def _new_set(self, args):
@@ -508,7 +511,7 @@ class Str(BuiltinClass):
                         'strip', 'swapcase', 'title', 'translate', 'upper',
                         'zfill']
         for method in self_methods:
-            collector(method, self_object)
+            collector(method, self_object, parent=self)
 
         py2_self_methods = ["__getslice__", "decode"]
         for method in py2_self_methods:
@@ -518,7 +521,7 @@ class Str(BuiltinClass):
                 pass
 
         for method in ['rsplit', 'split', 'splitlines']:
-            collector(method, get_list(self_object))
+            collector(method, get_list(self_object), parent=self)
 
         super(Str, self).__init__(str, collector.attributes)
 
