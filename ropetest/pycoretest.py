@@ -1,4 +1,7 @@
 import sys
+
+from rope.base.builtins import File
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -550,6 +553,12 @@ class PyCoreTest(unittest.TestCase):
             code = 'from __future__ import with_statement\n' + code
         pymod = libutils.get_string_module(self.project, code)
         pymod.get_attributes()
+
+    def test_with_statement(self):
+        code = 'with open("file") as f:    pass\n'
+        pymod = libutils.get_string_module(self.project, code)
+        assigned = pymod.get_attributes()['f']
+        self.assertEqual(File, type(assigned.get_object().type))
 
     def test_check_for_else_block(self):
         code = 'for i in range(10):\n' \
