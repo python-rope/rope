@@ -168,7 +168,7 @@ def _follow_levels(assignment, pyobject):
 
 @_ignore_inferred
 def _follow_pyname(assignment, pymodule, lineno=None):
-    assign_node = assignment.ast_node
+    assign_node = assignment.type_hint or assignment.ast_node
     if lineno is None:
         lineno = _get_lineno_for_node(assign_node)
     holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)

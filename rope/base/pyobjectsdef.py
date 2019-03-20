@@ -278,6 +278,49 @@ class PyPackage(pyobjects.PyPackage):
         return self
 
 
+class _AnnAssignVisitor(object):
+
+    def __init__(self, scope_visitor):
+        self.scope_visitor = scope_visitor
+        self.assigned_ast = None
+        self.type_hint = None
+
+    def _AnnAssign(self, node):
+        self.assigned_ast = node.value
+        self.type_hint = node.annotation
+
+        ast.walk(node.target, self)
+
+    def _assigned(self, name, assignment=None):
+        self.scope_visitor._assigned(name, assignment)
+
+    def _Name(self, node):
+        assignment = pynames.AssignmentValue(self.assigned_ast,
+                                             assign_type=True,
+                                             type_hint=self.type_hint)
+        self._assigned(node.id, assignment)
+
+    def _Tuple(self, node):
+        names = astutils.get_name_levels(node)
+        for name, levels in names:
+            assignment = None
+            if self.assigned_ast is not None:
+                assignment = pynames.AssignmentValue(self.assigned_ast, levels)
+            self._assigned(name, assignment)
+
+    def _Annotation(self, node):
+        pass
+
+    def _Attribute(self, node):
+        pass
+
+    def _Subscript(self, node):
+        pass
+
+    def _Slice(self, node):
+        pass
+
+
 class _AssignVisitor(object):
 
     def __init__(self, scope_visitor):
@@ -360,6 +403,9 @@ class _ScopeVisitor(object):
     def _Assign(self, node):
         ast.walk(node, _AssignVisitor(self))
 
+    def _AnnAssign(self, node):
+        ast.walk(node, _AnnAssignVisitor(self))
+
     def _AugAssign(self, node):
         pass
 
@@ -382,7 +428,7 @@ class _ScopeVisitor(object):
             self.names[name] = pyname
 
     def _update_evaluated(self, targets, assigned,
-                          evaluation='', eval_type=False):
+                          evaluation='', eval_type=False, type_hint=None):
         result = {}
         if isinstance(targets, str):
             assignment = pynames.AssignmentValue(assigned, [],
