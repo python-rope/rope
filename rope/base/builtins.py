@@ -1,5 +1,7 @@
 """This module trys to support builtin types and functions."""
 import inspect
+import io
+
 try:
     raw_input
 except NameError:
@@ -587,17 +589,21 @@ get_generator = _create_builtin_getter(Generator)
 
 class File(BuiltinClass):
 
-    def __init__(self):
+    def __init__(self, filename=None, mode='r', *args):
+        self.filename = filename
+        self.mode = mode
+        self.args = args
         str_object = get_str()
         str_list = get_list(get_str())
         attributes = {}
 
         def add(name, returned=None, function=None):
-            builtin = getattr(open, name, None)
+            builtin = getattr(io.TextIOBase, name, None)
             attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=builtin))
         add('__iter__', get_iterator(str_object))
+        add('__enter__', returned=self)
         for method in ['next', 'read', 'readline', 'readlines']:
             add(method, str_list)
         for method in ['close', 'flush', 'lineno', 'isatty', 'seek', 'tell',
@@ -720,6 +726,10 @@ def _create_builtin(args, creator):
         return creator()
 
 
+def _open_function(args):
+    return _create_builtin(args, get_file)
+
+
 def _range_function(args):
     return get_list()
 
@@ -789,7 +799,8 @@ _initial_builtins = {
     'set': BuiltinName(get_set_type()),
     'str': BuiltinName(get_str_type()),
     'file': BuiltinName(get_file_type()),
-    'open': BuiltinName(get_file_type()),
+    'open': BuiltinName(BuiltinFunction(function=_open_function,
+                        builtin=open)),
     'unicode': BuiltinName(get_str_type()),
     'range': BuiltinName(BuiltinFunction(function=_range_function,
                          builtin=range)),
