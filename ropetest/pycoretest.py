@@ -558,7 +558,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'with open("file") as f:    pass\n'
         pymod = libutils.get_string_module(self.project, code)
         assigned = pymod.get_attributes()['f']
-        self.assertEqual(File, type(assigned.get_object().type))
+        self.assertEqual(File, type(assigned.get_object()))
 
     def test_check_for_else_block(self):
         code = 'for i in range(10):\n' \
