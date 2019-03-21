@@ -11,7 +11,7 @@
 Overview
 ========
 
-`ropee`_ is a customized branch I maintain that is based of the python
+`ropee`_ is a customized branch I maintain that is based off the python
 refactoring library, `rope`_. All related documentation can be found in its
 repository.
 
