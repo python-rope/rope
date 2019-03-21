@@ -22,3 +22,8 @@ Artifacts are also uploaded to `pypi`_ for those who want bleeding edge.
 
 Note that I'm piggy backing off of the latest version that is provided by rope,
 but they do not correspond to each other in any way.
+
+Getting Started
+===============
+
+Please follow: https://github.com/python-rope/rope#getting-started
