@@ -646,7 +646,7 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod['a_var'].get_object()
         self.assertEquals(Str, type(a_var.get_type()))
 
-    @testutils.only_for_versions_higher('3.4')
+    @testutils.only_for_versions_higher('3.6')
     def test_soi_on_typed_assignment(self):
         code = 'a_var: str'
         self.mod.write(code)

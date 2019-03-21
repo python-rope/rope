@@ -80,7 +80,7 @@ class PyCoreTest(unittest.TestCase):
         var = mod_element['var']
         self.assertEqual(AssignedName, type(var))
 
-    @testutils.only_for_versions_higher('3.4')
+    @testutils.only_for_versions_higher('3.6')
     def test_global_variable_with_type_annotation(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('py3_var: str = foo_bar')
