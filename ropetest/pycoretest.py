@@ -73,13 +73,18 @@ class PyCoreTest(unittest.TestCase):
         method = sample_class['sample_method'].get_object()
         self.assertEquals(get_base_type('Function'), method.get_type())
 
-    def test_global_variables(self):
+    def test_global_variable_without_type_annotation(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('var = 10\n' \
-                  'py3_var: str = foo_bar')
+        mod.write('var = 10')
         mod_element = self.project.get_module('mod')
         var = mod_element['var']
         self.assertEqual(AssignedName, type(var))
+
+    @testutils.only_for_versions_higher('3.4')
+    def test_global_variable_with_type_annotation(self):
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('py3_var: str = foo_bar')
+        mod_element = self.project.get_module('mod')
         py3_var = mod_element['py3_var']
         self.assertEqual(AssignedName, type(py3_var))
 
