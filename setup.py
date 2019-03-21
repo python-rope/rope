@@ -40,7 +40,7 @@ classifiers = [
     'Environment :: Win32 (MS Windows)',
     'Environment :: MacOS X',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: GNU General Public License (GPL)',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
     'Natural Language :: English',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2',
