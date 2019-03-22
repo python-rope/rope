@@ -49,7 +49,7 @@ googlegroups.com`_.
 License
 =======
 
-This program is under the terms of GPL v2 (GNU General Public License).
+This program is under the terms of LGPL v3+ (GNU Lesser General Public License).
 Have a look at `COPYING`_ for more information.
 
 

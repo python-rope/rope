@@ -66,7 +66,7 @@ def get_version():
             os.path.dirname(__file__), 'rope', '__init__.py')) as inif:
         for line in inif:
             if line.startswith('VERSION'):
-                version = line.split('=')[1].strip(" \t'")
+                version = line.split('=')[1].strip(" \t'\n")
                 break
     return version
 
