@@ -1,6 +1,6 @@
 import sys
 
-from rope.base.builtins import File
+from rope.base.builtins import File, BuiltinClass
 
 try:
     import unittest2 as unittest
@@ -565,10 +565,15 @@ class PyCoreTest(unittest.TestCase):
         pymod.get_attributes()
 
     def test_with_statement(self):
-        code = 'with open("file") as f:    pass\n'
+        code = 'a = 10\n' \
+               'with open("file") as f:    pass\n'
         pymod = libutils.get_string_module(self.project, code)
-        assigned = pymod.get_attributes()['f']
-        self.assertEqual(File, type(assigned.get_object()))
+
+        assigned = pymod.get_attribute('a')
+        self.assertEqual(BuiltinClass, type(assigned.get_object().get_type()))
+
+        assigned = pymod.get_attribute('f')
+        self.assertEqual(File, type(assigned.get_object().get_type()))
 
     def test_check_for_else_block(self):
         code = 'for i in range(10):\n' \
