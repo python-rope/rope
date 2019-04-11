@@ -35,6 +35,7 @@ calling the `create_finder()` function.
     arguments
 """
 
+import ast
 import re
 
 from rope.base import codeanalyze
@@ -300,6 +301,8 @@ class _TextualFinder(object):
         self.comment_pattern = _TextualFinder.any('comment', [r'#[^\n]*'])
         self.string_pattern = _TextualFinder.any(
             'string', [codeanalyze.get_string_pattern()])
+        self.f_string_pattern = _TextualFinder.any(
+            'fstring', [codeanalyze.get_formatted_string_pattern()])
         self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source):
@@ -314,9 +317,18 @@ class _TextualFinder(object):
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
-            for key, value in match.groupdict().items():
-                if value and key == 'occurrence':
-                    yield match.start(key)
+            if match.groupdict()['occurrence']:
+                yield match.start('occurrence')
+            elif utils.pycompat.PY36 and match.groupdict()['fstring']:
+                f_string = match.groupdict()['fstring']
+                for occurrence_node in self._search_in_f_string(f_string):
+                    yield match.start('fstring') + occurrence_node.col_offset
+
+    def _search_in_f_string(self, f_string):
+        tree = ast.parse(f_string)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and node.id == self.name:
+                yield node
 
     def _normal_search(self, source):
         current = 0
@@ -352,7 +364,8 @@ class _TextualFinder(object):
         occurrence_pattern = _TextualFinder.any('occurrence',
                                                 ['\\b' + name + '\\b'])
         pattern = re.compile(occurrence_pattern + '|' + self.comment_pattern +
-                             '|' + self.string_pattern)
+                             '|' + self.string_pattern + '|' +
+                             self.f_string_pattern)
         return pattern
 
     @staticmethod

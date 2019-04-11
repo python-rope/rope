@@ -6,6 +6,7 @@ PY2 = sys.version_info[0] == 2
 PY27 = sys.version_info[0:2] >= (2, 7)
 PY3 = sys.version_info[0] == 3
 PY34 = sys.version_info[0:2] >= (3, 4)
+PY36 = sys.version_info[0:2] >= (3, 6)
 
 try:
     str = unicode
