@@ -17,11 +17,17 @@ class ParamProvider(interfaces.IParamProvider):
         :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
         superfunc = pyfunc
-        while superfunc:
+        visited = []
+        while superfunc not in visited:
             result = self._delegate(superfunc, param_name)
             if result:
                 return result
             superfunc = utils.get_super_func(superfunc)
+
+            if not superfunc:
+                break
+
+            visited.add(superfunc)
 
 
 class ReturnProvider(interfaces.IReturnProvider):
