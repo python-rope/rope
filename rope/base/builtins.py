@@ -603,7 +603,7 @@ class File(BuiltinClass):
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=builtin))
         add('__iter__', get_iterator(str_object))
-        add('__enter__', returned=self)
+        add('__enter__', returned=pyobjects.PyObject(self))
         for method in ['next', 'read', 'readline', 'readlines']:
             add(method, str_list)
         for method in ['close', 'flush', 'lineno', 'isatty', 'seek', 'tell',
