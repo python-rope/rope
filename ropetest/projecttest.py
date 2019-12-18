@@ -389,7 +389,7 @@ class ProjectTest(unittest.TestCase):
     def test_file_encoding_reading(self):
         sample_file = self.project.root.create_file('my_file.txt')
         contents = (b'# -*- coding: utf-8 -*-\n' +
-                    b'#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
+                    br'#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
         file = open(sample_file.real_path, 'wb')
         file.write(contents.encode('utf-8'))
         file.close()
@@ -398,13 +398,13 @@ class ProjectTest(unittest.TestCase):
     def test_file_encoding_writing(self):
         sample_file = self.project.root.create_file('my_file.txt')
         contents = (b'# -*- coding: utf-8 -*-\n' +
-                    b'\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
+                    br'\N{LATIN SMALL LETTER I WITH DIAERESIS}\n').decode('utf8')
         sample_file.write(contents)
         self.assertEqual(contents, sample_file.read())
 
     def test_using_utf8_when_writing_in_case_of_errors(self):
         sample_file = self.project.root.create_file('my_file.txt')
-        contents = b'\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'.decode('utf8')
+        contents = br'\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'.decode('utf8')
         sample_file.write(contents)
         self.assertEqual(contents, sample_file.read())
 
