@@ -30,7 +30,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_get_items(self):
         self.mod.write('class C(object):'
@@ -39,14 +39,14 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_get_items_for_lists(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\na_var = l[0]\n')
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_get_items_from_slices(self):
         self.mod.write('class C(object):\n    pass'
@@ -54,7 +54,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_simple_for_loops(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\n'
@@ -62,14 +62,14 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_definition_location_for_loop_variables(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\n'
                        'for c in l:\n    pass\n')
         pymod = self.project.get_pymodule(self.mod)
         c_var = pymod['c']
-        self.assertEquals((pymod, 4), c_var.get_definition_location())
+        self.assertEqual((pymod, 4), c_var.get_definition_location())
 
     def test_simple_case_for_dicts(self):
         self.mod.write('d = {}\n')
@@ -82,14 +82,14 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_dict_function_parent(self):
         self.mod.write('d = {1: 2}\n'
                        'a_var = d.keys()')
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod['d'].get_object()['keys'].get_object()
-        self.assertEquals(type(a_var.parent), Dict)
+        self.assertEqual(type(a_var.parent), Dict)
 
     def test_popping_dicts(self):
         self.mod.write('class C(object):\n    pass\n'
@@ -97,7 +97,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_getting_keys_from_dicts(self):
         self.mod.write('class C1(object):\n    pass\n'
@@ -106,7 +106,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_getting_values_from_dicts(self):
         self.mod.write('class C1(object):\n    pass\n'
@@ -116,7 +116,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C2'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_getting_iterkeys_from_dicts(self):
         self.mod.write('class C1(object):\n    pass'
@@ -125,7 +125,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_getting_itervalues_from_dicts(self):
         self.mod.write('class C1(object):\n    pass'
@@ -135,7 +135,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C2'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_using_copy_for_dicts(self):
         self.mod.write('class C1(object):\n    pass'
@@ -144,7 +144,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_tuple_assignments_for_items(self):
         self.mod.write('class C1(object):\n    pass'
@@ -155,8 +155,8 @@ class BuiltinTypesTest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         key = pymod['key'].get_object()
         value = pymod['value'].get_object()
-        self.assertEquals(c1_class, key.get_type())
-        self.assertEquals(c2_class, value.get_type())
+        self.assertEqual(c1_class, key.get_type())
+        self.assertEqual(c2_class, value.get_type())
 
     def test_tuple_assignment_for_lists(self):
         self.mod.write('class C(object):\n    pass\n'
@@ -165,8 +165,8 @@ class BuiltinTypesTest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
-        self.assertEquals(c_class, b_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
+        self.assertEqual(c_class, b_var.get_type())
 
     def test_tuple_assignments_for_iteritems_in_fors(self):
         self.mod.write('class C1(object):\n    pass\n'
@@ -178,8 +178,8 @@ class BuiltinTypesTest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_simple_tuple_assignments(self):
         self.mod.write('class C1(object):'
@@ -190,15 +190,15 @@ class BuiltinTypesTest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_overriding_builtin_names(self):
         self.mod.write('class C(object):\n    pass\nlist = C\n')
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         list_var = pymod['list'].get_object()
-        self.assertEquals(c_class, list_var)
+        self.assertEqual(c_class, list_var)
 
     def test_simple_builtin_scope_test(self):
         self.mod.write('l = list()\n')
@@ -216,7 +216,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_making_tuples_using_the_passed_argument_to_init(self):
         self.mod.write('class C(object):\n    pass\nl1 = [C()]\n'
@@ -224,7 +224,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_making_sets_using_the_passed_argument_to_init(self):
         self.mod.write('class C(object):\n    pass\nl1 = [C()]\n'
@@ -232,7 +232,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_making_dicts_using_the_passed_argument_to_init(self):
         self.mod.write('class C1(object):\n    pass\n'
@@ -244,8 +244,8 @@ class BuiltinTypesTest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_range_builtin_function(self):
         self.mod.write('l = range(1)\n')
@@ -259,7 +259,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_sorted_builtin_function(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\n'
@@ -267,7 +267,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_super_builtin_function(self):
         self.mod.write(
@@ -279,7 +279,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_file_builtin_type(self):
         self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
@@ -297,7 +297,7 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('l = lambda: 1\n')
         pymod = self.project.get_pymodule(self.mod)
         l_var = pymod['l'].get_object()
-        self.assertEquals(pyobjects.get_base_type('Function'),
+        self.assertEqual(pyobjects.get_base_type('Function'),
                           l_var.get_type())
 
     def test_lambda_function_definition(self):
@@ -305,8 +305,8 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         l_var = pymod['l'].get_object()
         self.assertTrue(l_var.get_name() is not None)
-        self.assertEquals(len(l_var.get_param_names()), 4)
-        self.assertEquals((pymod, 1),
+        self.assertEqual(len(l_var.get_param_names()), 4)
+        self.assertEqual((pymod, 1),
                           pymod['l'].get_definition_location())
 
     def test_lambdas_that_return_unknown(self):
@@ -325,8 +325,8 @@ class BuiltinTypesTest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_builtin_zip_function_with_more_than_two_args(self):
         self.mod.write(
@@ -339,9 +339,9 @@ class BuiltinTypesTest(unittest.TestCase):
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
         c_var = pymod['c'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
-        self.assertEquals(c1_class, c_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, c_var.get_type())
 
     def test_wrong_arguments_to_zip_function(self):
         self.mod.write(
@@ -351,7 +351,7 @@ class BuiltinTypesTest(unittest.TestCase):
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()  # noqa
-        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
 
     def test_enumerate_builtin_function(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\n'
@@ -359,12 +359,12 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_builtin_class_get_name(self):
-        self.assertEquals('object',
+        self.assertEqual('object',
                           builtins.builtins['object'].get_object().get_name())
-        self.assertEquals(
+        self.assertEqual(
             'property', builtins.builtins['property'].get_object().get_name())
 
     def test_star_args_and_double_star_args(self):
@@ -394,60 +394,60 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_simple_int_type(self):
         self.mod.write('l = 1\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['int'].get_object(),
+        self.assertEqual(builtins.builtins['int'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_simple_float_type(self):
         self.mod.write('l = 1.0\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['float'].get_object(),
+        self.assertEqual(builtins.builtins['float'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_simple_float_type2(self):
         self.mod.write('l = 1e1\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['float'].get_object(),
+        self.assertEqual(builtins.builtins['float'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_simple_complex_type(self):
         self.mod.write('l = 1.0j\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['complex'].get_object(),
+        self.assertEqual(builtins.builtins['complex'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_handling_unaryop_on_ints(self):
         self.mod.write('l = -(1)\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['int'].get_object(),
+        self.assertEqual(builtins.builtins['int'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_handling_binop_on_ints(self):
         self.mod.write('l = 1 + 1\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['int'].get_object(),
+        self.assertEqual(builtins.builtins['int'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_handling_compares(self):
         self.mod.write('l = 1 == 1\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['bool'].get_object(),
+        self.assertEqual(builtins.builtins['bool'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_handling_boolops(self):
         self.mod.write('l = 1 and 2\n')
         pymod = self.project.get_pymodule(self.mod)
-        self.assertEquals(builtins.builtins['int'].get_object(),
+        self.assertEqual(builtins.builtins['int'].get_object(),
                           pymod['l'].get_object().get_type())
 
     def test_binary_or_left_value_unknown(self):
         code = 'var = (asdsd or 3)\n'
         pymod = libutils.get_string_module(self.project, code)
-        self.assertEquals(builtins.builtins['int'].get_object(),
+        self.assertEqual(builtins.builtins['int'].get_object(),
                           pymod['var'].get_object().get_type())
 
     def test_unknown_return_object(self):

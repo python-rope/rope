@@ -48,7 +48,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
+        self.assertEqual('run', self.get_output_file_content(file_path))
 
     def test_passing_arguments(self):
         file_path = 'sample.py'
@@ -82,7 +82,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.kill_process()
-        self.assertEquals('', self.get_output_file_content(file_path))
+        self.assertEqual('', self.get_output_file_content(file_path))
 
     def test_running_nested_files(self):
         self.project.root.create_folder('src')
@@ -91,7 +91,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
+        self.assertEqual('run', self.get_output_file_content(file_path))
 
     def test_setting_process_input(self):
         file_path = 'sample.py'
@@ -109,7 +109,7 @@ class PythonFileRunnerTest(unittest.TestCase):
             runner = self.pycore.run_module(file_resource, stdin=stdin)
             runner.wait_process()
             stdin.close()
-            self.assertEquals('input text\n',
+            self.assertEqual('input text\n',
                               self.get_output_file_content(file_path))
         finally:
             os.remove(temp_file_name)
@@ -128,7 +128,7 @@ class PythonFileRunnerTest(unittest.TestCase):
             runner.wait_process()
             stdout.close()
             temp_file = open(temp_file_name, 'r')
-            self.assertEquals('output text\n', temp_file.read())
+            self.assertEqual('output text\n', temp_file.read())
             temp_file.close()
         finally:
             os.remove(temp_file_name)
@@ -146,7 +146,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
+        self.assertEqual('run', self.get_output_file_content(file_path))
 
     def test_making_runner_when_doi_is_disabled(self):
         self.project.set('enable_doi', False)
@@ -155,7 +155,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
+        self.assertEqual('run', self.get_output_file_content(file_path))
 
 
 def suite():
