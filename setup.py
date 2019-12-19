@@ -1,36 +1,10 @@
 import io
 import os.path
-import sys
 
 try:
-    from setuptools import Command, setup
+    from setuptools import setup
 except ImportError:
-    from distutils.core import Command, setup
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
-
-class RunTests(Command):
-    """New setup.py command to run all tests for the package.
-    """
-    description = "run all tests for the package"
-
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        import ropetest
-        tests = unittest.TestSuite(ropetest.suite())
-        runner = unittest.TextTestRunner(verbosity=2)
-        results = runner.run(tests)
-        sys.exit(0 if results.wasSuccessful() else 1)
+    from distutils.core import setup
 
 
 classifiers = [
@@ -91,6 +65,8 @@ setup(name='rope',
                 'rope.refactor.importutils'],
       license='GNU GPL',
       classifiers=classifiers,
-      cmdclass={
-          'test': RunTests,
+      extras_require={
+          'dev': [
+              'pytest'
+          ]
       })
