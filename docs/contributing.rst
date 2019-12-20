@@ -89,6 +89,27 @@ Programming Style
 * Include good unit-tests when appropriate.
 * Rope test suite should pass after patching
 
+Testing
+-------
+
+Rope uses `pytest`_ as a test runner per default (although the 
+tests are strictly unittest-based), so running::
+
+    pytest -v
+
+or::
+
+    python3 -munittest -v discover
+
+runs all tests. Make sure to have complete test suite passing and 
+add new tests for the changes you are providing with each new 
+submission.
+
+All required packages for development could be installed with::
+
+    pip install -e .[dev]
+
+
 Sending Patches
 ---------------
 
@@ -99,3 +120,4 @@ Follow the instructions on GitHub_ on how to setup Git and fork the
 .. _GitHub: http://github.com/
 .. _`python-rope/rope`: https://github.com/python-rope/rope
 .. _`pull request`: https://help.github.com/articles/using-pull-requests
+.. _`pytest`: https://pytest.org/
