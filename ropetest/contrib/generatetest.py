@@ -41,28 +41,28 @@ class GenerateTest(unittest.TestCase):
         code = 'a_var = name\n'
         self.mod.write(code)
         generator = self._get_generate(code.index('name'))
-        self.assertEquals((self.mod, 1), generator.get_location())
+        self.assertEqual((self.mod, 1), generator.get_location())
 
     def test_generating_variable(self):
         code = 'a_var = name\n'
         self.mod.write(code)
         changes = self._get_generate(code.index('name')).get_changes()
         self.project.do(changes)
-        self.assertEquals('name = None\n\n\na_var = name\n', self.mod.read())
+        self.assertEqual('name = None\n\n\na_var = name\n', self.mod.read())
 
     def test_generating_variable_inserting_before_statement(self):
         code = 'c = 1\nc = b\n'
         self.mod.write(code)
         changes = self._get_generate(code.index('b')).get_changes()
         self.project.do(changes)
-        self.assertEquals('c = 1\nb = None\n\n\nc = b\n', self.mod.read())
+        self.assertEqual('c = 1\nb = None\n\n\nc = b\n', self.mod.read())
 
     def test_generating_variable_in_local_scopes(self):
         code = 'def f():\n    c = 1\n    c = b\n'
         self.mod.write(code)
         changes = self._get_generate(code.index('b')).get_changes()
         self.project.do(changes)
-        self.assertEquals('def f():\n    c = 1\n    b = None\n    c = b\n',
+        self.assertEqual('def f():\n    c = 1\n    b = None\n    c = b\n',
                           self.mod.read())
 
     def test_generating_variable_in_other_modules(self):
@@ -70,8 +70,8 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         generator = self._get_generate(code.index('b'))
         self.project.do(generator.get_changes())
-        self.assertEquals((self.mod2, 1), generator.get_location())
-        self.assertEquals('b = None\n', self.mod2.read())
+        self.assertEqual((self.mod2, 1), generator.get_location())
+        self.assertEqual('b = None\n', self.mod2.read())
 
     def test_generating_variable_in_classes(self):
         code = 'class C(object):\n    def f(self):\n        pass\n' \
@@ -79,7 +79,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate(code.index('attr')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n    def f(self):\n        '
             'pass\n\n    attr = None\n'
             'c = C()\na_var = c.attr', self.mod.read())
@@ -89,7 +89,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate(code.index('attr')).get_changes()
         self.project.do(changes)
-        self.assertEquals('class C(object):\n\n    attr = None\n'
+        self.assertEqual('class C(object):\n\n    attr = None\n'
                           'c = C()\na_var = c.attr', self.mod.read())
 
     def test_generating_variable_in_packages(self):
@@ -98,15 +98,15 @@ class GenerateTest(unittest.TestCase):
         generator = self._get_generate(code.rindex('a'))
         self.project.do(generator.get_changes())
         init = self.pkg.get_child('__init__.py')
-        self.assertEquals((init, 1), generator.get_location())
-        self.assertEquals('a = None\n', init.read())
+        self.assertEqual((init, 1), generator.get_location())
+        self.assertEqual('a = None\n', init.read())
 
     def test_generating_classes(self):
         code = 'c = C()\n'
         self.mod.write(code)
         changes = self._get_generate_class(code.index('C')).get_changes()
         self.project.do(changes)
-        self.assertEquals('class C(object):\n    pass\n\n\nc = C()\n',
+        self.assertEqual('class C(object):\n    pass\n\n\nc = C()\n',
                           self.mod.read())
 
     def test_generating_classes_in_other_module(self):
@@ -114,9 +114,9 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate_class(code.index('C'), self.mod2).get_changes()
         self.project.do(changes)
-        self.assertEquals('class C(object):\n    pass\n',
+        self.assertEqual('class C(object):\n    pass\n',
                           self.mod2.read())
-        self.assertEquals('from mod2 import C\nc = C()\n',
+        self.assertEqual('from mod2 import C\nc = C()\n',
                           self.mod.read())
 
     def test_generating_modules(self):
@@ -125,8 +125,8 @@ class GenerateTest(unittest.TestCase):
         generator = self._get_generate_module(code.rindex('mod'))
         self.project.do(generator.get_changes())
         mod = self.pkg.get_child('mod.py')
-        self.assertEquals((mod, 1), generator.get_location())
-        self.assertEquals('import pkg.mod\npkg.mod\n', self.mod.read())
+        self.assertEqual((mod, 1), generator.get_location())
+        self.assertEqual('import pkg.mod\npkg.mod\n', self.mod.read())
 
     def test_generating_packages(self):
         code = 'import pkg\npkg.pkg2\n'
@@ -135,8 +135,8 @@ class GenerateTest(unittest.TestCase):
         self.project.do(generator.get_changes())
         pkg2 = self.pkg.get_child('pkg2')
         init = pkg2.get_child('__init__.py')
-        self.assertEquals((init, 1), generator.get_location())
-        self.assertEquals('import pkg.pkg2\npkg.pkg2\n', self.mod.read())
+        self.assertEqual((init, 1), generator.get_location())
+        self.assertEqual('import pkg.pkg2\npkg.pkg2\n', self.mod.read())
 
     def test_generating_function(self):
         code = 'a_func()\n'
@@ -144,7 +144,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals('def a_func():\n    pass\n\n\na_func()\n',
+        self.assertEqual('def a_func():\n    pass\n\n\na_func()\n',
                           self.mod.read())
 
     def test_generating_modules_with_empty_primary(self):
@@ -153,8 +153,8 @@ class GenerateTest(unittest.TestCase):
         generator = self._get_generate_module(code.rindex('mod'))
         self.project.do(generator.get_changes())
         mod = self.project.root.get_child('mod.py')
-        self.assertEquals((mod, 1), generator.get_location())
-        self.assertEquals('import mod\nmod\n', self.mod.read())
+        self.assertEqual((mod, 1), generator.get_location())
+        self.assertEqual('import mod\nmod\n', self.mod.read())
 
     def test_generating_variable_already_exists(self):
         code = 'b = 1\nc = b\n'
@@ -181,7 +181,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n\n    @staticmethod'
             '\n    def a_func():\n        pass\nC.a_func()\n',
             self.mod.read())
@@ -192,7 +192,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n\n    def a_func(self):\n        pass\n'
             'c = C()\nc.a_func()\n',
             self.mod.read())
@@ -202,7 +202,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate_function(code.rindex('C')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n\n    def __init__(self):\n        pass\n'
             'c = C()\n',
             self.mod.read())
@@ -212,7 +212,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate_function(code.rindex('c')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n\n    def __call__(self):\n        pass\n'
             'c = C()\nc()\n',
             self.mod.read())
@@ -223,7 +223,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate_function(code.rindex('c')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'class C(object):\n\n    def __call__(self):\n        pass\n',
             self.mod2.read())
 
@@ -233,7 +233,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals('def a_func(arg0):\n    pass\n\n\na_func(1)\n',
+        self.assertEqual('def a_func(arg0):\n    pass\n\n\na_func(1)\n',
                           self.mod.read())
 
     def test_generating_function_handling_keyword_xarguments(self):
@@ -242,7 +242,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals('def a_func(p):\n    pass\n\n\na_func(p=1)\n',
+        self.assertEqual('def a_func(p):\n    pass\n\n\na_func(p=1)\n',
                           self.mod.read())
 
     def test_generating_function_handling_arguments_better_naming(self):
@@ -251,7 +251,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals('a_var = 1\ndef a_func(a_var):'
+        self.assertEqual('a_var = 1\ndef a_func(a_var):'
                           '\n    pass\n\n\na_func(a_var)\n',
                           self.mod.read())
 
@@ -261,8 +261,8 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         generator = self._get_generate(code.index('b'))
         self.project.do(generator.get_changes())
-        self.assertEquals((self.mod2, 5), generator.get_location())
-        self.assertEquals('\n\n\nprint(1)\n\n\nb = None\n', self.mod2.read())
+        self.assertEqual((self.mod2, 5), generator.get_location())
+        self.assertEqual('\n\n\nprint(1)\n\n\nb = None\n', self.mod2.read())
 
     def test_generating_function_in_a_suite(self):
         code = 'if True:\n    a_func()\n'
@@ -270,7 +270,7 @@ class GenerateTest(unittest.TestCase):
         changes = self._get_generate_function(
             code.index('a_func')).get_changes()
         self.project.do(changes)
-        self.assertEquals('def a_func():\n    pass'
+        self.assertEqual('def a_func():\n    pass'
                           '\n\n\nif True:\n    a_func()\n',
                           self.mod.read())
 
@@ -279,7 +279,7 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         changes = self._get_generate_function(code.index('g()')).get_changes()
         self.project.do(changes)
-        self.assertEquals(
+        self.assertEqual(
             'def f():\n    a = 1\n    def g():\n        pass\n'
             '    if 1:\n        g()\n',
             self.mod.read())

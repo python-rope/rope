@@ -340,7 +340,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', 'Num', '', ',',
                 ' *', 'Starred', '', ')'])
- 
+
     @testutils.only_for_versions_lower('3.5')
     def test_call_func_and_only_dstar_args(self):
         source = 'f(**kwds)\n'
@@ -1048,7 +1048,7 @@ class _ResultChecker(object):
         node = self._find_node(text)
         if node is None:
             self.test_case.fail('Node <%s> cannot be found' % text)
-        self.test_case.assertEquals((start, end), node.region)
+        self.test_case.assertEqual((start, end), node.region)
 
     def _find_node(self, text):
         goal = text
@@ -1076,17 +1076,17 @@ class _ResultChecker(object):
         if node is None:
             self.test_case.fail('Node <%s> cannot be found' % text)
         result = list(node.sorted_children)
-        self.test_case.assertEquals(len(children), len(result))
+        self.test_case.assertEqual(len(children), len(result))
         for expected, child in zip(children, result):
             goals = expected
             if not isinstance(expected, (tuple, list)):
                 goals = [expected]
             for goal in goals:
                 if goal == '' or isinstance(child, basestring):
-                    self.test_case.assertEquals(goal, child)
+                    self.test_case.assertEqual(goal, child)
                     break
             else:
-                self.test_case.assertNotEquals(
+                self.test_case.assertNotEqual(
                     '', text, 'probably ignoring some node')
                 self.test_case.assertTrue(
                     child.__class__.__name__.startswith(expected),

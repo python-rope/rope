@@ -24,7 +24,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = 'class Sample(object):\n    pass\n' \
@@ -33,7 +33,7 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_func'].get_object().\
             get_scope()['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_in_class_methods(self):
         code = 'class Sample(object):\n    pass\n' \
@@ -44,7 +44,7 @@ class ObjectInferTest(unittest.TestCase):
         another_class = scope['Another'].get_object()
         a_var = another_class['a_method'].\
             get_object().get_scope()['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_class_attributes(self):
         code = 'class Sample(object):\n    pass\n' \
@@ -54,7 +54,7 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         a_var = another_class['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_for_in_class_assignments(self):
         code = 'class Sample(object):\n    pass\n' \
@@ -63,7 +63,7 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         an_attr = another_class['an_attr'].get_object()
-        self.assertEquals(sample_class, an_attr.get_type())
+        self.assertEqual(sample_class, an_attr.get_type())
 
     def test_simple_type_inferencing_for_chained_assignments(self):
         mod = 'class Sample(object):\n    pass\n' \
@@ -71,7 +71,7 @@ class ObjectInferTest(unittest.TestCase):
         mod_scope = libutils.get_string_scope(self.project, mod)
         sample_class = mod_scope['Sample']
         copied_sample = mod_scope['copied_sample']
-        self.assertEquals(sample_class.get_object(),
+        self.assertEqual(sample_class.get_object(),
                           copied_sample.get_object())
 
     def test_following_chained_assignments_avoiding_circles(self):
@@ -81,7 +81,7 @@ class ObjectInferTest(unittest.TestCase):
         mod_scope = libutils.get_string_scope(self.project, mod)
         sample_class = mod_scope['Sample']
         sample_class_var = mod_scope['sample_class']
-        self.assertEquals(sample_class.get_object(),
+        self.assertEqual(sample_class.get_object(),
                           sample_class_var.get_object())
 
     def test_function_returned_object_static_type_inference1(self):
@@ -91,7 +91,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
-        self.assertEquals(sample_class.get_object(), a_var.get_object())
+        self.assertEqual(sample_class.get_object(), a_var.get_object())
 
     def test_function_returned_object_static_type_inference2(self):
         src = 'class Sample(object):\n    pass\n' \
@@ -100,7 +100,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_recursive_function_returned_object_static_type_inference(self):
         src = 'class Sample(object):\n    pass\n' \
@@ -111,7 +111,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_func_returned_obj_using_call_spec_func_static_type_infer(self):
         src = 'class Sample(object):\n' \
@@ -120,14 +120,14 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
-        self.assertEquals(sample_class.get_object(), a_var.get_object())
+        self.assertEqual(sample_class.get_object(), a_var.get_object())
 
     def test_list_type_inferencing(self):
         src = 'class Sample(object):\n    pass\na_var = [Sample()]\n'
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
-        self.assertNotEquals(sample_class, a_var.get_type())
+        self.assertNotEqual(sample_class, a_var.get_type())
 
     def test_attributed_object_inference(self):
         src = 'class Sample(object):\n' \
@@ -136,7 +136,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = sample_class['a_var'].get_object()
-        self.assertEquals(sample_class, a_var.get_type())
+        self.assertEqual(sample_class, a_var.get_type())
 
     def test_getting_property_attributes(self):
         src = 'class A(object):\n    pass\n' \
@@ -146,7 +146,7 @@ class ObjectInferTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, src)
         a_class = pymod['A'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(a_class, a_var.get_type())
+        self.assertEqual(a_class, a_var.get_type())
 
     def test_getting_property_attributes_with_method_getters(self):
         src = 'class A(object):\n    pass\n' \
@@ -156,7 +156,7 @@ class ObjectInferTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, src)
         a_class = pymod['A'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(a_class, a_var.get_type())
+        self.assertEqual(a_class, a_var.get_type())
 
     def test_lambda_functions(self):
         code = 'class C(object):\n    pass\n' \
@@ -164,7 +164,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_mixing_subscript_with_tuple_assigns(self):
         code = 'class C(object):\n    attr = 0\n' \
@@ -172,7 +172,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['b'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_mixing_ass_attr_with_tuple_assignment(self):
         code = 'class C(object):\n    attr = 0\n' \
@@ -180,7 +180,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['b'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_mixing_slice_with_tuple_assigns(self):
         mod = libutils.get_string_module(
@@ -189,7 +189,7 @@ class ObjectInferTest(unittest.TestCase):
             'd = [None] * 3\nd[0:2], b = ((0,), C())\n')
         c_class = mod['C'].get_object()
         a_var = mod['b'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_nested_tuple_assignments(self):
         mod = libutils.get_string_module(
@@ -201,9 +201,9 @@ class ObjectInferTest(unittest.TestCase):
         a_var = mod['a'].get_object()
         b_var = mod['b'].get_object()
         c_var = mod['c'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
-        self.assertEquals(c1_class, c_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, c_var.get_type())
 
     def test_empty_tuples(self):
         mod = libutils.get_string_module(
@@ -217,7 +217,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -233,7 +233,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_basic_list_comprehensions(self):
         code = 'class C(object):\n    pass\n' \
@@ -241,7 +241,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_basic_generator_expressions(self):
         code = 'class C(object):\n    pass\n' \
@@ -249,7 +249,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_list_comprehensions_and_loop_var(self):
         code = 'class C(object):\n    pass\n' \
@@ -258,7 +258,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertEqual(c_class, a_var.get_type())
 
     def test_list_comprehensions_and_multiple_loop_var(self):
         code = 'class C1(object):\n    pass\n' \
@@ -270,8 +270,8 @@ class ObjectInferTest(unittest.TestCase):
         c2_class = mod['C2'].get_object()
         a_var = mod['a'].get_object()
         b_var = mod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_list_comprehensions_and_multiple_iters(self):
         mod = libutils.get_string_module(
@@ -283,8 +283,8 @@ class ObjectInferTest(unittest.TestCase):
         c2_class = mod['C2'].get_object()
         a_var = mod['a'].get_object()
         b_var = mod['b'].get_object()
-        self.assertEquals(c1_class, a_var.get_type())
-        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEqual(c2_class, b_var.get_type())
 
     def test_we_know_the_type_of_catched_exceptions(self):
         code = 'class MyError(Exception):\n    pass\n' \
@@ -293,7 +293,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
-        self.assertEquals(my_error, e_var.get_type())
+        self.assertEqual(my_error, e_var.get_type())
 
     def test_we_know_the_type_of_catched_multiple_excepts(self):
         code = 'class MyError(Exception):\n    pass\n' \
@@ -302,7 +302,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
-        self.assertEquals(my_error, e_var.get_type())
+        self.assertEqual(my_error, e_var.get_type())
 
     def test_using_property_as_decorators(self):
         code = 'class A(object):\n    pass\n' \
@@ -312,7 +312,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         var = mod['var'].get_object()
         a = mod['A'].get_object()
-        self.assertEquals(a, var.get_type())
+        self.assertEqual(a, var.get_type())
 
     def test_using_property_as_decorators_and_passing_parameter(self):
         code = 'class B(object):\n' \
@@ -321,7 +321,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         var = mod['var'].get_object()
         a = mod['B'].get_object()
-        self.assertEquals(a, var.get_type())
+        self.assertEqual(a, var.get_type())
 
 
 def suite():

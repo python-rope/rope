@@ -28,7 +28,7 @@ class MultiProjectRefactoringTest(unittest.TestCase):
             rename.Rename, [])
         renamer = refactoring(self.project1, self.mod1, 1)
         multiproject.perform(renamer.get_all_changes('newvar'))
-        self.assertEquals('newvar = 1\n', self.mod1.read())
+        self.assertEqual('newvar = 1\n', self.mod1.read())
 
     def test_rename(self):
         self.mod1.write('var = 1\n')
@@ -37,8 +37,8 @@ class MultiProjectRefactoringTest(unittest.TestCase):
             rename.Rename, [self.project2])
         renamer = refactoring(self.project1, self.mod1, 1)
         multiproject.perform(renamer.get_all_changes('newvar'))
-        self.assertEquals('newvar = 1\n', self.mod1.read())
-        self.assertEquals('import mod1\nmyvar = mod1.newvar\n',
+        self.assertEqual('newvar = 1\n', self.mod1.read())
+        self.assertEqual('import mod1\nmyvar = mod1.newvar\n',
                           self.mod2.read())
 
     def test_move(self):
@@ -49,9 +49,9 @@ class MultiProjectRefactoringTest(unittest.TestCase):
         renamer = refactoring(self.project1, self.mod1,
                               self.mod1.read().index('_func'))
         multiproject.perform(renamer.get_all_changes(self.other))
-        self.assertEquals('', self.mod1.read())
-        self.assertEquals('def a_func():\n    pass\n', self.other.read())
-        self.assertEquals('import other\nmyvar = other.a_func()\n',
+        self.assertEqual('', self.mod1.read())
+        self.assertEqual('def a_func():\n    pass\n', self.other.read())
+        self.assertEqual('import other\nmyvar = other.a_func()\n',
                           self.mod2.read())
 
     def test_rename_from_the_project_not_containing_the_change(self):
@@ -63,8 +63,8 @@ class MultiProjectRefactoringTest(unittest.TestCase):
         renamer = refactoring(self.project2, self.mod2,
                               self.mod2.read().rindex('var'))
         multiproject.perform(renamer.get_all_changes('newvar'))
-        self.assertEquals('newvar = 1\n', self.mod1.read())
-        self.assertEquals('import mod1\nmyvar = mod1.newvar\n',
+        self.assertEqual('newvar = 1\n', self.mod1.read())
+        self.assertEqual('import mod1\nmyvar = mod1.newvar\n',
                           self.mod2.read())
 
 

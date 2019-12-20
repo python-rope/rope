@@ -41,8 +41,8 @@ class FixModuleNamesTest(unittest.TestCase):
         self.project.do(FixModuleNames(self.project).get_changes(_fixer))
         newmod1 = self.project.get_resource('_od1.py')
         newmod2 = self.project.get_resource('_od2.py')
-        self.assertEquals('import _od2\n', newmod1.read())
-        self.assertEquals('import _od1\n', newmod2.read())
+        self.assertEqual('import _od2\n', newmod1.read())
+        self.assertEqual('import _od1\n', newmod2.read())
 
     def test_handling_nested_modules(self):
         pkg = create_package(self.project, 'xkg')
