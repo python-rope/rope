@@ -389,10 +389,7 @@ class _OccurrenceToolsCreator(object):
     @property
     @utils.saveit
     def source_code(self):
-        if self.__resource is not None:
-            return self.resource.read()
-        else:
-            return self.pymodule.source_code
+        return self.pymodule.source_code
 
     @property
     @utils.saveit
