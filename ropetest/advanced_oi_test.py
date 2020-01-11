@@ -1,3 +1,5 @@
+from rope.base.builtins import Str
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -635,6 +637,23 @@ class NewStaticOITest(unittest.TestCase):
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEqual(c1_class, a_var.get_type())
+
+    def test_soi_on_literal_assignment(self):
+        code = 'a_var = ""'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
+        a_var = pymod['a_var'].get_object()
+        self.assertEquals(Str, type(a_var.get_type()))
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_soi_on_typed_assignment(self):
+        code = 'a_var: str'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
+        a_var = pymod['a_var'].get_object()
+        self.assertEquals(Str, type(a_var.get_type()))
 
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, 'mod2')

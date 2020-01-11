@@ -101,6 +101,17 @@ class SOAVisitor(object):
             result.append(pyfunction.get_parameter(i))
         return result
 
+    def _AnnAssign(self, node):
+        for child in rope.base.ast.get_child_nodes(node):
+            rope.base.ast.walk(child, self)
+        visitor = _SOAAssignVisitor()
+        nodes = []
+
+        rope.base.ast.walk(node.target, visitor)
+        nodes.extend(visitor.nodes)
+
+        self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
+
     def _Assign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
             rope.base.ast.walk(child, self)
@@ -109,13 +120,16 @@ class SOAVisitor(object):
         for child in node.targets:
             rope.base.ast.walk(child, visitor)
             nodes.extend(visitor.nodes)
+        self._evaluate_assign_value(node, nodes)
+
+    def _evaluate_assign_value(self, node, nodes, type_hint=False):
         for subscript, levels in nodes:
             instance = evaluate.eval_node(self.scope, subscript.value)
-            args_pynames = []
-            args_pynames.append(evaluate.eval_node(self.scope,
-                                                   subscript.slice.value))
+            args_pynames = [evaluate.eval_node(self.scope,
+                                               subscript.slice.value)]
             value = rope.base.oi.soi._infer_assignment(
-                rope.base.pynames.AssignmentValue(node.value, levels),
+                rope.base.pynames.AssignmentValue(node.value, levels,
+                                                  type_hint=type_hint),
                 self.pymodule)
             args_pynames.append(rope.base.pynames.UnboundName(value))
             if instance is not None and value is not None:

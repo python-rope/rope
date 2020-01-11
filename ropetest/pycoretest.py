@@ -11,6 +11,7 @@ from rope.base import exceptions
 from rope.base import libutils
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pyobjects import get_base_type, AbstractFunction
+from rope.base.pynamesdef import AssignedName
 from ropetest import testutils
 
 
@@ -72,11 +73,20 @@ class PyCoreTest(unittest.TestCase):
         method = sample_class['sample_method'].get_object()
         self.assertEqual(get_base_type('Function'), method.get_type())
 
-    def test_global_variables(self):
+    def test_global_variable_without_type_annotation(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('var = 10')
         mod_element = self.project.get_module('mod')
-        result = mod_element['var']  # noqa
+        var = mod_element['var']
+        self.assertEqual(AssignedName, type(var))
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_global_variable_with_type_annotation(self):
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('py3_var: str = foo_bar')
+        mod_element = self.project.get_module('mod')
+        py3_var = mod_element['py3_var']
+        self.assertEqual(AssignedName, type(py3_var))
 
     def test_class_variables(self):
         mod = testutils.create_module(self.project, 'mod')
