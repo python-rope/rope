@@ -644,7 +644,7 @@ class NewStaticOITest(unittest.TestCase):
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(Str, type(a_var.get_type()))
+        self.assertEqual(Str, type(a_var.get_type()))
 
     @testutils.only_for_versions_higher('3.6')
     def test_soi_on_typed_assignment(self):
@@ -653,7 +653,7 @@ class NewStaticOITest(unittest.TestCase):
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod['a_var'].get_object()
-        self.assertEquals(Str, type(a_var.get_type()))
+        self.assertEqual(Str, type(a_var.get_type()))
 
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, 'mod2')
