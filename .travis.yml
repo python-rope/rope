@@ -7,6 +7,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
   - "pypy3"
 matrix:
   allow_failures:
@@ -16,4 +17,4 @@ install:
     - pip install pytest
 notifications:
     irc: "chat.freenode.net#rope"
-script: pytest -v -k 'not (test_hint_parametrized_iterable or test_hint_parametrized_iterator)'
+script: pytest -v
