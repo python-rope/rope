@@ -1,5 +1,5 @@
 import sys
-import _ast
+import ast
 # from rope.base import ast
 
 PY2 = sys.version_info[0] == 2
@@ -15,7 +15,7 @@ except NameError:  # PY3
     str = str
     string_types = (str,)
     import builtins
-    ast_arg_type = _ast.arg
+    ast_arg_type = ast.arg
 
     def execfile(fn, global_vars=None, local_vars=None):
         with open(fn) as f:
@@ -34,7 +34,7 @@ else:  # PY2
 
     string_types = (basestring,)
     builtins = __import__('__builtin__')
-    ast_arg_type = _ast.Name
+    ast_arg_type = ast.Name
     execfile = execfile
 
     def get_ast_arg_arg(node):

@@ -1,10 +1,13 @@
 # this snippet was taken from this link
 # http://code.activestate.com/recipes/576694/
 
-import collections
+try:
+    from collections import MutableSet
+except ImportError:
+    from collections.abc import MutableSet
 
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
 
     def __init__(self, iterable=None):
         self.end = end = []

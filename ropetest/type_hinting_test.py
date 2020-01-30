@@ -198,18 +198,18 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                + self._make_class_hint('collections.Iterable[threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr:\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_iterator(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('collections.Iterator[threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr:\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_dict_key(self):
         code = 'class Sample(object):\n' \

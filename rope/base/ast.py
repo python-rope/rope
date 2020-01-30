@@ -1,5 +1,6 @@
-import _ast
-from _ast import *
+from __future__ import absolute_import
+import ast
+from ast import *
 
 from rope.base import fscommands
 
@@ -18,7 +19,7 @@ def parse(source, filename='<string>'):
     if not source.endswith(b'\n'):
         source += b'\n'
     try:
-        return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
+        return ast.parse(source, filename='<unknown>')
     except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1
@@ -32,7 +33,7 @@ def walk(node, walker):
     method_name = '_' + node.__class__.__name__
     method = getattr(walker, method_name, None)
     if method is not None:
-        if isinstance(node, _ast.ImportFrom) and node.module is None:
+        if isinstance(node, ast.ImportFrom) and node.module is None:
             # In python < 2.7 ``node.module == ''`` for relative imports
             # but for python 2.7 it is None. Generalizing it to ''.
             node.module = ''
@@ -42,7 +43,7 @@ def walk(node, walker):
 
 
 def get_child_nodes(node):
-    if isinstance(node, _ast.Module):
+    if isinstance(node, ast.Module):
         return node.body
     result = []
     if node._fields is not None:
@@ -50,9 +51,9 @@ def get_child_nodes(node):
             child = getattr(node, name)
             if isinstance(child, list):
                 for entry in child:
-                    if isinstance(entry, _ast.AST):
+                    if isinstance(entry, ast.AST):
                         result.append(entry)
-            if isinstance(child, _ast.AST):
+            if isinstance(child, ast.AST):
                 result.append(child)
     return result
 
