@@ -352,7 +352,7 @@ def count_line_indents(line):
 
 def get_string_pattern_with_prefix(prefix):
     longstr = r'%s"""(\\.|"(?!"")|\\\n|[^"\\])*"""' % prefix
-    shortstr = r'%s"(\\.|\\\n|[^"\\])*"' % prefix
+    shortstr = r'%s"(\\.|\\\n|[^"\\\n])*"' % prefix
     return '|'.join([longstr, longstr.replace('"', "'"),
                      shortstr, shortstr.replace('"', "'")])
 
