@@ -342,6 +342,11 @@ class WordRangeFinderTest(unittest.TestCase):
         finder = worder.Worder(code)
         self.assertTrue(finder.is_on_function_call_keyword(len(code) - 1))
 
+    def test_get_word_range_with_fstring(self):
+        code = 'auth = 8\nmy_var = f"some value {auth}"\nprint(auth)\nother_val = "some other"'
+        finder = worder.Worder(code)
+        self.assertEqual(finder.get_word_range(45), (45, 49))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 
