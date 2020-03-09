@@ -1,8 +1,4 @@
 from __future__ import print_function
-try:
-    from collections import MutableMapping
-except ImportError:
-    from UserDict import DictMixin as MutableMapping
 
 
 class ObjectDB(object):
@@ -124,13 +120,13 @@ class _NullScopeInfo(object):
             raise NotImplementedError()
 
 
-class FileInfo(MutableMapping):
+class FileInfo(dict):
 
     def create_scope(self, key):
         pass
 
 
-class FileDict(MutableMapping):
+class FileDict(dict):
 
     def create(self, key):
         pass
