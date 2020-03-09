@@ -32,7 +32,7 @@ into play.  It analyzes function body and tries to infer the object
 that is returned from it (we usually need the returned value for the
 given parameter objects).
 
-Rope might collect and store information for other `PyName`\s, too.
+Rope might collect and store information for other `PyName`, too.
 For instance rope stores the object builtin containers hold.
 
 """

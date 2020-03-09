@@ -126,7 +126,7 @@ class RemovingVisitor(ImportInfoVisitor):
 class AddingVisitor(ImportInfoVisitor):
     """A class for adding imports
 
-    Given a list of `ImportInfo`\s, it tries to add each import to the
+    Given a list of `ImportInfo`, it tries to add each import to the
     module and returns `True` and gives up when an import can be added
     to older ones.
 

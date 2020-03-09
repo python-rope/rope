@@ -9,11 +9,11 @@ from rope.refactor import occurrences
 def find_occurrences(project, resource, offset, unsure=False, resources=None,
                      in_hierarchy=False,
                      task_handle=taskhandle.NullTaskHandle()):
-    """Return a list of `Location`\s
+    """Return a list of `Location`
 
     If `unsure` is `True`, possible matches are returned, too.  You
     can use `Location.unsure` to see which are unsure occurrences.
-    `resources` can be a list of `rope.base.resource.File`\s that
+    `resources` can be a list of `rope.base.resource.File` that
     should be searched for occurrences; if `None` all python files
     in the project are searched.
 
@@ -40,7 +40,7 @@ def find_implementations(project, resource, offset, resources=None,
     """Find the places a given method is overridden.
 
     Finds the places a method is implemented.  Returns a list of
-    `Location`\s.
+    `Location`.
     """
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.get_pymodule(resource)

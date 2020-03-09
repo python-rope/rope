@@ -31,7 +31,7 @@ class IntroduceFactory(object):
         be added.  If `global_factory` is `True` the factory will be
         global otherwise a static method is added to the class.
 
-        `resources` can be a list of `rope.base.resource.File`\s that
+        `resources` can be a list of `rope.base.resource.File` that
         this refactoring should be applied on; if `None` all python
         files in the project are searched.
 

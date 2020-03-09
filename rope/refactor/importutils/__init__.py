@@ -261,7 +261,7 @@ class ImportTools(object):
 
 
 def get_imports(project, pydefined):
-    """A shortcut for getting the `ImportInfo`\s used in a scope"""
+    """A shortcut for getting the `ImportInfo` used in a scope"""
     pymodule = pydefined.get_module()
     module = module_imports.ModuleImports(project, pymodule)
     if pymodule == pydefined:

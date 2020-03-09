@@ -90,7 +90,7 @@ class AutoImport(object):
                        task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for project files
 
-        If `resources` is a list of `rope.base.resource.File`\s, only
+        If `resources` is a list of `rope.base.resource.File`, only
         those files are searched; otherwise all python modules in the
         project are cached.
 

@@ -40,7 +40,7 @@ def infer_returned_object(pyfunction, args):
 
 @_ignore_inferred
 def infer_parameter_objects(pyfunction):
-    """Infer the `PyObject`\s of parameters of this `PyFunction`"""
+    """Infer the `PyObject` of parameters of this `PyFunction`"""
     object_info = pyfunction.pycore.object_info
     result = object_info.get_parameter_objects(pyfunction)
     if result is None:

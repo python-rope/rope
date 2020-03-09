@@ -116,10 +116,10 @@ class ChangeSet(Change):
 
 
 def _handle_job_set(function):
-    """A decorator for handling `taskhandle.JobSet`\s
+    """A decorator for handling `taskhandle.JobSet`
 
-    A decorator for handling `taskhandle.JobSet`\s for `do` and `undo`
-    methods of `Change`\s.
+    A decorator for handling `taskhandle.JobSet` for `do` and `undo`
+    methods of `Change`.
     """
     def call(self, job_set=taskhandle.NullJobSet()):
         job_set.started_job(str(self))

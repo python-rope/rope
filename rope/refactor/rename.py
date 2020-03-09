@@ -59,7 +59,7 @@ class Rename(object):
           called with an instance of `occurrence.Occurrence` as
           parameter.  If it returns `True`, the occurrence is
           considered to be a match.
-        - `resources` can be a list of `rope.base.resources.File`\s to
+        - `resources` can be a list of `rope.base.resources.File` to
           apply this refactoring on.  If `None`, the restructuring
           will be applied to all python files.
         - `in_file`: this argument has been deprecated; use

@@ -3,7 +3,7 @@ from rope.base import exceptions, utils
 
 
 class PyName(object):
-    """References to `PyObject`\s inside python programs"""
+    """References to `PyObject` inside python programs"""
 
     def get_object(self):
         """Return the `PyObject` object referenced by this `PyName`"""
