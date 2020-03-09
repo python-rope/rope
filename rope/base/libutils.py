@@ -35,6 +35,7 @@ def path_to_resource(project, path, type=None):
 def path_relative_to_project_root(project, path):
     return relative(project.address, path)
 
+
 @utils.deprecated()
 def relative(root, path):
     root = rope.base.project._realpath(root).replace(os.path.sep, '/')

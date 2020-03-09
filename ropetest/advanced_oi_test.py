@@ -696,9 +696,9 @@ class NewStaticOITest(unittest.TestCase):
     def test_report_change_in_libutils(self):
         self.project.prefs['automatic_soa'] = True
         code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
-        mod_file = open(self.mod.real_path, 'w')
-        mod_file.write(code)
-        mod_file.close()
+        with open(self.mod.real_path, 'w') as mod_file:
+            mod_file.write(code)
+
         rope.base.libutils.report_change(self.project, self.mod.real_path, '')
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
