@@ -1,4 +1,4 @@
-"""Provides classes for persisting `PyObject`\s"""
+"""Provides classes for persisting `PyObject`"""
 import os
 import re
 

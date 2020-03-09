@@ -214,7 +214,7 @@ class _ResourceMatcher(object):
     def set_patterns(self, patterns):
         """Specify which resources to match
 
-        `patterns` is a `list` of `str`\s that can contain ``*`` and
+        `patterns` is a `list` of `str` that can contain ``*`` and
         ``?`` signs for matching resource names.
 
         """

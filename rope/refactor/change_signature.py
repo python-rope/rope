@@ -127,10 +127,10 @@ class ChangeSignature(object):
                     task_handle=taskhandle.NullTaskHandle()):
         """Get changes caused by this refactoring
 
-        `changers` is a list of `_ArgumentChanger`\s.  If `in_hierarchy`
+        `changers` is a list of `_ArgumentChanger`.  If `in_hierarchy`
         is `True` the changers are applyed to all matching methods in
         the class hierarchy.
-        `resources` can be a list of `rope.base.resource.File`\s that
+        `resources` can be a list of `rope.base.resource.File` that
         should be searched for occurrences; if `None` all python files
         in the project are searched.
 

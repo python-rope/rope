@@ -67,7 +67,7 @@ class MoveMethod(object):
         - `dest_attr`: the name of the destination attribute
         - `new_name`: the name of the new method; if `None` uses
           the old name
-        - `resources` can be a list of `rope.base.resources.File`\s to
+        - `resources` can be a list of `rope.base.resources.File` to
           apply this refactoring on.  If `None`, the restructuring
           will be applied to all python files.
 

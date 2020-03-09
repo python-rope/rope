@@ -29,7 +29,7 @@ from rope.base import ast, evaluate, pyobjects
 def find_errors(project, resource):
     """Find possible bad name and attribute accesses
 
-    It returns a list of `Error`\s.
+    It returns a list of `Error`.
     """
     pymodule = project.get_pymodule(resource)
     finder = _BadAccessFinder(pymodule)

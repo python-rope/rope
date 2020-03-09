@@ -33,7 +33,7 @@ class _Project(object):
         folder address is an empty string.  If the resource does not
         exist a `exceptions.ResourceNotFound` exception would be
         raised.  Use `get_file()` and `get_folder()` when you need to
-        get nonexistent `Resource`\s.
+        get nonexistent `Resource`.
 
         """
         path = self._get_resource_path(resource_name)

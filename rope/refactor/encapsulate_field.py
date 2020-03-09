@@ -30,7 +30,7 @@ class EncapsulateField(object):
         same is true for `setter` and if it is None set_${field_name} is
         used.
 
-        `resources` can be a list of `rope.base.resource.File`\s that
+        `resources` can be a list of `rope.base.resource.File` that
         the refactoring should be applied on; if `None` all python
         files in the project are searched.
 

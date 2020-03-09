@@ -32,7 +32,7 @@ class PyObject(object):
         return key in self.get_attributes()
 
     def __eq__(self, obj):
-        """Check the equality of two `PyObject`\s
+        """Check the equality of two `PyObject`
 
         Currently it is assumed that instances (the direct instances
         of `PyObject`, not the instances of its subclasses) are equal

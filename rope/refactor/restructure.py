@@ -95,7 +95,7 @@ class Restructure(object):
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed by this restructuring
 
-        `resources` can be a list of `rope.base.resources.File`\s to
+        `resources` can be a list of `rope.base.resources.File` to
         apply the restructuring on.  If `None`, the restructuring will
         be applied to all python files.
 

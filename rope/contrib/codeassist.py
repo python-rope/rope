@@ -19,7 +19,7 @@ from rope.refactor import functionutils
 
 def code_assist(project, source_code, offset, resource=None,
                 templates=None, maxfixes=1, later_locals=True):
-    """Return python code completions as a list of `CodeAssistProposal`\s
+    """Return python code completions as a list of `CodeAssistProposal`
 
     `resource` is a `rope.base.resources.Resource` object.  If
     provided, relative imports are handled.
@@ -317,7 +317,7 @@ class NamedParamProposal(CompletionProposal):
 def sorted_proposals(proposals, scopepref=None, typepref=None):
     """Sort a list of proposals
 
-    Return a sorted list of the given `CodeAssistProposal`\s.
+    Return a sorted list of the given `CodeAssistProposal`.
 
     `scopepref` can be a list of proposal scopes.  Defaults to
     ``['parameter_keyword', 'local', 'global', 'imported',

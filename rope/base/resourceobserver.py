@@ -4,9 +4,9 @@ import os
 class ResourceObserver(object):
     """Provides the interface for observing resources
 
-    `ResourceObserver`\s can be registered using `Project.
+    `ResourceObserver` can be registered using `Project.
     add_observer()`.  But most of the time `FilteredResourceObserver`
-    should be used.  `ResourceObserver`\s report all changes passed
+    should be used.  `ResourceObserver` report all changes passed
     to them and they don't report changes to all resources.  For
     example if a folder is removed, it only calls `removed()` for that
     folder and not its contents.  You can use
