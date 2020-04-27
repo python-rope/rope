@@ -196,6 +196,14 @@ class StatementEvaluator(object):
         type_name = type(node.n).__name__
         self.result = self._get_builtin_name(type_name)
 
+    def _Constant(self, node):
+        type_name = type(node.n).__name__
+        try:
+            self.result = self._get_builtin_name(type_name)
+        except exceptions.AttributeNotFoundError:
+            # XXX: Right way to fix this is to add missing NoneType to builtins?
+            pass
+
     def _get_builtin_name(self, type_name):
         pytype = rope.base.builtins.builtins[type_name].get_object()
         return rope.base.pynames.UnboundName(
