@@ -238,15 +238,25 @@ class DynamicOITest(unittest.TestCase):
         def complex_to_textual(pyobject):
             return to_textual.transform(
                 to_pyobject.transform(to_textual.transform(pyobject)))
-        for name in ('C', 'f', 'a_var', 'a_list', 'a_str', 'a_file'):
-            var = pymod[name].get_object()
-            self.assertEqual(to_textual.transform(var),
-                              complex_to_textual(var))
-        self.assertEqual(to_textual.transform(pymod),
-                          complex_to_textual(pymod))
-        enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
-        self.assertEqual(to_textual.transform(enumerate_func),
-                          complex_to_textual(enumerate_func))
+
+        test_variables = [
+            ('C', ('defined', 'mod.py', 'C')),
+            ('f', ('defined', 'mod.py', 'f')),
+            ('a_var', ('instance', ('defined', 'mod.py', 'C'))),
+            ('a_list',
+             ('builtin', 'list', ('instance', ('defined', 'mod.py', 'C')))),
+            ('a_str', ('builtin', 'str')),
+            ('a_file', ('builtin', 'file')),
+        ]
+        test_cases = [(pymod[v].get_object(), r) for v, r in test_variables]
+        test_cases += [
+            (pymod, ('defined', 'mod.py')),
+            (rope.base.builtins.builtins['enumerate'].get_object(),
+             ('builtin', 'function', 'enumerate'))
+        ]
+        for var, result in test_cases:
+            self.assertEqual(to_textual.transform(var), result)
+            self.assertEqual(complex_to_textual(var), result)
 
     def test_arguments_with_keywords(self):
         mod = testutils.create_module(self.project, 'mod')
