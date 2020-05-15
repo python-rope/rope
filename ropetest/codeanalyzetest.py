@@ -111,6 +111,11 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, code.index('attr') + 1)
         self.assertEqual('a_var.\nattr', result)
 
+    def test_word_finder_on_primary_like_keyword(self):
+        code = 'is_keyword = False\n'
+        result = self._find_primary(code, 1)
+        self.assertEqual('is_keyword', result)
+
     def test_strings(self):
         code = '"a string".split()'
         self.assertEqual('"a string".split', self._find_primary(code, 14))
