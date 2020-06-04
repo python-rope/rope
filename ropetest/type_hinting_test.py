@@ -51,9 +51,9 @@ class DocstringParamHintingTest(AbstractHintingTest):
         code = 'class Sample(object):\n' \
                '    def a_method(self, a_arg):\n' \
                '        """:type a_arg: threading.Thread"""\n' \
-               '        a_arg.isA'
+               '        a_arg.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hierarchical_hint_param(self):
         code = 'class ISample(object):\n' \
@@ -62,9 +62,9 @@ class DocstringParamHintingTest(AbstractHintingTest):
                '\n\n' \
                'class Sample(ISample):\n' \
                '    def a_method(self, a_arg):\n' \
-               '        a_arg.isA'
+               '        a_arg.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
 
 class DocstringReturnHintingTest(AbstractHintingTest):
@@ -78,9 +78,9 @@ class DocstringReturnHintingTest(AbstractHintingTest):
                '    def b_method(self):\n' \
                '        pass\n' \
                '    def a_method(self):\n' \
-               '        self.b_method().isA'
+               '        self.b_method().is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
 
 class AbstractAssignmentHintingTest(AbstractHintingTest):
@@ -95,9 +95,9 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('threading.Thread') + \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hierarchical_hint_attr(self):
         code = 'class ISample(object):\n' \
@@ -106,18 +106,18 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                'class Sample(ISample):\n' \
                '    a_attr = None\n'\
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_defined_by_constructor(self):
         code = 'class Sample(object):\n' \
                '    def __init__(self, arg):\n' \
                + self._make_constructor_hint('threading.Thread') + \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_attr_redefined_by_constructor(self):
         code = 'class Sample(object):\n' \
@@ -125,9 +125,9 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                '    def __init__(self):\n' \
                '        self.a_attr = None\n' \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hierarchical_hint_attr_redefined_by_constructor(self):
         code = 'class ISample(object):\n' \
@@ -137,61 +137,61 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                '    def __init__(self):\n' \
                '        self.a_attr = None\n' \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_attr_for_pre_defined_type(self):
         code = 'class Other(object):\n' \
-               '    def isAlive(self):\n' \
+               '    def is_alive(self):\n' \
                '        pass\n' \
                '\n\n' \
                'class Sample(object):\n' \
                + self._make_class_hint('Other') + \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_attr_for_post_defined_type(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('Other') + \
                '    def a_method(self):\n' \
-               '        self.a_attr.isA'
+               '        self.a_attr.is_a'
         offset = len(code)
         code += '\n\n' \
                 'class Other(object):\n' \
-                '    def isAlive(self):\n' \
+                '    def is_alive(self):\n' \
                 '        pass\n'
         result = self._assist(code, offset)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_list(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('list[threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr:\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_tuple(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('tuple[threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr:\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_set(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('set[threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr:\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_iterable(self):
         code = 'class Sample(object):\n' \
@@ -225,9 +225,9 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                + self._make_class_hint('dict[str, threading.Thread]') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr.values():\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_parametrized_nested_tuple_list(self):
         code = 'class Sample(object):\n' \
@@ -235,26 +235,26 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                '    def a_method(self):\n' \
                '        for j in self.a_attr:\n' \
                '            for i in j:\n' \
-               '                i.isA'
+               '                i.is_a'
         result = self._assist(code)
-        self.assert_completion_in_result('isAlive', 'attribute', result)
+        self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_or(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('str | threading.Thread') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr.values():\n' \
-               '            i.isA'
+               '            i.is_a'
         result = self._assist(code)
         # Be sure, there isn't errors currently
-        # self.assert_completion_in_result('isAlive', 'attribute', result)
+        # self.assert_completion_in_result('is_alive', 'attribute', result)
 
     def test_hint_nonexistent(self):
         code = 'class Sample(object):\n' \
                + self._make_class_hint('sdfdsf.asdfasdf.sdfasdf.Dffg') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr.values():\n' \
-               '            i.isA'
+               '            i.is_a'
         self._assist(code)
 
     def test_hint_invalid_syntax(self):
@@ -262,7 +262,7 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                + self._make_class_hint('sdf | & # &*') + \
                '    def a_method(self):\n' \
                '        for i in self.a_attr.values():\n' \
-               '            i.isA'
+               '            i.is_a'
         self._assist(code)
 
 
