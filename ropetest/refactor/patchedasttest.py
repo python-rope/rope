@@ -14,6 +14,7 @@ try:
 except NameError:
     basestring = (str, bytes)
 
+NameConstant = 'Name' if sys.version_info <= (3, 8) else 'NameConstant'
 
 class PatchedASTTest(unittest.TestCase):
 
@@ -124,7 +125,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('BoolOp', 0, len(source) - 1)
         checker.check_children(
-            'BoolOp', ['Name', ' ', 'and', ' ', 'Name'])
+            'BoolOp', [NameConstant, ' ', 'and', ' ', NameConstant])
 
     def test_basic_closing_parens(self):
         source = '1 + (2)\n'
@@ -263,7 +264,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Assert', 0, len(source) - 1)
         checker.check_children(
-            'Assert', ['assert', ' ', 'Name'])
+            'Assert', ['assert', ' ', NameConstant])
 
     def test_assert2(self):
         source = 'assert True, "error"\n'
@@ -271,7 +272,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Assert', 0, len(source) - 1)
         checker.check_children(
-            'Assert', ['assert', ' ', 'Name', '', ',', ' ', 'Str'])
+            'Assert', ['assert', ' ', NameConstant, '', ',', ' ', 'Str'])
 
     def test_aug_assign_node(self):
         source = 'a += 1\n'
@@ -594,7 +595,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('If', 0, len(source) - 1)
         checker.check_children(
-            'If', ['if', ' ', 'Name', '', ':', '\n    ', 'Pass', '\n',
+            'If', ['if', ' ', NameConstant, '', ':', '\n    ', 'Pass', '\n',
                    'else', '', ':', '\n    ', 'Pass'])
 
     def test_if_node2(self):
@@ -603,7 +604,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('If', 0, len(source) - 1)
         checker.check_children(
-            'If', ['if', ' ', 'Name', '', ':', '\n    ', 'Pass', '\n',
+            'If', ['if', ' ', NameConstant, '', ':', '\n    ', 'Pass', '\n',
                    'If'])
 
     def test_if_node3(self):
@@ -613,7 +614,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('If', 0, len(source) - 1)
         checker.check_children(
-            'If', ['if', ' ', 'Name', '', ':', '\n    ', 'Pass', '\n',
+            'If', ['if', ' ', NameConstant, '', ':', '\n    ', 'Pass', '\n',
                    'else', '', ':', '\n    ', 'If'])
 
     def test_import_node(self):
@@ -630,7 +631,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Lambda', 0, len(source) - 1)
         checker.check_children(
-            'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', 'Name'])
+            'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', NameConstant])
         expected_child = pycompat.ast_arg_type.__name__
         checker.check_children(
             'arguments', [expected_child, '', ',', ' ',
@@ -654,7 +655,7 @@ class PatchedASTTest(unittest.TestCase):
             'ListComp', ['[', '', 'Name', ' ', 'comprehension', '', ']'])
         checker.check_children(
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
-                              'Call', ' ', 'if', ' ', 'Name'])
+                              'Call', ' ', 'if', ' ', NameConstant])
 
     def test_list_comp_node_with_multiple_comprehensions(self):
         source = '[i for i in range(1) for j in range(1) if True]\n'
@@ -666,7 +667,7 @@ class PatchedASTTest(unittest.TestCase):
                          ' ', 'comprehension', '', ']'])
         checker.check_children(
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
-                              'Call', ' ', 'if', ' ', 'Name'])
+                              'Call', ' ', 'if', ' ', NameConstant])
 
     def test_set_node(self):
         # make sure we are in a python version with set literals
@@ -699,7 +700,7 @@ class PatchedASTTest(unittest.TestCase):
             'SetComp', ['{', '', 'Name', ' ', 'comprehension', '', '}'])
         checker.check_children(
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
-                              'Call', ' ', 'if', ' ', 'Name'])
+                              'Call', ' ', 'if', ' ', NameConstant])
 
     def test_dict_comp_node(self):
         # make sure we are in a python version with dict comprehensions
@@ -718,7 +719,7 @@ class PatchedASTTest(unittest.TestCase):
                          ' ', 'comprehension', '', '}'])
         checker.check_children(
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
-                              'Call', ' ', 'if', ' ', 'Name'])
+                              'Call', ' ', 'if', ' ', NameConstant])
 
     def test_ext_slice_node(self):
         source = 'x = xs[0,:]\n'
@@ -747,7 +748,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children('Expr', ['BoolOp'])
-        checker.check_children('BoolOp', ['UnaryOp', ' ', 'or', ' ', 'Name'])
+        checker.check_children('BoolOp', ['UnaryOp', ' ', 'or', ' ', NameConstant])
 
     @testutils.only_for_versions_lower('3')
     def test_print_node(self):
@@ -790,7 +791,7 @@ class PatchedASTTest(unittest.TestCase):
         source = 'def f():\n    return None\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children('Return', ['return', ' ', 'Name'])
+        checker.check_children('Return', ['return', ' ', NameConstant])
 
     def test_empty_return_node(self):
         source = 'def f():\n    return\n'
@@ -852,14 +853,14 @@ class PatchedASTTest(unittest.TestCase):
         source = 'def f():\n    yield None\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children('Yield', ['yield', ' ', 'Name'])
+        checker.check_children('Yield', ['yield', ' ', NameConstant])
 
     def test_while_node(self):
         source = 'while True:\n    pass\nelse:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
-            'While', ['while', ' ', 'Name', '', ':', '\n    ', 'Pass', '\n',
+            'While', ['while', ' ', NameConstant, '', ':', '\n    ', 'Pass', '\n',
                       'else', '', ':', '\n    ', 'Pass'])
 
     @testutils.only_for('2.5')
@@ -973,7 +974,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
-            'IfExp', ['Num', ' ', 'if', ' ', 'Name', ' ', 'else',
+            'IfExp', ['Num', ' ', 'if', ' ', NameConstant, ' ', 'else',
                       ' ', 'Num'])
 
     def test_delete_node(self):
@@ -1060,6 +1061,8 @@ class _ResultChecker(object):
 
             def __call__(self, node):
                 for text in goal:
+                    if sys.version_info >= (3, 8) and text in ['Num', 'Str', 'NameConstant']:
+                        text = 'Constant'
                     if str(node).startswith(text):
                         self.result = node
                         break
@@ -1088,6 +1091,8 @@ class _ResultChecker(object):
             else:
                 self.test_case.assertNotEqual(
                     '', text, 'probably ignoring some node')
+                if sys.version_info >= (3, 8) and expected in ['Num', 'Str', 'NameConstant']:
+                    expected = 'Constant'
                 self.test_case.assertTrue(
                     child.__class__.__name__.startswith(expected),
                     msg='Expected <%s> but was <%s>' %
