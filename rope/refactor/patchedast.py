@@ -334,7 +334,7 @@ class _PatchingASTWalker(object):
         self._handle(node, ['del'] + self._child_nodes(node.targets, ','))
 
     def _Constant(self, node):
-        if isinstance(node.value, str):
+        if isinstance(node.value, basestring):
             self._handle(node, [self.String])
             return
 
@@ -356,6 +356,9 @@ class _PatchingASTWalker(object):
         self._handle(node, [self.Number])
 
     def _Str(self, node):
+        self._handle(node, [self.String])
+
+    def _Bytes(self, node):
         self._handle(node, [self.String])
 
     def _Continue(self, node):
