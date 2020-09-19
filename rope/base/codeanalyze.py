@@ -358,7 +358,7 @@ def get_string_pattern_with_prefix(prefix):
 
 
 def get_string_pattern():
-    prefix = r'(?<![fF])(\b[uU]?[rR]?)?'
+    prefix = r'(?<![fF])(\b[uUbB]?[rR]?)?'
     return get_string_pattern_with_prefix(prefix)
 
 
