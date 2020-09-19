@@ -29,7 +29,7 @@ class PatchedASTTest(unittest.TestCase):
         source = '1 + b"("\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        str_fragment = '"("'
+        str_fragment = 'b"("'
         start = source.index(str_fragment)
         checker.check_region(Bytes, start, start + len(str_fragment))
         checker.check_children(Bytes, [str_fragment])
