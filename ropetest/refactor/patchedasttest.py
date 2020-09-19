@@ -15,6 +15,7 @@ except NameError:
     basestring = (str, bytes)
 
 NameConstant = 'Name' if sys.version_info <= (3, 8) else 'NameConstant'
+Bytes = 'Bytes' if (3, 0) <= sys.version_info <= (3, 8) else 'Str'
 
 class PatchedASTTest(unittest.TestCase):
 
@@ -23,6 +24,15 @@ class PatchedASTTest(unittest.TestCase):
 
     def tearDown(self):
         super(PatchedASTTest, self).tearDown()
+
+    def test_bytes_string(self):
+        source = '1 + b"("\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        str_fragment = '"("'
+        start = source.index(str_fragment)
+        checker.check_region(Bytes, start, start + len(str_fragment))
+        checker.check_children(Bytes, [str_fragment])
 
     def test_integer_literals_and_region(self):
         source = 'a = 10\n'
