@@ -86,6 +86,13 @@ class PatchedASTTest(unittest.TestCase):
         # start = source.index('10')
         checker.check_children('Num', ['10'])
 
+    def test_ellipsis(self):
+        source = 'a[...]\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('...')
+        checker.check_region('Ellipsis', start, start + len('...'))
+
     def test_ass_name_node(self):
         source = 'a = 10\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1061,7 +1068,7 @@ class _ResultChecker(object):
 
             def __call__(self, node):
                 for text in goal:
-                    if sys.version_info >= (3, 8) and text in ['Num', 'Str', 'NameConstant']:
+                    if sys.version_info >= (3, 8) and text in ['Num', 'Str', 'NameConstant', 'Ellipsis']:
                         text = 'Constant'
                     if str(node).startswith(text):
                         self.result = node
@@ -1091,7 +1098,7 @@ class _ResultChecker(object):
             else:
                 self.test_case.assertNotEqual(
                     '', text, 'probably ignoring some node')
-                if sys.version_info >= (3, 8) and expected in ['Num', 'Str', 'NameConstant']:
+                if sys.version_info >= (3, 8) and expected in ['Num', 'Str', 'NameConstant', 'Ellipsis']:
                     expected = 'Constant'
                 self.test_case.assertTrue(
                     child.__class__.__name__.startswith(expected),

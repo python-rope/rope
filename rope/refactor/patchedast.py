@@ -346,6 +346,10 @@ class _PatchingASTWalker(object):
             self._handle(node, [self.Number])
             return
 
+        if node.value is Ellipsis:
+            self._handle(node, ['...'])
+            return
+
         assert False
 
     def _Num(self, node):
