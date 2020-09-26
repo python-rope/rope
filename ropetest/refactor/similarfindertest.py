@@ -33,6 +33,12 @@ class SimilarFinderTest(unittest.TestCase):
         result = [(source.index('10'), source.index('10') + 2)]
         self.assertEqual(result, list(finder.get_match_regions('10')))
 
+    def test_bool_is_not_similar_to_integer(self):
+        source = 'a = False\nb = 0'
+        finder = self._create_finder(source)
+        result = [(source.index('False'), source.index('False') + len('False'))]
+        self.assertEqual(result, list(finder.get_match_regions('False')))
+
     def test_simple_addition(self):
         source = 'a = 1 + 2\n'
         finder = self._create_finder(source)

@@ -204,7 +204,7 @@ class _ASTMatcher(object):
                     if not self._match_nodes(c1, c2, mapping):
                         return False
             else:
-                if child1 != child2:
+                if type(child1) is not type(child2) or child1 != child2:
                     return False
         return True
 
