@@ -96,3 +96,33 @@ def resolve(str_or_obj):
     __import__(mod_name)
     mod = sys.modules[mod_name]
     return getattr(mod, obj_name) if obj_name else mod
+
+def guess_def_lineno(module, node):
+    """ Find the line number for a function or class definition.
+
+        `node` may be either an ast.FunctionDef, ast.AsyncFunctionDef, or ast.ClassDef
+
+        Python 3.8 simply provides this to us, but in earlier versions the ast
+        node.lineno points to the first decorator rather than the actual
+        definition, so we try our best to find where the definitions are.
+
+        This is to workaround bpo-33211 (https://bugs.python.org/issue33211)
+    """
+    def is_inline_body():
+        # class Foo(object):
+        #     def inline_body(): pass
+        #     ^                  ^--- body_col_offset
+        #     `--- indent_col_offset
+        #     def not_inline_body():
+        #         pass
+        #         ^--- body_col_offset == indent_col_offset
+        line = module.lines.get_line(node.body[0].lineno)
+        indent_col_offset = len(line) - len(line.lstrip())
+        body_col_offset = node.body[0].col_offset
+        return indent_col_offset < body_col_offset
+
+    if sys.version_info >= (3, 8):
+        return node.lineno
+
+    possible_def_line = node.body[0].lineno if is_inline_body() else node.body[0].lineno - 1
+    return module.logical_lines.logical_line_in(possible_def_line)[0]

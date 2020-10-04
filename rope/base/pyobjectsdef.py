@@ -390,8 +390,11 @@ class _ScopeVisitor(object):
                     def _eval(type_=type_, arg=arg):
                         return type_.get_property_object(
                             arguments.ObjectArguments([arg]))
+
+                    lineno = utils.guess_def_lineno(self.get_module(), node)
+
                     self.names[node.name] = pynames.EvaluatedName(
-                        _eval, module=self.get_module(), lineno=node.lineno)
+                        _eval, module=self.get_module(), lineno=lineno)
                     break
         else:
             self.names[node.name] = pynames.DefinedName(pyfunction)

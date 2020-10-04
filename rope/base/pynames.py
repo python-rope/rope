@@ -21,7 +21,8 @@ class DefinedName(PyName):
         return self.pyobject
 
     def get_definition_location(self):
-        return (self.pyobject.get_module(), self.pyobject.get_ast().lineno)
+        lineno = utils.guess_def_lineno(self.pyobject.get_module(), self.pyobject.get_ast())
+        return (self.pyobject.get_module(), lineno)
 
 
 class AssignedName(PyName):

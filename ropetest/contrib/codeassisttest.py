@@ -352,14 +352,81 @@ class CodeAssistTest(unittest.TestCase):
         result = get_definition_location(self.project, code, len(code) - 11)
         self.assertEqual((None, 1), result)
 
-    def test_get_definition_location_dotted_names(self):
+    def test_get_definition_location_dotted_names_method(self):
         code = 'class AClass(object):\n' \
                '    @staticmethod\n' \
                '    def a_method():\n' \
                '        pass\n' \
                'AClass.a_method()'
         result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 3), result)
+
+    def test_get_definition_location_dotted_names_property(self):
+        code = 'class AClass(object):\n' \
+               '    @property\n' \
+               '    @somedecorator\n' \
+               '    def a_method():\n' \
+               '        pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 4), result)
+
+    def test_get_definition_location_dotted_names_free_function(self):
+        code = '@custom_decorator\n' \
+               'def a_method():\n' \
+               '    pass\n' \
+               'a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 2), result)
+
+    @testutils.only_for_versions_higher('3.5')
+    def test_get_definition_location_dotted_names_async_def(self):
+        code = 'class AClass(object):\n' \
+               '    @property\n' \
+               '    @decorator2\n' \
+               '    async def a_method():\n' \
+               '        pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 4), result)
+
+    def test_get_definition_location_dotted_names_class(self):
+        code = '@custom_decorator\n' \
+               'class AClass(object):\n' \
+               '    def a_method():\n' \
+               '        pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 12)
+        self.assertEqual((None, 2), result)
+
+    def test_get_definition_location_dotted_names_with_space(self):
+        code = 'class AClass(object):\n' \
+               '    @staticmethod\n' \
+               '    def a_method():\n' \
+               '        \n' \
+               '        pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 3), result)
+
+    def test_get_definition_location_dotted_names_inline_body(self):
+        code = 'class AClass(object):\n' \
+               '    @staticmethod\n' \
+               '    def a_method(): pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 3), result)
+
+    def test_get_definition_location_dotted_names_inline_body_split_arg(self):
+        code = 'class AClass(object):\n' \
+               '    @staticmethod\n' \
+               '    def a_method(\n' \
+               '        self,\n' \
+               '        arg1\n' \
+               '    ): pass\n' \
+               'AClass.a_method()'
+        result = get_definition_location(self.project, code, len(code) - 3)
+        self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dotted_module_names(self):
         module_resource = testutils.create_module(self.project, 'mod')
@@ -389,7 +456,7 @@ class CodeAssistTest(unittest.TestCase):
                '@staticmethod\n    def a_method():\n' \
                '        pass\nAClass.\\\n     a_method()'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEqual((None, 2), result)
+        self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dot_line_break_inside_parens(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n' + \
