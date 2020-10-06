@@ -210,7 +210,7 @@ class _RealFinder(object):
                             self._is_id_char(offset)):
             atom_start = self._find_atom_start(offset)
             if not keyword.iskeyword(self.code[atom_start:offset + 1]) or \
-               (offset + 2 < len(self.code) and self._is_id_char(offset + 2)):
+               (offset + 1 < len(self.code) and self._is_id_char(offset + 1)):
                 return atom_start
         return last_atom
 

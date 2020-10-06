@@ -116,6 +116,11 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, 1)
         self.assertEqual('is_keyword', result)
 
+    def test_keyword_before_parens_no_space(self):
+        code = 'if(a_var).an_attr:\n    pass\n'
+        self.assertEqual('(a_var).an_attr',
+                         self._find_primary(code, code.index(':')))
+
     def test_strings(self):
         code = '"a string".split()'
         self.assertEqual('"a string".split', self._find_primary(code, 14))
@@ -123,7 +128,7 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_function_calls2(self):
         code = 'file("afile.txt").read()'
         self.assertEqual('file("afile.txt").read',
-                          self._find_primary(code, 18))
+                         self._find_primary(code, 18))
 
     def test_parens(self):
         code = '("afile.txt").split()'
@@ -136,7 +141,7 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_function_with_multiple_param(self):
         code = 'AClass(a_param, another_param, "a string").a_func()'
         self.assertEqual('AClass(a_param, another_param, "a string").a_func',
-                          self._find_primary(code, 44))
+                         self._find_primary(code, 44))
 
     def test_param_expressions(self):
         code = 'AClass(an_object.an_attr).a_func()'
@@ -149,7 +154,7 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_extra_spaces(self):
         code = 'a_func  (  "(" ) .   an_attr'
         self.assertEqual('a_func  (  "(" ) .   an_attr',
-                          self._find_primary(code, 26))
+                         self._find_primary(code, 26))
 
     def test_functions_on_ending_parens(self):
         code = 'A()'
@@ -158,7 +163,7 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_splitted_statement(self):
         word_finder = worder.Worder('an_object.an_attr')
         self.assertEqual(('an_object', 'an_at', 10),
-                          word_finder.get_splitted_primary_before(15))
+                         word_finder.get_splitted_primary_before(15))
 
     def test_empty_splitted_statement(self):
         word_finder = worder.Worder('an_attr')
