@@ -600,12 +600,12 @@ class LogicalLineFinderTest(unittest.TestCase):
 
     def test_generating_line_starts2(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
-        line_finder = LogicalLineFinder(SourceLinesAdapter(code))
+        line_finder = self._logical_finder(code)
         self.assertEqual([2, 4], list(line_finder.generate_starts(2)))
 
     def test_generating_line_starts3(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
-        line_finder = LogicalLineFinder(SourceLinesAdapter(code))
+        line_finder = self._logical_finder(code)
         self.assertEqual([2], list(line_finder.generate_starts(2, 3)))
 
     def test_generating_line_starts_for_multi_line_statements(self):
