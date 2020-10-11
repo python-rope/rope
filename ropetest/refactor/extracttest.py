@@ -1,3 +1,4 @@
+from textwrap import dedent
 try:
     import unittest2 as unittest
 except ImportError:
@@ -63,6 +64,26 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(code, start, end, 'extracted')
         expected = "def a_func():\n    extracted()\n    print('two')\n\n" \
                    "def extracted():\n    print('one')\n\nprint('hey')\n"
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for('3.5')
+    def test_extract_function_containing_dict_generalized_unpacking(self):
+        code = dedent('''\
+            def a_func(dict1):
+                dict2 = {}
+                a_var = {a: b, **dict1, **dict2}
+        ''')
+        start = code.index('{a')
+        end = code.index('2}') + len('2}')
+        refactored = self.do_extract_method(code, start, end, 'extracted')
+        expected = dedent('''\
+            def a_func(dict1):
+                dict2 = {}
+                a_var = extracted(dict1, dict2)
+
+            def extracted(dict1, dict2):
+                return {a: b, **dict1, **dict2}
+        ''')
         self.assertEqual(expected, refactored)
 
     def test_simple_extract_function_with_parameter(self):
