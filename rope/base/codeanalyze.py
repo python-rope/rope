@@ -143,7 +143,7 @@ class _CustomGenerator(object):
             if token in ["'''", '"""', "'", '"']:
                 if not self.in_string:
                     self.in_string = token
-                elif self.in_string == token:
+                elif self.in_string == token or (self.in_string in ['"', "'"] and token == 3*self.in_string):
                     self.in_string = ''
             if self.in_string:
                 continue

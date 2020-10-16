@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os.path
+from textwrap import dedent
 try:
     import unittest2 as unittest
 except ImportError:
@@ -471,6 +472,19 @@ class CodeAssistTest(unittest.TestCase):
                '    print(a_var)\n'
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
+
+    def test_get_definition_location_false_triple_quoted_string(self):
+        code = dedent('''\
+            def foo():
+                a = 0
+                p = "foo"""
+
+            def bar():
+                a = 1
+                a += 1
+        ''')
+        result = get_definition_location(self.project, code, code.index("a += 1"))
+        self.assertEqual((None, 6), result)
 
     def test_code_assists_in_parens(self):
         code = 'def a_func(a_var):\n    pass\na_var = 10\na_func(a_'

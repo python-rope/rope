@@ -1,3 +1,4 @@
+from textwrap import dedent
 try:
     import unittest2 as unittest
 except ImportError:
@@ -600,12 +601,12 @@ class LogicalLineFinderTest(unittest.TestCase):
 
     def test_generating_line_starts2(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
-        line_finder = LogicalLineFinder(SourceLinesAdapter(code))
+        line_finder = self._logical_finder(code)
         self.assertEqual([2, 4], list(line_finder.generate_starts(2)))
 
     def test_generating_line_starts3(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
-        line_finder = LogicalLineFinder(SourceLinesAdapter(code))
+        line_finder = self._logical_finder(code)
         self.assertEqual([2], list(line_finder.generate_starts(2, 3)))
 
     def test_generating_line_starts_for_multi_line_statements(self):
@@ -618,6 +619,21 @@ class LogicalLineFinderTest(unittest.TestCase):
                '            a = 1\n    b = 1\n'
         line_finder = self._logical_finder(code)
         self.assertEqual([4, 5], list(line_finder.generate_starts(4)))
+
+    def test_false_triple_quoted_string(self):
+        code = dedent("""\
+            def foo():
+                a = 0
+                p = 'foo'''
+
+            def bar():
+                a = 1
+                a += 1
+        """)
+        line_finder = self._logical_finder(code)
+        self.assertEqual([1, 2, 3, 5, 6, 7], list(line_finder.generate_starts()))
+        self.assertEqual((3, 3), line_finder.logical_line_in(3))
+        self.assertEqual([5, 6, 7], list(line_finder.generate_starts(4)))
 
 
 class TokenizerLogicalLineFinderTest(LogicalLineFinderTest):
