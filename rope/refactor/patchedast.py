@@ -361,6 +361,9 @@ class _PatchingASTWalker(object):
     def _Bytes(self, node):
         self._handle(node, [self.String])
 
+    def _JoinedStr(self, node):
+        self._handle(node, [self.String])
+
     def _Continue(self, node):
         self._handle(node, ['continue'])
 
@@ -788,7 +791,10 @@ class _Source(object):
             original = codeanalyze.get_string_pattern()
             pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
                       (original, original)
-            _Source._string_pattern = re.compile(pattern)
+            foriginal = codeanalyze.get_formatted_string_pattern()
+            fpattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
+                      (foriginal, foriginal)
+            _Source._string_pattern = re.compile(r'(?:%s)|(?:%s)' % (pattern, fpattern))
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
 

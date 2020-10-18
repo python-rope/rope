@@ -227,6 +227,21 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children('Module', ['', 'Expr', '\n', 'Expr', '\n'])
 
+    def test_handling_raw_strings(self):
+        source = 'r"abc"\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'Str', ['r"abc"'])
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_handling_format_strings_basic(self):
+        source = 'f"abc{a:01}"\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            'JoinedStr', ['f"abc{a:01}"'])
+
     @testutils.only_for_versions_lower('3')
     def test_long_integer_literals(self):
         source = "0x1L + a"
