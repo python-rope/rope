@@ -499,6 +499,16 @@ class PatchedASTTest(unittest.TestCase):
             'Dict', ['{', '', 'Num', '', ':', ' ', 'Num', '', ',',
                      ' ', 'Num', '', ':', ' ', 'Num', '', '}'])
 
+    @testutils.only_for('3.5')
+    def test_dict_node_with_unpacking(self):
+        source = '{**dict1, **dict2}\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region('Dict', 0, len(source) - 1)
+        checker.check_children(
+            'Dict', ['{', '', '**', '', 'Name', '', ',',
+                     ' ', '**', '', 'Name', '', '}'])
+
     def test_div_node(self):
         source = '1 / 2\n'
         ast_frag = patchedast.get_patched_ast(source, True)

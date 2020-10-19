@@ -369,7 +369,11 @@ class _PatchingASTWalker(object):
         children.append('{')
         if node.keys:
             for index, (key, value) in enumerate(zip(node.keys, node.values)):
-                children.extend([key, ':', value])
+                if key is None:
+                    # PEP-448 dict unpacking: {a: b, **unpack}
+                    children.extend(['**', value])
+                else:
+                    children.extend([key, ':', value])
                 if index < len(node.keys) - 1:
                     children.append(',')
         children.append('}')
