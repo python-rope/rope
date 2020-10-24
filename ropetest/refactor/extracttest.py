@@ -430,6 +430,20 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'new_var = 10 + 20\na_var = new_var\n'
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.6')
+    def test_extract_variable_f_string(self):
+        code = dedent('''\
+            foo(f"abc {a_var} #2", 10)
+        ''')
+        start = code.index('f"')
+        end = code.index('2"') + 2
+        refactored = self.do_extract_variable(code, start, end, 'new_var')
+        expected = dedent('''\
+            new_var = f"abc {a_var} #2"
+            foo(new_var, 10)
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_extract_variable_multiple_lines(self):
         code = 'a = 1\nb = 2\n'
         start = code.index('1')
@@ -563,6 +577,24 @@ class ExtractMethodTest(unittest.TestCase):
         code = '\nprint(1)\n'
         refactored = self.do_extract_method(code, 0, len(code), 'new_f')
         expected = '\n\ndef new_f():\n    print(1)\n\nnew_f()\n'
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_extract_method_f_string_extract_method(self):
+        code = dedent('''\
+            def func(a_var):
+                foo(f"abc {a_var}", 10)
+        ''')
+        start = code.index('f"')
+        end = code.index('}"') + 2
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def func(a_var):
+                foo(new_func(a_var), 10)
+
+            def new_func(a_var):
+                return f"abc {a_var}"
+        ''')
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_in_the_same_line_as_variable_read(self):

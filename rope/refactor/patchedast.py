@@ -76,6 +76,7 @@ class _PatchingASTWalker(object):
 
     Number = object()
     String = object()
+    JoinedString = object()
     semicolon_or_as_in_except = object()
 
     def __call__(self, node):
@@ -114,6 +115,11 @@ class _PatchingASTWalker(object):
             else:
                 if child is self.String:
                     region = self.source.consume_string(
+                        end=self._find_next_statement_start())
+                elif child is self.JoinedString:
+                    region = self.source.consume_joined_string(
+                        walker=self,
+                        node=node,
                         end=self._find_next_statement_start())
                 elif child is self.Number:
                     region = self.source.consume_number()
@@ -362,7 +368,10 @@ class _PatchingASTWalker(object):
         self._handle(node, [self.String])
 
     def _JoinedStr(self, node):
-        self._handle(node, [self.String])
+        self._handle(node, [self.JoinedString])
+
+    def _FormattedValue(self, node):
+        self._handle(node, [node.value])
 
     def _Continue(self, node):
         self._handle(node, ['continue'])
@@ -797,6 +806,15 @@ class _Source(object):
             _Source._string_pattern = re.compile(r'(?:%s)|(?:%s)' % (pattern, fpattern))
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
+
+    def consume_joined_string(self, walker, node, end=None):
+        # consume opening string
+        offset = self.offset
+        for part in node.values:
+            if isinstance(part, ast.FormattedValue):
+                ast.call_for_nodes(part, walker)
+        self.offset = offset
+        return self.consume_string(end=end)
 
     def consume_number(self):
         if _Source._number_pattern is None:
