@@ -433,13 +433,13 @@ class ExtractMethodTest(unittest.TestCase):
     @testutils.only_for_versions_higher('3.6')
     def test_extract_variable_f_string(self):
         code = dedent('''\
-            foo(f"abc {a_var} #2", 10)
+            foo(f"abc {a_var} def", 10)
         ''')
         start = code.index('f"')
-        end = code.index('2"') + 2
+        end = code.index('def"') + 4
         refactored = self.do_extract_variable(code, start, end, 'new_var')
         expected = dedent('''\
-            new_var = f"abc {a_var} #2"
+            new_var = f"abc {a_var} def"
             foo(new_var, 10)
         ''')
         self.assertEqual(expected, refactored)
@@ -594,6 +594,28 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(a_var):
                 return f"abc {a_var}"
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_extract_method_f_string_extract_method_complex_expression(self):
+        code = dedent('''\
+            def func(a_var):
+                b_var = int
+                fill = 10
+                foo(f"abc {a_var + f'{b_var(a_var)}':{fill}16}", 10)
+        ''')
+        start = code.index('f"')
+        end = code.index('}"') + 2
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def func(a_var):
+                b_var = int
+                fill = 10
+                foo(new_func(a_var, b_var, fill), 10)
+
+            def new_func(a_var, b_var, fill):
+                return f"abc {a_var + f'{b_var(a_var)}':{fill}16}"
         ''')
         self.assertEqual(expected, refactored)
 

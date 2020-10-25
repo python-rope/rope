@@ -76,7 +76,6 @@ class _PatchingASTWalker(object):
 
     Number = object()
     String = object()
-    JoinedString = object()
     semicolon_or_as_in_except = object()
 
     def __call__(self, node):
@@ -115,11 +114,6 @@ class _PatchingASTWalker(object):
             else:
                 if child is self.String:
                     region = self.source.consume_string(
-                        end=self._find_next_statement_start())
-                elif child is self.JoinedString:
-                    region = self.source.consume_joined_string(
-                        walker=self,
-                        node=node,
                         end=self._find_next_statement_start())
                 elif child is self.Number:
                     region = self.source.consume_number()
@@ -368,10 +362,44 @@ class _PatchingASTWalker(object):
         self._handle(node, [self.String])
 
     def _JoinedStr(self, node):
-        self._handle(node, [self.JoinedString])
+        def start_quote_char():
+            possible_quotes = [(self.source.source.find(q, start, end), q) for q in QUOTE_CHARS]
+            quote_pos, quote_char = min((pos, q) for pos, q in possible_quotes if pos != -1)
+            return self.source[start:quote_pos + len(quote_char)]
+
+        def end_quote_char():
+            possible_quotes = [(self.source.source.rfind(q, start, end), q) for q in reversed(QUOTE_CHARS)]
+            _, quote_pos, quote_char = max((len(q), pos, q) for pos, q in possible_quotes if pos != -1)
+            return self.source[end - len(quote_char):end]
+
+        QUOTE_CHARS = ['"""', "'''", '"', "'"]
+        offset = self.source.offset
+        start, end = self.source.consume_string(
+            end=self._find_next_statement_start(),
+        )
+        self.source.offset = offset
+
+        children = []
+        children.append(start_quote_char())
+        for part in node.values:
+            if isinstance(part, ast.FormattedValue):
+                children.append(part)
+        children.append(end_quote_char())
+        self._handle(node, children)
 
     def _FormattedValue(self, node):
-        self._handle(node, [node.value])
+        children = []
+        children.append('{')
+        children.append(node.value)
+        if node.format_spec:
+            children.append(':')
+            for val in node.format_spec.values:
+                if isinstance(val, ast.FormattedValue):
+                    children.append(val.value)
+                else:
+                    children.append(val.s)
+        children.append('}')
+        self._handle(node, children)
 
     def _Continue(self, node):
         self._handle(node, ['continue'])
@@ -806,15 +834,6 @@ class _Source(object):
             _Source._string_pattern = re.compile(r'(?:%s)|(?:%s)' % (pattern, fpattern))
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
-
-    def consume_joined_string(self, walker, node, end=None):
-        # consume opening string
-        offset = self.offset
-        for part in node.values:
-            if isinstance(part, ast.FormattedValue):
-                ast.call_for_nodes(part, walker)
-        self.offset = offset
-        return self.consume_string(end=end)
 
     def consume_number(self):
         if _Source._number_pattern is None:
