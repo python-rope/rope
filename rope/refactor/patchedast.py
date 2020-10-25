@@ -125,7 +125,10 @@ class _PatchingASTWalker(object):
                     # semicolon in except
                     region = self.source.consume_except_as_or_semicolon()
                 else:
-                    region = self.source.consume(child, skip_comment=not isinstance(node, (ast.JoinedStr, ast.FormattedValue)))
+                    if hasattr(ast, 'JoinedStr') and isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
+                        region = self.source.consume_joined_string(child)
+                    else:
+                        region = self.source.consume(child)
                 child = self.source[region[0]:region[1]]
                 token_start = region[0]
             if not first_token:
@@ -820,6 +823,11 @@ class _Source(object):
             raise MismatchedTokenError(
                 'Token <%s> at %s cannot be matched' %
                 (token, self._get_location()))
+        self.offset = new_offset + len(token)
+        return (new_offset, self.offset)
+
+    def consume_joined_string(self, token):
+        new_offset = self.source.index(token, self.offset)
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
