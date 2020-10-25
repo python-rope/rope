@@ -602,20 +602,61 @@ class ExtractMethodTest(unittest.TestCase):
         code = dedent('''\
             def func(a_var):
                 b_var = int
+                c_var = 10
                 fill = 10
-                foo(f"abc {a_var + f'{b_var(a_var)}':{fill}16}", 10)
+                foo(f"abc {a_var + f'{b_var(a_var)}':{fill}16}" f"{c_var}", 10)
         ''')
         start = code.index('f"')
-        end = code.index('}"') + 2
+        end = code.index('c_var}"') + 7
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = dedent('''\
             def func(a_var):
                 b_var = int
+                c_var = 10
                 fill = 10
-                foo(new_func(a_var, b_var, fill), 10)
+                foo(new_func(a_var, b_var, c_var, fill), 10)
 
-            def new_func(a_var, b_var, fill):
-                return f"abc {a_var + f'{b_var(a_var)}':{fill}16}"
+            def new_func(a_var, b_var, c_var, fill):
+                return f"abc {a_var + f'{b_var(a_var)}':{fill}16}" f"{c_var}"
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_extract_method_f_string_false_comment(self):
+        code = dedent('''\
+            def func(a_var):
+                foo(f"abc {a_var} # ", 10)
+        ''')
+        start = code.index('f"')
+        end = code.index('# "') + 3
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def func(a_var):
+                foo(new_func(a_var), 10)
+
+            def new_func(a_var):
+                return f"abc {a_var} # "
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @unittest.expectedFailure
+    @testutils.only_for_versions_higher('3.6')
+    def test_extract_method_f_string_false_format_value_in_regular_string(self):
+        code = dedent('''\
+            def func(a_var):
+                b_var = 1
+                foo(f"abc {a_var} " "{b_var}" f"{b_var} def", 10)
+        ''')
+        start = code.index('f"')
+        end = code.index('def"') + 4
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def func(a_var):
+                b_var = 1
+                foo(new_func(a_var, b_var), 10)
+
+            def new_func(a_var, b_var):
+                return f"abc {a_var} " "{b_var}" f"{b_var} def"
         ''')
         self.assertEqual(expected, refactored)
 

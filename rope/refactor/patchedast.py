@@ -125,7 +125,7 @@ class _PatchingASTWalker(object):
                     # semicolon in except
                     region = self.source.consume_except_as_or_semicolon()
                 else:
-                    region = self.source.consume(child)
+                    region = self.source.consume(child, skip_comment=not isinstance(node, (ast.JoinedStr, ast.FormattedValue)))
                 child = self.source[region[0]:region[1]]
                 token_start = region[0]
             if not first_token:
@@ -808,11 +808,11 @@ class _Source(object):
         self.source = source
         self.offset = 0
 
-    def consume(self, token):
+    def consume(self, token, skip_comment=True):
         try:
             while True:
                 new_offset = self.source.index(token, self.offset)
-                if self._good_token(token, new_offset):
+                if self._good_token(token, new_offset) or not skip_comment:
                     break
                 else:
                     self._skip_comment()
@@ -825,13 +825,12 @@ class _Source(object):
 
     def consume_string(self, end=None):
         if _Source._string_pattern is None:
-            original = codeanalyze.get_string_pattern()
+            string_pattern = codeanalyze.get_string_pattern()
+            formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
+            original = r'(?:%s)|(?:%s)' % (string_pattern, formatted_string_pattern)
             pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
                       (original, original)
-            foriginal = codeanalyze.get_formatted_string_pattern()
-            fpattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
-                      (foriginal, foriginal)
-            _Source._string_pattern = re.compile(r'(?:%s)|(?:%s)' % (pattern, fpattern))
+            _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
 
