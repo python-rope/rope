@@ -125,7 +125,10 @@ class _PatchingASTWalker(object):
                     # semicolon in except
                     region = self.source.consume_except_as_or_semicolon()
                 else:
-                    region = self.source.consume(child)
+                    if hasattr(ast, 'JoinedStr') and isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
+                        region = self.source.consume_joined_string(child)
+                    else:
+                        region = self.source.consume(child)
                 child = self.source[region[0]:region[1]]
                 token_start = region[0]
             if not first_token:
@@ -360,6 +363,46 @@ class _PatchingASTWalker(object):
 
     def _Bytes(self, node):
         self._handle(node, [self.String])
+
+    def _JoinedStr(self, node):
+        def start_quote_char():
+            possible_quotes = [(self.source.source.find(q, start, end), q) for q in QUOTE_CHARS]
+            quote_pos, quote_char = min((pos, q) for pos, q in possible_quotes if pos != -1)
+            return self.source[start:quote_pos + len(quote_char)]
+
+        def end_quote_char():
+            possible_quotes = [(self.source.source.rfind(q, start, end), q) for q in reversed(QUOTE_CHARS)]
+            _, quote_pos, quote_char = max((len(q), pos, q) for pos, q in possible_quotes if pos != -1)
+            return self.source[end - len(quote_char):end]
+
+        QUOTE_CHARS = ['"""', "'''", '"', "'"]
+        offset = self.source.offset
+        start, end = self.source.consume_string(
+            end=self._find_next_statement_start(),
+        )
+        self.source.offset = offset
+
+        children = []
+        children.append(start_quote_char())
+        for part in node.values:
+            if isinstance(part, ast.FormattedValue):
+                children.append(part)
+        children.append(end_quote_char())
+        self._handle(node, children)
+
+    def _FormattedValue(self, node):
+        children = []
+        children.append('{')
+        children.append(node.value)
+        if node.format_spec:
+            children.append(':')
+            for val in node.format_spec.values:
+                if isinstance(val, ast.FormattedValue):
+                    children.append(val.value)
+                else:
+                    children.append(val.s)
+        children.append('}')
+        self._handle(node, children)
 
     def _Continue(self, node):
         self._handle(node, ['continue'])
@@ -768,11 +811,11 @@ class _Source(object):
         self.source = source
         self.offset = 0
 
-    def consume(self, token):
+    def consume(self, token, skip_comment=True):
         try:
             while True:
                 new_offset = self.source.index(token, self.offset)
-                if self._good_token(token, new_offset):
+                if self._good_token(token, new_offset) or not skip_comment:
                     break
                 else:
                     self._skip_comment()
@@ -783,9 +826,16 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
+    def consume_joined_string(self, token):
+        new_offset = self.source.index(token, self.offset)
+        self.offset = new_offset + len(token)
+        return (new_offset, self.offset)
+
     def consume_string(self, end=None):
         if _Source._string_pattern is None:
-            original = codeanalyze.get_string_pattern()
+            string_pattern = codeanalyze.get_string_pattern()
+            formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
+            original = r'(?:%s)|(?:%s)' % (string_pattern, formatted_string_pattern)
             pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
                       (original, original)
             _Source._string_pattern = re.compile(pattern)
