@@ -329,7 +329,9 @@ class _ExpressionVisitor(object):
         self.scope_visitor._assigned(name, assignment)
 
     def _GeneratorExp(self, node):
-        ast.walk(node.elt, self)
+        for child in ['elt', 'key', 'value']:
+            if hasattr(node, child):
+                ast.walk(getattr(node, child), self)
         for comp in node.generators:
             ast.walk(comp.target, _AssignVisitor(self))
             ast.walk(comp, self)
@@ -337,6 +339,12 @@ class _ExpressionVisitor(object):
                 ast.walk(if_, self)
 
     def _ListComp(self, node):
+        self._GeneratorExp(node)
+
+    def _SetComp(self, node):
+        self._GeneratorExp(node)
+
+    def _DictComp(self, node):
         self._GeneratorExp(node)
 
     def _NamedExpr(self, node):

@@ -60,6 +60,30 @@ class PyCoreScopesTest(unittest.TestCase):
             ['b_var', 'c_var'],
         )
 
+    def test_set_comprehension_scope(self):
+        scope = libutils.get_string_scope(
+            self.project, '{b_var + d_var for b_var, c_var in e_var}\n')
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ['b_var', 'c_var'],
+        )
+
+    def test_generator_comprehension_scope(self):
+        scope = libutils.get_string_scope(
+            self.project, '(b_var + d_var for b_var, c_var in e_var)\n')
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ['b_var', 'c_var'],
+        )
+
+    def test_dict_comprehension_scope(self):
+        scope = libutils.get_string_scope(
+            self.project, '{b_var: d_var for b_var, c_var in e_var}\n')
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ['b_var', 'c_var'],
+        )
+
     def test_inline_assignment_in_comprehensions(self):
         scope = libutils.get_string_scope(
             self.project, '''[
