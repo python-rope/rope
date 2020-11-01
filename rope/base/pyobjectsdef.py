@@ -335,6 +335,9 @@ class _ExpressionVisitor(object):
     def _ListComp(self, node):
         self._GeneratorExp(node)
 
+    def _NamedExpr(self, node):
+        ast.walk(node, _AssignVisitor(self))
+
 
 class _AssignVisitor(object):
 

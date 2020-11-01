@@ -113,6 +113,21 @@ class RenameRefactoringTest(unittest.TestCase):
             'a_var = (new_var for new_var, c_var in d_var if new_var == c_var)',
             refactored)
 
+    def test_renaming_inline_assignment(self):
+        code = dedent('''\
+            while a_var := next(foo):
+                print(a_var)
+        ''')
+        refactored = self._local_rename(code, code.index('a_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            dedent('''\
+                while new_var := next(foo):
+                    print(new_var)
+            '''),
+            refactored,
+        )
+
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = 'def a_func(p1=None, p2=None):\n    pass\na_func(p2=1)\n'
         refactored = self._local_rename(code, code.index('p2') + 1, 'p3')
