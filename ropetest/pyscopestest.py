@@ -60,6 +60,30 @@ class PyCoreScopesTest(unittest.TestCase):
             ['b_var', 'c_var'],
         )
 
+    def test_inline_assignment_in_comprehensions(self):
+        scope = libutils.get_string_scope(
+            self.project, '''[
+                (a_var := b_var + (f_var := g_var))
+                for b_var in [(j_var := i_var)
+                for i_var in c_var] if a_var + (h_var := d_var)
+            ]''')
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ['a_var', 'b_var', 'f_var', 'h_var', 'i_var', 'j_var'],
+        )
+
+    def test_nested_comprehension(self):
+        scope = libutils.get_string_scope(
+            self.project, '''[
+                b_var + d_var for b_var, c_var in [
+                    e_var for e_var in f_var
+                ]
+            ]\n''')
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ['b_var', 'c_var', 'e_var'],
+        )
+
     def test_simple_class_scope(self):
         scope = libutils.get_string_scope(
             self.project,
