@@ -113,6 +113,20 @@ class RenameRefactoringTest(unittest.TestCase):
             'a_var = (new_var for new_var, c_var in d_var if new_var == c_var)',
             refactored)
 
+    @unittest.expectedFailure
+    def test_renaming_comprehension_loop_variables_scope(self):
+        # FIXME: variable scoping for comprehensions is incorrect, we currently
+        #        don't create a scope for comprehension
+        code = dedent('''\
+            [b_var for b_var, c_var in d_var if b_var == c_var]
+            b_var = 10
+        ''')
+        refactored = self._local_rename(code, code.index('b_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            '[new_var for new_var, c_var in d_var if new_var == c_var]\nb_var = 10\n',
+            refactored)
+
     def test_renaming_inline_assignment(self):
         code = dedent('''\
             while a_var := next(foo):
