@@ -321,6 +321,37 @@ class _AnnAssignVisitor(object):
         pass
 
 
+class _ExpressionVisitor(object):
+    def __init__(self, scope_visitor):
+        self.scope_visitor = scope_visitor
+
+    def _assigned(self, name, assignment=None):
+        self.scope_visitor._assigned(name, assignment)
+
+    def _GeneratorExp(self, node):
+        for child in ['elt', 'key', 'value']:
+            if hasattr(node, child):
+                ast.walk(getattr(node, child), self)
+        for comp in node.generators:
+            ast.walk(comp.target, _AssignVisitor(self))
+            ast.walk(comp, self)
+            for if_ in comp.ifs:
+                ast.walk(if_, self)
+
+    def _ListComp(self, node):
+        self._GeneratorExp(node)
+
+    def _SetComp(self, node):
+        self._GeneratorExp(node)
+
+    def _DictComp(self, node):
+        self._GeneratorExp(node)
+
+    def _NamedExpr(self, node):
+        ast.walk(node.target, _AssignVisitor(self))
+        ast.walk(node.value, self)
+
+
 class _AssignVisitor(object):
 
     def __init__(self, scope_visitor):
@@ -331,6 +362,7 @@ class _AssignVisitor(object):
         self.assigned_ast = node.value
         for child_node in node.targets:
             ast.walk(child_node, self)
+        ast.walk(node.value, _ExpressionVisitor(self.scope_visitor))
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
@@ -359,7 +391,7 @@ class _AssignVisitor(object):
         pass
 
 
-class _ScopeVisitor(object):
+class _ScopeVisitor(_ExpressionVisitor):
 
     def __init__(self, pycore, owner_object):
         self.pycore = pycore

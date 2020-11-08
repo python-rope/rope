@@ -89,6 +89,60 @@ class RenameRefactoringTest(unittest.TestCase):
             'def a_func(new_param):\n    a = new_param\na_func(1)\n',
             refactored)
 
+    def test_renaming_comprehension_loop_variables(self):
+        code = '[b_var for b_var, c_var in d_var if b_var == c_var]'
+        refactored = self._local_rename(code, code.index('b_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            '[new_var for new_var, c_var in d_var if new_var == c_var]',
+            refactored)
+
+    def test_renaming_list_comprehension_loop_variables_in_assignment(self):
+        code = 'a_var = [b_var for b_var, c_var in d_var if b_var == c_var]'
+        refactored = self._local_rename(code, code.index('b_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            'a_var = [new_var for new_var, c_var in d_var if new_var == c_var]',
+            refactored)
+
+    def test_renaming_generator_comprehension_loop_variables(self):
+        code = 'a_var = (b_var for b_var, c_var in d_var if b_var == c_var)'
+        refactored = self._local_rename(code, code.index('b_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            'a_var = (new_var for new_var, c_var in d_var if new_var == c_var)',
+            refactored)
+
+    @unittest.expectedFailure
+    def test_renaming_comprehension_loop_variables_scope(self):
+        # FIXME: variable scoping for comprehensions is incorrect, we currently
+        #        don't create a scope for comprehension
+        code = dedent('''\
+            [b_var for b_var, c_var in d_var if b_var == c_var]
+            b_var = 10
+        ''')
+        refactored = self._local_rename(code, code.index('b_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            '[new_var for new_var, c_var in d_var if new_var == c_var]\nb_var = 10\n',
+            refactored)
+
+    @testutils.only_for_versions_higher('3.8')
+    def test_renaming_inline_assignment(self):
+        code = dedent('''\
+            while a_var := next(foo):
+                print(a_var)
+        ''')
+        refactored = self._local_rename(code, code.index('a_var') + 1,
+                                        'new_var')
+        self.assertEqual(
+            dedent('''\
+                while new_var := next(foo):
+                    print(new_var)
+            '''),
+            refactored,
+        )
+
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = 'def a_func(p1=None, p2=None):\n    pass\na_func(p2=1)\n'
         refactored = self._local_rename(code, code.index('p2') + 1, 'p3')
