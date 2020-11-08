@@ -1,4 +1,5 @@
 import sys
+from textwrap import dedent
 try:
     import unittest2 as unittest
 except ImportError:
@@ -626,6 +627,25 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(code, code.index('a_var') + 1,
                                         'new_var')
         self.assertEqual(code.replace('a_var', 'new_var', 2), refactored)
+
+    def test_renaming_in_generalized_dict_unpacking(self):
+        code = dedent('''\
+            a_var = {**{'stuff': 'can'}, **{'stuff': 'crayon'}}
+
+            if "stuff" in a_var:
+                print("ya")
+        ''')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write(code)
+        refactored = self._local_rename(code, code.index('a_var') + 1,
+                                        'new_var')
+        expected = dedent('''\
+            new_var = {**{'stuff': 'can'}, **{'stuff': 'crayon'}}
+
+            if "stuff" in new_var:
+                print("ya")
+        ''')
+        self.assertEqual(expected, refactored)
 
     def test_dos_line_ending_and_renaming(self):
         code = '\r\na = 1\r\n\r\nprint(2 + a + 2)\r\n'
