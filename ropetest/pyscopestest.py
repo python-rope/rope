@@ -84,6 +84,7 @@ class PyCoreScopesTest(unittest.TestCase):
             ['b_var', 'c_var'],
         )
 
+    @testutils.only_for_versions_higher('3.8')
     def test_inline_assignment_in_comprehensions(self):
         scope = libutils.get_string_scope(
             self.project, '''[

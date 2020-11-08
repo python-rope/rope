@@ -127,6 +127,7 @@ class RenameRefactoringTest(unittest.TestCase):
             '[new_var for new_var, c_var in d_var if new_var == c_var]\nb_var = 10\n',
             refactored)
 
+    @testutils.only_for_versions_higher('3.8')
     def test_renaming_inline_assignment(self):
         code = dedent('''\
             while a_var := next(foo):
