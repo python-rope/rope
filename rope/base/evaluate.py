@@ -235,7 +235,7 @@ class StatementEvaluator(object):
         keys = None
         values = None
         if node.keys and node.keys[0]:
-            keys, values = next(filter(itemgetter(0), zip(node.keys, node.values)), (None, None))
+            keys, values = next(iter(filter(itemgetter(0), zip(node.keys, node.values))), (None, None))
             if keys:
                 keys = self._get_object_for_node(keys)
             if values:

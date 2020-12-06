@@ -682,6 +682,7 @@ class RenameRefactoringTest(unittest.TestCase):
                                         'new_var')
         self.assertEqual(code.replace('a_var', 'new_var', 2), refactored)
 
+    @testutils.only_for_versions_higher('3.5')
     def test_renaming_in_generalized_dict_unpacking(self):
         code = dedent('''\
             a_var = {**{'stuff': 'can'}, **{'stuff': 'crayon'}}
