@@ -547,7 +547,7 @@ class _ExtractMethodParts(object):
         # if not make_global, do not pass any global names; they are
         # all visible.
         if self.info.global_ and not self.info.make_global:
-            return ()
+            return list(self.info_collector.read & self.info_collector.postread & self.info_collector.written)
         if not self.info.one_line:
             result = (self.info_collector.prewritten &
                       self.info_collector.read)
@@ -661,6 +661,11 @@ class _FunctionInformationCollector(object):
         ast.walk(node.value, self)
         for child in node.targets:
             ast.walk(child, self)
+
+    def _AugAssign(self, node):
+        ast.walk(node.value, self)
+        self._read_variable(node.target.id, node.target.lineno)
+        self._written_variable(node.target.id, node.target.lineno)
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
