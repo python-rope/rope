@@ -1,0 +1,56 @@
+name: rope
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test - ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip pytest
+    - name: Test with pytest
+      run: |
+        pytest -v
+
+    # === NOTIFICATIONS ===
+    # https://github.com/rectalogic/notify-irc
+    - name: Dump event info
+      if: always()
+      # Usually unnecessary, but insanely useful if IRC notifications fail.
+      run: |
+        cat <<"EOF"
+        ${{ toJSON(github.event) }}
+        EOF
+    - name: IRC result notification (direct push)
+      uses: rectalogic/notify-irc@v1
+      if: github.repository == 'python-rope/rope' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled()
+      with:
+        channel: "#rope"
+        nickname: rope-ga
+        message: |-
+          ${{ github.actor }} pushed master on ${{ github.event.compare }}: ${{ job.status }}
+          Subject: ${{ join(github.event.commits[0].message) }} (+ more, maybe)
+          Details: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
+
+    - name: IRC result notification (PR)
+      uses: rectalogic/notify-irc@v1
+      if: github.event_name == 'pull_request' && !cancelled()
+      with:
+        channel: "#rope"
+        nickname: rope-ga
+        message: |-
+          ${{ github.actor }} ${{ github.event.action }} PR #${{ github.event.pull_request.number }}: ${{ job.status }}
+          Subject: ${{ github.event.pull_request.title }}
+          Details: ${{ github.event.pull_request._links.html.href }}
