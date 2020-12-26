@@ -46,7 +46,7 @@ def get_child_nodes(node):
     if isinstance(node, ast.Module):
         return node.body
     result = []
-    if node._fields is not None:
+    if node and node._fields is not None:
         for name in node._fields:
             child = getattr(node, name)
             if isinstance(child, list):
