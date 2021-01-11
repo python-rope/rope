@@ -1208,6 +1208,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.8')
     def test_extract_function_with_inline_assignment_in_condition(self):
         code = dedent('''\
             def foo(a):
