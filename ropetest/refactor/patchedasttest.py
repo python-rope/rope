@@ -121,7 +121,7 @@ class PatchedASTTest(unittest.TestCase):
             'Assign', ['Name', ' ', '=', ' ', 'Num'])
 
     @testutils.only_for_versions_higher('3.6')
-    def test_ann_assign_node_with_target(self):
+    def test_ann_assign_node_without_target(self):
         source = 'a: List[int]\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
