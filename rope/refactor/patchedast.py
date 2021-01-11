@@ -236,10 +236,6 @@ class _PatchingASTWalker(object):
     def _get_op(self, node):
         return self._operators[node.__class__.__name__].split(' ')
 
-    def _AnnAssign(self, node):
-        children = [node.target]
-        self._handle(node, children)
-
     def _Attribute(self, node):
         self._handle(node, [node.value, '.', node.attr])
 
@@ -431,6 +427,10 @@ class _PatchingASTWalker(object):
 
     def _Expr(self, node):
         self._handle(node, [node.value])
+
+    def _NamedExpr(self, node):
+        children = [node.target, ':=', node.value]
+        self._handle(node, children)
 
     def _Exec(self, node):
         children = []

@@ -601,6 +601,15 @@ class PatchedASTTest(unittest.TestCase):
                     ':', '\n    ', 'Pass', '\n',
                     'else', '', ':', '\n    ', 'Pass'])
 
+    @testutils.only_for_versions_higher('3.8')
+    def test_named_expr_node(self):
+        source = 'if a := 10 == 10:\n    pass\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('a')
+        checker.check_region('NamedExpr', start, start + 13)
+        checker.check_children('NamedExpr', ['Name', ' ', ':=', ' ', 'Compare'])
+
     def test_normal_from_node(self):
         source = 'from x import y\n'
         ast_frag = patchedast.get_patched_ast(source, True)

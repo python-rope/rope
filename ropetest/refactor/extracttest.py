@@ -1208,6 +1208,27 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_function_with_inline_assignment_in_condition(self):
+        code = dedent('''\
+            def foo(a):
+                if i := a == 5:
+                    i += 1
+                print(i)
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def foo(a):
+                i = new_func(a)
+                print(i)
+
+            def new_func(a):
+                if i := a == 5:
+                    i += 1
+                return i
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
