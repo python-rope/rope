@@ -258,6 +258,13 @@ class _PatchingASTWalker(object):
         children.extend(['=', node.value])
         self._handle(node, children)
 
+    def _AnnAssign(self, node):
+        children = [node.target, ':', node.annotation]
+        if node.value is not None:
+            children.append('=')
+            children.append(node.value)
+        self._handle(node, children)
+
     def _Repr(self, node):
         self._handle(node, ['`', node.value, '`'])
 
