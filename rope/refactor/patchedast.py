@@ -258,6 +258,13 @@ class _PatchingASTWalker(object):
         children.extend(['=', node.value])
         self._handle(node, children)
 
+    def _AnnAssign(self, node):
+        children = [node.target, ':', node.annotation]
+        if node.value is not None:
+            children.append('=')
+            children.append(node.value)
+        self._handle(node, children)
+
     def _Repr(self, node):
         self._handle(node, ['`', node.value, '`'])
 
@@ -427,6 +434,10 @@ class _PatchingASTWalker(object):
 
     def _Expr(self, node):
         self._handle(node, [node.value])
+
+    def _NamedExpr(self, node):
+        children = [node.target, ':=', node.value]
+        self._handle(node, children)
 
     def _Exec(self, node):
         children = []

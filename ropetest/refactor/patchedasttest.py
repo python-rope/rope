@@ -120,6 +120,26 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Assign', ['Name', ' ', '=', ' ', 'Num'])
 
+    @testutils.only_for_versions_higher('3.6')
+    def test_ann_assign_node_without_target(self):
+        source = 'a: List[int]\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('a')  # noqa
+        checker.check_region('AnnAssign', 0, len(source) - 1)
+        checker.check_children(
+            'AnnAssign', ['Name', '', ':', ' ', 'Subscript'])
+
+    @testutils.only_for_versions_higher('3.6')
+    def test_ann_assign_node_with_target(self):
+        source = 'a: int = 10\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('a')  # noqa
+        checker.check_region('AnnAssign', 0, len(source) - 1)
+        checker.check_children(
+            'AnnAssign', ['Name', '', ':', ' ', 'Name', ' ', '=', ' ', 'Num'])
+
     def test_add_node(self):
         source = '1 + 2\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -600,6 +620,15 @@ class PatchedASTTest(unittest.TestCase):
             'For', ['for', ' ', 'Name', ' ', 'in', ' ', 'Call', '',
                     ':', '\n    ', 'Pass', '\n',
                     'else', '', ':', '\n    ', 'Pass'])
+
+    @testutils.only_for_versions_higher('3.8')
+    def test_named_expr_node(self):
+        source = 'if a := 10 == 10:\n    pass\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index('a')
+        checker.check_region('NamedExpr', start, start + 13)
+        checker.check_children('NamedExpr', ['Name', ' ', ':=', ' ', 'Compare'])
 
     def test_normal_from_node(self):
         source = 'from x import y\n'
