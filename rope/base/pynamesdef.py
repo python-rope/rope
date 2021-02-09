@@ -24,7 +24,10 @@ class AssignedName(pynames.AssignedName):
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
         if self.lineno is None and self.assignments:
-            self.lineno = self.assignments[0].get_lineno()
+            try:
+                self.lineno = self.assignments[0].get_lineno()
+            except AttributeError:
+                pass
         return (self.module, self.lineno)
 
     def invalidate(self):
