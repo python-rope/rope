@@ -225,6 +225,14 @@ class _RealFinder(object):
             prev = self._find_last_non_space_char(offset - 1)
             if offset <= 0 or self.code[prev] != '.':
                 break
+
+            # Check if relative import
+            # XXX: Looks like a hack...
+            prev_word_end = self._find_last_non_space_char(prev - 1)
+            if self.code[prev_word_end-3:prev_word_end+1] == "from":
+                offset = prev
+                break
+
             offset = self._find_primary_without_dot_start(prev - 1)
             if not self._is_id_char(offset):
                 break
