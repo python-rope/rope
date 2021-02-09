@@ -157,6 +157,11 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEqual('a_func  (  "(" ) .   an_attr',
                          self._find_primary(code, 26))
 
+    def test_relative_import(self):
+        code = "from .module import smt"
+        self.assertEqual('.module',
+                         self._find_primary(code, 5))
+
     def test_functions_on_ending_parens(self):
         code = 'A()'
         self.assertEqual('A()', self._find_primary(code, 2))
