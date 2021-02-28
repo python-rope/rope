@@ -284,6 +284,32 @@ class GenerateTest(unittest.TestCase):
             '    if 1:\n        g()\n',
             self.mod.read())
 
+    def test_create_generate_class_with_goal_resource(self):
+        code = 'c = C()\n'
+        self.mod.write(code)
+
+        result = generate.create_generate(
+            "class",
+            self.project,
+            self.mod,
+            code.index("C"),
+            goal_resource=self.mod2)
+
+        self.assertTrue(isinstance(result, generate.GenerateClass))
+        self.assertEqual(result.goal_resource, self.mod2)
+
+    def test_create_generate_class_without_goal_resource(self):
+        code = 'c = C()\n'
+        self.mod.write(code)
+
+        result = generate.create_generate(
+            "class",
+            self.project,
+            self.mod,
+            code.index("C"))
+
+        self.assertTrue(isinstance(result, generate.GenerateClass))
+        self.assertIsNone(result.goal_resource)
 
 if __name__ == '__main__':
     unittest.main()
