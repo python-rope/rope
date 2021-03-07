@@ -5,7 +5,7 @@ from rope.base import (change, pyobjects, exceptions, pynames, worder,
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
-def create_generate(kind, project, resource, offset):
+def create_generate(kind, project, resource, offset, goal_resource=None):
     """A factory for creating `Generate` objects
 
     `kind` can be 'variable', 'function', 'class', 'module' or
@@ -13,7 +13,7 @@ def create_generate(kind, project, resource, offset):
 
     """
     generate = eval('Generate' + kind.title())
-    return generate(project, resource, offset)
+    return generate(project, resource, offset, goal_resource=goal_resource)
 
 
 def create_module(project, name, sourcefolder=None):
