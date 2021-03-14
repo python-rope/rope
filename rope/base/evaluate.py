@@ -307,6 +307,9 @@ class StatementEvaluator(object):
         elif isinstance(node.slice, ast.Slice):
             self._call_function(node.value, '__getitem__',
                                 [node.slice])
+        elif isinstance(node.slice, ast.expr):
+            self._call_function(node.value, '__getitem__',
+                                [node.value])
 
     def _Slice(self, node):
         self.result = self._get_builtin_name('slice')
