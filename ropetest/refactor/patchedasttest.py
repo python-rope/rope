@@ -838,8 +838,12 @@ class PatchedASTTest(unittest.TestCase):
         source = 'x = xs[0,:]\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_region('ExtSlice', 7, len(source) - 2)
-        checker.check_children('ExtSlice', ['Index', '', ',', '', 'Slice'])
+        if sys.version_info >= (3, 9):
+            checker.check_region('Tuple', 7, len(source) - 2)
+            checker.check_children('Tuple', ['Num', '', ',', '', 'Slice'])
+        else:
+            checker.check_region('ExtSlice', 7, len(source) - 2)
+            checker.check_children('ExtSlice', ['Index', '', ',', '', 'Slice'])
 
     def test_simple_module_node(self):
         source = 'pass\n'
@@ -933,9 +937,13 @@ class PatchedASTTest(unittest.TestCase):
         source = 'a[1]\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children(
-            'Subscript', ['Name', '', '[', '', 'Index', '', ']'])
-        checker.check_children('Index', ['Num'])
+        if sys.version_info >= (3, 9):
+            checker.check_children(
+                'Subscript', ['Name', '', '[', '', 'Num', '', ']'])
+        else:
+            checker.check_children(
+                'Subscript', ['Name', '', '[', '', 'Index', '', ']'])
+            checker.check_children('Index', ['Num'])
 
     def test_tuple_node(self):
         source = '(1, 2)\n'
