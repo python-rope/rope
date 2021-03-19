@@ -126,7 +126,7 @@ class SOAVisitor(object):
         for subscript, levels in nodes:
             instance = evaluate.eval_node(self.scope, subscript.value)
             args_pynames = [evaluate.eval_node(self.scope,
-                                               subscript.slice.value)]
+                                               subscript.slice)]
             value = rope.base.oi.soi._infer_assignment(
                 rope.base.pynames.AssignmentValue(node.value, levels,
                                                   type_hint=type_hint),
@@ -149,5 +149,5 @@ class _SOAAssignVisitor(astutils._NodeNameCollector):
 
     def _added(self, node, levels):
         if isinstance(node, rope.base.ast.Subscript) and \
-           isinstance(node.slice, rope.base.ast.Index):
+           isinstance(node.slice, (rope.base.ast.Index, rope.base.ast.expr)):
             self.nodes.append((node, levels))
