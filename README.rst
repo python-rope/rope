@@ -40,10 +40,9 @@ you open a project).
 Bug Reports
 ===========
 
-Send your bug reports and feature requests to `rope-dev (at)
-googlegroups.com`_.
+Send your bug reports and feature requests at `python-rope's issue tracker`_ in Github.
 
-.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
+.. _`python-rope's issue tracker`: https://github.com/python-rope/rope/issues
 
 
 License
