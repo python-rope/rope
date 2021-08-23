@@ -38,6 +38,7 @@ The `unresolved issues list`_ in Github is the latest todo list.
 There is also a rather outdated list in `dev/issues.rst`_. There
 is a section called "unresolved issues"; it contains almost every kind
 of task.  This file will need some cleanup, thoughts, and discussions.
+
 Pickup whichever you are most interested in.  If you have ideas or questions
 about them, don't hesitate to create a Github ticket for it.
 
