@@ -14,32 +14,45 @@ welcome to!
 How to Help Rope?
 =================
 
-Rope's mailing list is `rope-dev (at) googlegroups.com`_.  Click the
-"Join group to post" button to subscribe. Then:
+Rope's development happens in  `python-rope's Github`_.
 
-* Use rope
+Use `python-rope's Github Issue Tracker`_ to discuss development-related issues:
+
 * Send bug reports and request features
 * Submit patches for bugs or new features
-* Discuss your ideas
 
-.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
+Use `python-rope's Github Discussion`_ for other discussions, such as:
+
+* Help using rope
+* Help integrating rope with text editors/tools
+* Discuss your ideas
+* Engage with the rope community
+
+.. _`python-rope's Github`: https://github.com/python-rope/rope
+.. _`python-rope's Github Issue Tracker`: https://github.com/python-rope/rope/issues
+.. _`python-rope's Github Discussion`: https://github.com/python-rope/rope/discussions
 
 
 Wish List
 =========
 
-You are welcome to send your patches to the `rope-dev (at)
-googlegroups.com`_ mailing list.  Here is a list of suggestions.
+You are welcome to make pull requests in `python-rope's Github Issue Tracker`_.
+
+Here is a list of suggestions.
 
 Issues
 ------
 
-The `dev/issues.rst`_ file is actually the main rope todo file.  There
-is a section called "unresolved issues"; it contains almost every kind
-of task.  Most of them need some thought or discussion.  Pickup
-whichever you are most interested in.  If you have ideas or questions
-about them, don't hesitate to discuss it in the mailing list.
+The `unresolved issues list`_ in Github is the latest todo list.
 
+There is also a rather outdated list in `dev/issues.rst`_. There
+is a section called "unresolved issues"; it contains almost every kind
+of task.  This file will need some cleanup, thoughts, and discussions.
+
+Pickup whichever you are most interested in.  If you have ideas or questions
+about them, don't hesitate to create a Github ticket for it.
+
+.. _`unresolved issues list`: https://github.com/python-rope/rope/issues
 .. _`dev/issues.rst`: dev/issues.rst
 
 Write Plugins For Other IDEs
