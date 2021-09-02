@@ -14,19 +14,29 @@ welcome to!
 How to Help Rope?
 =================
 
-Rope's development happens in `python-rope's Github page`_. Then:
+Rope's development happens in  `python-rope's Github`_.
 
-* Use rope
+Use `python-rope's Github Issue Tracker`_ to discuss development-related issues:
+
 * Send bug reports and request features
 * Submit patches for bugs or new features
-* Discuss your ideas
 
-.. _`python-rope's Github page`: https://github.com/python-rope/rope
+Use `python-rope's Github Discussion`_ for other discussions, such as:
+
+* Help using rope
+* Help integrating rope with text editors/tools
+* Discuss your ideas
+* Engage with the rope community
+
+.. _`python-rope's Github`: https://github.com/python-rope/rope
+.. _`python-rope's Github Issue Tracker`: https://github.com/python-rope/rope/issues
+.. _`python-rope's Github Discussion`: https://github.com/python-rope/rope/discussions
+
 
 Wish List
 =========
 
-You are welcome to make pull requests in `python-rope's Github page`_.
+You are welcome to make pull requests in `python-rope's Github Issue Tracker`_.
 
 Here is a list of suggestions.
 
