@@ -526,14 +526,12 @@ class _ExtractMethodParts(object):
         return ', '.join(names)
 
     def _get_call(self):
-        if self.info.one_line:
-            args = self._find_function_arguments()
-            return self._get_function_call(args)
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         call_prefix = ''
         if returns:
-            call_prefix = self._get_comma_form(returns) + ' = '
+            assignment_operator = ' := ' if self.info.one_line else ' = '
+            call_prefix = self._get_comma_form(returns) + assignment_operator
         if self.info.returned:
             call_prefix = 'return '
         return call_prefix + self._get_function_call(args)
@@ -560,7 +558,12 @@ class _ExtractMethodParts(object):
         return list(self.info_collector.prewritten.intersection(read))
 
     def _find_function_returns(self):
-        if self.info.one_line or self.info.returned:
+        if self.info.one_line:
+            written = self.info_collector.written | \
+                self.info_collector.maybe_written
+            return list(written & self.info_collector.postread)
+
+        if self.info.returned:
             return []
         written = self.info_collector.written | \
             self.info_collector.maybe_written
@@ -730,8 +733,6 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        if isinstance(code, unicode):
-            code = code.encode('utf-8')
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
         ast.walk(node, visitor)
@@ -803,7 +804,11 @@ def _get_function_kind(scope):
 
 def _parse_text(body):
     body = sourceutils.fix_indentation(body, 0)
-    node = ast.parse(body)
+    try:
+        node = ast.parse(body)
+    except SyntaxError:
+        # needed to parse expression containing := operator
+        node = ast.parse('(' + body + ')')
     return node
 
 
