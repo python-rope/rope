@@ -523,12 +523,7 @@ class _ExtractMethodParts(object):
                                     self._get_comma_form(args))
 
     def _get_comma_form(self, names):
-        result = ''
-        if names:
-            result += names[0]
-            for name in names[1:]:
-                result += ', ' + name
-        return result
+        return ', '.join(names)
 
     def _get_call(self):
         if self.info.one_line:
