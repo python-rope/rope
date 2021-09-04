@@ -136,6 +136,10 @@ def _returns_last(node):
     return node.body and isinstance(node.body[-1], ast.Return)
 
 
+def _namedexpr_last(node):
+    return node.body and len(node.body) == 1 and isinstance(node.body[-1].value, ast.NamedExpr)
+
+
 def _yield_count(node):
     visitor = _ReturnOrYieldFinder()
     visitor.start_walking(node)

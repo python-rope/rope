@@ -1248,12 +1248,12 @@ class ExtractMethodTest(unittest.TestCase):
                 print(i)
 
             def new_func(a):
-                return i := a == 5
+                return (i := a == 5)
         ''')
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher('3.8')
-    def test_extract_function_expression_with_inline_assignment_in_inner_expression(self):
+    def test_extract_function_expression_with_inline_assignment_complex(self):
         code = dedent('''\
             def foo(a):
                 if i := a == (c := 5):
@@ -1272,7 +1272,29 @@ class ExtractMethodTest(unittest.TestCase):
                 print(i)
 
             def new_func(a):
-                return i := a == (c := 5)
+                return (i := a == (c := 5))
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.8')
+    def test_extract_function_expression_with_inline_assignment_in_inner_expression(self):
+        code = dedent('''\
+            def foo(a):
+                if a == (c := 5):
+                    c += 1
+                print(i)
+        ''')
+        extract_target = 'a == (c := 5)'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def foo(a):
+                if c := new_func(a):
+                    c += 1
+                print(i)
+
+            def new_func(a):
+                return a == (c := 5)
         ''')
         self.assertEqual(expected, refactored)
 

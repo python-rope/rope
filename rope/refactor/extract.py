@@ -192,6 +192,16 @@ class _ExtractInfo(object):
             self._returned = usefunction._returns_last(node)
         return self._returned
 
+    _parenthesize = None
+
+    @property
+    def parenthesize(self):
+        """Does the extracted piece need extra parentheses to make a valid Python expression"""
+        if self._parenthesize is None:
+            node = _parse_text(self.extracted)
+            self._parenthesize = usefunction._namedexpr_last(node)
+        return self._parenthesize
+
 
 class _ExtractCollector(object):
     """Collects information needed for performing the extract"""
@@ -571,7 +581,10 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            return 'return ' + _join_lines(self.info.extracted)
+            if self.info.parenthesize:
+                return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
+            else:
+                return 'return ' + _join_lines(self.info.extracted)
         extracted_body = self.info.extracted
         unindented_body = sourceutils.fix_indentation(extracted_body, 0)
         if returns:
