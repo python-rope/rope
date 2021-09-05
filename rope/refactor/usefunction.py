@@ -137,6 +137,8 @@ def _returns_last(node):
 
 
 def _namedexpr_last(node):
+    if not hasattr(ast, 'NamedExpr'): # python<3.8
+        return False
     return node.body and len(node.body) == 1 and isinstance(node.body[-1].value, ast.NamedExpr)
 
 
