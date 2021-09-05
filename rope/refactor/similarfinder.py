@@ -70,7 +70,11 @@ class RawSimilarFinder(object):
 
     def __init__(self, source, node=None, does_match=None):
         if node is None:
-            node = ast.parse(source)
+            try:
+                node = ast.parse(source)
+            except SyntaxError:
+                # needed to parse expression containing := operator
+                node = ast.parse('(' + source + ')')
         if does_match is None:
             self.does_match = self._simple_does_match
         else:

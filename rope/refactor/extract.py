@@ -192,6 +192,16 @@ class _ExtractInfo(object):
             self._returned = usefunction._returns_last(node)
         return self._returned
 
+    _parenthesize = None
+
+    @property
+    def parenthesize(self):
+        """Does the extracted piece need extra parentheses to make a valid Python expression"""
+        if self._parenthesize is None:
+            node = _parse_text(self.extracted)
+            self._parenthesize = usefunction._namedexpr_last(node)
+        return self._parenthesize
+
 
 class _ExtractCollector(object):
     """Collects information needed for performing the extract"""
@@ -523,22 +533,15 @@ class _ExtractMethodParts(object):
                                     self._get_comma_form(args))
 
     def _get_comma_form(self, names):
-        result = ''
-        if names:
-            result += names[0]
-            for name in names[1:]:
-                result += ', ' + name
-        return result
+        return ', '.join(names)
 
     def _get_call(self):
-        if self.info.one_line:
-            args = self._find_function_arguments()
-            return self._get_function_call(args)
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         call_prefix = ''
         if returns:
-            call_prefix = self._get_comma_form(returns) + ' = '
+            assignment_operator = ' := ' if self.info.one_line else ' = '
+            call_prefix = self._get_comma_form(returns) + assignment_operator
         if self.info.returned:
             call_prefix = 'return '
         return call_prefix + self._get_function_call(args)
@@ -565,7 +568,12 @@ class _ExtractMethodParts(object):
         return list(self.info_collector.prewritten.intersection(read))
 
     def _find_function_returns(self):
-        if self.info.one_line or self.info.returned:
+        if self.info.one_line:
+            written = self.info_collector.written | \
+                self.info_collector.maybe_written
+            return list(written & self.info_collector.postread)
+
+        if self.info.returned:
             return []
         written = self.info_collector.written | \
             self.info_collector.maybe_written
@@ -573,7 +581,10 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            return 'return ' + _join_lines(self.info.extracted)
+            if self.info.parenthesize:
+                return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
+            else:
+                return 'return ' + _join_lines(self.info.extracted)
         extracted_body = self.info.extracted
         unindented_body = sourceutils.fix_indentation(extracted_body, 0)
         if returns:
@@ -735,8 +746,6 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        if isinstance(code, unicode):
-            code = code.encode('utf-8')
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
         ast.walk(node, visitor)
@@ -808,7 +817,11 @@ def _get_function_kind(scope):
 
 def _parse_text(body):
     body = sourceutils.fix_indentation(body, 0)
-    node = ast.parse(body)
+    try:
+        node = ast.parse(body)
+    except SyntaxError:
+        # needed to parse expression containing := operator
+        node = ast.parse('(' + body + ')')
     return node
 
 
