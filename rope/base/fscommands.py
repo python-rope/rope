@@ -231,20 +231,6 @@ def _decode_data(data, encoding):
         return data.decode('latin1')
 
 
-def read_file_coding(path):
-    file = open(path, 'b')
-    count = 0
-    result = []
-    while True:
-        current = file.read(10)
-        if not current:
-            break
-        count += current.count('\n')
-        result.append(current)
-    file.close()
-    return _find_coding(''.join(result))
-
-
 def read_str_coding(source):
     if type(source) == bytes:
         newline = b'\n'
