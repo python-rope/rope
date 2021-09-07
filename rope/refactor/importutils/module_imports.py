@@ -400,9 +400,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
 
     def is_bound(self, primary, propagated=False):
         name = primary.split('.')[0]
-        if name in self.names:
-            return True
-        return False
+        return name in self.names
 
     def add_unbound(self, name):
         names = name.split('.')
