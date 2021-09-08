@@ -3,6 +3,8 @@ try:
 except ImportError:
     import unittest
 
+from textwrap import dedent
+
 from rope.refactor.importutils import ImportTools, importinfo, add_import
 from ropetest import testutils
 
@@ -936,6 +938,19 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual(
             'from __future__ import devision\n\nimport os\n',
             self.import_tools.sort_imports(pymod))
+
+    def test_organizing_imports_all_star(self):
+        code = expected = dedent('''\
+            from package import some_name
+
+
+            __all__ = ["some_name"]
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
 
     def test_customized_import_organization(self):
         self.mod.write('import sys\nimport sys\n')

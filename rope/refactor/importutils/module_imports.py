@@ -1,4 +1,5 @@
 from rope.base import ast
+from rope.base import exceptions
 from rope.base import pynames
 from rope.base import utils
 from rope.refactor.importutils import actions
@@ -31,8 +32,19 @@ class ModuleImports(object):
         ast.walk(self.pymodule.get_ast(), visitor)
         return visitor.unbound
 
+    def _get_all_star_list(self, pymodule):
+        result = set()
+        try:
+            dunder_all = pymodule.get_attribute('__all__')
+        except exceptions.AttributeNotFoundError:
+            return result
+        for assignment in dunder_all.assignments:
+            for el in assignment.ast_node.elts:
+                result.add(el.s)
+        return result
+
     def remove_unused_imports(self):
-        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
+        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule) | self._get_all_star_list(self.pymodule))
         visitor = actions.RemovingVisitor(
             self.project, self._current_folder(), can_select)
         for import_statement in self.imports:
