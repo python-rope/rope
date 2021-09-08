@@ -7,6 +7,7 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 
 """
 import os
+import re
 import shutil
 import subprocess
 
@@ -250,10 +251,6 @@ def read_str_coding(source):
         newline = b'\n'
     else:
         newline = '\n'
-    #try:
-    #    source = source.decode("utf-8")
-    #except AttributeError:
-    #    pass
     try:
         first = source.index(newline) + 1
         second = source.index(newline, first) + 1
@@ -265,6 +262,8 @@ def read_str_coding(source):
 def _find_coding(text):
     if isinstance(text, pycompat.str):
         text = text.encode('utf-8')
+    if not text.lstrip().startswith(b'#'):
+        return None
     coding = b'coding'
     to_chr = chr if pycompat.PY3 else lambda x: x
     try:
