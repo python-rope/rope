@@ -6,6 +6,7 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 `MercurialCommands` for example.
 
 """
+import re
 import os
 import shutil
 import subprocess
@@ -231,35 +232,21 @@ def _decode_data(data, encoding):
         return data.decode('latin1')
 
 
-def read_file_coding(path):
-    file = open(path, 'b')
-    count = 0
-    result = []
-    while True:
-        current = file.read(10)
-        if not current:
-            break
-        count += current.count('\n')
-        result.append(current)
-    file.close()
-    return _find_coding(''.join(result))
-
-
 def read_str_coding(source):
+    # as defined by PEP-263 (https://www.python.org/dev/peps/pep-0263/)
+    CODING_LINE_PATTERN = b'^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)'
+
     if type(source) == bytes:
         newline = b'\n'
+        CODING_LINE_PATTERN = re.compile(CODING_LINE_PATTERN)
     else:
         newline = '\n'
-    #try:
-    #    source = source.decode("utf-8")
-    #except AttributeError:
-    #    pass
-    try:
-        first = source.index(newline) + 1
-        second = source.index(newline, first) + 1
-    except ValueError:
-        second = len(source)
-    return _find_coding(source[:second])
+        CODING_LINE_PATTERN = re.compile(CODING_LINE_PATTERN.decode('ascii'))
+    for line in source.split(newline, 2)[:2]:
+        if re.match(CODING_LINE_PATTERN, line):
+            return _find_coding(line)
+    else:
+        return
 
 
 def _find_coding(text):

@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 import os.path
 import shutil
 try:
@@ -415,6 +416,15 @@ class ProjectTest(unittest.TestCase):
         file.write(contents)
         file.close()
         self.assertEqual(contents, sample_file.read().encode('latin-1'))
+
+    def test_not_an_encoding_declaration(self):
+        sample_file = self.project.root.create_file('my_file.txt')
+        contents = b"def my_method(self, encoding='latin-1'):\n    var = {}\n\xc2\xa9\n"
+        file = open(sample_file.real_path, 'wb')
+        file.write(contents)
+        file.close()
+        self.assertEqual(contents, sample_file.read().encode('utf-8'))
+        self.assertNotEqual(contents, sample_file.read().encode('latin-1'))
 
     def test_read_bytes(self):
         sample_file = self.project.root.create_file('my_file.txt')
