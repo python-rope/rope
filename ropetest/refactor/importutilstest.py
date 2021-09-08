@@ -1014,6 +1014,21 @@ class ImportUtilsTest(unittest.TestCase):
             expected,
             self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_no_infinite_recursion(self):
+        code = expected = dedent('''\
+            from package import name_one, name_two
+
+
+            foo = bar
+            bar = foo
+            __all__ = [foo, 'name_one', 'name_two']
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
+
     def test_customized_import_organization(self):
         self.mod.write('import sys\nimport sys\n')
         pymod = self.project.get_pymodule(self.mod)
