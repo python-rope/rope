@@ -43,7 +43,7 @@ Send your bug reports and feature requests at `python-rope's issue tracker`_ in 
 Maintainers
 ===========
 
-Current active maintainers of Rope are Matej Cepl (`@mcepl`_) and Lie Ryan <lie.1296@gmail.com> (`@lieryan`_).
+Current active maintainers of Rope are Matej Cepl (`@mcepl`_) and Lie Ryan (`@lieryan`_).
 
 Special Thanks
 ==============
