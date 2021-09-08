@@ -35,12 +35,29 @@ class ModuleImports(object):
     def _get_all_star_list(self, pymodule):
         result = set()
         try:
-            dunder_all = pymodule.get_attribute('__all__')
+            all_star_list = pymodule.get_attribute('__all__')
         except exceptions.AttributeNotFoundError:
             return result
-        for assignment in dunder_all.assignments:
-            for el in assignment.ast_node.elts:
-                result.add(el.s)
+
+        # FIXME: Need a better way to recursively infer possible values.
+        #        Currently pyobjects can recursively infer type, but not values.
+        # Do a very basic 1-level value inference
+        for assignment in all_star_list.assignments:
+            if isinstance(assignment.ast_node, ast.List):
+                stack = list(assignment.ast_node.elts)
+                while stack:
+                    el = stack.pop()
+                    if isinstance(el, ast.Str):
+                        result.add(el.s)
+                    elif isinstance(el, ast.Name):
+                        name = pymodule.get_attribute(el.id)
+                        if isinstance(name, pynames.AssignedName):
+                            for av in name.assignments:
+                                if isinstance(av.ast_node, ast.Str):
+                                    result.add(av.ast_node.s)
+                    elif isinstance(el, ast.IfExp):
+                        stack.append(el.body)
+                        stack.append(el.orelse)
         return result
 
     def remove_unused_imports(self):

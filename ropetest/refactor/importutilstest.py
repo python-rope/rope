@@ -952,6 +952,68 @@ class ImportUtilsTest(unittest.TestCase):
             expected,
             self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_with_variables(self):
+        code = expected = dedent('''\
+            from package import name_one, name_two
+
+
+            if something():
+                foo = 'name_one'
+            else:
+                foo = 'name_two'
+            __all__ = [foo]
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_with_inline_if(self):
+        code = expected = dedent('''\
+            from package import name_one, name_two
+
+
+            __all__ = ['name_one' if something() else 'name_two']
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
+
+    @testutils.only_for_versions_higher('3')
+    def test_organizing_imports_all_star_tolerates_non_list_of_str_1(self):
+        code = expected = dedent('''\
+            from package import name_one, name_two
+
+
+            foo = 'name_two'
+            __all__ = [bar, *abc] + mylist
+            __all__ = [foo, 'name_one', *abc]
+            __all__ = [it for it in mylist]
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_tolerates_non_list_of_str_2(self):
+        code = expected = dedent('''\
+            from package import name_one, name_two
+
+
+            foo = 'name_two'
+            __all__ = [foo, 3, 'name_one']
+            __all__ = [it for it in mylist]
+        ''')
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            expected,
+            self.import_tools.organize_imports(pymod))
+
     def test_customized_import_organization(self):
         self.mod.write('import sys\nimport sys\n')
         pymod = self.project.get_pymodule(self.mod)
