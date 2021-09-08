@@ -460,25 +460,6 @@ class _PatchingASTWalker(object):
         children.append(self.exec_close_paren_or_space)
         self._handle(node, children)
 
-    # def _Exec(self, node):
-    #     children = []
-    #     children.extend(['exec', '(', node.body])
-    #     if node.globals:
-    #         children.extend([',', node.globals])
-    #     if node.locals:
-    #         children.extend([',', node.locals])
-    #     children.append(')')
-    #     self._handle(node, children)
-
-    # def _Exec(self, node):
-    #     children = []
-    #     children.extend(['exec', node.body])
-    #     if node.globals:
-    #         children.extend(['in', node.globals])
-    #     if node.locals:
-    #         children.extend([',', node.locals])
-    #     self._handle(node, children)
-
     def _ExtSlice(self, node):
         children = []
         for index, dim in enumerate(node.dims):
@@ -862,7 +843,6 @@ class _Source(object):
                 else:
                     self._skip_comment()
         except (ValueError, TypeError) as e:
-            print e
             raise MismatchedTokenError(
                 'Token <%s> at %s cannot be matched' %
                 (token, self._get_location()))
