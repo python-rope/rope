@@ -52,7 +52,7 @@ class _ExtractRefactoring(object):
             offset -= 1
         return offset
 
-    def get_changes(self, extracted_name, similar=False, global_=False, static=False):
+    def get_changes(self, extracted_name, similar=False, global_=False, kind=None):
         """Get the changes this refactoring makes
 
         :parameters:
@@ -60,12 +60,13 @@ class _ExtractRefactoring(object):
               replaced.
             - `global_`: if `True`, the extracted method/variable will
               be global.
+            - `kind`: kind of target refactoring to (staticmethod)
 
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
             extracted_name, variable=self.kind == 'variable',
-            similar=similar, make_global=global_, static=static)
+            similar=similar, make_global=global_, static=kind == "staticmethod")
         new_contents = _ExtractPerformer(info).extract()
         changes = ChangeSet('Extract %s <%s>' % (self.kind,
                                                  extracted_name))
