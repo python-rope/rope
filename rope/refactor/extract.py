@@ -53,7 +53,7 @@ class _ExtractRefactoring(object):
             offset -= 1
         return offset
 
-    def get_changes(self, extracted_name, similar=False, global_=False):
+    def get_changes(self, extracted_name, similar=False, global_=False, static=False):
         """Get the changes this refactoring makes
 
         :parameters:
@@ -66,7 +66,7 @@ class _ExtractRefactoring(object):
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
             extracted_name, variable=self.kind == 'variable',
-            similar=similar, make_global=global_)
+            similar=similar, make_global=global_, static=static)
         new_contents = _ExtractPerformer(info).extract()
         changes = ChangeSet('Extract %s <%s>' % (self.kind,
                                                  extracted_name))
@@ -96,7 +96,7 @@ class _ExtractInfo(object):
     """Holds information about the extract to be performed"""
 
     def __init__(self, project, resource, start, end, new_name,
-                 variable, similar, make_global):
+                 variable, similar, make_global, static):
         self.project = project
         self.resource = resource
         self.pymodule = project.get_pymodule(resource)
@@ -107,6 +107,7 @@ class _ExtractInfo(object):
         self.variable = variable
         self.similar = similar
         self._init_parts(start, end)
+        self.static = static
         self._init_scope()
         self.make_global = make_global
 
@@ -440,6 +441,8 @@ class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
+        if self.info.method and _get_function_kind(self.info.scope) == "staticmethod":
+           self.info.static = True
 
     def get_definition(self):
         if self.info.global_:
@@ -493,9 +496,9 @@ class _ExtractMethodParts(object):
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
+
         result = []
-        if self.info.method and not self.info.make_global and \
-           _get_function_kind(self.info.scope) != 'method':
+        if self._extracting_static():
             result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
@@ -505,6 +508,9 @@ class _ExtractMethodParts(object):
         definition = ''.join(result)
 
         return definition + '\n'
+
+    def _extracting_static(self):
+        return self.info.static
 
     def _get_function_signature(self, args):
         args = list(args)
@@ -521,8 +527,8 @@ class _ExtractMethodParts(object):
             '(%s)' % self._get_comma_form(args)
 
     def _extracting_method(self):
-        return self.info.method and not self.info.make_global and \
-            _get_function_kind(self.info.scope) == 'method'
+        return not self._extracting_static() and (self.info.method and not self.info.make_global and \
+            _get_function_kind(self.info.scope) == 'method')
 
     def _get_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()
@@ -532,13 +538,13 @@ class _ExtractMethodParts(object):
     def _get_function_call(self, args):
         prefix = ''
         if self.info.method and not self.info.make_global:
-            if _get_function_kind(self.info.scope) == 'method':
+            if self._extracting_static():
+                prefix = self.info.scope.parent.pyobject.get_name() + '.'
+            else:
                 self_name = self._get_self_name()
                 if self_name in args:
                     args.remove(self_name)
                 prefix = self_name + '.'
-            else:
-                prefix = self.info.scope.parent.pyobject.get_name() + '.'
         return prefix + '%s(%s)' % (self.info.new_name,
                                     self._get_comma_form(args))
 
