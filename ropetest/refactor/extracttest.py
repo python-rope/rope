@@ -1320,6 +1320,17 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_to_static_method_when_self_in_body_should_raise_error(self):
+        code = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = self.a_var + 1
+        ''')
+        extract_target = 'self.a_var + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "extract static method with reference to self"):
+            self.do_extract_method(code, start, end, 'second_method', static=True)
 
 if __name__ == '__main__':
     unittest.main()
