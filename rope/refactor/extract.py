@@ -431,8 +431,10 @@ class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
-        if self.info.method and _get_function_kind(self.info.scope) == "staticmethod":
-           self.info.static = True
+        self.info.static = True if self._extracting_from_static() else self.info.static
+
+    def _extracting_from_static(self):
+        return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"
 
     def get_definition(self):
         if self.info.global_:
@@ -517,8 +519,10 @@ class _ExtractMethodParts(object):
             '(%s)' % self._get_comma_form(args)
 
     def _extracting_method(self):
-        return not self._extracting_static() and (self.info.method and not self.info.make_global and \
-            _get_function_kind(self.info.scope) == 'method')
+        return  not self._extracting_static() and \
+                (self.info.method and \
+                    not self.info.make_global and \
+                    _get_function_kind(self.info.scope) == 'method')
 
     def _get_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()
@@ -526,6 +530,12 @@ class _ExtractMethodParts(object):
             return param_names[0]
 
     def _get_function_call(self, args):
+        return '{prefix}{name}({args})'.format(
+            prefix=self._get_function_call_prefix(args),
+            name=self.info.new_name,
+            args=self._get_comma_form(args))
+
+    def _get_function_call_prefix(self, args):
         prefix = ''
         if self.info.method and not self.info.make_global:
             if self._extracting_static():
@@ -535,8 +545,7 @@ class _ExtractMethodParts(object):
                 if self_name in args:
                     args.remove(self_name)
                 prefix = self_name + '.'
-        return prefix + '%s(%s)' % (self.info.new_name,
-                                    self._get_comma_form(args))
+        return prefix
 
     def _get_comma_form(self, names):
         return ', '.join(names)
