@@ -77,6 +77,9 @@ class _PatchingASTWalker(object):
     Number = object()
     String = object()
     semicolon_or_as_in_except = object()
+    exec_open_paren_or_space = object()
+    exec_close_paren_or_space = object()
+    exec_in_or_comma = object()
 
     def __call__(self, node):
         method = getattr(self, '_' + node.__class__.__name__, None)
@@ -124,6 +127,15 @@ class _PatchingASTWalker(object):
                     # INFO: This has been added to handle deprecated
                     # semicolon in except
                     region = self.source.consume_except_as_or_semicolon()
+                elif child == self.exec_open_paren_or_space:
+                    # These three cases handle the differences between
+                    # the deprecated exec statement and the exec
+                    # function.
+                    region = self.source.consume_exec_open_paren_or_space()
+                elif child == self.exec_in_or_comma:
+                    region = self.source.consume_exec_in_or_comma()
+                elif child == self.exec_close_paren_or_space:
+                    region = self.source.consume_exec_close_paren_or_space()
                 else:
                     if hasattr(ast, 'JoinedStr') and isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
                         region = self.source.consume_joined_string(child)
@@ -440,12 +452,12 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Exec(self, node):
-        children = []
-        children.extend(['exec', node.body])
+        children = ['exec', self.exec_open_paren_or_space, node.body]
         if node.globals:
-            children.extend(['in', node.globals])
+            children.extend([self.exec_in_or_comma, node.globals])
         if node.locals:
             children.extend([',', node.locals])
+        children.append(self.exec_close_paren_or_space)
         self._handle(node, children)
 
     def _ExtSlice(self, node):
@@ -830,7 +842,7 @@ class _Source(object):
                     break
                 else:
                     self._skip_comment()
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             raise MismatchedTokenError(
                 'Token <%s> at %s cannot be matched' %
                 (token, self._get_location()))
@@ -868,6 +880,18 @@ class _Source(object):
 
     def consume_except_as_or_semicolon(self):
         repattern = re.compile(r'as|,')
+        return self._consume_pattern(repattern)
+
+    def consume_exec_open_paren_or_space(self):
+        repattern = re.compile(r'\(|')
+        return self._consume_pattern(repattern)
+
+    def consume_exec_in_or_comma(self):
+        repattern = re.compile(r'in|,')
+        return self._consume_pattern(repattern)
+
+    def consume_exec_close_paren_or_space(self):
+        repattern = re.compile(r'\)|')
         return self._consume_pattern(repattern)
 
     def _good_token(self, token, offset, start=None):

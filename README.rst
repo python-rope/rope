@@ -15,13 +15,8 @@ Overview
 .. _`rope`: https://github.com/python-rope/rope
 
 
-Notes
-============
-
-* Nick Smith <nicks@fastmail.fm> takes over maintaining rope. Many thanks to
-  Matej Cepl for his work maintaining rope for the past few years!!
-* Partial Python3 support, please file bugs and contribute patches if you
-  encounter gaps.
+Most Python syntax from Python 2.7 up to Python 3.9 is supported. Please file bugs and contribute
+patches if you encounter gaps.
 
 Getting Started
 ===============
@@ -44,6 +39,27 @@ Send your bug reports and feature requests at `python-rope's issue tracker`_ in 
 
 .. _`python-rope's issue tracker`: https://github.com/python-rope/rope/issues
 
+
+Maintainers
+===========
+
+Current active maintainers of Rope are Matej Cepl (`@mcepl`_) and Lie Ryan (`@lieryan`_).
+
+Special Thanks
+==============
+
+Many thanks the following people:
+
+- Ali Gholami Rudi (`@aligrudi`_) for initially creating the initial Rope project and most of Rope's code
+- Nick Smith <nicks@fastmail.fm> (`@soupytwist`_) as former Rope maintainer
+- `all of our current and former contributors`_
+- authors of editor integrations
+
+.. _`@aligrudi`: https://github.com/aligrudi
+.. _`@soupytwist`: https://github.com/soupytwist
+.. _`@lieryan`: https://github.com/lieryan
+.. _`@mcepl`: https://github.com/mcepl
+.. _`all of our current and former contributors`: https://github.com/python-rope/rope/graphs/contributors
 
 License
 =======
