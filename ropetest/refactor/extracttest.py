@@ -1363,6 +1363,16 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "extract static method with reference to self"):
             self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
 
+    def test_extract_from_function_to_staticmethod_raises_exception(self):
+        code = dedent('''\
+            def first_method():
+                a_var = 1
+                b_var = a_var + 1
+        ''')
+        extract_target = 'a_var + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Cannot extract to staticmethod outside class"):
+            self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
 
 if __name__ == '__main__':
     unittest.main()

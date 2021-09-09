@@ -433,8 +433,14 @@ class _ExtractMethodParts(object):
         self.info = info
         self.info_collector = self._create_info_collector()
         self.info.static = True if self._extracting_from_static() else self.info.static
+
+        self._check_constraints()
+
+    def _check_constraints(self):
         if self._extracting_static() and self._self_name_in_body():
-            raise RefactoringError("Can't extract static method with reference to {}".format(self._get_self_name()))
+            raise RefactoringError("Cannot extract static method with reference to {}".format(self._get_self_name()))
+        if self._extracting_static() and  not self.info.method:
+            raise RefactoringError("Cannot extract to staticmethod outside class")
 
     def _self_name_in_body(self):
         return self._get_self_name() and self._get_self_name() in self.info.extracted
