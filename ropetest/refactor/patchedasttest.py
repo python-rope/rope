@@ -599,7 +599,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Exec', 0, len(source) - 1)
-        checker.check_children('Exec', ['exec', ' ', 'Str'])
+        checker.check_children('Exec', ['exec', '', '', ' ', 'Str', '', ''])
 
     @testutils.only_for_versions_lower('3')
     def test_exec_node(self):
@@ -608,8 +608,18 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Exec', 0, len(source) - 1)
         checker.check_children(
-            'Exec', ['exec', ' ', 'Str', ' ', 'in',
-                     ' ', 'Call', '', ',', ' ', 'Call'])
+            'Exec', ['exec', '', '', ' ', 'Str', ' ', 'in',
+                     ' ', 'Call', '', ',', ' ', 'Call', '', ''])
+
+    @testutils.only_for_versions_lower('3')
+    def test_exec_node_with_parens(self):
+        source = 'exec("", locals(), globals())\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region('Exec', 0, len(source) - 1)
+        checker.check_children(
+            'Exec', ['exec', '', '(', '', 'Str', '', ',',
+                     ' ', 'Call', '', ',', ' ', 'Call', '', ')'])
 
     def test_for_node(self):
         source = 'for i in range(1):\n    pass\nelse:\n    pass\n'

@@ -1298,6 +1298,37 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_exec(self):
+        code = dedent('''\
+            exec("def f(): pass", {})
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 1, 1)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+
+            def new_func():
+                exec("def f(): pass", {})
+
+            new_func()
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_lower('3')
+    def test_extract_exec_statement(self):
+        code = dedent('''\
+            exec "def f(): pass" in {}
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 1, 1)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+
+            def new_func():
+                exec "def f(): pass" in {}
+
+            new_func()
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_extract_to_static_method(self):
         code = dedent('''\
             class A:
@@ -1331,6 +1362,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
         with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "extract static method with reference to self"):
             self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
+
 
 if __name__ == '__main__':
     unittest.main()
