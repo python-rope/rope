@@ -1298,6 +1298,28 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_to_static_method(self):
+        code = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = a_var + 1
+        ''')
+        extract_target = 'a_var + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, 'second_method', static=True)
+        expected = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = A.second_method(a_var)
+
+                @staticmethod
+                def second_method(a_var):
+                    return a_var + 1
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
