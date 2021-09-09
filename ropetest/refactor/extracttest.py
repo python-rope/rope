@@ -1298,6 +1298,27 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_function_expression_with_inline_assignment_in_inner_expression(self):
+        code = dedent('''\
+            class A(object):
+                def func(self):
+                    self.var_a = 1
+                    var_bb = self.var_a
+        ''')
+        extract_target = '= self.var_a'
+        start, end = code.index(extract_target)+2, code.index(extract_target)+2 + len(extract_target) - 2
+        refactored = self.do_extract_method(code, start, end, 'new_func', similar=True)
+        expected = dedent('''\
+            class A(object):
+                def func(self):
+                    self.var_a = 1
+                    var_bb = self.new_func()
+
+                def new_func(self):
+                    return self.var_a
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
