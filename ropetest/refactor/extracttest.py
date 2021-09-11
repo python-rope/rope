@@ -1595,16 +1595,25 @@ class ExtractMethodTest(unittest.TestCase):
             self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
 
     def test_extract_method_in_classmethods(self):
-        code = 'class AClass(object):\n\n' \
-               '    @classmethod\n    def func2(cls):\n        b = 1\n'
+        code = dedent('''\
+            class AClass(object):
+                @classmethod
+                def func2(cls):
+                    b = 1
+        ''')
         start = code.index(' 1') + 1
         refactored = self.do_extract_method(code, start, start + 1,
                                             'one', similar=True)
-        expected = 'class AClass(object):\n\n' \
-                   '    @classmethod\n    def func2(cls):\n' \
-                   '        b = AClass.one()\n\n' \
-                   '    @classmethod\n    def one(cls):\n' \
-                   '        return 1\n'
+        expected = dedent('''\
+            class AClass(object):
+                @classmethod
+                def func2(cls):
+                    b = AClass.one()
+
+                @classmethod
+                def one(cls):
+                    return 1
+        ''')
         self.assertEqual(expected, refactored)
 
 
