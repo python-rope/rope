@@ -433,7 +433,7 @@ class _ExtractMethodParts(object):
         self.info = info
         self.info_collector = self._create_info_collector()
         self.info.static = True if self._extracting_from_static() else self.info.static
-
+        self.info.classmethod = True if self._extracting_from_classmethod() else False
         self._check_constraints()
 
     def _check_constraints(self):
@@ -447,6 +447,9 @@ class _ExtractMethodParts(object):
 
     def _extracting_from_static(self):
         return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"
+
+    def _extracting_from_classmethod(self):
+        return self.info.method and _get_function_kind(self.info.scope) == "classmethod"
 
     def get_definition(self):
         if self.info.global_:
@@ -502,8 +505,12 @@ class _ExtractMethodParts(object):
         returns = self._find_function_returns()
 
         result = []
+
         if self._extracting_static():
             result.append('@staticmethod\n')
+        if self._extracting_classmethod():
+            result.append('@classmethod\n')
+
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
         indents = sourceutils.get_indent(self.info.project)
@@ -513,13 +520,16 @@ class _ExtractMethodParts(object):
 
         return definition + '\n'
 
+    def _extracting_classmethod(self):
+        return self.info.classmethod
+
     def _extracting_static(self):
         return self.info.static
 
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self._extracting_method():
+        if self._extracting_method() or self._extracting_classmethod():
             self_name = self._get_self_name()
             if self_name is None:
                 raise RefactoringError('Extracting a method from a function '
@@ -550,7 +560,7 @@ class _ExtractMethodParts(object):
     def _get_function_call_prefix(self, args):
         prefix = ''
         if self.info.method and not self.info.make_global:
-            if self._extracting_static():
+            if self._extracting_static() or self._extracting_classmethod():
                 prefix = self.info.scope.parent.pyobject.get_name() + '.'
             else:
                 self_name = self._get_self_name()
