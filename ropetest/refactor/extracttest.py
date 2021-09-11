@@ -1298,6 +1298,37 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_exec(self):
+        code = dedent('''\
+            exec("def f(): pass", {})
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 1, 1)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+
+            def new_func():
+                exec("def f(): pass", {})
+
+            new_func()
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_lower('3')
+    def test_extract_exec_statement(self):
+        code = dedent('''\
+            exec "def f(): pass" in {}
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 1, 1)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+
+            def new_func():
+                exec "def f(): pass" in {}
+
+            new_func()
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_extract_function_expression_with_inline_assignment_in_inner_expression(self):
         code = dedent('''\
             class A(object):
