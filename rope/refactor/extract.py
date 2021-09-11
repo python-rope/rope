@@ -61,13 +61,15 @@ class _ExtractRefactoring(object):
               replaced.
             - `global_`: if `True`, the extracted method/variable will
               be global.
-            - `kind`: kind of target refactoring to (staticmethod)
+            - `kind`: kind of target refactoring to (staticmethod, classmethod)
 
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
             extracted_name, variable=self.kind == 'variable',
-            similar=similar, make_global=global_, static=kind == "staticmethod")
+            similar=similar, make_global=global_)
+        info.staticmethod = kind == "staticmethod"
+        info.classmethod = kind == "classmethod"
         new_contents = _ExtractPerformer(info).extract()
         changes = ChangeSet('Extract %s <%s>' % (self.kind,
                                                  extracted_name))
@@ -97,7 +99,7 @@ class _ExtractInfo(object):
     """Holds information about the extract to be performed"""
 
     def __init__(self, project, resource, start, end, new_name,
-                 variable, similar, make_global, static):
+                 variable, similar, make_global):
         self.project = project
         self.resource = resource
         self.pymodule = project.get_pymodule(resource)
@@ -108,7 +110,8 @@ class _ExtractInfo(object):
         self.variable = variable
         self.similar = similar
         self._init_parts(start, end)
-        self.static = static
+        self.staticmethod = False
+        self.classmethod = False
         self._init_scope()
         self.make_global = make_global
 
@@ -442,18 +445,22 @@ class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
-        self.info.static = True if self._extracting_from_static() else self.info.static
-        self.info.classmethod = True if self._extracting_from_classmethod() else False
+        self.info.staticmethod = True if self._extracting_from_static() else self.info.staticmethod
+        self.info.classmethod = True if self._extracting_from_classmethod() else self.info.classmethod
         self._check_constraints()
 
     def _check_constraints(self):
-        if self._extracting_static() and self._self_name_in_body():
-            raise RefactoringError("Cannot extract static method with reference to {}".format(self._get_self_name()))
-        if self._extracting_static() and  not self.info.method:
+        if self._extracting_staticmethod() and self._self_name_in_body():
+            raise RefactoringError("Cannot extract staticmethod with reference to {}".format(self._get_self_name()))
+        elif self._extracting_staticmethod() and  not self.info.method:
             raise RefactoringError("Cannot extract to staticmethod outside class")
+        elif self._extracting_classmethod() and self._self_name_in_body():
+            raise RefactoringError("Cannot extract classmethod with reference to {}".format(self._get_scope_self_name()))
+        elif self._extracting_classmethod() and  not self.info.method:
+            raise RefactoringError("Cannot extract to classmethod outside class")
 
     def _self_name_in_body(self):
-        return self._get_self_name() and self._get_self_name() in self.info.extracted
+        return self._get_scope_self_name() and self._get_scope_self_name() in self.info.extracted
 
     def _extracting_from_static(self):
         return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"
@@ -515,12 +522,7 @@ class _ExtractMethodParts(object):
         returns = self._find_function_returns()
 
         result = []
-
-        if self._extracting_static():
-            result.append('@staticmethod\n')
-        if self._extracting_classmethod():
-            result.append('@classmethod\n')
-
+        self._append_decorators(result)
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
         indents = sourceutils.get_indent(self.info.project)
@@ -530,11 +532,17 @@ class _ExtractMethodParts(object):
 
         return definition + '\n'
 
+    def _append_decorators(self, result):
+        if self._extracting_staticmethod():
+            result.append('@staticmethod\n')
+        elif self._extracting_classmethod():
+            result.append('@classmethod\n')
+
     def _extracting_classmethod(self):
         return self.info.classmethod
 
-    def _extracting_static(self):
-        return self.info.static
+    def _extracting_staticmethod(self):
+        return self.info.staticmethod
 
     def _get_function_signature(self, args):
         args = list(args)
@@ -551,12 +559,17 @@ class _ExtractMethodParts(object):
             '(%s)' % self._get_comma_form(args)
 
     def _extracting_method(self):
-        return  not self._extracting_static() and \
+        return  not self._extracting_staticmethod() and \
                 (self.info.method and \
                     not self.info.make_global and \
                     _get_function_kind(self.info.scope) == 'method')
 
     def _get_self_name(self):
+        if self._extracting_classmethod():
+            return "cls"
+        return self._get_scope_self_name()
+
+    def _get_scope_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()
         if param_names:
             return param_names[0]
@@ -570,7 +583,7 @@ class _ExtractMethodParts(object):
     def _get_function_call_prefix(self, args):
         prefix = ''
         if self.info.method and not self.info.make_global:
-            if self._extracting_static() or self._extracting_classmethod():
+            if self._extracting_staticmethod() or self._extracting_classmethod():
                 prefix = self.info.scope.parent.pyobject.get_name() + '.'
             else:
                 self_name = self._get_self_name()
