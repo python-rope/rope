@@ -1014,7 +1014,8 @@ class ImportUtilsTest(unittest.TestCase):
             expected,
             self.import_tools.organize_imports(pymod))
 
-    def test_organizing_imports_all_star_no_infinite_recursion(self):
+    @testutils.time_limit(60)
+    def test_organizing_imports_all_star_no_infinite_loop(self):
         code = expected = dedent('''\
             from package import name_one, name_two
 
