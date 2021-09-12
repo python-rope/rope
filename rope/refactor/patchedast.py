@@ -468,13 +468,23 @@ class _PatchingASTWalker(object):
             children.append(dim)
         self._handle(node, children)
 
-    def _For(self, node):
-        children = ['for', node.target, 'in', node.iter, ':']
+    def _handle_for_loop_node(self, node, is_async):
+        if is_async:
+            children = ['async', 'for']
+        else:
+            children = ['for']
+        children.extend([node.target, 'in', node.iter, ':'])
         children.extend(node.body)
         if node.orelse:
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
+
+    def _For(self, node):
+        self._handle_for_loop_node(node, is_async=False)
+
+    def _AsyncFor(self, node):
+        self._handle_for_loop_node(node, is_async=True)
 
     def _ImportFrom(self, node):
         children = ['from']

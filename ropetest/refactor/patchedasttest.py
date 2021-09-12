@@ -640,6 +640,16 @@ class PatchedASTTest(unittest.TestCase):
                     ':', '\n    ', 'Pass', '\n',
                     'else', '', ':', '\n    ', 'Pass'])
 
+    def test_async_for_node(self):
+        source = 'async for i in range(1):\n    pass\nelse:\n    pass\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region('AsyncFor', 0, len(source) - 1)
+        checker.check_children(
+            'AsyncFor', ['async', ' ', 'for', ' ', 'Name', ' ', 'in', ' ', 'Call', '',
+                    ':', '\n    ', 'Pass', '\n',
+                    'else', '', ':', '\n    ', 'Pass'])
+
     @testutils.only_for_versions_higher('3.8')
     def test_named_expr_node(self):
         source = 'if a := 10 == 10:\n    pass\n'

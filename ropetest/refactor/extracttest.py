@@ -1370,6 +1370,27 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_async_for_loop(self):
+        code = dedent('''\
+            def my_func(my_list):
+                async for x in my_list:
+                    var = x + 1
+                return var
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func(my_list):
+                async for x in my_list:
+                    var = new_func(x)
+                return var
+
+            def new_func(x):
+                var = x + 1
+                return var
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
