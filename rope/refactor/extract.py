@@ -685,23 +685,6 @@ class _FunctionInformationCollector(object):
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
-    def _handle_conditional_node(self, node):
-        self.conditional = True
-        try:
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-        finally:
-            self.conditional = False
-
-    @contextmanager
-    def _handle_loop_context(self, node):
-        if node.lineno < self.start:
-            self.loop_depth += 1
-        try:
-            yield
-        finally:
-            self.loop_depth -= 1
-
     def _If(self, node):
         self._handle_conditional_node(node)
 
@@ -723,6 +706,28 @@ class _FunctionInformationCollector(object):
                     ast.walk(child, self)
             finally:
                 self.conditional = False
+
+    def _handle_conditional_node(self, node):
+        with self._handle_conditional_context(node):
+            for child in ast.get_child_nodes(node):
+                ast.walk(child, self)
+
+    @contextmanager
+    def _handle_conditional_context(self, node):
+        self.conditional = True
+        try:
+            yield
+        finally:
+            self.conditional = False
+
+    @contextmanager
+    def _handle_loop_context(self, node):
+        if node.lineno < self.start:
+            self.loop_depth += 1
+        try:
+            yield
+        finally:
+            self.loop_depth -= 1
 
 
 def _get_argnames(arguments):
