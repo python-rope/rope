@@ -501,6 +501,29 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_for_loop_variable_scope_write_only(self):
+        code = dedent('''\
+            def my_func():
+                i = 0
+                for num in range(10):
+                    i = 'hello' + num
+                    print(i)
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func():
+                i = 0
+                for num in range(10):
+                    i = new_func(num)
+                    print(i)
+
+            def new_func(num):
+                i = 'hello' + num
+                return i
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_variable_writes_followed_by_variable_reads_after_extraction(self):
         code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
         start = code.index('a = 1')
@@ -1140,19 +1163,24 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_returning_conditional_updated_vars_in_extracted(self):
-        code = 'def f(a):\n' \
-               '    if 0:\n' \
-               '        a = 1\n' \
-               '    print(a)\n'
+        code = dedent("""\
+            def f(a):
+                if 0:
+                    a = 1
+                print(a)
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, 'g')
-        expected = 'def f(a):\n' \
-                   '    a = g(a)\n' \
-                   '    print(a)\n\n' \
-                   'def g(a):\n' \
-                   '    if 0:\n' \
-                   '        a = 1\n' \
-                   '    return a\n'
+        expected = dedent("""\
+            def f(a):
+                a = g(a)
+                print(a)
+
+            def g(a):
+                if 0:
+                    a = 1
+                return a
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_variables_possibly_written_to(self):

@@ -678,7 +678,7 @@ class _FunctionInformationCollector(object):
 
     def _written_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
-            if self.conditional or self.loop_depth > 0:
+            if self.conditional:
                 self.maybe_written.add(name)
             else:
                 self.written.add(name)
@@ -734,19 +734,15 @@ class _FunctionInformationCollector(object):
             self._handle_conditional_node(node)
 
     def _For(self, node):
-        self.conditional = True
-        with self._handle_loop_context(node):
-            try:
-                # iter has to be checked before the target variables
-                ast.walk(node.iter, self)
-                ast.walk(node.target, self)
+        with self._handle_loop_context(node), self._handle_conditional_context(node):
+            # iter has to be checked before the target variables
+            ast.walk(node.iter, self)
+            ast.walk(node.target, self)
 
-                for child in node.body:
-                    ast.walk(child, self)
-                for child in node.orelse:
-                    ast.walk(child, self)
-            finally:
-                self.conditional = False
+            for child in node.body:
+                ast.walk(child, self)
+            for child in node.orelse:
+                ast.walk(child, self)
 
     def _handle_conditional_node(self, node):
         with self._handle_conditional_context(node):
@@ -755,7 +751,8 @@ class _FunctionInformationCollector(object):
 
     @contextmanager
     def _handle_conditional_context(self, node):
-        self.conditional = True
+        if self.start <= node.lineno <= self.end:
+            self.conditional = True
         try:
             yield
         finally:
