@@ -66,23 +66,27 @@ class _ExtractRefactoring(object):
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
-            extracted_name, variable=self.kind == 'variable',
+            extracted_name, variable=self._get_kind(kind) == 'variable',
             similar=similar, make_global=global_)
-        info.staticmethod = kind == "staticmethod"
-        info.classmethod = kind == "classmethod"
+        info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet('Extract %s <%s>' % (self.kind,
+        changes = ChangeSet('Extract %s <%s>' % (info.kind,
                                                  extracted_name))
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
+    @classmethod
+    def _get_kind(cls, kind):
+        raise NotImplementedError(f"You have to sublass {cls}")
+
 
 class ExtractMethod(_ExtractRefactoring):
-
-    def __init__(self, *args, **kwds):
-        super(ExtractMethod, self).__init__(*args, **kwds)
-
     kind = 'method'
+    allowed_kinds = ("function", "method", "staticmethod", "classmethod")
+
+    @classmethod
+    def _get_kind(cls, kind):
+        return kind if kind in cls.allowed_kinds else cls.kind
 
 
 class ExtractVariable(_ExtractRefactoring):
@@ -94,6 +98,8 @@ class ExtractVariable(_ExtractRefactoring):
 
     kind = 'variable'
 
+    def _get_kind(cls, kind):
+        return cls.kind
 
 class _ExtractInfo(object):
     """Holds information about the extract to be performed"""
@@ -110,8 +116,7 @@ class _ExtractInfo(object):
         self.variable = variable
         self.similar = similar
         self._init_parts(start, end)
-        self.staticmethod = False
-        self.classmethod = False
+        self.kind = None
         self._init_scope()
         self.make_global = make_global
 
@@ -445,24 +450,27 @@ class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
-        self.info.staticmethod = True if self._extracting_from_static() else self.info.staticmethod
-        self.info.classmethod = True if self._extracting_from_classmethod() else self.info.classmethod
+        self.info.kind = self._get_kind_by_scope()
         self._check_constraints()
 
+    def _get_kind_by_scope(self):
+        if self._extacting_from_staticmethod():
+            return "staticmethod"
+        elif self._extracting_from_classmethod():
+            return "classmethod"
+        return self.info.kind
+
     def _check_constraints(self):
-        if self._extracting_staticmethod() and self._self_name_in_body():
-            raise RefactoringError("Cannot extract staticmethod with reference to {}".format(self._get_self_name()))
-        elif self._extracting_staticmethod() and  not self.info.method:
-            raise RefactoringError("Cannot extract to staticmethod outside class")
-        elif self._extracting_classmethod() and self._self_name_in_body():
-            raise RefactoringError("Cannot extract classmethod with reference to {}".format(self._get_scope_self_name()))
-        elif self._extracting_classmethod() and  not self.info.method:
-            raise RefactoringError("Cannot extract to classmethod outside class")
+        if self._extracting_staticmethod() or self._extracting_classmethod():
+            if self._self_name_in_body():
+                raise RefactoringError("Cannot extract staticmethod/classmethod with reference to {}".format(self._get_scope_self_name()))
+            elif not self.info.method:
+                raise RefactoringError("Cannot extract to staticmethod/classmethod outside class")
 
     def _self_name_in_body(self):
         return self._get_scope_self_name() and self._get_scope_self_name() in self.info.extracted
 
-    def _extracting_from_static(self):
+    def _extacting_from_staticmethod(self):
         return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"
 
     def _extracting_from_classmethod(self):
@@ -539,10 +547,10 @@ class _ExtractMethodParts(object):
             result.append('@classmethod\n')
 
     def _extracting_classmethod(self):
-        return self.info.classmethod
+        return self.info.kind == "classmethod"
 
     def _extracting_staticmethod(self):
-        return self.info.staticmethod
+        return self.info.kind == "staticmethod"
 
     def _get_function_signature(self, args):
         args = list(args)
