@@ -735,7 +735,7 @@ class _FunctionInformationCollector(object):
             self.conditional = False
 
     @contextmanager
-    def _handle_loop_node(self, node):
+    def _handle_loop_context(self, node):
         if node.lineno < self.start:
             self.loop_depth += 1
         try:
@@ -747,12 +747,12 @@ class _FunctionInformationCollector(object):
         self._handle_conditional_node(node)
 
     def _While(self, node):
-        with self._handle_loop_node(node):
+        with self._handle_loop_context(node):
             self._handle_conditional_node(node)
 
     def _For(self, node):
         self.conditional = True
-        with self._handle_loop_node(node):
+        with self._handle_loop_context(node):
             try:
                 # iter has to be checked before the target variables
                 ast.walk(node.iter, self)
