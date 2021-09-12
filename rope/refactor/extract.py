@@ -661,6 +661,7 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
+        self.surrounded_by_loop = 0
         self.globals_ = OrderedSet()
 
     def _read_variable(self, name, lineno):
@@ -674,10 +675,12 @@ class _FunctionInformationCollector(object):
 
     def _written_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
-            if self.conditional:
+            if self.conditional or self.surrounded_by_loop:
                 self.maybe_written.add(name)
             else:
                 self.written.add(name)
+            if self.surrounded_by_loop and name in self.read:
+                self.postread.add(name)
         if self.start > lineno:
             self.prewritten.add(name)
         if self.end < lineno:
@@ -732,10 +735,17 @@ class _FunctionInformationCollector(object):
         self._handle_conditional_node(node)
 
     def _While(self, node):
-        self._handle_conditional_node(node)
+        if node.lineno < self.start:
+            self.surrounded_by_loop += 1
+        try:
+            self._handle_conditional_node(node)
+        finally:
+            self.surrounded_by_loop -= 1
 
     def _For(self, node):
         self.conditional = True
+        if node.lineno < self.start:
+            self.surrounded_by_loop += 1
         try:
             # iter has to be checked before the target variables
             ast.walk(node.iter, self)
@@ -747,6 +757,7 @@ class _FunctionInformationCollector(object):
                 ast.walk(child, self)
         finally:
             self.conditional = False
+            self.surrounded_by_loop -= 1
 
 
 def _get_argnames(arguments):

@@ -433,6 +433,74 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, 'new_func')
 
+    def test_for_loop_variable_scope(self):
+        code = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    i += 1
+                    print(i)
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 4, 5)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    i = new_func(i)
+
+            def new_func(i):
+                i += 1
+                print(i)
+                return i
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_for_loop_variable_scope_read_then_write(self):
+        code = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    a = i + 1
+                    i = a + 1
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 4, 5)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    i = new_func(i)
+
+            def new_func(i):
+                a = i + 1
+                i = a + 1
+                return i
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_for_loop_variable_scope_write_then_read(self):
+        code = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    i = 'hello'
+                    print(i)
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 4, 5)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func():
+                i = 0
+                for dummy in range(10):
+                    new_func()
+
+            def new_func():
+                i = 'hello'
+                print(i)
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_variable_writes_followed_by_variable_reads_after_extraction(self):
         code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
         start = code.index('a = 1')
@@ -1126,25 +1194,29 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_list_comprehension_and_iter(self):
-        code = "def foo():\n" \
-               "    x = [e for e in []]\n" \
-               "    f = 23\n" \
-               "\n" \
-               "    for x, f in x:\n" \
-               "        def bar():\n" \
-               "            x[42] = 1\n"
+        code = dedent("""\
+            def foo():
+                x = [e for e in []]
+                f = 23
+
+                for x, f in x:
+                    def bar():
+                        x[42] = 1
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 7)
         refactored = self.do_extract_method(code, start, end, 'baz')
-        expected = "def foo():\n" \
-                   "    x = [e for e in []]\n" \
-                   "    f = 23\n" \
-                   "\n" \
-                   "    baz(x)\n" \
-                   "\n" \
-                   "def baz(x):\n" \
-                   "    for x, f in x:\n" \
-                   "        def bar():\n" \
-                   "            x[42] = 1\n"
+        expected = dedent("""\
+            def foo():
+                x = [e for e in []]
+                f = 23
+
+                baz(x)
+
+            def baz(x):
+                for x, f in x:
+                    def bar():
+                        x[42] = 1
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_list_comprehension_and_orelse(self):
@@ -1209,8 +1281,13 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_function_with_for_else_statemant_outside_loops(self):
-        code = 'def a_func():\n    for i in range(10):\n        a = i\n' \
-            '    else:\n        a=None\n'
+        code = dedent('''\
+            def a_func():
+                for i in range(10):
+                    a = i
+                else:
+                    a=None
+        ''')
         start = code.index('a = i')
         end = len(code) - 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
