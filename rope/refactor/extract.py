@@ -561,7 +561,7 @@ class _ExtractMethodParts(object):
             return list(result)
         start = self.info.region[0]
         if start == self.info.lines_region[0]:
-            start = start + re.search('\S', self.info.extracted).start()
+            start = start + re.search('\\S', self.info.extracted).start()
         function_definition = self.info.source[start:self.info.region[1]]
         read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
             function_definition)
