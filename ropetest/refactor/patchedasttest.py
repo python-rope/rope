@@ -541,6 +541,15 @@ class PatchedASTTest(unittest.TestCase):
                                ['def', ' ', 'f', '', '(', '', 'arguments', '',
                                             ')', '', ':', '\n    ', 'Pass'])
 
+    def test_async_function_node(self):
+        source = 'async def f():\n    pass\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region('AsyncFunction', 0, len(source) - 1)
+        checker.check_children('AsyncFunction',
+                               ['async', ' ', 'def', ' ', 'f', '', '(', '', 'arguments', '',
+                                            ')', '', ':', '\n    ', 'Pass'])
+
     def test_function_node2(self):
         source = 'def f(p1, **p2):\n    """docs"""\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)

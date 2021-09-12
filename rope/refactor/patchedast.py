@@ -492,7 +492,7 @@ class _PatchingASTWalker(object):
             children.extend(['as', node.asname])
         self._handle(node, children)
 
-    def _FunctionDef(self, node):
+    def _handle_function_def_node(self, node, is_async):
         children = []
         try:
             decorators = getattr(node, 'decorator_list')
@@ -502,10 +502,20 @@ class _PatchingASTWalker(object):
             for decorator in decorators:
                 children.append('@')
                 children.append(decorator)
-        children.extend(['def', node.name, '(', node.args])
+        if is_async:
+            children.extend(['async', 'def'])
+        else:
+            children.extend(['def'])
+        children.extend([node.name, '(', node.args])
         children.extend([')', ':'])
         children.extend(node.body)
         self._handle(node, children)
+
+    def _FunctionDef(self, node):
+        self._handle_function_def_node(node, is_async=False)
+
+    def _AsyncFunctionDef(self, node):
+        self._handle_function_def_node(node, is_async=True)
 
     def _arguments(self, node):
         children = []
