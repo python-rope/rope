@@ -76,7 +76,7 @@ class _ExtractRefactoring(object):
 
     @classmethod
     def _get_kind(cls, kind):
-        raise NotImplementedError(f"You have to sublass {cls}")
+        raise NotImplementedError("You have to sublass {}".format(cls))
 
 
 class ExtractMethod(_ExtractRefactoring):
