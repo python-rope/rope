@@ -1391,6 +1391,27 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_await_expression(self):
+        code = dedent('''\
+            def my_func(my_list):
+                for url in my_list:
+                    resp = await request(url)
+                return resp
+        ''')
+        selected = 'request(url)'
+        start, end = code.index(selected), code.index(selected) + len(selected)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func(my_list):
+                for url in my_list:
+                    resp = await new_func(url)
+                return resp
+
+            def new_func(url):
+                return request(url)
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

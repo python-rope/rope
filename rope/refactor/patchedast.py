@@ -813,6 +813,12 @@ class _PatchingASTWalker(object):
         children.append(node.operand)
         self._handle(node, children)
 
+    def _Await(self, node):
+        children = ['await']
+        if node.value:
+            children.append(node.value)
+        self._handle(node, children)
+
     def _Yield(self, node):
         children = ['yield']
         if node.value:

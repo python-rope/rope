@@ -3,6 +3,7 @@ try:
 except ImportError:
     import unittest
 import sys
+from textwrap import dedent
 
 from rope.base import ast
 from rope.base.utils import pycompat
@@ -1187,6 +1188,15 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', 'keyword', '', ',', ' *',
                      'Starred', '', ')'])
+
+    def test_await_node(self):
+        source = dedent('''\
+            def f():
+                await sleep()
+        ''')
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children('Await', ['await', ' ', 'Call'])
 
 
 class _ResultChecker(object):
