@@ -92,7 +92,7 @@ class RawSimilarFinder(object):
         self.ast = node
 
     def get_matches(self, code, start=0, end=None, skip=None):
-        """Search for `code` in source and return a list of `Match`\es
+        """Search for `code` in source and return a list of `Match`-es
 
         `code` can contain wildcards.  ``${name}`` matches normal
         names and ``${?name} can match any expression.  You can use

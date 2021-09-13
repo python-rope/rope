@@ -43,6 +43,9 @@ Here is a list of suggestions.
 Issues
 ------
 
+If this is your first time contributing in rope and you don't know where to start, 
+tickets labeled `good first issue`_ is a good place start.
+
 The `unresolved issues list`_ in Github is the latest todo list.
 
 There is also a rather outdated list in `dev/issues.rst`_. There
@@ -52,6 +55,7 @@ of task.  This file will need some cleanup, thoughts, and discussions.
 Pickup whichever you are most interested in.  If you have ideas or questions
 about them, don't hesitate to create a Github ticket for it.
 
+.. _`good first issue`: https://github.com/python-rope/rope/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 .. _`unresolved issues list`: https://github.com/python-rope/rope/issues
 .. _`dev/issues.rst`: dev/issues.rst
 

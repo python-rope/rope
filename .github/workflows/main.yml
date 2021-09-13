@@ -19,7 +19,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip pytest
+        python -m pip install --upgrade pip pytest pytest-timeout
     - name: Test with pytest
       run: |
         pytest -v
