@@ -182,25 +182,31 @@ class _ExtractInfo(object):
     def extracted(self):
         return self.source[self.region[0]:self.region[1]]
 
+    _cached_parsed_extraced = None
+
+    @property
+    def _parsed_extracted(self):
+        if self._cached_parsed_extraced is None:
+            self._cached_parsed_extraced = _parse_text(self.extracted)
+        return self._cached_parsed_extraced
+
     _returned = None
 
     @property
     def returned(self):
         """Does the extracted piece contain return statement"""
         if self._returned is None:
-            node = _parse_text(self.extracted)
-            self._returned = usefunction._returns_last(node)
+            self._returned = usefunction._returns_last(self._parsed_extracted)
         return self._returned
 
-    _parenthesize = None
+    _returning_named_expr = None
 
     @property
-    def parenthesize(self):
-        """Does the extracted piece need extra parentheses to make a valid Python expression"""
-        if self._parenthesize is None:
-            node = _parse_text(self.extracted)
-            self._parenthesize = usefunction._namedexpr_last(node)
-        return self._parenthesize
+    def returning_named_expr(self):
+        """Does the extracted piece contains named expression/:= operator)"""
+        if self._returning_named_expr is None:
+            self._returning_named_expr = usefunction._namedexpr_last(self._parsed_extracted)
+        return self._returning_named_expr
 
 
 class _ExtractCollector(object):
@@ -581,7 +587,7 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            if self.info.parenthesize:
+            if self.info.returning_named_expr:
                 return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
             else:
                 return 'return ' + _join_lines(self.info.extracted)
