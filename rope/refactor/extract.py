@@ -35,6 +35,8 @@ from rope.refactor import (sourceutils, similarfinder,
 # classes.
 class _ExtractRefactoring(object):
 
+    kind_prefixes = {}
+
     def __init__(self, project, resource, start_offset, end_offset,
                  variable=False):
         self.project = project
@@ -56,6 +58,8 @@ class _ExtractRefactoring(object):
         """Get the changes this refactoring makes
 
         :parameters:
+            - `extracted_name`: target name, when starts with @ - set kind to
+            classmethod, $ - staticmethod
             - `similar`: if `True`, similar expressions/statements are also
               replaced.
             - `global_`: if `True`, the extracted method/variable will
@@ -63,6 +67,8 @@ class _ExtractRefactoring(object):
             - `kind`: kind of target refactoring to (staticmethod, classmethod)
 
         """
+        extracted_name, kind = self._get_kind_from_name(extracted_name, kind)
+
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
             extracted_name, variable=self._get_kind(kind) == 'variable',
@@ -74,6 +80,18 @@ class _ExtractRefactoring(object):
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
+    def _get_kind_from_name(self, extracted_name, kind):
+        for sign, selected_kind in self.kind_prefixes.items():
+            if extracted_name.startswith(sign):
+                self._validate_kind_prefix(kind, selected_kind)
+                return extracted_name[1:], selected_kind
+        return extracted_name, kind
+
+    @staticmethod
+    def _validate_kind_prefix(kind, selected_kind):
+        if kind and kind != selected_kind:
+            raise RefactoringError("Kind and shorcut in name missmatch")
+
     @classmethod
     def _get_kind(cls, kind):
         raise NotImplementedError("You have to sublass {}".format(cls))
@@ -82,6 +100,7 @@ class _ExtractRefactoring(object):
 class ExtractMethod(_ExtractRefactoring):
     kind = 'method'
     allowed_kinds = ("function", "method", "staticmethod", "classmethod")
+    kind_prefixes = {"@": "classmethod", "$": "staticmethod"}
 
     @classmethod
     def _get_kind(cls, kind):
