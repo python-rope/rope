@@ -1661,6 +1661,54 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_to_classmethod_when_name_starts_with_at_sign(self):
+        code = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = a_var + 1
+        ''')
+        extract_target = 'a_var + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '@second_method')
+        expected = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = A.second_method(a_var)
+
+                @classmethod
+                def second_method(cls, a_var):
+                    return a_var + 1
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extract_to_staticmethod_when_name_starts_with_dollar_sign(self):
+        code = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = a_var + 1
+        ''')
+        extract_target = 'a_var + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '$second_method')
+        expected = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = A.second_method(a_var)
+
+                @staticmethod
+                def second_method(a_var):
+                    return a_var + 1
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_raises_exception_when_sign_in_name_and_kind_missmatch(self):
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Kind and shorcut in name missmatch"):
+            self.do_extract_method("code", 0,1, '$second_method', kind="classmethod")
+
 
 if __name__ == '__main__':
     unittest.main()
