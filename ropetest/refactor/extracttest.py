@@ -59,6 +59,25 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_simple_extract_function_one_line(self):
+        code = dedent("""\
+            def a_func():
+                resp = 'one'
+                print(resp)
+        """)
+        selected = "'one'"
+        start, end = code.index(selected), code.index(selected) + len(selected)
+        refactored = self.do_extract_method(code, start, end, 'extracted')
+        expected = dedent('''\
+            def a_func():
+                resp = extracted()
+                print(resp)
+
+            def extracted():
+                return 'one'
+        ''')
+        self.assertEqual(expected, refactored)
+
     def test_extract_function_at_the_end_of_file(self):
         code = "def a_func():\n    print('one')"
         start, end = self._convert_line_range_to_offset(code, 2, 2)

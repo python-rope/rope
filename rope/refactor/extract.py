@@ -545,7 +545,7 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         call_prefix = ''
-        if returns:
+        if returns and (not self.info.one_line or self.info.returning_named_expr):
             assignment_operator = ' := ' if self.info.one_line else ' = '
             call_prefix = self._get_comma_form(returns) + assignment_operator
         if self.info.returned:
