@@ -1,4 +1,5 @@
 from rope.base import ast
+from rope.base import exceptions
 from rope.base import pynames
 from rope.base import utils
 from rope.refactor.importutils import actions
@@ -31,8 +32,36 @@ class ModuleImports(object):
         ast.walk(self.pymodule.get_ast(), visitor)
         return visitor.unbound
 
+    def _get_all_star_list(self, pymodule):
+        result = set()
+        try:
+            all_star_list = pymodule.get_attribute('__all__')
+        except exceptions.AttributeNotFoundError:
+            return result
+
+        # FIXME: Need a better way to recursively infer possible values.
+        #        Currently pyobjects can recursively infer type, but not values.
+        # Do a very basic 1-level value inference
+        for assignment in all_star_list.assignments:
+            if isinstance(assignment.ast_node, ast.List):
+                stack = list(assignment.ast_node.elts)
+                while stack:
+                    el = stack.pop()
+                    if isinstance(el, ast.Str):
+                        result.add(el.s)
+                    elif isinstance(el, ast.Name):
+                        name = pymodule.get_attribute(el.id)
+                        if isinstance(name, pynames.AssignedName):
+                            for av in name.assignments:
+                                if isinstance(av.ast_node, ast.Str):
+                                    result.add(av.ast_node.s)
+                    elif isinstance(el, ast.IfExp):
+                        stack.append(el.body)
+                        stack.append(el.orelse)
+        return result
+
     def remove_unused_imports(self):
-        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
+        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule) | self._get_all_star_list(self.pymodule))
         visitor = actions.RemovingVisitor(
             self.project, self._current_folder(), can_select)
         for import_statement in self.imports:

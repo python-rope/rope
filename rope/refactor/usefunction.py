@@ -154,14 +154,24 @@ def _return_count(node):
     return visitor.returns
 
 
+def _named_expr_count(node):
+    visitor = _ReturnOrYieldFinder()
+    visitor.start_walking(node)
+    return visitor.named_expression
+
+
 class _ReturnOrYieldFinder(object):
 
     def __init__(self):
         self.returns = 0
+        self.named_expression = 0
         self.yields = 0
 
     def _Return(self, node):
         self.returns += 1
+
+    def _NamedExpr(self, node):
+        self.named_expression += 1
 
     def _Yield(self, node):
         self.yields += 1

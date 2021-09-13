@@ -68,6 +68,7 @@ setup(name='rope',
       classifiers=classifiers,
       extras_require={
           'dev': [
-              'pytest'
+              'pytest',
+              'pytest-timeout',
           ]
       })
