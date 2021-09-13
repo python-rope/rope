@@ -542,6 +542,7 @@ class PatchedASTTest(unittest.TestCase):
                                ['def', ' ', 'f', '', '(', '', 'arguments', '',
                                             ')', '', ':', '\n    ', 'Pass'])
 
+    @testutils.only_for_versions_higher('3.5')
     def test_async_function_node(self):
         source = 'async def f():\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -641,6 +642,7 @@ class PatchedASTTest(unittest.TestCase):
                     ':', '\n    ', 'Pass', '\n',
                     'else', '', ':', '\n    ', 'Pass'])
 
+    @testutils.only_for_versions_higher('3.5')
     def test_async_for_node(self):
         source = 'async for i in range(1):\n    pass\nelse:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1189,6 +1191,7 @@ class PatchedASTTest(unittest.TestCase):
             'Call', ['Name', '', '(', '', 'keyword', '', ',', ' *',
                      'Starred', '', ')'])
 
+    @testutils.only_for_versions_higher('3.5')
     def test_await_node(self):
         source = dedent('''\
             def f():

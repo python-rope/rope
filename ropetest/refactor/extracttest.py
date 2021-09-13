@@ -1349,6 +1349,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.5')
     def test_extract_async_function(self):
         code = dedent('''\
             async def my_func(my_list):
@@ -1370,6 +1371,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.5')
     def test_extract_async_for_loop(self):
         code = dedent('''\
             def my_func(my_list):
@@ -1391,6 +1393,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.5')
     def test_extract_await_expression(self):
         code = dedent('''\
             def my_func(my_list):
