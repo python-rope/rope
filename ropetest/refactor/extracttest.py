@@ -42,11 +42,21 @@ class ExtractMethodTest(unittest.TestCase):
         return lines.get_line_start(start), lines.get_line_end(end)
 
     def test_simple_extract_function(self):
-        code = "def a_func():\n    print('one')\n    print('two')\n"
+        code = dedent("""\
+            def a_func():
+                print('one')
+                print('two')
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, 'extracted')
-        expected = "def a_func():\n    extracted()\n    print('two')\n\n" \
-                   "def extracted():\n    print('one')\n"
+        expected = dedent('''\
+            def a_func():
+                extracted()
+                print('two')
+
+            def extracted():
+                print('one')
+        ''')
         self.assertEqual(expected, refactored)
 
     def test_extract_function_at_the_end_of_file(self):
