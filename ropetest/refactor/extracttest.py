@@ -1315,17 +1315,8 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         extract_target = 'a == (c := 5)'
         start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
-        refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = dedent('''\
-            def foo(a):
-                if c := new_func(a):
-                    c += 1
-                print(i)
-
-            def new_func(a):
-                return a == (c := 5)
-        ''')
-        self.assertEqual(expected, refactored)
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, 'Extracted piece cannot contain named expression \\(:=\\) statements.'):
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_exec(self):
         code = dedent('''\

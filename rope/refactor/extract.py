@@ -400,6 +400,9 @@ class _ExceptionalConditionChecker(object):
         if info.variable and not info.one_line:
             raise RefactoringError('Extract variable should not '
                                    'span multiple lines.')
+        if usefunction._named_expr_count(info._parsed_extracted) - usefunction._namedexpr_last(info._parsed_extracted):
+            raise RefactoringError('Extracted piece cannot '
+                                   'contain named expression (:=) statements.')
 
     def multi_line_conditions(self, info):
         node = _parse_text(info.source[info.region[0]:info.region[1]])
