@@ -1374,7 +1374,7 @@ class ExtractMethodTest(unittest.TestCase):
     @testutils.only_for_versions_higher('3.5')
     def test_extract_async_for_loop(self):
         code = dedent('''\
-            def my_func(my_list):
+            async def my_func(my_list):
                 async for x in my_list:
                     var = x + 1
                 return var
@@ -1382,7 +1382,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = dedent('''\
-            def my_func(my_list):
+            async def my_func(my_list):
                 async for x in my_list:
                     var = new_func(x)
                 return var
@@ -1396,7 +1396,7 @@ class ExtractMethodTest(unittest.TestCase):
     @testutils.only_for_versions_higher('3.5')
     def test_extract_await_expression(self):
         code = dedent('''\
-            def my_func(my_list):
+            async def my_func(my_list):
                 for url in my_list:
                     resp = await request(url)
                 return resp
@@ -1405,7 +1405,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(selected), code.index(selected) + len(selected)
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = dedent('''\
-            def my_func(my_list):
+            async def my_func(my_list):
                 for url in my_list:
                     resp = await new_func(url)
                 return resp

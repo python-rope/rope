@@ -633,7 +633,12 @@ class PatchedASTTest(unittest.TestCase):
                      ' ', 'Call', '', ',', ' ', 'Call', '', ')'])
 
     def test_for_node(self):
-        source = 'for i in range(1):\n    pass\nelse:\n    pass\n'
+        source = dedent('''\
+            for i in range(1):
+                pass
+            else:
+                pass
+        ''')
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('For', 0, len(source) - 1)
@@ -644,14 +649,20 @@ class PatchedASTTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher('3.5')
     def test_async_for_node(self):
-        source = 'async for i in range(1):\n    pass\nelse:\n    pass\n'
+        source = dedent('''\
+            async def foo():
+                async for i in range(1):
+                    pass
+                else:
+                    pass
+        ''')
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_region('AsyncFor', 0, len(source) - 1)
+        checker.check_region('AsyncFor', source.index('async for'), len(source) - 1)
         checker.check_children(
             'AsyncFor', ['async', ' ', 'for', ' ', 'Name', ' ', 'in', ' ', 'Call', '',
-                    ':', '\n    ', 'Pass', '\n',
-                    'else', '', ':', '\n    ', 'Pass'])
+                    ':', '\n        ', 'Pass', '\n    ',
+                    'else', '', ':', '\n        ', 'Pass'])
 
     @testutils.only_for_versions_higher('3.8')
     def test_named_expr_node(self):
@@ -1194,7 +1205,7 @@ class PatchedASTTest(unittest.TestCase):
     @testutils.only_for_versions_higher('3.5')
     def test_await_node(self):
         source = dedent('''\
-            def f():
+            async def f():
                 await sleep()
         ''')
         ast_frag = patchedast.get_patched_ast(source, True)
