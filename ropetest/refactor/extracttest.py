@@ -1709,6 +1709,30 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Kind and shorcut in name missmatch"):
             self.do_extract_method("code", 0,1, '$second_method', kind="classmethod")
 
+    def test_extracting_from_static_with_function_arg(self):
+        code = dedent('''\
+                class A:
+                    @staticmethod
+                    def first_method(someargs):
+                        b_var = someargs + 1
+            ''')
+
+        extract_target = 'someargs + 1'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, 'second_method')
+        expected = dedent('''\
+                class A:
+                    @staticmethod
+                    def first_method(someargs):
+                        b_var = A.second_method(someargs)
+
+                    @staticmethod
+                    def second_method(someargs):
+                        return someargs + 1
+            ''')
+
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

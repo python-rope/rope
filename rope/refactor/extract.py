@@ -597,6 +597,8 @@ class _ExtractMethodParts(object):
         return self._get_scope_self_name()
 
     def _get_scope_self_name(self):
+        if self.info.scope.pyobject.get_kind() == "staticmethod":
+            return
         param_names = self.info.scope.pyobject.get_param_names()
         if param_names:
             return param_names[0]
