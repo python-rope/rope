@@ -481,13 +481,8 @@ class _ExtractMethodParts(object):
 
     def _check_constraints(self):
         if self._extracting_staticmethod() or self._extracting_classmethod():
-            if self._self_name_in_body():
-                raise RefactoringError("Cannot extract staticmethod/classmethod with reference to {}".format(self._get_scope_self_name()))
-            elif not self.info.method:
+            if not self.info.method:
                 raise RefactoringError("Cannot extract to staticmethod/classmethod outside class")
-
-    def _self_name_in_body(self):
-        return self._get_scope_self_name() and self._get_scope_self_name() in self.info.extracted
 
     def _extacting_from_staticmethod(self):
         return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"

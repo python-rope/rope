@@ -1571,7 +1571,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
-    def test_extract_to_staticmethod_when_self_in_body_should_raise_error(self):
+    def test_extract_to_staticmethod_when_self_in_body(self):
         code = dedent('''\
             class A:
                 def first_method(self):
@@ -1580,8 +1580,18 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         extract_target = 'self.a_var + 1'
         start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
-        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "extract staticmethod/classmethod with reference to self"):
-            self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
+        refactored = self.do_extract_method(code, start, end, 'second_method', kind="staticmethod")
+        expected = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = A.second_method(self)
+
+                @staticmethod
+                def second_method(self):
+                    return self.a_var + 1
+        ''')
+        self.assertEqual(expected, refactored)
 
     def test_extract_from_function_to_staticmethod_raises_exception(self):
         code = dedent('''\
@@ -1627,7 +1637,7 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Cannot extract to staticmethod/classmethod outside class"):
             self.do_extract_method(code, start, end, 'second_method', kind="classmethod")
 
-    def test_extract_to_classmethod_when_self_in_body_should_raise_error(self):
+    def test_extract_to_classmethod_when_self_in_body(self):
         code = dedent('''\
             class A:
                 def first_method(self):
@@ -1636,8 +1646,18 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         extract_target = 'self.a_var + 1'
         start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
-        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "extract staticmethod/classmethod with reference to self"):
-            self.do_extract_method(code, start, end, 'second_method', kind="classmethod")
+        refactored = self.do_extract_method(code, start, end, 'second_method', kind="classmethod")
+        expected = dedent('''\
+            class A:
+                def first_method(self):
+                    a_var = 1
+                    b_var = A.second_method(self)
+
+                @classmethod
+                def second_method(cls, self):
+                    return self.a_var + 1
+        ''')
+        self.assertEqual(expected, refactored)
 
     def test_extract_to_classmethod(self):
         code = dedent('''\
