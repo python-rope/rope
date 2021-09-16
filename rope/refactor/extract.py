@@ -596,9 +596,19 @@ class _ExtractMethodParts(object):
                 return 'return ' + _join_lines(self.info.extracted)
         extracted_body = self.info.extracted
         unindented_body = sourceutils.fix_indentation(extracted_body, 0)
+        unindented_body = self._insert_globals(unindented_body)
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
+
+    def _insert_globals(self, unindented_body):
+        globals_ = self.info_collector.globals_ & self._get_internal_variables()
+        if globals_:
+            unindented_body = "global {}\n{}".format(", ".join(globals_), unindented_body)
+        return unindented_body
+
+    def _get_internal_variables(self):
+        return self.info_collector.read | self.info_collector.written | self.info_collector.maybe_written
 
 
 class _ExtractVariableParts(object):
@@ -635,6 +645,7 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
+        self.globals_ = OrderedSet()
 
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
@@ -670,6 +681,9 @@ class _FunctionInformationCollector(object):
                 ast.walk(child, visitor)
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
+
+    def _Global(self, node):
+        self.globals_.add(*node.names)
 
     def _Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.AugStore)):

@@ -1349,6 +1349,38 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extraction_method_with_global_variable(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        extract_target = 'g = 2'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_g')
+        expected = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                _g()
+
+            def _g():
+                global g
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
