@@ -92,3 +92,15 @@ def only_for_versions_higher(version):
 def skipNotPOSIX():
     return unittest.skipIf(os.name != 'posix',
                            'This test works only on POSIX')
+
+
+def time_limit(timeout):
+    if not any(procname in sys.argv[0] for procname in {'pytest', 'py.test'}):
+        # no-op when running tests without pytest
+        return lambda *args, **kwargs: lambda func: func
+
+    # do a local import so we don't import pytest when running without pytest
+    import pytest
+
+    # this prevents infinite loop/recursion from taking forever in CI
+    return pytest.mark.time_limit(timeout)

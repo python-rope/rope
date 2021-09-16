@@ -181,25 +181,31 @@ class _ExtractInfo(object):
     def extracted(self):
         return self.source[self.region[0]:self.region[1]]
 
+    _cached_parsed_extraced = None
+
+    @property
+    def _parsed_extracted(self):
+        if self._cached_parsed_extraced is None:
+            self._cached_parsed_extraced = _parse_text(self.extracted)
+        return self._cached_parsed_extraced
+
     _returned = None
 
     @property
     def returned(self):
         """Does the extracted piece contain return statement"""
         if self._returned is None:
-            node = _parse_text(self.extracted)
-            self._returned = usefunction._returns_last(node)
+            self._returned = usefunction._returns_last(self._parsed_extracted)
         return self._returned
 
-    _parenthesize = None
+    _returning_named_expr = None
 
     @property
-    def parenthesize(self):
-        """Does the extracted piece need extra parentheses to make a valid Python expression"""
-        if self._parenthesize is None:
-            node = _parse_text(self.extracted)
-            self._parenthesize = usefunction._namedexpr_last(node)
-        return self._parenthesize
+    def returning_named_expr(self):
+        """Does the extracted piece contains named expression/:= operator)"""
+        if self._returning_named_expr is None:
+            self._returning_named_expr = usefunction._namedexpr_last(self._parsed_extracted)
+        return self._returning_named_expr
 
 
 class _ExtractCollector(object):
@@ -399,6 +405,9 @@ class _ExceptionalConditionChecker(object):
         if info.variable and not info.one_line:
             raise RefactoringError('Extract variable should not '
                                    'span multiple lines.')
+        if usefunction._named_expr_count(info._parsed_extracted) - usefunction._namedexpr_last(info._parsed_extracted):
+            raise RefactoringError('Extracted piece cannot '
+                                   'contain named expression (:=) statements.')
 
     def multi_line_conditions(self, info):
         node = _parse_text(info.source[info.region[0]:info.region[1]])
@@ -544,7 +553,7 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         call_prefix = ''
-        if returns:
+        if returns and (not self.info.one_line or self.info.returning_named_expr):
             assignment_operator = ' := ' if self.info.one_line else ' = '
             call_prefix = self._get_comma_form(returns) + assignment_operator
         if self.info.returned:
@@ -566,7 +575,7 @@ class _ExtractMethodParts(object):
             return list(result)
         start = self.info.region[0]
         if start == self.info.lines_region[0]:
-            start = start + re.search('\S', self.info.extracted).start()
+            start = start + re.search('\\S', self.info.extracted).start()
         function_definition = self.info.source[start:self.info.region[1]]
         read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
             function_definition)
@@ -586,7 +595,7 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            if self.info.parenthesize:
+            if self.info.returning_named_expr:
                 return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
             else:
                 return 'return ' + _join_lines(self.info.extracted)
