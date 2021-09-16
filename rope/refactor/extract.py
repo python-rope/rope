@@ -602,10 +602,20 @@ class _ExtractMethodParts(object):
         return unindented_body
 
     def _insert_globals(self, unindented_body):
+        globals_in_body = self._get_globals_in_body(unindented_body)
         globals_ = self.info_collector.globals_ & self._get_internal_variables()
+        globals_ = globals_ - globals_in_body
+
         if globals_:
             unindented_body = "global {}\n{}".format(", ".join(globals_), unindented_body)
         return unindented_body
+
+    @staticmethod
+    def _get_globals_in_body(unindented_body):
+        node = _parse_text(unindented_body)
+        visitor = _GlobalFinder()
+        ast.walk(node, visitor)
+        return visitor.globals_
 
     def _get_internal_variables(self):
         return self.info_collector.read | self.info_collector.written | self.info_collector.maybe_written
@@ -832,6 +842,15 @@ class _UnmatchedBreakOrContinueFinder(object):
         visitor = _UnmatchedBreakOrContinueFinder()
         ast.walk(node, visitor)
         return visitor.error
+
+
+class _GlobalFinder(object):
+    def __init__(self):
+        self.globals_ = OrderedSet()
+
+    def _Global(self, node):
+        for name in node.names:
+            self.globals_.add(name)
 
 
 def _get_function_kind(scope):
