@@ -1349,7 +1349,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
-    def test_extract_function_expression_with_inline_assignment_in_inner_expression(self):
+    def test_extract_function_expression_with_assingment(self):
         code = dedent('''\
             class A(object):
                 def func(self):
