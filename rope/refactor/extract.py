@@ -1,10 +1,11 @@
 import re
+from contextlib import contextmanager
 
-from rope.base.utils.datastructures import OrderedSet
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.base.utils import pycompat
+from rope.base.utils.datastructures import OrderedSet
 from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
 
@@ -709,6 +710,7 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
+        self.loop_depth = 0
 
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
@@ -725,6 +727,8 @@ class _FunctionInformationCollector(object):
                 self.maybe_written.add(name)
             else:
                 self.written.add(name)
+            if self.loop_depth > 0 and name in self.read:
+                self.postread.add(name)
         if self.start > lineno:
             self.prewritten.add(name)
         if self.end < lineno:
@@ -764,23 +768,15 @@ class _FunctionInformationCollector(object):
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
-    def _handle_conditional_node(self, node):
-        self.conditional = True
-        try:
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-        finally:
-            self.conditional = False
-
     def _If(self, node):
         self._handle_conditional_node(node)
 
     def _While(self, node):
-        self._handle_conditional_node(node)
+        with self._handle_loop_context(node):
+            self._handle_conditional_node(node)
 
     def _For(self, node):
-        self.conditional = True
-        try:
+        with self._handle_loop_context(node), self._handle_conditional_context(node):
             # iter has to be checked before the target variables
             ast.walk(node.iter, self)
             ast.walk(node.target, self)
@@ -789,8 +785,29 @@ class _FunctionInformationCollector(object):
                 ast.walk(child, self)
             for child in node.orelse:
                 ast.walk(child, self)
+
+    def _handle_conditional_node(self, node):
+        with self._handle_conditional_context(node):
+            for child in ast.get_child_nodes(node):
+                ast.walk(child, self)
+
+    @contextmanager
+    def _handle_conditional_context(self, node):
+        if self.start <= node.lineno <= self.end:
+            self.conditional = True
+        try:
+            yield
         finally:
             self.conditional = False
+
+    @contextmanager
+    def _handle_loop_context(self, node):
+        if node.lineno < self.start:
+            self.loop_depth += 1
+        try:
+            yield
+        finally:
+            self.loop_depth -= 1
 
 
 def _get_argnames(arguments):
