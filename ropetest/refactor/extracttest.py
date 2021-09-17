@@ -1477,6 +1477,53 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher('3.5')
+    def test_extract_inner_async_function(self):
+        code = dedent('''\
+            def my_func(my_list):
+                async def inner_func(my_list):
+                    for x in my_list:
+                        var = x + 1
+                return inner_func
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 2, 4)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func(my_list):
+                inner_func = new_func(my_list)
+                return inner_func
+
+            def new_func(my_list):
+                async def inner_func(my_list):
+                    for x in my_list:
+                        var = x + 1
+                return inner_func
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.5')
+    def test_extract_around_inner_async_function(self):
+        code = dedent('''\
+            def my_func(lst):
+                async def inner_func(obj):
+                    for x in obj:
+                        var = x + 1
+                return map(inner_func, lst)
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 5, 5)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            def my_func(lst):
+                async def inner_func(obj):
+                    for x in obj:
+                        var = x + 1
+                return new_func(inner_func, lst)
+
+            def new_func(inner_func, lst):
+                return map(inner_func, lst)
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher('3.5')
     def test_extract_refactor_around_async_for_loop(self):
         code = dedent('''\
             async def my_func(my_list):
@@ -1528,10 +1575,10 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = dedent('''\
             async def my_func(my_list):
-                var = new_func()
+                var = new_func(my_list)
                 return var
 
-            def new_func():
+            def new_func(my_list):
                 async for x in my_list:
                     var = x + 1
                 return var

@@ -754,6 +754,9 @@ class _FunctionInformationCollector(object):
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
+    def _AsyncFunctionDef(self, node):
+        self._FunctionDef(node)
+
     def _Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.AugStore)):
             self._written_variable(node.id, node.lineno)
