@@ -1149,7 +1149,7 @@ class PatchedASTTest(unittest.TestCase):
             'Delete', ['del', ' ', 'Name', '', ',', ' ', 'Name'])
 
     @testutils.only_for_versions_lower('3.5')
-    def test_starargs_before_keywords(self):
+    def test_starargs_before_keywords_legacy(self):
         source = 'foo(*args, a=1)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -1158,7 +1158,7 @@ class PatchedASTTest(unittest.TestCase):
                      'keyword', '', ')'])
 
     @testutils.only_for_versions_lower('3.5')
-    def test_starargs_in_keywords(self):
+    def test_starargs_in_keywords_legacy(self):
         source = 'foo(a=1, *args, b=2)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
@@ -1167,7 +1167,7 @@ class PatchedASTTest(unittest.TestCase):
                      'Name', '', ',', ' ', 'keyword', '',')'])
 
     @testutils.only_for_versions_lower('3.5')
-    def test_starargs_after_keywords(self):
+    def test_starargs_after_keywords_legacy(self):
         source = 'foo(a=1, *args)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
