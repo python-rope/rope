@@ -384,7 +384,7 @@ class _ExceptionalConditionChecker(object):
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError('Bad region selected for extract method')
         try:
-            extracted = info.source[info.region[0]:info.region[1]]
+            extracted = info.extracted
             if info.one_line:
                 extracted = '(%s)' % extracted
             if _UnmatchedBreakOrContinueFinder.has_errors(extracted):
