@@ -1372,7 +1372,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher('3.5')
-    def test_extract_async_for_loop(self):
+    def test_extract_refactor_around_async_for_loop(self):
         code = dedent('''\
             async def my_func(my_list):
                 async for x in my_list:
@@ -1389,6 +1389,45 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(x):
                 var = x + 1
+                return var
+        ''')
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_lower('3.8')
+    def test_extract_refactor_containing_async_for_loop_should_error_before_py38(self):
+        """
+        Refactoring async/await syntaxes is only supported in Python 3.8 and
+        higher because support for ast.PyCF_ALLOW_TOP_LEVEL_AWAIT was only
+        added to the standard library in Python 3.8.
+        """
+        code = dedent('''\
+            async def my_func(my_list):
+                async for x in my_list:
+                    var = x + 1
+                return var
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, 'Extracted piece can only have async/await statements if Rope is running on Python 3.8 or higher'):
+            self.do_extract_method(code, start, end, 'new_func')
+
+    @testutils.only_for_versions_higher('3.8')
+    def test_extract_refactor_containing_async_for_loop_is_supported_after_py38(self):
+        code = dedent('''\
+            async def my_func(my_list):
+                async for x in my_list:
+                    var = x + 1
+                return var
+        ''')
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = dedent('''\
+            async def my_func(my_list):
+                var = new_func()
+                return var
+
+            def new_func():
+                async for x in my_list:
+                    var = x + 1
                 return var
         ''')
         self.assertEqual(expected, refactored)

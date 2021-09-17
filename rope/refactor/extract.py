@@ -407,12 +407,17 @@ class _ExceptionalConditionChecker(object):
     def multi_line_conditions(self, info):
         node = _parse_text(info.source[info.region[0]:info.region[1]])
         count = usefunction._return_count(node)
+        extracted = info.extracted
         if count > 1:
             raise RefactoringError('Extracted piece can have only one '
                                    'return statement.')
         if usefunction._yield_count(node):
             raise RefactoringError('Extracted piece cannot '
                                    'have yield statements.')
+        if not hasattr(ast, 'PyCF_ALLOW_TOP_LEVEL_AWAIT') and _AsyncStatementFinder.has_errors(extracted):
+            raise RefactoringError('Extracted piece can only have async/await '
+                                   'statements if Rope is running on Python '
+                                   '3.8 or higher')
         if count == 1 and not usefunction._returns_last(node):
             raise RefactoringError('Return should be the last statement.')
         if info.region != info.lines_region:
@@ -822,6 +827,24 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
         pass
 
 
+class _AsyncStatementFinder(_BaseErrorFinder):
+
+    def __init__(self):
+        self.error = False
+
+    def _AsyncFor(self, node):
+        self.error = True
+
+    def _AsyncWith(self, node):
+        self.error = True
+
+    def _FunctionDef(self, node):
+        pass
+
+    def _ClassDef(self, node):
+        pass
+
+
 def _get_function_kind(scope):
     return scope.pyobject.get_kind()
 
@@ -832,7 +855,11 @@ def _parse_text(body):
         node = ast.parse(body)
     except SyntaxError:
         # needed to parse expression containing := operator
-        node = ast.parse('(' + body + ')')
+        try:
+            node = ast.parse('(' + body + ')')
+        except SyntaxError:
+            node = ast.parse('async def __rope_placeholder__():\n' + sourceutils.fix_indentation(body, 4))
+            node.body = node.body[0].body
     return node
 
 
