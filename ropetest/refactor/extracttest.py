@@ -1315,7 +1315,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         extract_target = 'a == (c := 5)'
         start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
-        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, 'Extracted piece cannot contain named expression \\(:=\\) statements.'):
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, 'Extracted piece cannot contain named expression \\(:= operator\\).'):
             self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_exec(self):
