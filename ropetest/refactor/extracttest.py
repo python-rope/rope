@@ -1498,6 +1498,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.5')
     @testutils.only_for_versions_lower('3.8')
     def test_extract_refactor_containing_async_for_loop_should_error_before_py38(self):
         """
