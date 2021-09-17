@@ -770,7 +770,18 @@ class _VariableReadsAndWritesFinder(object):
         return visitor.read
 
 
-class _UnmatchedBreakOrContinueFinder(object):
+class _BaseErrorFinder(object):
+    @classmethod
+    def has_errors(cls, code):
+        if code.strip() == '':
+            return False
+        node = _parse_text(code)
+        visitor = cls()
+        ast.walk(node, visitor)
+        return visitor.error
+
+
+class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
 
     def __init__(self):
         self.error = False
@@ -809,15 +820,6 @@ class _UnmatchedBreakOrContinueFinder(object):
 
     def _ClassDef(self, node):
         pass
-
-    @staticmethod
-    def has_errors(code):
-        if code.strip() == '':
-            return False
-        node = _parse_text(code)
-        visitor = _UnmatchedBreakOrContinueFinder()
-        ast.walk(node, visitor)
-        return visitor.error
 
 
 def _get_function_kind(scope):
