@@ -591,9 +591,10 @@ class _ExtractMethodParts(object):
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
             if self.info.returning_named_expr:
-                return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
+                body = 'return ' + '(' + _join_lines(self.info.extracted) + ')'
             else:
-                return 'return ' + _join_lines(self.info.extracted)
+                body = 'return ' + _join_lines(self.info.extracted)
+            return self._insert_globals(body)
         extracted_body = self.info.extracted
         unindented_body = sourceutils.fix_indentation(extracted_body, 0)
         unindented_body = self._insert_globals(unindented_body)
