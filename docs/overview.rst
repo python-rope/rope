@@ -444,6 +444,10 @@ if you extract ``a * 2`` as a method you'll get:
       def twice(a):
           return a * 2
 
+You can indicate method kind prefixing name:
+
+- @ - classmethod (@name)
+- $ - staticmethod ($name)
 
 Inline Method Refactoring
 -------------------------
