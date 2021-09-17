@@ -1349,6 +1349,126 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    def test_extract_with_list_compehention(self):
+        code = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = sum([x for x in y])
+                b = sum([x for x in y])
+
+                print(a, b)
+
+            f()
+        ''')
+        extract_target = '    a = sum([x for x in y])\n'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_a')
+        expected = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum([x for x in y])
+
+                print(a, b)
+
+            def _a(y):
+                a = sum([x for x in y])
+                return a
+
+            f()
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_generator(self):
+        code = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = sum(x for x in y)
+                b = sum(x for x in y)
+
+                print(a, b)
+
+            f()
+        ''')
+        extract_target = '    a = sum(x for x in y)\n'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_a')
+        expected = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum(x for x in y)
+
+                print(a, b)
+
+            def _a(y):
+                a = sum(x for x in y)
+                return a
+
+            f()
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_set_compehention(self):
+        code = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = sum({x for x in y})
+                b = sum({x for x in y})
+
+                print(a, b)
+
+            f()
+        ''')
+        extract_target = '    a = sum({x for x in y})\n'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_a')
+        expected = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum({x for x in y})
+
+                print(a, b)
+
+            def _a(y):
+                a = sum({x for x in y})
+                return a
+
+            f()
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_dict_compehention(self):
+        code = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = sum({x: x for x in y})
+                b = sum({x: x for x in y})
+
+                print(a, b)
+
+            f()
+        ''')
+        extract_target = '    a = sum({x: x for x in y})\n'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_a')
+        expected = dedent('''\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum({x: x for x in y})
+
+                print(a, b)
+
+            def _a(y):
+                a = sum({x: x for x in y})
+                return a
+
+            f()
+        ''')
+        self.assertEqual(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
