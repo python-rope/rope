@@ -590,17 +590,22 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            if self.info.returning_named_expr:
-                body = 'return ' + '(' + _join_lines(self.info.extracted) + ')'
-            else:
-                body = 'return ' + _join_lines(self.info.extracted)
-            return self._insert_globals(body)
-        extracted_body = self.info.extracted
-        unindented_body = sourceutils.fix_indentation(extracted_body, 0)
+            return self._get_one_line_function_body()
+        return self._get_multiline_function_body(returns)
+
+    def _get_multiline_function_body(self, returns):
+        unindented_body = sourceutils.fix_indentation(self.info.extracted, 0)
         unindented_body = self._insert_globals(unindented_body)
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
+
+    def _get_one_line_function_body(self):
+        if self.info.returning_named_expr:
+            body = 'return ' + '(' + _join_lines(self.info.extracted) + ')'
+        else:
+            body = 'return ' + _join_lines(self.info.extracted)
+        return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
         globals_in_body = self._get_globals_in_body(unindented_body)
