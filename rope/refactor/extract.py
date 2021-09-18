@@ -741,10 +741,8 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
-        self.surrounded_by_loop = 0
         self.globals_ = OrderedSet()
         self.surrounded_by_loop = 0
-        self.loop_depth = 0
         self.loop_depth = 0
 
     def _read_variable(self, name, lineno):
