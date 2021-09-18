@@ -65,7 +65,7 @@ setup(name='rope',
                 'rope.contrib',
                 'rope.refactor',
                 'rope.refactor.importutils'],
-      license='GNU GPL',
+      license='LGPL-3.0-or-later',
       classifiers=classifiers,
       extras_require={
           'dev': [
