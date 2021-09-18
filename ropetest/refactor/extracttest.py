@@ -1926,6 +1926,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.8')
     def test_extraction_one_line_with_global_variable(self):
         code = dedent('''\
             g = None
@@ -1960,6 +1961,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher('3.8')
     def test_extraction_one_line_with_global_variable_has_postread(self):
         code = dedent('''\
             g = None
