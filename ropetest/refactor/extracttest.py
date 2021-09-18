@@ -1888,7 +1888,6 @@ class ExtractMethodTest(unittest.TestCase):
         extract_target = '= g'
         start, end = code.index(extract_target) + 2, code.index(extract_target) + 3
         refactored = self.do_extract_method(code, start, end, '_g')
-        print(refactored)
         expected = dedent('''\
             g = None
 
