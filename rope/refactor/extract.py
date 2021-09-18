@@ -414,7 +414,7 @@ class _ExceptionalConditionChecker(object):
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError('Bad region selected for extract method')
         try:
-            extracted = info.source[info.region[0]:info.region[1]]
+            extracted = info.extracted
             if info.one_line:
                 extracted = '(%s)' % extracted
             if _UnmatchedBreakOrContinueFinder.has_errors(extracted):
@@ -432,17 +432,22 @@ class _ExceptionalConditionChecker(object):
                                    'span multiple lines.')
         if usefunction._named_expr_count(info._parsed_extracted) - usefunction._namedexpr_last(info._parsed_extracted):
             raise RefactoringError('Extracted piece cannot '
-                                   'contain named expression (:=) statements.')
+                                   'contain named expression (:= operator).')
 
     def multi_line_conditions(self, info):
         node = _parse_text(info.source[info.region[0]:info.region[1]])
         count = usefunction._return_count(node)
+        extracted = info.extracted
         if count > 1:
             raise RefactoringError('Extracted piece can have only one '
                                    'return statement.')
         if usefunction._yield_count(node):
             raise RefactoringError('Extracted piece cannot '
                                    'have yield statements.')
+        if not hasattr(ast, 'PyCF_ALLOW_TOP_LEVEL_AWAIT') and _AsyncStatementFinder.has_errors(extracted):
+            raise RefactoringError('Extracted piece can only have async/await '
+                                   'statements if Rope is running on Python '
+                                   '3.8 or higher')
         if count == 1 and not usefunction._returns_last(node):
             raise RefactoringError('Return should be the last statement.')
         if info.region != info.lines_region:
@@ -749,6 +754,9 @@ class _FunctionInformationCollector(object):
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
+    def _AsyncFunctionDef(self, node):
+        self._FunctionDef(node)
+
     def _Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.AugStore)):
             self._written_variable(node.id, node.lineno)
@@ -902,7 +910,18 @@ class _VariableReadsAndWritesFinder(object):
         return visitor.read
 
 
-class _UnmatchedBreakOrContinueFinder(object):
+class _BaseErrorFinder(object):
+    @classmethod
+    def has_errors(cls, code):
+        if code.strip() == '':
+            return False
+        node = _parse_text(code)
+        visitor = cls()
+        ast.walk(node, visitor)
+        return visitor.error
+
+
+class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
 
     def __init__(self):
         self.error = False
@@ -942,14 +961,23 @@ class _UnmatchedBreakOrContinueFinder(object):
     def _ClassDef(self, node):
         pass
 
-    @staticmethod
-    def has_errors(code):
-        if code.strip() == '':
-            return False
-        node = _parse_text(code)
-        visitor = _UnmatchedBreakOrContinueFinder()
-        ast.walk(node, visitor)
-        return visitor.error
+
+class _AsyncStatementFinder(_BaseErrorFinder):
+
+    def __init__(self):
+        self.error = False
+
+    def _AsyncFor(self, node):
+        self.error = True
+
+    def _AsyncWith(self, node):
+        self.error = True
+
+    def _FunctionDef(self, node):
+        pass
+
+    def _ClassDef(self, node):
+        pass
 
 
 def _get_function_kind(scope):
@@ -962,7 +990,11 @@ def _parse_text(body):
         node = ast.parse(body)
     except SyntaxError:
         # needed to parse expression containing := operator
-        node = ast.parse('(' + body + ')')
+        try:
+            node = ast.parse('(' + body + ')')
+        except SyntaxError:
+            node = ast.parse('async def __rope_placeholder__():\n' + sourceutils.fix_indentation(body, 4))
+            node.body = node.body[0].body
     return node
 
 
