@@ -1,6 +1,12 @@
 # Release <unreleased>
 
+# Syntax support
+
 - #392 Add extract method refactoring of code containing `global` (@climbus)
+
+## Bug fixes
+- #391, #396 Extract method similar no longer replace the left-hand side of assignment
+
 
 
 # Release 0.20.1
@@ -11,6 +17,7 @@ Date: 2021-09-18
 
 - Fix caller of `_namedexpr_last()` throwing exception due to returning unexpected list
   instead of boolean
+
 
 
 # Release 0.20.0
