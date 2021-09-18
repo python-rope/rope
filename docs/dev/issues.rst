@@ -149,8 +149,3 @@ readability.
 * sourceutils -> srcutils
 * resourceobserver -> observer
 
-
-Getting Ready For Python 3.0
-============================
-
-This has been moved to a separate branch.
