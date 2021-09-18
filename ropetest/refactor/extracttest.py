@@ -1783,8 +1783,8 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
-    def test_raises_exception_when_sign_in_name_and_kind_missmatch(self):
-        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Kind and shorcut in name missmatch"):
+    def test_raises_exception_when_sign_in_name_and_kind_mismatch(self):
+        with self.assertRaisesRegexp(rope.base.exceptions.RefactoringError, "Kind and shortcut in name mismatch"):
             self.do_extract_method("code", 0,1, '$second_method', kind="classmethod")
 
     def test_extracting_from_static_with_function_arg(self):

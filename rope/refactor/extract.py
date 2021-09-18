@@ -91,7 +91,7 @@ class _ExtractRefactoring(object):
     @staticmethod
     def _validate_kind_prefix(kind, selected_kind):
         if kind and kind != selected_kind:
-            raise RefactoringError("Kind and shorcut in name missmatch")
+            raise RefactoringError("Kind and shortcut in name mismatch")
 
     @classmethod
     def _get_kind(cls, kind):
