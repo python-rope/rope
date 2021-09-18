@@ -122,30 +122,3 @@ Examples
 .. ...
 
 
-Possible Module Renamings
-=========================
-
-*First level*:
-
-These module names are somehow inconsistent.
-
-* change -> changes
-* method_object -> methodobject
-* default_config -> defaultconfig
-
-*Second level*
-
-Many modules use long names.  They can be shortened without loss of
-readability.
-
-* methodobject -> methobj or funcobj
-* usefunction -> usefunc
-* multiproject -> mulprj
-* functionutils -> funcutils
-* importutils -> imputils
-* introduce_factory -> factory
-* change_signature -> signature
-* encapsulate_field -> encapsulate
-* sourceutils -> srcutils
-* resourceobserver -> observer
-
