@@ -1829,6 +1829,9 @@ class ExtractMethodTest(unittest.TestCase):
 
                 def new_func(self):
                     return self.var_a
+        ''')
+
+        self.assertEqual(expected, refactored)
 
     def test_extraction_method_with_global_variable(self):
         code = dedent('''\
