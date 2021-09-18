@@ -468,13 +468,23 @@ class _PatchingASTWalker(object):
             children.append(dim)
         self._handle(node, children)
 
-    def _For(self, node):
-        children = ['for', node.target, 'in', node.iter, ':']
+    def _handle_for_loop_node(self, node, is_async):
+        if is_async:
+            children = ['async', 'for']
+        else:
+            children = ['for']
+        children.extend([node.target, 'in', node.iter, ':'])
         children.extend(node.body)
         if node.orelse:
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
+
+    def _For(self, node):
+        self._handle_for_loop_node(node, is_async=False)
+
+    def _AsyncFor(self, node):
+        self._handle_for_loop_node(node, is_async=True)
 
     def _ImportFrom(self, node):
         children = ['from']
@@ -492,7 +502,7 @@ class _PatchingASTWalker(object):
             children.extend(['as', node.asname])
         self._handle(node, children)
 
-    def _FunctionDef(self, node):
+    def _handle_function_def_node(self, node, is_async):
         children = []
         try:
             decorators = getattr(node, 'decorator_list')
@@ -502,10 +512,20 @@ class _PatchingASTWalker(object):
             for decorator in decorators:
                 children.append('@')
                 children.append(decorator)
-        children.extend(['def', node.name, '(', node.args])
+        if is_async:
+            children.extend(['async', 'def'])
+        else:
+            children.extend(['def'])
+        children.extend([node.name, '(', node.args])
         children.extend([')', ':'])
         children.extend(node.body)
         self._handle(node, children)
+
+    def _FunctionDef(self, node):
+        self._handle_function_def_node(node, is_async=False)
+
+    def _AsyncFunctionDef(self, node):
+        self._handle_function_def_node(node, is_async=True)
 
     def _arguments(self, node):
         children = []
@@ -791,6 +811,12 @@ class _PatchingASTWalker(object):
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
         children.append(node.operand)
+        self._handle(node, children)
+
+    def _Await(self, node):
+        children = ['await']
+        if node.value:
+            children.append(node.value)
         self._handle(node, children)
 
     def _Yield(self, node):
