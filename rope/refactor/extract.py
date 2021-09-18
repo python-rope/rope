@@ -91,7 +91,7 @@ class _ExtractRefactoring(object):
     @staticmethod
     def _validate_kind_prefix(kind, selected_kind):
         if kind and kind != selected_kind:
-            raise RefactoringError("Kind and shorcut in name missmatch")
+            raise RefactoringError("Kind and shortcut in name mismatch")
 
     @classmethod
     def _get_kind(cls, kind):
@@ -302,11 +302,17 @@ class _ExtractPerformer(object):
             # Don't extract overlapping regions
             last_match_end = -1
             for region_match in region_matches:
+                if self.info.one_line and self._is_assignment(region_match):
+                    continue
                 start, end = region_match.get_region()
                 if last_match_end < start:
                     matches.append(region_match)
                     last_match_end = end
         collector.matches = matches
+
+    @staticmethod
+    def _is_assignment(region_match):
+        return isinstance(region_match.ast, (ast.Attribute, ast.Subscript)) and isinstance(region_match.ast.ctx, ast.Store)
 
     def _where_to_search(self):
         if self.info.similar:
@@ -670,16 +676,38 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            if self.info.returning_named_expr:
-                return 'return ' + '(' + _join_lines(self.info.extracted) + ')'
-            else:
-                return 'return ' + _join_lines(self.info.extracted)
-        extracted_body = self.info.extracted
-        unindented_body = sourceutils.fix_indentation(extracted_body, 0)
+            return self._get_one_line_function_body()
+        return self._get_multiline_function_body(returns)
+
+    def _get_multiline_function_body(self, returns):
+        unindented_body = sourceutils.fix_indentation(self.info.extracted, 0)
+        unindented_body = self._insert_globals(unindented_body)
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
 
+    def _get_one_line_function_body(self):
+        if self.info.returning_named_expr:
+            body = 'return ' + '(' + _join_lines(self.info.extracted) + ')'
+        else:
+            body = 'return ' + _join_lines(self.info.extracted)
+        return self._insert_globals(body)
+
+    def _insert_globals(self, unindented_body):
+        globals_in_body = self._get_globals_in_body(unindented_body)
+        globals_ = self.info_collector.globals_ & (self.info_collector.written | self.info_collector.maybe_written)
+        globals_ = globals_ - globals_in_body
+
+        if globals_:
+            unindented_body = "global {}\n{}".format(", ".join(globals_), unindented_body)
+        return unindented_body
+
+    @staticmethod
+    def _get_globals_in_body(unindented_body):
+        node = _parse_text(unindented_body)
+        visitor = _GlobalFinder()
+        ast.walk(node, visitor)
+        return visitor.globals_
 
 class _ExtractVariableParts(object):
 
@@ -715,6 +743,8 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
+        self.globals_ = OrderedSet()
+        self.surrounded_by_loop = 0
         self.loop_depth = 0
 
     def _read_variable(self, name, lineno):
@@ -753,6 +783,9 @@ class _FunctionInformationCollector(object):
                 ast.walk(child, visitor)
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
+
+    def _Global(self, node):
+        self.globals_.add(*node.names)
 
     def _AsyncFunctionDef(self, node):
         self._FunctionDef(node)
@@ -937,6 +970,14 @@ class _AsyncStatementFinder(_BaseErrorFinder):
 
     def _ClassDef(self, node):
         pass
+
+
+class _GlobalFinder(object):
+    def __init__(self):
+        self.globals_ = OrderedSet()
+
+    def _Global(self, node):
+        self.globals_.add(*node.names)
 
 
 def _get_function_kind(scope):

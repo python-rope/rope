@@ -1,4 +1,4 @@
-include README.rst COPYING setup.py MANIFEST.in
+include README.rst COPYING setup.py MANIFEST.in CHANGELOG.md
 recursive-include rope *.py
 recursive-include docs *.rst
 recursive-include ropetest *.py
