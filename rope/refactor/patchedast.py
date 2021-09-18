@@ -836,7 +836,7 @@ class _PatchingASTWalker(object):
     def _With(self, node):
         children = []
         for item in pycompat.get_ast_with_items(node):
-            children.extend(['with', item.context_expr])
+            children.extend([('with', ','), item.context_expr])
             if item.optional_vars:
                 children.extend(['as', item.optional_vars])
         children.append(':')
@@ -861,6 +861,14 @@ class _Source(object):
         self.offset = 0
 
     def consume(self, token, skip_comment=True):
+        if not isinstance(token, tuple):
+            return self._consume_token(token, skip_comment)
+        for tkn in token:
+            if tkn not in self.source[self.offset:]:
+                continue
+            return self._consume_token(tkn, skip_comment)
+
+    def _consume_token(self, token, skip_comment):
         try:
             while True:
                 new_offset = self.source.index(token, self.offset)
