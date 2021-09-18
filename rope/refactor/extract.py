@@ -302,11 +302,17 @@ class _ExtractPerformer(object):
             # Don't extract overlapping regions
             last_match_end = -1
             for region_match in region_matches:
+                if self.info.one_line and self._is_assignment(region_match):
+                    continue
                 start, end = region_match.get_region()
                 if last_match_end < start:
                     matches.append(region_match)
                     last_match_end = end
         collector.matches = matches
+
+    @staticmethod
+    def _is_assignment(region_match):
+        return isinstance(region_match.ast, ast.Attribute) and isinstance(region_match.ast.ctx, ast.Store)
 
     def _where_to_search(self):
         if self.info.similar:
