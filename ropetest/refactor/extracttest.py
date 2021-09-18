@@ -1873,7 +1873,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
-    def test_extraction_one_line_with_global_variable(self):
+    def test_extraction_one_line_with_global_variable_read_only(self):
         code = dedent('''\
             g = None
 
@@ -1897,8 +1897,75 @@ class ExtractMethodTest(unittest.TestCase):
                 a = _g()
 
             def _g():
-                global g
                 return g
+
+            f()
+            print(g)
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_one_line_with_global_variable(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                while g := 4:
+                    pass
+
+            f()
+            print(g)
+        ''')
+        extract_target = 'g := 4'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_g')
+        expected = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                while _g():
+                    pass
+
+            def _g():
+                global g
+                return (g := 4)
+
+            f()
+            print(g)
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_one_line_with_global_variable_has_postread(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                while g := 4:
+                    print(g)
+
+            f()
+            print(g)
+        ''')
+        extract_target = 'g := 4'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_g')
+        expected = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                while g := _g():
+                    print(g)
+
+            def _g():
+                global g
+                return (g := 4)
 
             f()
             print(g)

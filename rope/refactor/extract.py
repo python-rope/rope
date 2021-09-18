@@ -689,7 +689,7 @@ class _ExtractMethodParts(object):
 
     def _insert_globals(self, unindented_body):
         globals_in_body = self._get_globals_in_body(unindented_body)
-        globals_ = self.info_collector.globals_ & self._get_internal_variables()
+        globals_ = self.info_collector.globals_ & (self.info_collector.written | self.info_collector.maybe_written)
         globals_ = globals_ - globals_in_body
 
         if globals_:
@@ -702,10 +702,6 @@ class _ExtractMethodParts(object):
         visitor = _GlobalFinder()
         ast.walk(node, visitor)
         return visitor.globals_
-
-    def _get_internal_variables(self):
-        return self.info_collector.read | self.info_collector.written | self.info_collector.maybe_written
-
 
 class _ExtractVariableParts(object):
 
