@@ -1,4 +1,4 @@
-# Release <unreleased>
+# Release **unreleased**
 
 # Syntax support
 
