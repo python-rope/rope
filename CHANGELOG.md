@@ -1,3 +1,11 @@
+Release <unreleased>
+
+Bug fixes
+
+- Fix caller of `_namedexpr_last()` throwing exception due to returning unexpected list
+  instead of boolean
+
+
 Release 0.20.0
 
 Date: 2021-09-18
