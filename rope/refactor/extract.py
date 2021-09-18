@@ -1,10 +1,11 @@
 import re
+from contextlib import contextmanager
 
-from rope.base.utils.datastructures import OrderedSet
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.base.utils import pycompat
+from rope.base.utils.datastructures import OrderedSet
 from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
 
@@ -34,6 +35,9 @@ from rope.refactor import (sourceutils, similarfinder,
 # There are a few more helper functions and classes used by above
 # classes.
 class _ExtractRefactoring(object):
+
+    kind_prefixes = {}
+
     def __init__(self, project, resource, start_offset, end_offset,
                  variable=False):
         self.project = project
@@ -51,33 +55,57 @@ class _ExtractRefactoring(object):
             offset -= 1
         return offset
 
-    def get_changes(self, extracted_name, similar=False, global_=False):
+    def get_changes(self, extracted_name, similar=False, global_=False, kind=None):
         """Get the changes this refactoring makes
 
         :parameters:
+            - `extracted_name`: target name, when starts with @ - set kind to
+            classmethod, $ - staticmethod
             - `similar`: if `True`, similar expressions/statements are also
               replaced.
             - `global_`: if `True`, the extracted method/variable will
               be global.
+            - `kind`: kind of target refactoring to (staticmethod, classmethod)
 
         """
+        extracted_name, kind = self._get_kind_from_name(extracted_name, kind)
+
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
-            extracted_name, variable=self.kind == 'variable',
+            extracted_name, variable=self._get_kind(kind) == 'variable',
             similar=similar, make_global=global_)
+        info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet('Extract %s <%s>' % (self.kind,
+        changes = ChangeSet('Extract %s <%s>' % (info.kind,
                                                  extracted_name))
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
+    def _get_kind_from_name(self, extracted_name, kind):
+        for sign, selected_kind in self.kind_prefixes.items():
+            if extracted_name.startswith(sign):
+                self._validate_kind_prefix(kind, selected_kind)
+                return extracted_name[1:], selected_kind
+        return extracted_name, kind
+
+    @staticmethod
+    def _validate_kind_prefix(kind, selected_kind):
+        if kind and kind != selected_kind:
+            raise RefactoringError("Kind and shorcut in name missmatch")
+
+    @classmethod
+    def _get_kind(cls, kind):
+        raise NotImplementedError("You have to sublass {}".format(cls))
+
 
 class ExtractMethod(_ExtractRefactoring):
-
-    def __init__(self, *args, **kwds):
-        super(ExtractMethod, self).__init__(*args, **kwds)
-
     kind = 'method'
+    allowed_kinds = ("function", "method", "staticmethod", "classmethod")
+    kind_prefixes = {"@": "classmethod", "$": "staticmethod"}
+
+    @classmethod
+    def _get_kind(cls, kind):
+        return kind if kind in cls.allowed_kinds else cls.kind
 
 
 class ExtractVariable(_ExtractRefactoring):
@@ -89,6 +117,8 @@ class ExtractVariable(_ExtractRefactoring):
 
     kind = 'variable'
 
+    def _get_kind(cls, kind):
+        return cls.kind
 
 class _ExtractInfo(object):
     """Holds information about the extract to be performed"""
@@ -105,6 +135,7 @@ class _ExtractInfo(object):
         self.variable = variable
         self.similar = similar
         self._init_parts(start, end)
+        self.kind = None
         self._init_scope()
         self.make_global = make_global
 
@@ -444,6 +475,26 @@ class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
+        self.info.kind = self._get_kind_by_scope()
+        self._check_constraints()
+
+    def _get_kind_by_scope(self):
+        if self._extacting_from_staticmethod():
+            return "staticmethod"
+        elif self._extracting_from_classmethod():
+            return "classmethod"
+        return self.info.kind
+
+    def _check_constraints(self):
+        if self._extracting_staticmethod() or self._extracting_classmethod():
+            if not self.info.method:
+                raise RefactoringError("Cannot extract to staticmethod/classmethod outside class")
+
+    def _extacting_from_staticmethod(self):
+        return self.info.method and _get_function_kind(self.info.scope) == "staticmethod"
+
+    def _extracting_from_classmethod(self):
+        return self.info.method and _get_function_kind(self.info.scope) == "classmethod"
 
     def get_definition(self):
         if self.info.global_:
@@ -497,10 +548,9 @@ class _ExtractMethodParts(object):
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
+
         result = []
-        if self.info.method and not self.info.make_global and \
-           _get_function_kind(self.info.scope) != 'method':
-            result.append('@staticmethod\n')
+        self._append_decorators(result)
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
         indents = sourceutils.get_indent(self.info.project)
@@ -510,10 +560,22 @@ class _ExtractMethodParts(object):
 
         return definition + '\n'
 
+    def _append_decorators(self, result):
+        if self._extracting_staticmethod():
+            result.append('@staticmethod\n')
+        elif self._extracting_classmethod():
+            result.append('@classmethod\n')
+
+    def _extracting_classmethod(self):
+        return self.info.kind == "classmethod"
+
+    def _extracting_staticmethod(self):
+        return self.info.kind == "staticmethod"
+
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self._extracting_method():
+        if self._extracting_method() or self._extracting_classmethod():
             self_name = self._get_self_name()
             if self_name is None:
                 raise RefactoringError('Extracting a method from a function '
@@ -525,26 +587,40 @@ class _ExtractMethodParts(object):
             '(%s)' % self._get_comma_form(args)
 
     def _extracting_method(self):
-        return self.info.method and not self.info.make_global and \
-            _get_function_kind(self.info.scope) == 'method'
+        return  not self._extracting_staticmethod() and \
+                (self.info.method and \
+                    not self.info.make_global and \
+                    _get_function_kind(self.info.scope) == 'method')
 
     def _get_self_name(self):
+        if self._extracting_classmethod():
+            return "cls"
+        return self._get_scope_self_name()
+
+    def _get_scope_self_name(self):
+        if self.info.scope.pyobject.get_kind() == "staticmethod":
+            return
         param_names = self.info.scope.pyobject.get_param_names()
         if param_names:
             return param_names[0]
 
     def _get_function_call(self, args):
+        return '{prefix}{name}({args})'.format(
+            prefix=self._get_function_call_prefix(args),
+            name=self.info.new_name,
+            args=self._get_comma_form(args))
+
+    def _get_function_call_prefix(self, args):
         prefix = ''
         if self.info.method and not self.info.make_global:
-            if _get_function_kind(self.info.scope) == 'method':
+            if self._extracting_staticmethod() or self._extracting_classmethod():
+                prefix = self.info.scope.parent.pyobject.get_name() + '.'
+            else:
                 self_name = self._get_self_name()
                 if self_name in args:
                     args.remove(self_name)
                 prefix = self_name + '.'
-            else:
-                prefix = self.info.scope.parent.pyobject.get_name() + '.'
-        return prefix + '%s(%s)' % (self.info.new_name,
-                                    self._get_comma_form(args))
+        return prefix
 
     def _get_comma_form(self, names):
         return ', '.join(names)
@@ -640,6 +716,7 @@ class _FunctionInformationCollector(object):
         self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
+        self.loop_depth = 0
 
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
@@ -656,6 +733,8 @@ class _FunctionInformationCollector(object):
                 self.maybe_written.add(name)
             else:
                 self.written.add(name)
+            if self.loop_depth > 0 and name in self.read:
+                self.postread.add(name)
         if self.start > lineno:
             self.prewritten.add(name)
         if self.end < lineno:
@@ -695,23 +774,15 @@ class _FunctionInformationCollector(object):
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
-    def _handle_conditional_node(self, node):
-        self.conditional = True
-        try:
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-        finally:
-            self.conditional = False
-
     def _If(self, node):
         self._handle_conditional_node(node)
 
     def _While(self, node):
-        self._handle_conditional_node(node)
+        with self._handle_loop_context(node):
+            self._handle_conditional_node(node)
 
     def _For(self, node):
-        self.conditional = True
-        try:
+        with self._handle_loop_context(node), self._handle_conditional_context(node):
             # iter has to be checked before the target variables
             ast.walk(node.iter, self)
             ast.walk(node.target, self)
@@ -720,8 +791,29 @@ class _FunctionInformationCollector(object):
                 ast.walk(child, self)
             for child in node.orelse:
                 ast.walk(child, self)
+
+    def _handle_conditional_node(self, node):
+        with self._handle_conditional_context(node):
+            for child in ast.get_child_nodes(node):
+                ast.walk(child, self)
+
+    @contextmanager
+    def _handle_conditional_context(self, node):
+        if self.start <= node.lineno <= self.end:
+            self.conditional = True
+        try:
+            yield
         finally:
             self.conditional = False
+
+    @contextmanager
+    def _handle_loop_context(self, node):
+        if node.lineno < self.start:
+            self.loop_depth += 1
+        try:
+            yield
+        finally:
+            self.loop_depth -= 1
 
 
 def _get_argnames(arguments):
