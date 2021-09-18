@@ -1,6 +1,6 @@
 # Release <unreleased>
 
-- TODO
+- #392 Add extract method refactoring of code containing `global` (@climbus)
 
 
 # Release 0.20.1
