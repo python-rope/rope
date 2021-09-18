@@ -1454,102 +1454,7 @@ class ExtractMethodTest(unittest.TestCase):
         ''')
         self.assertEqual(expected, refactored)
 
-    def test_extraction_method_with_global_variable(self):
-        code = dedent('''\
-            g = None
-
-            def f():
-                global g
-
-                g = 2
-
-            f()
-            print(g)
-        ''')
-        extract_target = 'g = 2'
-        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
-        refactored = self.do_extract_method(code, start, end, '_g')
-        expected = dedent('''\
-            g = None
-
-            def f():
-                global g
-
-                _g()
-
-            def _g():
-                global g
-                g = 2
-
-            f()
-            print(g)
-        ''')
-        self.assertEqual(expected, refactored)
-
-    def test_extraction_method_with_global_variable_and_global_declaration(self):
-        code = dedent('''\
-            g = None
-
-            def f():
-                global g
-
-                g = 2
-
-            f()
-            print(g)
-        ''')
-        start, end = 23, 42
-        refactored = self.do_extract_method(code, start, end, '_g')
-        expected = dedent('''\
-            g = None
-
-            def f():
-                _g()
-
-            def _g():
-                global g
-
-                g = 2
-
-            f()
-            print(g)
-        ''')
-        self.assertEqual(expected, refactored)
-
-    def test_extraction_one_line_with_global_variable(self):
-        code = dedent('''\
-            g = None
-
-            def f():
-                global g
-
-                a = g
-
-            f()
-            print(g)
-        ''')
-        extract_target = '= g'
-        start, end = code.index(extract_target) + 2, code.index(extract_target) + 3
-        refactored = self.do_extract_method(code, start, end, '_g')
-        print(refactored)
-        expected = dedent('''\
-            g = None
-
-            def f():
-                global g
-
-                a = _g()
-
-            def _g():
-                global g
-                return g
-
-            f()
-            print(g)
-        ''')
-        self.assertEqual(expected, refactored)
-
-    def test_extract_to_static_method(self):
+    def test_extract_to_staticmethod(self):
         code = dedent('''\
             class A:
                 def first_method(self):
@@ -1751,6 +1656,101 @@ class ExtractMethodTest(unittest.TestCase):
                         return someargs + 1
             ''')
 
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_method_with_global_variable(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        extract_target = 'g = 2'
+        start, end = code.index(extract_target), code.index(extract_target) + len(extract_target)
+        refactored = self.do_extract_method(code, start, end, '_g')
+        expected = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                _g()
+
+            def _g():
+                global g
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_method_with_global_variable_and_global_declaration(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        start, end = 23, 42
+        refactored = self.do_extract_method(code, start, end, '_g')
+        expected = dedent('''\
+            g = None
+
+            def f():
+                _g()
+
+            def _g():
+                global g
+
+                g = 2
+
+            f()
+            print(g)
+        ''')
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_one_line_with_global_variable(self):
+        code = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                a = g
+
+            f()
+            print(g)
+        ''')
+        extract_target = '= g'
+        start, end = code.index(extract_target) + 2, code.index(extract_target) + 3
+        refactored = self.do_extract_method(code, start, end, '_g')
+        print(refactored)
+        expected = dedent('''\
+            g = None
+
+            def f():
+                global g
+
+                a = _g()
+
+            def _g():
+                global g
+                return g
+
+            f()
+            print(g)
+        ''')
         self.assertEqual(expected, refactored)
 
 

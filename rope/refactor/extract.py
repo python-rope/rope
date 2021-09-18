@@ -740,6 +740,7 @@ class _FunctionInformationCollector(object):
         self.globals_ = OrderedSet()
         self.surrounded_by_loop = 0
         self.loop_depth = 0
+        self.loop_depth = 0
 
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
@@ -948,8 +949,7 @@ class _GlobalFinder(object):
         self.globals_ = OrderedSet()
 
     def _Global(self, node):
-        for name in node.names:
-            self.globals_.add(name)
+        self.globals_.add(*node.names)
 
 
 def _get_function_kind(scope):
