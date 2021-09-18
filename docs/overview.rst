@@ -415,6 +415,35 @@ Extracting ``2 * 3`` will result in:
   else:
       x = six + 1
 
+Extract Regular Method into staticmethod/classmethod
+----------------------------------------------------
+
+If you prefix the extracted method name with `@` or `$`, the generated 
+method will be created as a `classmethod` and `staticmethod` respectively.
+For instance in:
+
+.. code-block:: python
+
+  class A(object):
+
+      def f(self, a):
+          b = a * 2
+
+if you extract ``a * 2`` and name the method `@twice`, you'll get:
+
+.. code-block:: python
+
+  class A(object):
+
+      def f(self, a):
+          b = A.twice(a)
+
+      @classmethod
+      def twice(cls, a):
+          return a * 2
+
+Likewise you can use `$` to create a staticmethod.
+
 
 Extract Method In staticmethods/classmethods
 --------------------------------------------
@@ -443,11 +472,7 @@ if you extract ``a * 2`` as a method you'll get:
       @staticmethod
       def twice(a):
           return a * 2
-
-You can indicate method kind prefixing name:
-
-- @ - classmethod (@name)
-- $ - staticmethod ($name)
+          
 
 Inline Method Refactoring
 -------------------------
