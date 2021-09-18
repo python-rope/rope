@@ -312,7 +312,7 @@ class _ExtractPerformer(object):
 
     @staticmethod
     def _is_assignment(region_match):
-        return isinstance(region_match.ast, ast.Attribute) and isinstance(region_match.ast.ctx, ast.Store)
+        return isinstance(region_match.ast, (ast.Attribute, ast.Subscript)) and isinstance(region_match.ast.ctx, ast.Store)
 
     def _where_to_search(self):
         if self.info.similar:
