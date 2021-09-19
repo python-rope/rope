@@ -429,7 +429,7 @@ For instance in:
       def f(self, a):
           b = a * 2
 
-if you extract ``a * 2`` and name the method `@twice`, you'll get:
+if you select ``a * 2`` for method extraction and name the method ``@new_method``, you'll get:
 
 .. code-block:: python
 
@@ -439,10 +439,10 @@ if you extract ``a * 2`` and name the method `@twice`, you'll get:
           b = A.twice(a)
 
       @classmethod
-      def twice(cls, a):
+      def new_method(cls, a):
           return a * 2
 
-Likewise you can use `$` to create a staticmethod.
+Similarly, you can prefix the name with `$` to create a staticmethod instead.
 
 
 Extract Method In staticmethods/classmethods
