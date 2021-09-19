@@ -840,8 +840,12 @@ class _PatchingASTWalker(object):
             children.extend([('with', ','), item.context_expr])
             if item.optional_vars:
                 children.extend(['as', item.optional_vars])
-        children.append(':')
-        children.extend(node.body)
+        pattern = re.compile(r"\(.*?\)|(,)")
+        if pycompat.PY2 and pattern.search(self.source.source):
+            children.append(node.body[0])
+        else:
+            children.append(':')
+            children.extend(node.body)
         self._handle(node, children)
 
     def _child_nodes(self, nodes, separator):
