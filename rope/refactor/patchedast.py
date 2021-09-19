@@ -12,6 +12,8 @@ try:
 except NameError:
     basestring = (str, bytes)
 
+COMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
+
 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
@@ -840,8 +842,7 @@ class _PatchingASTWalker(object):
             children.extend([('with', ','), item.context_expr])
             if item.optional_vars:
                 children.extend(['as', item.optional_vars])
-        pattern = re.compile(r"\(.*?\)|(,)")
-        if pycompat.PY2 and pattern.search(self.source.source):
+        if pycompat.PY2 and COMA_IN_WITH_PATTERN.search(self.source.source):
             children.append(node.body[0])
         else:
             children.append(':')
