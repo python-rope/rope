@@ -1141,16 +1141,3 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
         pkg.get_child('__init__.py').write('syntax error ...\n')
         with self.assertRaises(exceptions.ModuleSyntaxError):
             self.project.pycore.resource_to_pyobject(pkg, force_errors=True)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(PyCoreTest))
-    result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
-    result.addTests(unittest.makeSuite(TextChangeDetectorTest))
-    result.addTests(unittest.makeSuite(PyCoreProjectConfigsTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

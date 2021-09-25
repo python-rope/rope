@@ -368,20 +368,3 @@ class RegressionHintingTest(AbstractHintingTest):
                '        return self.bar'
         result = self._assist(code)
         self.assert_completion_in_result('bar', 'attribute', result)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(DocstringParamHintingTest))
-    result.addTests(unittest.makeSuite(DocstringReturnHintingTest))
-    result.addTests(unittest.makeSuite(DocstringNoneAssignmentHintingTest))
-    result.addTests(unittest.makeSuite(DocstringNotImplementedAssignmentHintingTest))
-    result.addTests(unittest.makeSuite(PEP0484CommentNoneAssignmentHintingTest))
-    result.addTests(unittest.makeSuite(PEP0484CommentNotImplementedAssignmentHintingTest))
-    result.addTests(unittest.makeSuite(EvaluateTest))
-    result.addTests(unittest.makeSuite(RegressionHintingTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

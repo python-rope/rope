@@ -184,7 +184,3 @@ class RestructureTest(unittest.TestCase):
         refactoring = restructure.Restructure(self.project, '${a}', '${a}')
         self.project.do(refactoring.get_changes())
         self.assertEqual(mod_text, self.mod.read())
-
-
-if __name__ == '__main__':
-    unittest.main()

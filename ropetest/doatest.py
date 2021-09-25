@@ -36,7 +36,7 @@ class DOATest(unittest.TestCase):
         received_objs = list(receiver.receive_data())
         attacker_proc.join()
         return received_objs
-        
+
     def test_CVE_2014_3539_no_encoding(self):
         # Attacker sends pickled data to the receiver socket.
         receiver = doa._SocketReceiver()
@@ -46,7 +46,7 @@ class DOATest(unittest.TestCase):
 
         # Make sure the exploit did not run
         self.assertEqual(0, len(received_objs))
-        
+
     def test_CVE_2014_3539_signature_mismatch(self):
         # Attacker sends well-formed data with an incorrect signature.
         receiver = doa._SocketReceiver()
@@ -60,7 +60,7 @@ class DOATest(unittest.TestCase):
 
         # Make sure the exploit did not run
         self.assertEqual(0, len(received_objs))
-        
+
     def test_CVE_2014_3539_sanity(self):
         # Tests that sending valid, signed data on the socket does work.
         receiver = doa._SocketReceiver()
@@ -80,12 +80,3 @@ class DOATest(unittest.TestCase):
         self.assertTrue(doa._compat_compare_digest('abc', 'abc'))
         self.assertFalse(doa._compat_compare_digest('abc', 'abd'))
         self.assertFalse(doa._compat_compare_digest('abc', 'abcd'))
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(DOATest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

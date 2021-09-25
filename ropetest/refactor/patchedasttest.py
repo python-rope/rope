@@ -1271,7 +1271,3 @@ class _ResultChecker(object):
                     child.__class__.__name__.startswith(expected),
                     msg='Expected <%s> but was <%s>' %
                     (expected, child.__class__.__name__))
-
-
-if __name__ == '__main__':
-    unittest.main()

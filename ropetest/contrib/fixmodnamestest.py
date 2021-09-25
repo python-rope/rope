@@ -55,6 +55,3 @@ class FixModuleNamesTest(unittest.TestCase):
 
 def _fixer(name):
     return name.replace('x', '_')
-
-if __name__ == '__main__':
-    unittest.main()

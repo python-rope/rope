@@ -278,14 +278,3 @@ class TemplateTest(unittest.TestCase):
     def test_substituting_multiple_names(self):
         template = similarfinder.CodeTemplate('${a}, ${b}\n')
         self.assertEqual('1, 2\n', template.substitute({'a': '1', 'b': '2'}))
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(SimilarFinderTest))
-    result.addTests(unittest.makeSuite(CheckingFinderTest))
-    result.addTests(unittest.makeSuite(TemplateTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

@@ -655,17 +655,3 @@ class CustomLogicalLineFinderTest(LogicalLineFinderTest):
         lines = SourceLinesAdapter(code)
         return codeanalyze.CachingLogicalLineFinder(
             lines, codeanalyze.custom_generator)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(SourceLinesAdapterTest))
-    result.addTests(unittest.makeSuite(WordRangeFinderTest))
-    result.addTests(unittest.makeSuite(ScopeNameFinderTest))
-    result.addTests(unittest.makeSuite(LogicalLineFinderTest))
-    result.addTests(unittest.makeSuite(TokenizerLogicalLineFinderTest))
-    result.addTests(unittest.makeSuite(CustomLogicalLineFinderTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

@@ -50,7 +50,3 @@ class FindErrorsTest(unittest.TestCase):
         result = finderrors.find_errors(self.project, self.mod)
         self.assertEqual(1, len(result))
         self.assertEqual(4, result[0].lineno)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -440,7 +440,3 @@ class ChangeSignatureTest(unittest.TestCase):
                    '    pass\n' \
                    'f(2, 1)\n'
         self.assertEqual(expected, self.mod.read())
-
-
-if __name__ == '__main__':
-    unittest.main()

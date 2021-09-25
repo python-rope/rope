@@ -136,7 +136,3 @@ class SuiteTest(unittest.TestCase):
 
 def source_suite_tree(source):
     return suites.ast_suite_tree(ast.parse(source))
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -794,7 +794,3 @@ class MoveRefactoringTest(unittest.TestCase):
         self.project.do(mover.get_changes(self.mod1))
         expected = '%s\n%s' % (code1, code2)
         self.assertEqual(expected, self.mod1.read())
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -776,14 +776,3 @@ class NewStaticOITest(unittest.TestCase):
         a_class = pymod['A'].get_object()
         x_var = pymod['x'].get_object().get_type()
         self.assertEqual(a_class, x_var)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(DynamicOITest))
-    result.addTests(unittest.makeSuite(NewStaticOITest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -826,15 +826,3 @@ class ImplicitInterfacesTest(unittest.TestCase):
             'class A(object):\n    def newrun(self):\n        pass\n'
             'class B(object):\n    def newrun(self):\n        pass\n'
             'mod1.f(A())\nmod1.f(B())\n', self.mod2.read())
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(RenameRefactoringTest))
-    result.addTests(unittest.makeSuite(ChangeOccurrencesTest))
-    result.addTests(unittest.makeSuite(ImplicitInterfacesTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

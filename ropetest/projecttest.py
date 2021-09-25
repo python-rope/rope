@@ -1034,15 +1034,3 @@ class RopeFolderTest(unittest.TestCase):
         ropefolder = self.project.ropefolder
         self.assertEqual('.f1/f2', ropefolder.path)
         self.assertTrue(ropefolder.exists())
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ProjectTest))
-    result.addTests(unittest.makeSuite(ResourceObserverTest))
-    result.addTests(unittest.makeSuite(OutOfProjectTest))
-    result.addTests(unittest.makeSuite(RopeFolderTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

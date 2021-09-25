@@ -33,7 +33,3 @@ class ChangeStackTest(unittest.TestCase):
         changes = stack.merged()
         self.project.do(changes)
         self.assertEqual('3', myfile.read())
-
-
-if __name__ == '__main__':
-    unittest.main()

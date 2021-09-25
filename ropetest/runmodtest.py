@@ -156,12 +156,3 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEqual('run', self.get_output_file_content(file_path))
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(PythonFileRunnerTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

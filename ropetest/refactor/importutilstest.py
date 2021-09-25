@@ -1209,13 +1209,3 @@ class AddImportTest(unittest.TestCase):
         result, name = add_import(self.project, pymod, 'pkg.mod3', None)
         self.assertEqual('import pkg.mod3\n', result)
         self.assertEqual('pkg.mod3', name)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ImportUtilsTest))
-    result.addTests(unittest.makeSuite(AddImportTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()
