@@ -7,11 +7,6 @@ from rope.base import simplify
 
 
 class SimplifyTest(unittest.TestCase):
-    def setUp(self):
-        super(SimplifyTest, self).setUp()
-
-    def tearDown(self):
-        super(SimplifyTest, self).tearDown()
 
     def test_trivial_case(self):
         self.assertEqual("", simplify.real_code(""))
