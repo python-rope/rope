@@ -178,17 +178,29 @@ class RenameRefactoringTest(unittest.TestCase):
 
     @testutils.only_for("3.6")
     def test_renaming_occurrence_in_f_string(self):
-        refactored = self._local_rename(
-            "a_var = 20\na_string=f'value: {a_var}'\n", 2, "new_var"
-        )
-        self.assertEqual("new_var = 20\na_string=f'value: {new_var}'\n", refactored)
+        code = dedent("""\
+            a_var = 20
+            a_string=f'value: {a_var}'
+        """)
+        expected = dedent("""\
+            new_var = 20
+            a_string=f'value: {new_var}'
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.6")
+    @testutils.only_for('3.6')
     def test_renaming_occurrence_in_nested_f_string(self):
-        refactored = self._local_rename(
-            "a_var = 20\na_string=f'{f\"{a_var}\"}'\n", 2, "new_var"
-        )
-        self.assertEqual("new_var = 20\na_string=f'{f\"{new_var}\"}'\n", refactored)
+        code = dedent("""\
+            a_var = 20
+            a_string=f'{f"{a_var}"}'
+        """)
+        expected = dedent("""\
+            new_var = 20
+            a_string=f'{f"{new_var}"}'
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
 
     @testutils.only_for("3.6")
     def test_not_renaming_string_contents_in_f_string(self):
