@@ -112,12 +112,3 @@ class FindItTest(unittest.TestCase):
         result = find_definition(self.project, code, code.index('var'))
         self.assertEqual(mod1, result.resource)
         self.assertEqual(0, result.offset)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(FindItTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

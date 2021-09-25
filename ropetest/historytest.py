@@ -403,14 +403,3 @@ class SavingHistoryTest(unittest.TestCase):
         history = rope.base.history.History(self.project)
         history.redo()
         self.assertTrue(myfile.exists())
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(HistoryTest))
-    result.addTests(unittest.makeSuite(IsolatedHistoryTest))
-    result.addTests(unittest.makeSuite(SavingHistoryTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

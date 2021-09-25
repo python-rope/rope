@@ -310,6 +310,3 @@ class GenerateTest(unittest.TestCase):
 
         self.assertTrue(isinstance(result, generate.GenerateClass))
         self.assertIsNone(result.goal_resource)
-
-if __name__ == '__main__':
-    unittest.main()

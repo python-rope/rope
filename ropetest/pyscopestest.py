@@ -314,13 +314,3 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertTrue('A' in scope.get_names())
         self.assertTrue('open' not in scope.get_defined_names())
         self.assertTrue('A' in scope.get_defined_names())
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(PyCoreScopesTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -653,13 +653,3 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.rindex('var'),
                                   remove=False, only_current=True, docs=True)
         self.assertEqual(expected, refactored)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(InlineTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

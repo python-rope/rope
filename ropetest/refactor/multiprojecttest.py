@@ -66,7 +66,3 @@ class MultiProjectRefactoringTest(unittest.TestCase):
         self.assertEqual('newvar = 1\n', self.mod1.read())
         self.assertEqual('import mod1\nmyvar = mod1.newvar\n',
                           self.mod2.read())
-
-
-if __name__ == '__main__':
-    unittest.main()

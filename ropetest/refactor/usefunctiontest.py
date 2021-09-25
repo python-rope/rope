@@ -119,7 +119,3 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         with self.assertRaises(exceptions.RefactoringError):
             UseFunction(self.project, self.mod1, code.index('func'))
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -152,13 +152,3 @@ class ObjectDBTest(unittest.TestCase):
         db.add_file_list_observer(observer)
         db.validate_files()
         self.assertEqual('removed invalid ', observer.log)
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ObjectDBTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1202,13 +1202,3 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_starting_expression(self):
         code = 'l = list()\nl.app'
         self.assertEqual('l.app', starting_expression(code, len(code)))
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(CodeAssistTest))
-    result.addTests(unittest.makeSuite(CodeAssistInProjectsTest))
-    return result
-
-if __name__ == '__main__':
-    unittest.main()

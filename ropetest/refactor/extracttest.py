@@ -2017,7 +2017,3 @@ class ExtractMethodTest(unittest.TestCase):
             print(g)
         ''')
         self.assertEqual(expected, refactored)
-
-
-if __name__ == '__main__':
-    unittest.main()

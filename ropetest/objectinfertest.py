@@ -322,13 +322,3 @@ class ObjectInferTest(unittest.TestCase):
         var = mod['var'].get_object()
         a = mod['B'].get_object()
         self.assertEqual(a, var.get_type())
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ObjectInferTest))
-    return result
-
-
-if __name__ == '__main__':
-    unittest.main()
