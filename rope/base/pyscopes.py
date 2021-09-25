@@ -144,6 +144,33 @@ class GlobalScope(Scope):
         return rope.base.builtins.builtins.get_attributes()
 
 
+class CompScope(Scope):
+
+    def __init__(self, pycore, pyobject, visitor):
+        super(CompScope, self).__init__(pycore, pyobject,
+                                            pyobject.parent.get_scope())
+        self.names = None
+        self.returned_asts = None
+        self.defineds = None
+        self.visitor = visitor
+
+    def _get_names(self):
+        if self.names is None:
+            self._visit_comp()
+        return self.names
+
+    def get_names(self):
+        return self._get_names()
+
+    def _visit_comp(self):
+        if self.names is None:
+            new_visitor = self.visitor(self.pycore, self.pyobject)
+            for n in ast.get_child_nodes(self.pyobject.get_ast()):
+                ast.walk(n, new_visitor)
+            self.names = new_visitor.names
+            self.defineds = new_visitor.defineds
+
+
 class FunctionScope(Scope):
 
     def __init__(self, pycore, pyobject, visitor):

@@ -254,6 +254,10 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     """Only a placeholder"""
 
 
+class PyComp(PyDefinedObject, PyObject):
+    """Only a placeholder"""
+
+
 class PyClass(PyDefinedObject, AbstractClass):
     """Only a placeholder"""
 

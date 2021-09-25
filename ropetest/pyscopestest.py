@@ -49,7 +49,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project, 'a_var = [b_var + d_var for b_var, c_var in e_var]\n')
         self.assertEqual(
             list(sorted(scope.get_defined_names())),
-            ['a_var', 'b_var', 'c_var'],
+            ['a_var'],
         )
 
     def test_list_comprehension_scope(self):
@@ -314,6 +314,22 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertTrue('A' in scope.get_names())
         self.assertTrue('open' not in scope.get_defined_names())
         self.assertTrue('A' in scope.get_defined_names())
+
+    def test_get_inner_scope_for_list_comprhension(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            'a = [i for i in range(10)]\n')
+        self.assertGreater(len(scope.get_scopes()), 0)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_funnc(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            'def funkcja():\n'
+            '    ala = 1\n')
+        names = scope.get_scopes()[0]
+        self.assertIn("ala", names)
 
 
 def suite():
