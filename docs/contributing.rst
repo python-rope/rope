@@ -114,10 +114,6 @@ tests are strictly unittest-based), so running::
 
     pytest -v
 
-or::
-
-    python3 -munittest -v discover
-
 runs all tests. Make sure to have complete test suite passing and 
 add new tests for the changes you are providing with each new 
 submission.
