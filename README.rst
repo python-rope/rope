@@ -2,15 +2,15 @@
 .. _GitHub python-rope / rope: https://github.com/python-rope/rope
 
 
-========================================
- rope, a python refactoring library ...
-========================================
+=========================================================================
+ rope -- the world's most advanced open source Python refactoring library
+=========================================================================
 
 
 Overview
 ========
 
-`Rope`_ is a python refactoring library.
+`Rope`_ is the world's most advanced open source Python refactoring library.
 
 .. _`rope`: https://github.com/python-rope/rope
 
@@ -32,6 +32,15 @@ To change your project preferences edit
 the root folder of your project (this file is created the first time
 you open a project).
 
+
+Why use Rope?
+=============
+
+- Rope aims to provide powerful and safe refactoring
+- Rope is light on dependency, depending only on Python itself, unlike pyright or pylance, there is no additional dependency to another language's runtime
+- Unlike pylance, Rope is open source
+- Unlike pyright and pylance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in an environment that you are already familiar with
+- Unlike jedi, Rope is focused on refactoring, Rope supports many advanced refactoring operations that Jedi does not support
 
 Bug Reports
 ===========
