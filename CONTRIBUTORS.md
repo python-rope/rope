@@ -98,4 +98,7 @@ make their contributions less important:
 * Nick Smith <nicks@fastmail.fm>
 
 
+If you notice any errors or omissions, please let us know so we can fix them.
+
+
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
