@@ -31,7 +31,7 @@ class Worder(object):
 
     def _context_call(self, name, offset):
         if self.handle_ignores:
-            if not hasattr(self, 'starts'):
+            if not hasattr(self, "starts"):
                 self._init_ignores()
             start = bisect.bisect(self.starts, offset)
             if start > 0 and offset < self.ends[start - 1]:
@@ -39,19 +39,19 @@ class Worder(object):
         return getattr(self.code_finder, name)(offset)
 
     def get_primary_at(self, offset):
-        return self._context_call('get_primary_at', offset)
+        return self._context_call("get_primary_at", offset)
 
     def get_word_at(self, offset):
-        return self._context_call('get_word_at', offset)
+        return self._context_call("get_word_at", offset)
 
     def get_primary_range(self, offset):
-        return self._context_call('get_primary_range', offset)
+        return self._context_call("get_primary_range", offset)
 
     def get_splitted_primary_before(self, offset):
-        return self._context_call('get_splitted_primary_before', offset)
+        return self._context_call("get_splitted_primary_before", offset)
 
     def get_word_range(self, offset):
-        return self._context_call('get_word_range', offset)
+        return self._context_call("get_word_range", offset)
 
     def is_function_keyword_parameter(self, offset):
         return self.code_finder.is_function_keyword_parameter(offset)
@@ -124,7 +124,6 @@ class Worder(object):
 
 
 class _RealFinder(object):
-
     def __init__(self, code, raw):
         self.code = code
         self.raw = raw
@@ -142,15 +141,14 @@ class _RealFinder(object):
 
     def _find_last_non_space_char(self, offset):
         while offset >= 0 and self.code[offset].isspace():
-            if self.code[offset] == '\n':
+            if self.code[offset] == "\n":
                 return offset
             offset -= 1
         return max(-1, offset)
 
     def get_word_at(self, offset):
         offset = self._get_fixed_offset(offset)
-        return self.raw[self._find_word_start(offset):
-                        self._find_word_end(offset) + 1]
+        return self.raw[self._find_word_start(offset) : self._find_word_end(offset) + 1]
 
     def _get_fixed_offset(self, offset):
         if offset >= len(self.code):
@@ -163,7 +161,7 @@ class _RealFinder(object):
         return offset
 
     def _is_id_char(self, offset):
-        return self.code[offset].isalnum() or self.code[offset] == '_'
+        return self.code[offset].isalnum() or self.code[offset] == "_"
 
     def _find_string_start(self, offset):
         kind = self.code[offset]
@@ -174,21 +172,21 @@ class _RealFinder(object):
 
     def _find_parens_start(self, offset):
         offset = self._find_last_non_space_char(offset - 1)
-        while offset >= 0 and self.code[offset] not in '[({':
-            if self.code[offset] not in ':,':
+        while offset >= 0 and self.code[offset] not in "[({":
+            if self.code[offset] not in ":,":
                 offset = self._find_primary_start(offset)
             offset = self._find_last_non_space_char(offset - 1)
         return offset
 
     def _find_atom_start(self, offset):
         old_offset = offset
-        if self.code[offset] == '\n':
+        if self.code[offset] == "\n":
             return offset + 1
         if self.code[offset].isspace():
             offset = self._find_last_non_space_char(offset)
-        if self.code[offset] in '\'"':
+        if self.code[offset] in "'\"":
             return self._find_string_start(offset)
-        if self.code[offset] in ')]}':
+        if self.code[offset] in ")]}":
             return self._find_parens_start(offset)
         if self._is_id_char(offset):
             return self._find_word_start(offset)
@@ -203,33 +201,33 @@ class _RealFinder(object):
         """
         last_atom = offset
         offset = self._find_last_non_space_char(last_atom)
-        while offset > 0 and self.code[offset] in ')]':
+        while offset > 0 and self.code[offset] in ")]":
             last_atom = self._find_parens_start(offset)
             offset = self._find_last_non_space_char(last_atom - 1)
-        if offset >= 0 and (self.code[offset] in '"\'})]' or
-                            self._is_id_char(offset)):
+        if offset >= 0 and (self.code[offset] in "\"'})]" or self._is_id_char(offset)):
             atom_start = self._find_atom_start(offset)
-            if not keyword.iskeyword(self.code[atom_start:offset + 1]) or \
-               (offset + 1 < len(self.code) and self._is_id_char(offset + 1)):
+            if not keyword.iskeyword(self.code[atom_start : offset + 1]) or (
+                offset + 1 < len(self.code) and self._is_id_char(offset + 1)
+            ):
                 return atom_start
         return last_atom
 
     def _find_primary_start(self, offset):
         if offset >= len(self.code):
             offset = len(self.code) - 1
-        if self.code[offset] != '.':
+        if self.code[offset] != ".":
             offset = self._find_primary_without_dot_start(offset)
         else:
             offset = offset + 1
         while offset > 0:
             prev = self._find_last_non_space_char(offset - 1)
-            if offset <= 0 or self.code[prev] != '.':
+            if offset <= 0 or self.code[prev] != ".":
                 break
 
             # Check if relative import
             # XXX: Looks like a hack...
             prev_word_end = self._find_last_non_space_char(prev - 1)
-            if self.code[prev_word_end-3:prev_word_end+1] == "from":
+            if self.code[prev_word_end - 3 : prev_word_end + 1] == "from":
                 offset = prev
                 break
 
@@ -250,66 +248,67 @@ class _RealFinder(object):
         This function is used in `rope.codeassist.assist` function.
         """
         if offset == 0:
-            return ('', '', 0)
+            return ("", "", 0)
         end = offset - 1
         word_start = self._find_atom_start(end)
         real_start = self._find_primary_start(end)
-        if self.code[word_start:offset].strip() == '':
+        if self.code[word_start:offset].strip() == "":
             word_start = end
         if self.code[end].isspace():
             word_start = end
-        if self.code[real_start:word_start].strip() == '':
+        if self.code[real_start:word_start].strip() == "":
             real_start = word_start
         if real_start == word_start == end and not self._is_id_char(end):
-            return ('', '', offset)
+            return ("", "", offset)
         if real_start == word_start:
-            return ('', self.raw[word_start:offset], word_start)
+            return ("", self.raw[word_start:offset], word_start)
         else:
-            if self.code[end] == '.':
-                return (self.raw[real_start:end], '', offset)
+            if self.code[end] == ".":
+                return (self.raw[real_start:end], "", offset)
             last_dot_position = word_start
-            if self.code[word_start] != '.':
-                last_dot_position = \
-                    self._find_last_non_space_char(word_start - 1)
-            last_char_position = \
-                self._find_last_non_space_char(last_dot_position - 1)
+            if self.code[word_start] != ".":
+                last_dot_position = self._find_last_non_space_char(word_start - 1)
+            last_char_position = self._find_last_non_space_char(last_dot_position - 1)
             if self.code[word_start].isspace():
                 word_start = offset
-            return (self.raw[real_start:last_char_position + 1],
-                    self.raw[word_start:offset], word_start)
+            return (
+                self.raw[real_start : last_char_position + 1],
+                self.raw[word_start:offset],
+                word_start,
+            )
 
     def _get_line_start(self, offset):
         try:
-            return self.code.rindex('\n', 0, offset + 1)
+            return self.code.rindex("\n", 0, offset + 1)
         except ValueError:
             return 0
 
     def _get_line_end(self, offset):
         try:
-            return self.code.index('\n', offset)
+            return self.code.index("\n", offset)
         except ValueError:
             return len(self.code)
 
     def is_name_assigned_in_class_body(self, offset):
         word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset) + 1
-        if '.' in self.code[word_start:word_end]:
+        if "." in self.code[word_start:word_end]:
             return False
         line_start = self._get_line_start(word_start)
         line = self.code[line_start:word_start].strip()
-        return not line and self.get_assignment_type(offset) == '='
+        return not line and self.get_assignment_type(offset) == "="
 
     def is_a_class_or_function_name_in_header(self, offset):
         word_start = self._find_word_start(offset - 1)
         line_start = self._get_line_start(word_start)
         prev_word = self.code[line_start:word_start].strip()
-        return prev_word in ['def', 'class']
+        return prev_word in ["def", "class"]
 
     def _find_first_non_space_char(self, offset):
         if offset >= len(self.code):
             return len(self.code)
         while offset < len(self.code) and self.code[offset].isspace():
-            if self.code[offset] == '\n':
+            if self.code[offset] == "\n":
                 return offset
             offset += 1
         return offset
@@ -317,26 +316,30 @@ class _RealFinder(object):
     def is_a_function_being_called(self, offset):
         word_end = self._find_word_end(offset) + 1
         next_char = self._find_first_non_space_char(word_end)
-        return next_char < len(self.code) and \
-            self.code[next_char] == '(' and \
-            not self.is_a_class_or_function_name_in_header(offset)
+        return (
+            next_char < len(self.code)
+            and self.code[next_char] == "("
+            and not self.is_a_class_or_function_name_in_header(offset)
+        )
 
     def _find_import_end(self, start):
         return self._get_line_end(start)
 
     def is_import_statement(self, offset):
         try:
-            last_import = self.code.rindex('import ', 0, offset)
+            last_import = self.code.rindex("import ", 0, offset)
         except ValueError:
             return False
         line_start = self._get_line_start(last_import)
-        return (self._find_import_end(last_import + 7) >= offset and
-                self._find_word_start(line_start) == last_import)
+        return (
+            self._find_import_end(last_import + 7) >= offset
+            and self._find_word_start(line_start) == last_import
+        )
 
     def is_from_statement(self, offset):
         try:
-            last_from = self.code.rindex('from ', 0, offset)
-            from_import = self.code.index(' import ', last_from)
+            last_from = self.code.rindex("from ", 0, offset)
+            from_import = self.code.index(" import ", last_from)
             from_names = from_import + 8
         except ValueError:
             return False
@@ -349,37 +352,39 @@ class _RealFinder(object):
         stmt_start = self._find_primary_start(offset)
         line_start = self._get_line_start(stmt_start)
         prev_word = self.code[line_start:stmt_start].strip()
-        return prev_word == 'from'
+        return prev_word == "from"
 
     def is_import_statement_aliased_module(self, offset):
         if not self.is_import_statement(offset):
             return False
         try:
             line_start = self._get_line_start(offset)
-            import_idx = self.code.rindex('import', line_start, offset)
+            import_idx = self.code.rindex("import", line_start, offset)
             imported_names = import_idx + 7
         except ValueError:
             return False
         # Check if the offset is within the imported names
-        if (imported_names - 1 > offset or
-            self._find_import_end(imported_names) < offset):
+        if (
+            imported_names - 1 > offset
+            or self._find_import_end(imported_names) < offset
+        ):
             return False
         try:
             end = self._find_word_end(offset)
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
-            return self.code[as_start:as_end + 1] == 'as'
+            return self.code[as_start : as_end + 1] == "as"
         except ValueError:
             return False
 
     def is_a_name_after_from_import(self, offset):
         try:
-            if len(self.code) > offset and self.code[offset] == '\n':
+            if len(self.code) > offset and self.code[offset] == "\n":
                 line_start = self._get_line_start(offset - 1)
             else:
                 line_start = self._get_line_start(offset)
-            last_from = self.code.rindex('from ', line_start, offset)
-            from_import = self.code.index(' import ', last_from)
+            last_from = self.code.rindex("from ", line_start, offset)
+            from_import = self.code.index(" import ", last_from)
             from_names = from_import + 8
         except ValueError:
             return False
@@ -389,8 +394,8 @@ class _RealFinder(object):
 
     def get_from_module(self, offset):
         try:
-            last_from = self.code.rindex('from ', 0, offset)
-            import_offset = self.code.index(' import ', last_from)
+            last_from = self.code.rindex("from ", 0, offset)
+            import_offset = self.code.index(" import ", last_from)
             end = self._find_last_non_space_char(import_offset)
             return self.get_primary_at(end)
         except ValueError:
@@ -403,7 +408,7 @@ class _RealFinder(object):
             end = self._find_word_end(offset)
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
-            return self.code[as_start:as_end + 1] == 'as'
+            return self.code[as_start : as_end + 1] == "as"
         except ValueError:
             return False
 
@@ -413,7 +418,7 @@ class _RealFinder(object):
             as_ = self._find_word_end(end + 1)
             alias = self._find_word_end(as_ + 1)
             start = self._find_word_start(alias)
-            return self.raw[start:alias + 1]
+            return self.raw[start : alias + 1]
         except ValueError:
             pass
 
@@ -422,19 +427,19 @@ class _RealFinder(object):
         if word_end + 1 == len(self.code):
             return False
         next_char = self._find_first_non_space_char(word_end + 1)
-        equals = self.code[next_char:next_char + 2]
-        if equals == '==' or not equals.startswith('='):
+        equals = self.code[next_char : next_char + 2]
+        if equals == "==" or not equals.startswith("="):
             return False
         word_start = self._find_word_start(offset)
         prev_char = self._find_last_non_space_char(word_start - 1)
-        return prev_char - 1 >= 0 and self.code[prev_char] in ',('
+        return prev_char - 1 >= 0 and self.code[prev_char] in ",("
 
     def is_on_function_call_keyword(self, offset):
         stop = self._get_line_start(offset)
         if self._is_id_char(offset):
             offset = self._find_word_start(offset) - 1
         offset = self._find_last_non_space_char(offset)
-        if offset <= stop or self.code[offset] not in '(,':
+        if offset <= stop or self.code[offset] not in "(,":
             return False
         parens_start = self.find_parens_start_from_inside(offset)
         return stop < parens_start
@@ -442,9 +447,9 @@ class _RealFinder(object):
     def find_parens_start_from_inside(self, offset):
         stop = self._get_line_start(offset)
         while offset > stop:
-            if self.code[offset] == '(':
+            if self.code[offset] == "(":
                 break
-            if self.code[offset] != ',':
+            if self.code[offset] != ",":
                 offset = self._find_primary_start(offset)
             offset -= 1
         return max(stop, offset)
@@ -456,12 +461,12 @@ class _RealFinder(object):
         # XXX: does not handle tuple assignments
         word_end = self._find_word_end(offset)
         next_char = self._find_first_non_space_char(word_end + 1)
-        single = self.code[next_char:next_char + 1]
-        double = self.code[next_char:next_char + 2]
-        triple = self.code[next_char:next_char + 3]
-        if double not in ('==', '<=', '>=', '!='):
+        single = self.code[next_char : next_char + 1]
+        double = self.code[next_char : next_char + 2]
+        triple = self.code[next_char : next_char + 3]
+        if double not in ("==", "<=", ">=", "!="):
             for op in [single, double, triple]:
-                if op.endswith('='):
+                if op.endswith("="):
                     return op
 
     def get_primary_range(self, offset):
@@ -475,7 +480,7 @@ class _RealFinder(object):
         end = self._find_word_end(offset) + 1
         return (start, end)
 
-    def get_word_parens_range(self, offset, opening='(', closing=')'):
+    def get_word_parens_range(self, offset, opening="(", closing=")"):
         end = self._find_word_end(offset)
         start_parens = self.code.index(opening, end)
         index = start_parens
@@ -497,16 +502,17 @@ class _RealFinder(object):
         while current > first:
             primary_start = current
             current = self._find_primary_start(current)
-            while current != first and (self.code[current] not in '=,'
-                    or self.code[current-1] in '=!<>'):
+            while current != first and (
+                self.code[current] not in "=," or self.code[current - 1] in "=!<>"
+            ):
                 current = self._find_last_non_space_char(current - 1)
-            primary = self.raw[current + 1:primary_start + 1].strip()
-            if self.code[current] == '=':
+            primary = self.raw[current + 1 : primary_start + 1].strip()
+            if self.code[current] == "=":
                 primary_start = current - 1
                 current -= 1
-                while current != first and self.code[current] not in ',':
+                while current != first and self.code[current] not in ",":
                     current = self._find_last_non_space_char(current - 1)
-                param_name = self.raw[current + 1:primary_start + 1].strip()
+                param_name = self.raw[current + 1 : primary_start + 1].strip()
                 keywords.append((param_name, primary))
             else:
                 args.append(primary)
@@ -523,28 +529,27 @@ class _RealFinder(object):
 
         prev_char_offset = self._find_last_non_space_char(primary_start - 1)
         next_char_offset = self._find_first_non_space_char(primary_end + 1)
-        next_char = prev_char = ''
+        next_char = prev_char = ""
         if prev_char_offset >= start:
             prev_char = self.code[prev_char_offset]
         if next_char_offset < end:
             next_char = self.code[next_char_offset]
         try:
-            equals_offset = self.code.index('=', start, end)
+            equals_offset = self.code.index("=", start, end)
         except ValueError:
             return False
-        if prev_char not in '(,' and next_char not in ',)':
+        if prev_char not in "(," and next_char not in ",)":
             return False
         parens_start = self.find_parens_start_from_inside(offset)
         # XXX: only handling (x, y) = value
-        return offset < equals_offset and \
-            self.code[start:parens_start].strip() == ''
+        return offset < equals_offset and self.code[start:parens_start].strip() == ""
 
     def get_function_and_args_in_header(self, offset):
         offset = self.find_function_offset(offset)
         lparens, rparens = self.get_word_parens_range(offset)
-        return self.raw[offset:rparens + 1]
+        return self.raw[offset : rparens + 1]
 
-    def find_function_offset(self, offset, definition='def '):
+    def find_function_offset(self, offset, definition="def "):
         while True:
             offset = self.code.index(definition, offset)
             if offset == 0 or not self._is_id_char(offset - 1):
@@ -554,7 +559,6 @@ class _RealFinder(object):
         return self._find_first_non_space_char(def_)
 
     def get_lambda_and_args(self, offset):
-        offset = self.find_function_offset(offset, definition='lambda ')
-        lparens, rparens = self.get_word_parens_range(offset, opening=' ',
-                                                      closing=':')
-        return self.raw[offset:rparens + 1]
+        offset = self.find_function_offset(offset, definition="lambda ")
+        lparens, rparens = self.get_word_parens_range(offset, opening=" ", closing=":")
+        return self.raw[offset : rparens + 1]

@@ -13,7 +13,6 @@ class PyName(object):
 
 
 class DefinedName(PyName):
-
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -21,7 +20,9 @@ class DefinedName(PyName):
         return self.pyobject
 
     def get_definition_location(self):
-        lineno = utils.guess_def_lineno(self.pyobject.get_module(), self.pyobject.get_ast())
+        lineno = utils.guess_def_lineno(
+            self.pyobject.get_module(), self.pyobject.get_ast()
+        )
         return (self.pyobject.get_module(), lineno)
 
 
@@ -30,7 +31,6 @@ class AssignedName(PyName):
 
 
 class UnboundName(PyName):
-
     def __init__(self, pyobject=None):
         self.pyobject = pyobject
         if self.pyobject is None:
@@ -46,8 +46,9 @@ class UnboundName(PyName):
 class AssignmentValue(object):
     """An assigned expression"""
 
-    def __init__(self, ast_node, levels=None, evaluation='',
-                 assign_type=False, type_hint=None):
+    def __init__(
+        self, ast_node, levels=None, evaluation="", assign_type=False, type_hint=None
+    ):
         """The `level` is `None` for simple assignments and is
         a list of numbers for tuple assignments for example in::
 
@@ -95,9 +96,7 @@ class ParameterName(PyName):
 
 
 class ImportedModule(PyName):
-
-    def __init__(self, importing_module, module_name=None,
-                 level=0, resource=None):
+    def __init__(self, importing_module, module_name=None, level=0, resource=None):
         self.importing_module = importing_module
         self.module_name = module_name
         self.level = level
@@ -119,11 +118,12 @@ class ImportedModule(PyName):
                 try:
                     if self.level == 0:
                         pymodule = pycore.project.get_module(
-                            self.module_name, self._current_folder())
+                            self.module_name, self._current_folder()
+                        )
                     else:
                         pymodule = pycore.project.get_relative_module(
-                            self.module_name, self._current_folder(),
-                            self.level)
+                            self.module_name, self._current_folder(), self.level
+                        )
                     self.pymodule.set(pymodule)
                 except exceptions.ModuleNotFoundError:
                     pass
@@ -142,7 +142,6 @@ class ImportedModule(PyName):
 
 
 class ImportedName(PyName):
-
     def __init__(self, imported_module, imported_name):
         self.imported_module = imported_module
         self.imported_name = imported_name
@@ -172,12 +171,10 @@ def _get_concluded_data(module):
 
 
 def _circular_inference():
-    raise rope.base.pyobjects.IsBeingInferredError(
-        'Circular Object Inference')
+    raise rope.base.pyobjects.IsBeingInferredError("Circular Object Inference")
 
 
 class _Inferred(object):
-
     def __init__(self, get_inferred, concluded=None):
         self.get_inferred = get_inferred
         self.concluded = concluded

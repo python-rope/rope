@@ -14,19 +14,18 @@ except ImportError:
 
 
 class NumPyDocstringParamParser(docstrings.IParamParser):
-
     def __call__(self, docstring, param_name):
         """Search `docstring` (in numpydoc format) for type(-s) of `param_name`."""
         if not docstring:
-          return []
-        params = NumpyDocString(docstring)._parsed_data['Parameters']
+            return []
+        params = NumpyDocString(docstring)._parsed_data["Parameters"]
         for p_name, p_type, p_descr in params:
             if p_name == param_name:
-                m = re.match('([^,]+(,[^,]+)*?)(,[ ]*optional)?$', p_type)
+                m = re.match("([^,]+(,[^,]+)*?)(,[ ]*optional)?$", p_type)
                 if m:
                     p_type = m.group(1)
 
-                if p_type.startswith('{'):
+                if p_type.startswith("{"):
                     types = set(type(x).__name__ for x in literal_eval(p_type))
                     return list(types)
                 else:

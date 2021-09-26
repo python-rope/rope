@@ -28,7 +28,6 @@ from rope.base.oi.type_hinting.providers import interfaces
 
 
 class ParamProvider(interfaces.IParamProvider):
-
     def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
@@ -49,7 +48,6 @@ class ParamProvider(interfaces.IParamProvider):
 
 
 class ReturnProvider(interfaces.IReturnProvider):
-
     def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IReturnParser
@@ -69,7 +67,6 @@ class ReturnProvider(interfaces.IReturnProvider):
 
 
 class AssignmentProvider(interfaces.IAssignmentProvider):
-
     def __init__(self, docstring_parser, resolver):
         """
         :type docstring_parser: rope.base.oi.type_hinting.providers.docstrings.IParamParser
@@ -94,7 +91,6 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
 
 
 class IParamParser(object):
-
     def __call__(self, docstring, param_name):
         """
         :type docstring: str
@@ -103,7 +99,6 @@ class IParamParser(object):
 
 
 class IReturnParser(object):
-
     def __call__(self, docstring):
         """
         :type docstring: str
@@ -113,9 +108,9 @@ class IReturnParser(object):
 class DocstringParamParser(IParamParser):
 
     DOCSTRING_PARAM_PATTERNS = [
-        r'\s*:type\s+%s:\s*([^\n]+)',  # Sphinx
-        r'\s*:param\s+(\w+)\s+%s:[^\n]+',  # Sphinx param with type
-        r'\s*@type\s+%s:\s*([^\n]+)',  # Epydoc
+        r"\s*:type\s+%s:\s*([^\n]+)",  # Sphinx
+        r"\s*:param\s+(\w+)\s+%s:[^\n]+",  # Sphinx param with type
+        r"\s*@type\s+%s:\s*([^\n]+)",  # Epydoc
     ]
 
     def __init__(self):
@@ -137,8 +132,9 @@ class DocstringParamParser(IParamParser):
         """
         if not docstring:
             return []
-        patterns = [re.compile(p % re.escape(param_name))
-                    for p in self.DOCSTRING_PARAM_PATTERNS]
+        patterns = [
+            re.compile(p % re.escape(param_name)) for p in self.DOCSTRING_PARAM_PATTERNS
+        ]
         for pattern in patterns:
             match = pattern.search(docstring)
             if match:
@@ -150,8 +146,8 @@ class DocstringParamParser(IParamParser):
 class DocstringReturnParser(IReturnParser):
 
     DOCSTRING_RETURN_PATTERNS = [
-        re.compile(r'\s*:rtype:\s*([^\n]+)', re.M),  # Sphinx
-        re.compile(r'\s*@rtype:\s*([^\n]+)', re.M),  # Epydoc
+        re.compile(r"\s*:rtype:\s*([^\n]+)", re.M),  # Sphinx
+        re.compile(r"\s*@rtype:\s*([^\n]+)", re.M),  # Epydoc
     ]
 
     def __init__(self):
@@ -169,7 +165,7 @@ class DocstringReturnParser(IReturnParser):
 
 class RSTRoleStrip(object):
 
-    RST_ROLE_PATTERN = re.compile(r':[^`]+:`([^`]+)`')
+    RST_ROLE_PATTERN = re.compile(r":[^`]+:`([^`]+)`")
 
     def __call__(self, type_str):
         """

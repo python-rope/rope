@@ -2,7 +2,6 @@ from rope.base.oi import objectdb
 
 
 class MemoryDB(objectdb.FileDict):
-
     def __init__(self, project, persist=None):
         self.project = project
         self._persist = persist
@@ -14,7 +13,8 @@ class MemoryDB(objectdb.FileDict):
         self._files = {}
         if self.persist:
             result = self.project.data_files.read_data(
-                'objectdb', compress=self.compress, import_=True)
+                "objectdb", compress=self.compress, import_=True
+            )
             if result is not None:
                 self._files = result
 
@@ -51,23 +51,21 @@ class MemoryDB(objectdb.FileDict):
 
     def write(self):
         if self.persist:
-            self.project.data_files.write_data('objectdb', self._files,
-                                               self.compress)
+            self.project.data_files.write_data("objectdb", self._files, self.compress)
 
     @property
     def compress(self):
-        return self.project.prefs.get('compress_objectdb', False)
+        return self.project.prefs.get("compress_objectdb", False)
 
     @property
     def persist(self):
         if self._persist is not None:
             return self._persist
         else:
-            return self.project.prefs.get('save_objectdb', False)
+            return self.project.prefs.get("save_objectdb", False)
 
 
 class FileInfo(objectdb.FileInfo):
-
     def __init__(self, scopes):
         self.scopes = scopes
 
@@ -97,9 +95,7 @@ class FileInfo(objectdb.FileInfo):
         raise NotImplementedError()
 
 
-
 class ScopeInfo(objectdb.ScopeInfo):
-
     def __init__(self):
         self.call_info = {}
         self.per_name = {}
