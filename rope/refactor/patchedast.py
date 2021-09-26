@@ -876,11 +876,11 @@ class _PatchingASTWalker(object):
         for item in pycompat.get_ast_with_items(node):
             children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
-                children.extend(['as', item.optional_vars])
+                children.extend(["as", item.optional_vars])
         if pycompat.PY2 and COMMA_IN_WITH_PATTERN.search(self.source.source):
             children.append(node.body[0])
         else:
-            children.append(':')
+            children.append(":")
             children.extend(node.body)
         self._handle(node, children)
 
