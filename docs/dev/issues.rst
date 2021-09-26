@@ -2,6 +2,9 @@
  Rope Issues
 =============
 
+NOTE: this file is severely outdated and is no longer actively used by rope to keep track of issues. It is kept only for historical purpose. Use the `Issue Tracker`_ instead
+
+.. _`Issue Tracker`: https://github.com/python-rope/rope/issues
 
 Unresolved Issues
 =================
@@ -20,7 +23,6 @@ Unresolved Issues
 * adding "referenced later" wildcard argument to restructurings?
 * adding "change references" wildcard argument to restructurings?
 * ideas for more custom wildcards
-* adapting future python 2.6 ast changes
 * custom wildcards and recursive patterns
 * custom restructuring wildcard patterns and replacements
 * not reimporting back imports after moving
@@ -31,7 +33,6 @@ Unresolved Issues
 * import actions with more that one phase and filtering problems
 * handle long imports should work on filtered imports unconditionally?
 * extracting subexpressions; look at `extracttest` for more info
-* switching to gplv3?
 * unignored files that are not under version control
 * inline fails when there is an arg mismatch
 * evaluate function parameter defaults in staticoi?
