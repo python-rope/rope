@@ -333,7 +333,7 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def test_get_inner_scope_for_list_comprhension(self):
         scope = libutils.get_string_scope(self.project, "a = [i for i in range(10)]\n")
-        self.assertGreater(len(scope.get_scopes()), 0)
+        self.assertEqual(len(scope.get_scopes()), 1)
         self.assertNotIn("i", scope)
         self.assertIn("i", scope.get_scopes()[0])
 
@@ -341,11 +341,44 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = libutils.get_string_scope(
             self.project, "a = [(i, j) for i,j in enumerate(range(10))]\n"
         )
-        self.assertGreater(len(scope.get_scopes()), 0)
+        self.assertEqual(len(scope.get_scopes()), 1)
         self.assertNotIn("i", scope)
         self.assertNotIn("j", scope)
         self.assertIn("i", scope.get_scopes()[0])
         self.assertIn("j", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_generator(self):
+        scope = libutils.get_string_scope(self.project, "a = (i for i in range(10))\n")
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_set_comprehension(self):
+        scope = libutils.get_string_scope(self.project, "a = {i for i in range(10)}\n")
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_dict_comprehension(self):
+        scope = libutils.get_string_scope(
+            self.project, "a = {i:i for i in range(10)}\n"
+        )
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_nested_list_comprhension(self):
+        scope = libutils.get_string_scope(
+            self.project, "a = [[i + j for j in range(10)] for i in range(10)]\n"
+        )
+
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertNotIn("j", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+        self.assertEqual(len(scope.get_scopes()[0].get_scopes()), 1)
+        self.assertIn("j", scope.get_scopes()[0].get_scopes()[0])
+        self.assertIn("i", scope.get_scopes()[0].get_scopes()[0])
 
 
 def suite():

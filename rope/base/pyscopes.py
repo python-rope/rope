@@ -143,9 +143,11 @@ class GlobalScope(Scope):
         return rope.base.builtins.builtins.get_attributes()
 
 
-class CompScope(Scope):
+class ComprehensionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super(CompScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        super(ComprehensionScope, self).__init__(
+            pycore, pyobject, pyobject.parent.get_scope()
+        )
         self.names = None
         self.returned_asts = None
         self.defineds = None
@@ -153,18 +155,19 @@ class CompScope(Scope):
 
     def _get_names(self):
         if self.names is None:
-            self._visit_comp()
+            self._visit_comprehension()
         return self.names
 
     def get_names(self):
         return self._get_names()
 
-    def _visit_comp(self):
+    def _visit_comprehension(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for n in ast.get_child_nodes(self.pyobject.get_ast()):
-                ast.walk(n, new_visitor)
+            for node in ast.get_child_nodes(self.pyobject.get_ast()):
+                ast.walk(node, new_visitor)
             self.names = new_visitor.names
+            self.names.update(self.parent.get_names())
             self.defineds = new_visitor.defineds
 
     def get_logical_end(self):

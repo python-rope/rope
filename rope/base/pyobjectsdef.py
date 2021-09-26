@@ -122,14 +122,16 @@ class PyFunction(pyobjects.PyFunction):
             return getattr(self.ast_node, "decorators", None)
 
 
-class ListComp(pyobjects.PyComp):
+class PyComprehension(pyobjects.PyComprehension):
     def __init__(self, pycore, ast_node, parent):
-        self.visitor_class = _ScopeVisitor
+        self.visitor_class = _ComprehensionVisitor
         rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
 
     def _create_scope(self):
-        return rope.base.pyscopes.CompScope(self.pycore, self, _CompVisitor)
+        return rope.base.pyscopes.ComprehensionScope(
+            self.pycore, self, _ComprehensionVisitor
+        )
 
 
 class PyClass(pyobjects.PyClass):
@@ -344,26 +346,26 @@ class _ExpressionVisitor(object):
         self.scope_visitor._assigned(name, assignment)
 
     def _GeneratorExp(self, node):
-        for child in ["elt", "key", "value"]:
-            if hasattr(node, child):
-                ast.walk(getattr(node, child), self)
-        for comp in node.generators:
-            ast.walk(comp.target, _AssignVisitor(self))
-            ast.walk(comp, self)
-            for if_ in comp.ifs:
-                ast.walk(if_, self)
+        if hasattr(self, "scope_visitor"):
+            list_comp = PyComprehension(
+                self.scope_visitor.pycore, node, self.scope_visitor.owner_object
+            )
+            self.scope_visitor.defineds.append(list_comp)
+        else:
+            for child in ["elt", "key", "value"]:
+                if hasattr(node, child):
+                    ast.walk(getattr(node, child), self)
+            for comp in node.generators:
+                ast.walk(comp.target, _AssignVisitor(self))
+                ast.walk(comp, self)
+                for if_ in comp.ifs:
+                    ast.walk(if_, self)
 
     def _SetComp(self, node):
         self._GeneratorExp(node)
 
     def _ListComp(self, node):
-        if hasattr(self, "scope_visitor"):
-            list_comp = ListComp(
-                self.scope_visitor.pycore, node, self.scope_visitor.owner_object
-            )
-            self.scope_visitor.defineds.append(list_comp)
-        else:
-            self._GeneratorExp(node)
+        self._GeneratorExp(node)
 
     def _DictComp(self, node):
         self._GeneratorExp(node)
@@ -411,10 +413,10 @@ class _AssignVisitor(object):
         pass
 
 
-class _CompVisitor(_ExpressionVisitor):
+class _ComprehensionVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
-        self.pycore = pycore
         self.owner_object = owner_object
+        self.pycore = pycore
         self.names = {}
         self.defineds = []
 
@@ -431,6 +433,10 @@ class _CompVisitor(_ExpressionVisitor):
 
     def _get_pyobject(self, node):
         return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
+
+    def _GeneratorExp(self, node):
+        list_comp = PyComprehension(self.pycore, node, self.owner_object)
+        self.defineds.append(list_comp)
 
 
 class _ScopeVisitor(_ExpressionVisitor):
