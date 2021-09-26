@@ -1395,7 +1395,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_function_with_for_else_statemant_more(self):
-        """TODO: fixed code to test passed """
+        """TODO: fixed code to test passed"""
         code = (
             "def a_func():\n"
             "    for i in range(10):\n"
@@ -1977,6 +1977,134 @@ class ExtractMethodTest(unittest.TestCase):
                         return someargs + 1
             """)
 
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_list_comprehension(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum([x for x in y])
+                b = sum([x for x in y])
+
+                print(a, b)
+
+            f()
+        """)
+        extract_target = "    a = sum([x for x in y])\n"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum([x for x in y])
+
+                print(a, b)
+
+            def _a(y):
+                a = sum([x for x in y])
+                return a
+
+            f()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_generator(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum(x for x in y)
+                b = sum(x for x in y)
+
+                print(a, b)
+
+            f()
+        """)
+        extract_target = "    a = sum(x for x in y)\n"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum(x for x in y)
+
+                print(a, b)
+
+            def _a(y):
+                a = sum(x for x in y)
+                return a
+
+            f()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_set_comprehension(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum({x for x in y})
+                b = sum({x for x in y})
+
+                print(a, b)
+
+            f()
+        """)
+        extract_target = "    a = sum({x for x in y})\n"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum({x for x in y})
+
+                print(a, b)
+
+            def _a(y):
+                a = sum({x for x in y})
+                return a
+
+            f()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_with_dict_comprehension(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum({x: x for x in y})
+                b = sum({x: x for x in y})
+
+                print(a, b)
+
+            f()
+        """)
+        extract_target = "    a = sum({x: x for x in y})\n"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = _a(y)
+                b = sum({x: x for x in y})
+
+                print(a, b)
+
+            def _a(y):
+                a = sum({x: x for x in y})
+                return a
+
+            f()
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_function_expression_with_assignment_to_attribute(self):
