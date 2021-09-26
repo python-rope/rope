@@ -1979,7 +1979,7 @@ class ExtractMethodTest(unittest.TestCase):
 
         self.assertEqual(expected, refactored)
 
-    def test_extract_with_list_compehention(self):
+    def test_extract_with_list_comprehension(self):
         code = dedent("""\
             def f():
                 y = [1,2,3,4]
@@ -2043,7 +2043,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_extract_with_set_compehention(self):
+    def test_extract_with_set_comprehension(self):
         code = dedent("""\
             def f():
                 y = [1,2,3,4]
@@ -2075,7 +2075,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_extract_with_dict_compehention(self):
+    def test_extract_with_dict_comprehension(self):
         code = dedent("""\
             def f():
                 y = [1,2,3,4]
