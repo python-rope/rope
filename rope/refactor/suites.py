@@ -18,6 +18,7 @@ def find_visible_for_suite(root, lines):
 
     def valid(suite):
         return suite is not None and not suite.ignored
+
     if valid(suite1) and not valid(suite2):
         return line1
     if not valid(suite1) and valid(suite2):
@@ -42,7 +43,7 @@ def find_visible_for_suite(root, lines):
 
 
 def ast_suite_tree(node):
-    if hasattr(node, 'lineno'):
+    if hasattr(node, "lineno"):
         lineno = node.lineno
     else:
         lineno = 1
@@ -50,7 +51,6 @@ def ast_suite_tree(node):
 
 
 class Suite(object):
-
     def __init__(self, child_nodes, lineno, parent=None, ignored=False):
         self.parent = parent
         self.lineno = lineno
@@ -98,7 +98,6 @@ class Suite(object):
 
 
 class _SuiteWalker(object):
-
     def __init__(self, suite):
         self.suite = suite
         self.suites = []
@@ -122,7 +121,9 @@ class _SuiteWalker(object):
                 proceed_to_except_handler = isinstance(node.body[0], ast.TryExcept)
             elif pycompat.PY3:
                 try:
-                    proceed_to_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
+                    proceed_to_except_handler = isinstance(
+                        node.handlers[0], ast.ExceptHandler
+                    )
                 except IndexError:
                     pass
         if proceed_to_except_handler:
@@ -150,9 +151,7 @@ class _SuiteWalker(object):
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
     def _FunctionDef(self, node):
-        self.suites.append(Suite(node.body, node.lineno,
-                                 self.suite, ignored=True))
+        self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
 
     def _ClassDef(self, node):
-        self.suites.append(Suite(node.body, node.lineno,
-                                 self.suite, ignored=True))
+        self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))

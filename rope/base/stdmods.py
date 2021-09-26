@@ -9,10 +9,11 @@ from rope.base.utils import pycompat
 def _stdlib_path():
     if pycompat.PY2:
         from distutils import sysconfig
-        return sysconfig.get_python_lib(standard_lib=True,
-                                        plat_specific=True)
+
+        return sysconfig.get_python_lib(standard_lib=True, plat_specific=True)
     elif pycompat.PY3:
         import inspect
+
         return os.path.dirname(inspect.getsourcefile(inspect))
 
 
@@ -29,10 +30,10 @@ def python_modules():
         for name in os.listdir(lib_path):
             path = os.path.join(lib_path, name)
             if os.path.isdir(path):
-                if '-' not in name:
+                if "-" not in name:
                     result.add(name)
             else:
-                if name.endswith('.py'):
+                if name.endswith(".py"):
                     result.add(name[:-3])
     return result
 
@@ -53,13 +54,13 @@ def normalize_so_name(name):
 @utils.cached(1)
 def dynload_modules():
     result = set(sys.builtin_module_names)
-    dynload_path = os.path.join(_stdlib_path(), 'lib-dynload')
+    dynload_path = os.path.join(_stdlib_path(), "lib-dynload")
     if os.path.exists(dynload_path):
         for name in os.listdir(dynload_path):
             path = os.path.join(dynload_path, name)
             if os.path.isfile(path):
-                if name.endswith('.dll'):
+                if name.endswith(".dll"):
                     result.add(normalize_so_name(name))
-                if name.endswith('.so'):
+                if name.endswith(".so"):
                     result.add(normalize_so_name(name))
     return result
