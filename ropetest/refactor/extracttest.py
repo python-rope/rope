@@ -2199,27 +2199,37 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_nested_double_with_as(self):
-        code = "with open(\"test\") as file1:\n" \
-               "    with open(\"test\") as file2:\n" \
-               "        print(file1, file2)\n"
+        code = dedent("""\
+            with open("test") as file1:
+                with open("test") as file2:
+                    print(file1, file2)
+        """)
         start, end = self._convert_line_range_to_offset(code, 3, 4)
         refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
-        expected = "\ndef extracted(file1, file2):\n" \
-                   "    print(file1, file2)\n" \
-                   "\n" \
-                   "with open(\"test\") as file1:\n" \
-                   "    with open(\"test\") as file2:\n" \
-                   "        extracted(file1, file2)\n"
+        expected = dedent("""\
+
+            def extracted(file1, file2):
+                print(file1, file2)
+
+            with open("test") as file1:
+                with open("test") as file2:
+                    extracted(file1, file2)
+        """)
         self.assertEquals(expected, refactored)
 
     def test_extract_method_with_double_with_as(self):
-        code = "with open(\"test\") as file1, open(\"test\") as file2:\n" \
-               "    print(file1, file2)\n"
+        code = dedent("""\
+            with open("test") as file1, open("test") as file2:
+                print(file1, file2)
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
-        expected = "\ndef extracted(file1, file2):\n" \
-                   "    print(file1, file2)\n" \
-                   "\n" \
-                   "with open(\"test\") as file1, open(\"test\") as file2:\n" \
-                   "    extracted(file1, file2)\n"
+        expected = dedent("""\
+
+            def extracted(file1, file2):
+                print(file1, file2)
+
+            with open("test") as file1, open("test") as file2:
+                extracted(file1, file2)
+        """)
         self.assertEquals(expected, refactored)
