@@ -19,7 +19,6 @@ from rope.base.pyobjectsdef import PyModule, PyPackage
 
 
 class PyCore(object):
-
     def __init__(self, project):
         self.project = project
         self._init_resource_observer()
@@ -32,7 +31,7 @@ class PyCore(object):
 
     def _init_python_files(self):
         self.python_matcher = None
-        patterns = self.project.prefs.get('python_files', None)
+        patterns = self.project.prefs.get("python_files", None)
         if patterns is not None:
             self.python_matcher = rope.base.resources._ResourceMatcher()
             self.python_matcher.set_patterns(patterns)
@@ -40,9 +39,9 @@ class PyCore(object):
     def _init_resource_observer(self):
         callback = self._invalidate_resource_cache
         observer = rope.base.resourceobserver.ResourceObserver(
-            changed=callback, moved=callback, removed=callback)
-        self.observer = \
-            rope.base.resourceobserver.FilteredResourceObserver(observer)
+            changed=callback, moved=callback, removed=callback
+        )
+        self.observer = rope.base.resourceobserver.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
 
     def _init_automatic_soa(self):
@@ -50,17 +49,17 @@ class PyCore(object):
             return
         callback = self._file_changed_for_soa
         observer = rope.base.resourceobserver.ResourceObserver(
-            changed=callback, moved=callback, removed=callback)
+            changed=callback, moved=callback, removed=callback
+        )
         self.project.add_observer(observer)
 
     @property
     def automatic_soa(self):
-        auto_soa = self.project.prefs.get('automatic_soi', None)
-        return self.project.prefs.get('automatic_soa', auto_soa)
+        auto_soa = self.project.prefs.get("automatic_soi", None)
+        return self.project.prefs.get("automatic_soa", auto_soa)
 
     def _file_changed_for_soa(self, resource, new_resource=None):
-        old_contents = self.project.history.\
-            contents_before_current_change(resource)
+        old_contents = self.project.history.contents_before_current_change(resource)
         if old_contents is not None:
             perform_soa_on_changed_scopes(self.project, resource, old_contents)
 
@@ -68,10 +67,10 @@ class PyCore(object):
         if resource.is_folder():
             return False
         if self.python_matcher is None:
-            return resource.name.endswith('.py')
+            return resource.name.endswith(".py")
         return self.python_matcher.does_match(resource)
 
-    @utils.deprecated('Use `project.get_module` instead')
+    @utils.deprecated("Use `project.get_module` instead")
     def get_module(self, name, folder=None):
         """Returns a `PyObject` if the module was found."""
         return self.project.get_module(name, folder)
@@ -79,20 +78,20 @@ class PyCore(object):
     def _builtin_submodules(self, modname):
         result = {}
         for extension in self.extension_modules:
-            if extension.startswith(modname + '.'):
-                name = extension[len(modname) + 1:]
-                if '.' not in name:
+            if extension.startswith(modname + "."):
+                name = extension[len(modname) + 1 :]
+                if "." not in name:
                     result[name] = self.builtin_module(extension)
         return result
 
     def builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
-    @utils.deprecated('Use `project.get_relative_module` instead')
+    @utils.deprecated("Use `project.get_relative_module` instead")
     def get_relative_module(self, name, folder, level):
         return self.project.get_relative_module(name, folder, level)
 
-    @utils.deprecated('Use `libutils.get_string_module` instead')
+    @utils.deprecated("Use `libutils.get_string_module` instead")
     def get_string_module(self, code, resource=None, force_errors=False):
         """Returns a `PyObject` object for the given code
 
@@ -103,7 +102,7 @@ class PyCore(object):
         """
         return PyModule(self, code, resource, force_errors=force_errors)
 
-    @utils.deprecated('Use `libutils.get_string_scope` instead')
+    @utils.deprecated("Use `libutils.get_string_scope` instead")
     def get_string_scope(self, code, resource=None):
         """Returns a `Scope` object for the given code"""
         return rope.base.libutils.get_string_scope(code, resource)
@@ -112,11 +111,11 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
-    @utils.deprecated('Use `project.get_python_path_folders` instead')
+    @utils.deprecated("Use `project.get_python_path_folders` instead")
     def get_python_path_folders(self):
         return self.project.get_python_path_folders()
 
-    @utils.deprecated('Use `project.find_module` instead')
+    @utils.deprecated("Use `project.find_module` instead")
     def find_module(self, modname, folder=None):
         """Returns a resource corresponding to the given module
 
@@ -124,7 +123,7 @@ class PyCore(object):
         """
         return self.project.find_module(modname, folder)
 
-    @utils.deprecated('Use `project.find_relative_module` instead')
+    @utils.deprecated("Use `project.find_relative_module` instead")
     def find_relative_module(self, modname, folder, level):
         return self.project.find_relative_module(modname, folder, level)
 
@@ -133,7 +132,7 @@ class PyCore(object):
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
-    @utils.deprecated('Use `project.get_source_folders` instead')
+    @utils.deprecated("Use `project.get_source_folders` instead")
     def get_source_folders(self):
         """Returns project source folders"""
         return self.project.get_source_folders()
@@ -141,14 +140,16 @@ class PyCore(object):
     def resource_to_pyobject(self, resource, force_errors=False):
         return self.module_cache.get_pymodule(resource, force_errors)
 
-    @utils.deprecated('Use `project.get_python_files` instead')
+    @utils.deprecated("Use `project.get_python_files` instead")
     def get_python_files(self):
         """Returns all python files available in the project"""
         return self.project.get_python_files()
 
     def _is_package(self, folder):
-        if folder.has_child('__init__.py') and \
-           not folder.get_child('__init__.py').is_folder():
+        if (
+            folder.has_child("__init__.py")
+            and not folder.get_child("__init__.py").is_folder()
+        ):
             return True
         else:
             return False
@@ -159,7 +160,7 @@ class PyCore(object):
                 return [folder]
         result = []
         for resource in folder.get_files():
-            if resource.name.endswith('.py'):
+            if resource.name.endswith(".py"):
                 result.append(folder)
                 break
         for resource in folder.get_folders():
@@ -173,19 +174,25 @@ class PyCore(object):
         controlling the process.
 
         """
-        perform_doa = self.project.prefs.get('perform_doi', True)
-        perform_doa = self.project.prefs.get('perform_doa', perform_doa)
+        perform_doa = self.project.prefs.get("perform_doi", True)
+        perform_doa = self.project.prefs.get("perform_doa", perform_doa)
         receiver = self.object_info.doa_data_received
         if not perform_doa:
             receiver = None
         runner = rope.base.oi.doa.PythonFileRunner(
-            self, resource, args, stdin, stdout, receiver)
+            self, resource, args, stdin, stdout, receiver
+        )
         runner.add_finishing_observer(self.module_cache.forget_all_data)
         runner.run()
         return runner
 
-    def analyze_module(self, resource, should_analyze=lambda py: True,
-                       search_subscopes=lambda py: True, followed_calls=None):
+    def analyze_module(
+        self,
+        resource,
+        should_analyze=lambda py: True,
+        search_subscopes=lambda py: True,
+        followed_calls=None,
+    ):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to collect
@@ -203,35 +210,36 @@ class PyCore(object):
         project config.
         """
         if followed_calls is None:
-            followed_calls = self.project.prefs.get('soa_followed_calls', 0)
+            followed_calls = self.project.prefs.get("soa_followed_calls", 0)
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
         rope.base.oi.soa.analyze_module(
-            self, pymodule, should_analyze, search_subscopes, followed_calls)
+            self, pymodule, should_analyze, search_subscopes, followed_calls
+        )
 
     def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
-        warnings.warn('`PyCore.get_classes()` is deprecated',
-                      DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "`PyCore.get_classes()` is deprecated", DeprecationWarning, stacklevel=2
+        )
         return []
 
     def __str__(self):
         return str(self.module_cache) + str(self.object_info)
 
-    @utils.deprecated('Use `libutils.modname` instead')
+    @utils.deprecated("Use `libutils.modname` instead")
     def modname(self, resource):
         return rope.base.libutils.modname(resource)
 
     @property
     @utils.cacheit
     def extension_modules(self):
-        result = set(self.project.prefs.get('extension_modules', []))
-        if self.project.prefs.get('import_dynload_stdmods', False):
+        result = set(self.project.prefs.get("extension_modules", []))
+        if self.project.prefs.get("import_dynload_stdmods", False):
             result.update(stdmods.dynload_modules())
         return result
 
 
 class _ModuleCache(object):
-
     def __init__(self, pycore):
         self.pycore = pycore
         self.module_map = {}
@@ -248,11 +256,9 @@ class _ModuleCache(object):
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
-            result = PyPackage(self.pycore, resource,
-                               force_errors=force_errors)
+            result = PyPackage(self.pycore, resource, force_errors=force_errors)
         else:
-            result = PyModule(self.pycore, resource=resource,
-                              force_errors=force_errors)
+            result = PyModule(self.pycore, resource=resource, force_errors=force_errors)
             if result.has_errors:
                 return result
         self.module_map[resource] = result
@@ -264,17 +270,16 @@ class _ModuleCache(object):
             pymodule._forget_concluded_data()
 
     def __str__(self):
-        return 'PyCore caches %d PyModules\n' % len(self.module_map)
+        return "PyCore caches %d PyModules\n" % len(self.module_map)
 
 
 class _ExtensionCache(object):
-
     def __init__(self, pycore):
         self.pycore = pycore
         self.extensions = {}
 
     def get_pymodule(self, name):
-        if name == '__builtin__':
+        if name == "__builtin__":
             return builtins.builtins
         allowed = self.pycore.extension_modules
         if name not in self.extensions and name in allowed:
@@ -299,13 +304,13 @@ def perform_soa_on_changed_scopes(project, resource, old_contents):
                 start = scope.get_start()
                 end = scope.get_end()
                 return detector.consume_changes(start, end)
+
             pycore.analyze_module(resource, should_analyze, search_subscopes)
         except exceptions.ModuleSyntaxError:
             pass
 
 
 class _TextChangeDetector(object):
-
     def __init__(self, old, new):
         self.old = old
         self.new = new
@@ -315,11 +320,12 @@ class _TextChangeDetector(object):
         differ = difflib.Differ()
         self.lines = []
         lineno = 0
-        for line in differ.compare(self.old.splitlines(True),
-                                   self.new.splitlines(True)):
-            if line.startswith(' '):
+        for line in differ.compare(
+            self.old.splitlines(True), self.new.splitlines(True)
+        ):
+            if line.startswith(" "):
                 lineno += 1
-            elif line.startswith('-'):
+            elif line.startswith("-"):
                 lineno += 1
                 self.lines.append(lineno)
 

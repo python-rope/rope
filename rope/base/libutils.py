@@ -25,9 +25,9 @@ def path_to_resource(project, path, type=None):
         project = rope.base.project.get_no_project()
     if type is None:
         return project.get_resource(project_path)
-    if type == 'file':
+    if type == "file":
         return project.get_file(project_path)
-    if type == 'folder':
+    if type == "folder":
         return project.get_folder(project_path)
     return None
 
@@ -38,12 +38,12 @@ def path_relative_to_project_root(project, path):
 
 @utils.deprecated()
 def relative(root, path):
-    root = rope.base.project._realpath(root).replace(os.path.sep, '/')
-    path = rope.base.project._realpath(path).replace(os.path.sep, '/')
+    root = rope.base.project._realpath(root).replace(os.path.sep, "/")
+    path = rope.base.project._realpath(path).replace(os.path.sep, "/")
     if path == root:
-        return ''
-    if path.startswith(root + '/'):
-        return path[len(root) + 1:]
+        return ""
+    if path.startswith(root + "/"):
+        return path[len(root) + 1 :]
 
 
 def report_change(project, path, old_content):
@@ -58,8 +58,7 @@ def report_change(project, path, old_content):
     for observer in list(project.observers):
         observer.resource_changed(resource)
     if project.pycore.automatic_soa:
-        rope.base.pycore.perform_soa_on_changed_scopes(project, resource,
-                                                       old_content)
+        rope.base.pycore.perform_soa_on_changed_scopes(project, resource, old_content)
 
 
 def analyze_module(project, resource):
@@ -76,7 +75,7 @@ def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
     Note that this might be really time consuming.
     """
     resources = project.get_python_files()
-    job_set = task_handle.create_jobset('Analyzing Modules', len(resources))
+    job_set = task_handle.create_jobset("Analyzing Modules", len(resources))
     for resource in resources:
         job_set.started_job(resource.path)
         analyze_module(project, resource)
@@ -91,8 +90,9 @@ def get_string_module(project, code, resource=None, force_errors=False):
     ``ignore_syntax_errors`` project config.
 
     """
-    return pyobjectsdef.PyModule(project.pycore, code, resource,
-                                 force_errors=force_errors)
+    return pyobjectsdef.PyModule(
+        project.pycore, code, resource, force_errors=force_errors
+    )
 
 
 def get_string_scope(project, code, resource=None):
@@ -108,16 +108,17 @@ def modname(resource):
     if resource.is_folder():
         module_name = resource.name
         source_folder = resource.parent
-    elif resource.name == '__init__.py':
+    elif resource.name == "__init__.py":
         module_name = resource.parent.name
         source_folder = resource.parent.parent
     else:
         module_name = resource.name[:-3]
         source_folder = resource.parent
 
-    while source_folder != source_folder.parent and \
-            source_folder.has_child('__init__.py'):
-        module_name = source_folder.name + '.' + module_name
+    while source_folder != source_folder.parent and source_folder.has_child(
+        "__init__.py"
+    ):
+        module_name = source_folder.name + "." + module_name
         source_folder = source_folder.parent
 
     return module_name

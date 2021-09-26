@@ -71,8 +71,9 @@ class Finder(object):
 
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
-        tools = _OccurrenceToolsCreator(self.project, resource=resource,
-                                        pymodule=pymodule, docs=self.docs)
+        tools = _OccurrenceToolsCreator(
+            self.project, resource=resource, pymodule=pymodule, docs=self.docs
+        )
         for offset in self._textual_finder.find_offsets(tools.source_code):
             occurrence = Occurrence(tools, offset)
             for filter in self.filters:
@@ -84,9 +85,18 @@ class Finder(object):
                 break
 
 
-def create_finder(project, name, pyname, only_calls=False, imports=True,
-                  unsure=None, docs=False, instance=None, in_hierarchy=False,
-                  keywords=True):
+def create_finder(
+    project,
+    name,
+    pyname,
+    only_calls=False,
+    imports=True,
+    unsure=None,
+    docs=False,
+    instance=None,
+    in_hierarchy=False,
+    keywords=True,
+):
     """A factory for `Finder`
 
     Based on the arguments it creates a list of filters.  `instance`
@@ -118,7 +128,6 @@ def create_finder(project, name, pyname, only_calls=False, imports=True,
 
 
 class Occurrence(object):
-
     def __init__(self, tools, offset):
         self.tools = tools
         self.offset = offset
@@ -142,27 +151,26 @@ class Occurrence(object):
     @utils.saveit
     def get_primary_and_pyname(self):
         try:
-            return self.tools.name_finder.get_primary_and_pyname_at(
-                self.offset)
+            return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
         except exceptions.BadIdentifierError:
             pass
 
     @utils.saveit
     def is_in_import_statement(self):
-        return (self.tools.word_finder.is_from_statement(self.offset) or
-                self.tools.word_finder.is_import_statement(self.offset))
+        return self.tools.word_finder.is_from_statement(
+            self.offset
+        ) or self.tools.word_finder.is_import_statement(self.offset)
 
     def is_called(self):
         return self.tools.word_finder.is_a_function_being_called(self.offset)
 
     def is_defined(self):
-        return self.tools.word_finder.is_a_class_or_function_name_in_header(
-            self.offset)
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
 
     def is_a_fixed_primary(self):
         return self.tools.word_finder.is_a_class_or_function_name_in_header(
-            self.offset) or \
-            self.tools.word_finder.is_a_name_after_from_import(self.offset)
+            self.offset
+        ) or self.tools.word_finder.is_a_name_after_from_import(self.offset)
 
     def is_written(self):
         return self.tools.word_finder.is_assigned_here(self.offset)
@@ -171,8 +179,7 @@ class Occurrence(object):
         return unsure_pyname(self.get_pyname())
 
     def is_function_keyword_parameter(self):
-        return self.tools.word_finder.is_function_keyword_parameter(
-            self.offset)
+        return self.tools.word_finder.is_function_keyword_parameter(self.offset)
 
     @property
     @utils.saveit
@@ -187,13 +194,14 @@ def same_pyname(expected, pyname):
         return False
     if expected == pyname:
         return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) \
-        and type(pyname) not in \
-            (pynames.ImportedModule, pynames.ImportedName):
+    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and type(
+        pyname
+    ) not in (pynames.ImportedModule, pynames.ImportedName):
         return False
-    return expected.get_definition_location() == \
-        pyname.get_definition_location() and \
-        expected.get_object() == pyname.get_object()
+    return (
+        expected.get_definition_location() == pyname.get_definition_location()
+        and expected.get_object() == pyname.get_object()
+    )
 
 
 def unsure_pyname(pyname, unbound=True):
@@ -243,7 +251,7 @@ class InHierarchyFilter(object):
         if isinstance(pyname, pynames.DefinedName):
             scope = pyname.get_object().get_scope()
             parent = scope.parent
-            if parent is not None and parent.get_kind() == 'Class':
+            if parent is not None and parent.get_kind() == "Class":
                 return parent.pyobject
 
     def _get_root_classes(self, pyclass, name):
@@ -294,15 +302,16 @@ class NoKeywordsFilter(object):
 
 
 class _TextualFinder(object):
-
     def __init__(self, name, docs=False):
         self.name = name
         self.docs = docs
-        self.comment_pattern = _TextualFinder.any('comment', [r'#[^\n]*'])
+        self.comment_pattern = _TextualFinder.any("comment", [r"#[^\n]*"])
         self.string_pattern = _TextualFinder.any(
-            'string', [codeanalyze.get_string_pattern()])
+            "string", [codeanalyze.get_string_pattern()]
+        )
         self.f_string_pattern = _TextualFinder.any(
-            'fstring', [codeanalyze.get_formatted_string_pattern()])
+            "fstring", [codeanalyze.get_formatted_string_pattern()]
+        )
         self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source):
@@ -317,12 +326,12 @@ class _TextualFinder(object):
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
-            if match.groupdict()['occurrence']:
-                yield match.start('occurrence')
-            elif utils.pycompat.PY36 and match.groupdict()['fstring']:
-                f_string = match.groupdict()['fstring']
+            if match.groupdict()["occurrence"]:
+                yield match.start("occurrence")
+            elif utils.pycompat.PY36 and match.groupdict()["fstring"]:
+                f_string = match.groupdict()["fstring"]
                 for occurrence_node in self._search_in_f_string(f_string):
-                    yield match.start('fstring') + occurrence_node.col_offset
+                    yield match.start("fstring") + occurrence_node.col_offset
 
     def _search_in_f_string(self, f_string):
         tree = ast.parse(f_string)
@@ -336,16 +345,15 @@ class _TextualFinder(object):
             try:
                 found = source.index(self.name, current)
                 current = found + len(self.name)
-                if (found == 0 or
-                        not self._is_id_char(source[found - 1])) and \
-                    (current == len(source) or
-                        not self._is_id_char(source[current])):
+                if (found == 0 or not self._is_id_char(source[found - 1])) and (
+                    current == len(source) or not self._is_id_char(source[current])
+                ):
                     yield found
             except ValueError:
                 break
 
     def _is_id_char(self, c):
-        return c.isalnum() or c == '_'
+        return c.isalnum() or c == "_"
 
     def _fast_file_query(self, source):
         try:
@@ -361,20 +369,24 @@ class _TextualFinder(object):
             return pymodule.source_code
 
     def _get_occurrence_pattern(self, name):
-        occurrence_pattern = _TextualFinder.any('occurrence',
-                                                ['\\b' + name + '\\b'])
-        pattern = re.compile(occurrence_pattern + '|' + self.comment_pattern +
-                             '|' + self.string_pattern + '|' +
-                             self.f_string_pattern)
+        occurrence_pattern = _TextualFinder.any("occurrence", ["\\b" + name + "\\b"])
+        pattern = re.compile(
+            occurrence_pattern
+            + "|"
+            + self.comment_pattern
+            + "|"
+            + self.string_pattern
+            + "|"
+            + self.f_string_pattern
+        )
         return pattern
 
     @staticmethod
     def any(name, list_):
-        return '(?P<%s>' % name + '|'.join(list_) + ')'
+        return "(?P<%s>" % name + "|".join(list_) + ")"
 
 
 class _OccurrenceToolsCreator(object):
-
     def __init__(self, project, resource=None, pymodule=None, docs=False):
         self.project = project
         self.__resource = resource

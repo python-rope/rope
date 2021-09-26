@@ -16,8 +16,9 @@ class ResourceObserver(object):
 
     """
 
-    def __init__(self, changed=None, moved=None, created=None,
-                 removed=None, validate=None):
+    def __init__(
+        self, changed=None, moved=None, created=None, removed=None, validate=None
+    ):
         self.changed = changed
         self.moved = moved
         self.created = created
@@ -80,8 +81,7 @@ class FilteredResourceObserver(object):
 
     """
 
-    def __init__(self, resource_observer, initial_resources=None,
-                 timekeeper=None):
+    def __init__(self, resource_observer, initial_resources=None, timekeeper=None):
         self.observer = resource_observer
         self.resources = {}
         if timekeeper is not None:
@@ -119,8 +119,7 @@ class FilteredResourceObserver(object):
         if self._is_parent_changed(changed):
             changes.add_changed(changed.parent)
 
-    def _update_changes_caused_by_moved(self, changes, resource,
-                                        new_resource=None):
+    def _update_changes_caused_by_moved(self, changes, resource, new_resource=None):
         if resource in self.resources:
             changes.add_removed(resource, new_resource)
         if new_resource in self.resources:
@@ -129,7 +128,8 @@ class FilteredResourceObserver(object):
             for file in list(self.resources):
                 if resource.contains(file):
                     new_file = self._calculate_new_resource(
-                        resource, new_resource, file)
+                        resource, new_resource, file
+                    )
                     changes.add_removed(file, new_file)
         if self._is_parent_changed(resource):
             changes.add_changed(resource.parent)
@@ -190,13 +190,19 @@ class FilteredResourceObserver(object):
 
     def _search_resource_creations(self, resource):
         creations = set()
-        if resource in self.resources and resource.exists() and \
-           self.resources[resource] is None:
+        if (
+            resource in self.resources
+            and resource.exists()
+            and self.resources[resource] is None
+        ):
             creations.add(resource)
         if resource.is_folder():
             for file in self.resources:
-                if file.exists() and resource.contains(file) and \
-                   self.resources[file] is None:
+                if (
+                    file.exists()
+                    and resource.contains(file)
+                    and self.resources[file] is None
+                ):
                     creations.add(file)
         return creations
 
@@ -231,32 +237,30 @@ class FilteredResourceObserver(object):
     def _is_changed(self, resource):
         if self.resources[resource] is None:
             return False
-        return self.resources[resource] != \
-            self.timekeeper.get_indicator(resource)
+        return self.resources[resource] != self.timekeeper.get_indicator(resource)
 
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
             return None
-        diff = resource.path[len(main.path):]
+        diff = resource.path[len(main.path) :]
         return resource.project.get_resource(new_main.path + diff)
 
 
 class ChangeIndicator(object):
-
     def get_indicator(self, resource):
         """Return the modification time and size of a `Resource`."""
         path = resource.real_path
         # on dos, mtime does not change for a folder when files are added
-        if os.name != 'posix' and os.path.isdir(path):
-            return (os.path.getmtime(path),
-                    len(os.listdir(path)),
-                    os.path.getsize(path))
-        return (os.path.getmtime(path),
-                os.path.getsize(path))
+        if os.name != "posix" and os.path.isdir(path):
+            return (
+                os.path.getmtime(path),
+                len(os.listdir(path)),
+                os.path.getsize(path),
+            )
+        return (os.path.getmtime(path), os.path.getsize(path))
 
 
 class _Changes(object):
-
     def __init__(self):
         self.changes = set()
         self.creations = set()

@@ -7,9 +7,9 @@ def get_indents(lines, lineno):
 
 def find_minimum_indents(source_code):
     result = 80
-    lines = source_code.split('\n')
+    lines = source_code.split("\n")
     for line in lines:
-        if line.strip() == '':
+        if line.strip() == "":
             continue
         result = min(result, codeanalyze.count_line_indents(line))
     return result
@@ -21,15 +21,15 @@ def indent_lines(source_code, amount):
     lines = source_code.splitlines(True)
     result = []
     for l in lines:
-        if l.strip() == '':
-            result.append('\n')
+        if l.strip() == "":
+            result.append("\n")
             continue
         if amount < 0:
             indents = codeanalyze.count_line_indents(l)
-            result.append(max(0, indents + amount) * ' ' + l.lstrip())
+            result.append(max(0, indents + amount) * " " + l.lstrip())
         else:
-            result.append(' ' * amount + l)
-    return ''.join(result)
+            result.append(" " * amount + l)
+    return "".join(result)
 
 
 def fix_indentation(code, new_indents):
@@ -45,15 +45,17 @@ def add_methods(pymodule, class_scope, methods_sources):
     if class_scope.get_scopes():
         insertion_line = class_scope.get_scopes()[-1].get_end()
     insertion_offset = lines.get_line_end(insertion_line)
-    methods = '\n\n' + '\n\n'.join(methods_sources)
+    methods = "\n\n" + "\n\n".join(methods_sources)
     indented_methods = fix_indentation(
-        methods, get_indents(lines, class_scope.get_start()) +
-        get_indent(pymodule.pycore.project))
+        methods,
+        get_indents(lines, class_scope.get_start())
+        + get_indent(pymodule.pycore.project),
+    )
     result = []
     result.append(source_code[:insertion_offset])
     result.append(indented_methods)
     result.append(source_code[insertion_offset:])
-    return ''.join(result)
+    return "".join(result)
 
 
 def get_body(pyfunction):
@@ -80,7 +82,7 @@ def get_body_region(defined):
     if scope_start[1] >= start_line:
         # a one-liner!
         # XXX: what if colon appears in a string
-        start = pymodule.source_code.index(':', start) + 1
+        start = pymodule.source_code.index(":", start) + 1
         while pymodule.source_code[start].isspace():
             start += 1
     end = min(lines.get_line_end(scope.end) + 1, len(pymodule.source_code))
@@ -88,4 +90,4 @@ def get_body_region(defined):
 
 
 def get_indent(project):
-    return project.prefs.get('indent_size', 4)
+    return project.prefs.get("indent_size", 4)

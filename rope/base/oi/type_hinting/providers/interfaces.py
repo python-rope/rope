@@ -1,5 +1,4 @@
 class IParamProvider(object):
-
     def __call__(self, pyfunc, param_name):
         """
         :type pyfunc: rope.base.pyobjectsdef.PyFunction
@@ -13,6 +12,7 @@ class IReturnProvider(object):
     """
     :type resolve: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
     """
+
     resolve = None
 
     def __call__(self, pyfunc):
@@ -27,6 +27,7 @@ class IAssignmentProvider(object):
     """
     :type resolve: rope.base.oi.type_hinting.resolvers.interfaces.IResolver
     """
+
     resolve = None
 
     def __call__(self, pyname):
