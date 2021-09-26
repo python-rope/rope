@@ -1,21 +1,5 @@
 ## Rope Contributors ✨
 
-See git logs and the mailing list for details.
-
-* Alexander Solovyov <piranha@piranha.org.ua>
-* Sebastjan Trepca <trepca@gmail.com>
-* MATSUI Tetsushi <mft@users.sf.net>
-* Kevin Turner <keturn@keturn.net>
-* Darren Syzling <dsyzling@gmail.com>
-* Orestis Markou <orestis@gmail.com>
-* Ronny Pfannschmidt <ronny.pfannschmidt@gmail.com>
-* Anton Gritsay <general@angri.ru>
-* Ivan Zakrevsky <ivzak@yandex.ru>
-* Sergey Glazyrin <sergey.glazyrin.dev@gmail.com>
-* Matěj Cepl <mcepl@cepl.eu>
-* Nick Smith <nicks@fastmail.fm>
-
-
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -86,6 +70,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://sourcery.ai/"><img src="https://avatars.githubusercontent.com/u/1440886?v=4" width="100px;" alt=""/><br /><sub><b>Brendan Maginnis</b></sub></a></td>
+    <td align="center"><a href="https://solovyov.net/"><img src="https://avatars.githubusercontent.com/u/6553?v=4" width="100px;" alt=""/><br /><sub><b>Alexander Solovyov</b></sub></a></td>
+    <td align="center"><a href="https://mmfftt.blogspot.com/"><img src="https://avatars.githubusercontent.com/u/1430953?v=4" width="100px;" alt=""/><br /><sub><b>MATSUI Tetsushi</b></sub></a></td>
   </tr>
 </table>
 
@@ -93,5 +79,23 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+Also special thank you to rope's early and pre-Github users and contributors,
+while we hadn't been able to track them in all-contributors format, it doesn't
+make their contributions less important:
+
+* Alexander Solovyov <piranha@piranha.org.ua>
+* Sebastjan Trepca <trepca@gmail.com>
+* MATSUI Tetsushi <mft@users.sf.net>
+* Kevin Turner <keturn@keturn.net>
+* Darren Syzling <dsyzling@gmail.com>
+* Orestis Markou <orestis@gmail.com>
+* Ronny Pfannschmidt <ronny.pfannschmidt@gmail.com>
+* Anton Gritsay <general@angri.ru>
+* Ivan Zakrevsky <ivzak@yandex.ru>
+* Sergey Glazyrin <sergey.glazyrin.dev@gmail.com>
+* Matěj Cepl <mcepl@cepl.eu>
+* Nick Smith <nicks@fastmail.fm>
+
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

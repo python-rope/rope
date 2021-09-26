@@ -465,6 +465,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "piranha",
+      "name": "Alexander Solovyov",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6553?v=4",
+      "profile": "https://solovyov.net/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mft",
+      "name": "MATSUI Tetsushi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1430953?v=4",
+      "profile": "https://mmfftt.blogspot.com/",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "projectName": "rope",
