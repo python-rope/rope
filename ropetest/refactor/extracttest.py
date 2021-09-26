@@ -2215,7 +2215,7 @@ class ExtractMethodTest(unittest.TestCase):
                 with open("test") as file2:
                     extracted(file1, file2)
         """)
-        self.assertEquals(expected, refactored)
+        self.assertEqual(expected, refactored)
 
     def test_extract_method_with_double_with_as(self):
         code = dedent("""\
@@ -2232,4 +2232,4 @@ class ExtractMethodTest(unittest.TestCase):
             with open("test") as file1, open("test") as file2:
                 extracted(file1, file2)
         """)
-        self.assertEquals(expected, refactored)
+        self.assertEqual(expected, refactored)
