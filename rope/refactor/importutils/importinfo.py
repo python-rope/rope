@@ -6,8 +6,9 @@ class ImportStatement(object):
 
     """
 
-    def __init__(self, import_info, start_line, end_line,
-                 main_statement=None, blank_lines=0):
+    def __init__(
+        self, import_info, start_line, end_line, main_statement=None, blank_lines=0
+    ):
         self.start_line = start_line
         self.end_line = end_line
         self.readonly = False
@@ -22,8 +23,11 @@ class ImportStatement(object):
         return self._import_info
 
     def _set_import_info(self, new_import):
-        if not self.readonly and \
-           new_import is not None and not new_import == self._import_info:
+        if (
+            not self.readonly
+            and new_import is not None
+            and not new_import == self._import_info
+        ):
             self._is_changed = True
             self._import_info = new_import
 
@@ -49,21 +53,22 @@ class ImportStatement(object):
         return self.new_start
 
     def is_changed(self):
-        return self._is_changed or (self.new_start is not None or
-                                    self.new_start != self.start_line)
+        return self._is_changed or (
+            self.new_start is not None or self.new_start != self.start_line
+        )
 
     def accept(self, visitor):
         return visitor.dispatch(self)
 
 
 class ImportInfo(object):
-
     def get_imported_primaries(self, context):
         pass
 
     def get_imported_names(self, context):
-        return [primary.split('.')[0]
-                for primary in self.get_imported_primaries(context)]
+        return [
+            primary.split(".")[0] for primary in self.get_imported_primaries(context)
+        ]
 
     def get_import_statement(self):
         pass
@@ -83,8 +88,10 @@ class ImportInfo(object):
         return True
 
     def __eq__(self, obj):
-        return isinstance(obj, self.__class__) and \
-            self.get_import_statement() == obj.get_import_statement()
+        return (
+            isinstance(obj, self.__class__)
+            and self.get_import_statement() == obj.get_import_statement()
+        )
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
@@ -95,7 +102,6 @@ class ImportInfo(object):
 
 
 class NormalImport(ImportInfo):
-
     def __init__(self, names_and_aliases):
         self.names_and_aliases = names_and_aliases
 
@@ -109,12 +115,12 @@ class NormalImport(ImportInfo):
         return result
 
     def get_import_statement(self):
-        result = 'import '
+        result = "import "
         for name, alias in self.names_and_aliases:
             result += name
             if alias:
-                result += ' as ' + alias
-            result += ', '
+                result += " as " + alias
+            result += ", "
         return result[:-2]
 
     def is_empty(self):
@@ -122,17 +128,15 @@ class NormalImport(ImportInfo):
 
 
 class FromImport(ImportInfo):
-
     def __init__(self, module_name, level, names_and_aliases):
         self.module_name = module_name
         self.level = level
         self.names_and_aliases = names_and_aliases
 
     def get_imported_primaries(self, context):
-        if self.names_and_aliases[0][0] == '*':
+        if self.names_and_aliases[0][0] == "*":
             module = self.get_imported_module(context)
-            return [name for name in module
-                    if not name.startswith('_')]
+            return [name for name in module if not name.startswith("_")]
         result = []
         for name, alias in self.names_and_aliases:
             if alias:
@@ -147,11 +151,11 @@ class FromImport(ImportInfo):
         Returns `None` if module was not found.
         """
         if self.level == 0:
-            return context.project.find_module(
-                self.module_name, folder=context.folder)
+            return context.project.find_module(self.module_name, folder=context.folder)
         else:
             return context.project.find_relative_module(
-                self.module_name, context.folder, self.level)
+                self.module_name, context.folder, self.level
+            )
 
     def get_imported_module(self, context):
         """Get the imported `PyModule`
@@ -160,27 +164,26 @@ class FromImport(ImportInfo):
         could not be found.
         """
         if self.level == 0:
-            return context.project.get_module(
-                self.module_name, context.folder)
+            return context.project.get_module(self.module_name, context.folder)
         else:
             return context.project.get_relative_module(
-                self.module_name, context.folder, self.level)
+                self.module_name, context.folder, self.level
+            )
 
     def get_import_statement(self):
-        result = 'from ' + '.' * self.level + self.module_name + ' import '
+        result = "from " + "." * self.level + self.module_name + " import "
         for name, alias in self.names_and_aliases:
             result += name
             if alias:
-                result += ' as ' + alias
-            result += ', '
+                result += " as " + alias
+            result += ", "
         return result[:-2]
 
     def is_empty(self):
         return len(self.names_and_aliases) == 0
 
     def is_star_import(self):
-        return len(self.names_and_aliases) > 0 and \
-            self.names_and_aliases[0][0] == '*'
+        return len(self.names_and_aliases) > 0 and self.names_and_aliases[0][0] == "*"
 
 
 class EmptyImport(ImportInfo):
@@ -195,7 +198,6 @@ class EmptyImport(ImportInfo):
 
 
 class ImportContext(object):
-
     def __init__(self, project, folder):
         self.project = project
         self.folder = folder

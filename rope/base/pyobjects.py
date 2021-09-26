@@ -3,7 +3,6 @@ from rope.base import ast, exceptions, utils
 
 
 class PyObject(object):
-
     def __init__(self, type_):
         if type_ is None:
             type_ = self
@@ -16,8 +15,7 @@ class PyObject(object):
 
     def get_attribute(self, name):
         if name not in self.get_attributes():
-            raise exceptions.AttributeNotFoundError(
-                'Attribute %s not found' % name)
+            raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
     def get_type(self):
@@ -72,10 +70,10 @@ class PyObject(object):
         if PyObject._types is None:
             PyObject._types = {}
             base_type = PyObject(None)
-            PyObject._types['Type'] = base_type
-            PyObject._types['Module'] = PyObject(base_type)
-            PyObject._types['Function'] = PyObject(base_type)
-            PyObject._types['Unknown'] = PyObject(base_type)
+            PyObject._types["Type"] = base_type
+            PyObject._types["Module"] = PyObject(base_type)
+            PyObject._types["Function"] = PyObject(base_type)
+            PyObject._types["Unknown"] = PyObject(base_type)
         return PyObject._types[name]
 
 
@@ -114,14 +112,13 @@ def get_unknown():
 
     """
     if PyObject._unknown is None:
-        PyObject._unknown = PyObject(get_base_type('Unknown'))
+        PyObject._unknown = PyObject(get_base_type("Unknown"))
     return PyObject._unknown
 
 
 class AbstractClass(PyObject):
-
     def __init__(self):
-        super(AbstractClass, self).__init__(get_base_type('Type'))
+        super(AbstractClass, self).__init__(get_base_type("Type"))
 
     def get_name(self):
         pass
@@ -134,9 +131,8 @@ class AbstractClass(PyObject):
 
 
 class AbstractFunction(PyObject):
-
     def __init__(self):
-        super(AbstractFunction, self).__init__(get_base_type('Function'))
+        super(AbstractFunction, self).__init__(get_base_type("Function"))
 
     def get_name(self):
         pass
@@ -152,9 +148,8 @@ class AbstractFunction(PyObject):
 
 
 class AbstractModule(PyObject):
-
     def __init__(self, doc=None):
-        super(AbstractModule, self).__init__(get_base_type('Module'))
+        super(AbstractModule, self).__init__(get_base_type("Module"))
 
     def get_doc(self):
         pass
@@ -203,8 +198,7 @@ class PyDefinedObject(object):
             return self._get_structural_attributes()[name]
         if name in self._get_concluded_attributes():
             return self._get_concluded_attributes()[name]
-        raise exceptions.AttributeNotFoundError('Attribute %s not found' %
-                                                name)
+        raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
 
     def get_scope(self):
         if self.scope is None:
@@ -220,8 +214,7 @@ class PyDefinedObject(object):
     def get_doc(self):
         if len(self.get_ast().body) > 0:
             expr = self.get_ast().body[0]
-            if isinstance(expr, ast.Expr) and \
-               isinstance(expr.value, ast.Str):
+            if isinstance(expr, ast.Expr) and isinstance(expr.value, ast.Str):
                 docstring = expr.value.s
                 coding = self.get_module().coding
                 return _decode_data(docstring, coding)
@@ -263,7 +256,6 @@ class PyClass(PyDefinedObject, AbstractClass):
 
 
 class _ConcludedData(object):
-
     def __init__(self):
         self.data_ = None
 
@@ -279,11 +271,10 @@ class _ConcludedData(object):
         self.data = None
 
     def __str__(self):
-        return '<' + str(self.data) + '>'
+        return "<" + str(self.data) + ">"
 
 
 class _PyModule(PyDefinedObject, AbstractModule):
-
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []

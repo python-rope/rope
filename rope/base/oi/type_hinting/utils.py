@@ -1,4 +1,5 @@
 import logging
+
 try:
     from typing import Union, Optional
 except ImportError:
@@ -51,8 +52,7 @@ def get_class_with_attr_name(pyname):
     pyobject = holding_scope.pyobject
     if isinstance(pyobject, PyClass):
         pyclass = pyobject
-    elif (isinstance(pyobject, PyFunction) and
-          isinstance(pyobject.parent, PyClass)):
+    elif isinstance(pyobject, PyFunction) and isinstance(pyobject.parent, PyClass):
         pyclass = pyobject.parent
     else:
         return
@@ -62,8 +62,7 @@ def get_class_with_attr_name(pyname):
 
 
 def get_lineno_for_node(assign_node):
-    if hasattr(assign_node, 'lineno') and \
-       assign_node.lineno is not None:
+    if hasattr(assign_node, "lineno") and assign_node.lineno is not None:
         return assign_node.lineno
     return 1
 
@@ -83,17 +82,18 @@ def resolve_type(type_name, pyobject):
     """
     Find proper type object from its name.
     """
-    deprecated_aliases = {'collections': 'collections.abc'}
+    deprecated_aliases = {"collections": "collections.abc"}
     ret_type = None
-    logging.debug('Looking for %s', type_name)
-    if '.' not in type_name:
+    logging.debug("Looking for %s", type_name)
+    if "." not in type_name:
         try:
-            ret_type = pyobject.get_module().get_scope().get_name(
-                type_name).get_object()
+            ret_type = (
+                pyobject.get_module().get_scope().get_name(type_name).get_object()
+            )
         except AttributeNotFoundError:
-            logging.exception('Cannot resolve type %s', type_name)
+            logging.exception("Cannot resolve type %s", type_name)
     else:
-        mod_name, attr_name = type_name.rsplit('.', 1)
+        mod_name, attr_name = type_name.rsplit(".", 1)
         try:
             mod_finder = ScopeNameFinder(pyobject.get_module())
             mod = mod_finder._find_module(mod_name).get_object()
@@ -101,35 +101,45 @@ def resolve_type(type_name, pyobject):
         except AttributeNotFoundError:
             if mod_name in deprecated_aliases:
                 try:
-                    logging.debug('Looking for %s in %s',
-                                  attr_name, deprecated_aliases[mod_name])
+                    logging.debug(
+                        "Looking for %s in %s", attr_name, deprecated_aliases[mod_name]
+                    )
                     mod = mod_finder._find_module(
-                        deprecated_aliases[mod_name]).get_object()
+                        deprecated_aliases[mod_name]
+                    ).get_object()
                     ret_type = mod.get_attribute(attr_name).get_object()
                 except AttributeNotFoundError:
-                    logging.exception('Cannot resolve type %s in %s',
-                                      attr_name, dir(mod))
-    logging.debug('ret_type = %s', ret_type)
+                    logging.exception(
+                        "Cannot resolve type %s in %s", attr_name, dir(mod)
+                    )
+    logging.debug("ret_type = %s", ret_type)
     return ret_type
 
 
 class ParametrizeType(object):
 
     _supported_mapping = {
-        'builtins.list': 'rope.base.builtins.get_list',
-        'builtins.tuple': 'rope.base.builtins.get_tuple',
-        'builtins.set': 'rope.base.builtins.get_set',
-        'builtins.dict': 'rope.base.builtins.get_dict',
-        '_collections_abc.Iterable': 'rope.base.builtins.get_iterator',
-        '_collections_abc.Iterator': 'rope.base.builtins.get_iterator',
-        'collections.abc.Iterable': 'rope.base.builtins.get_iterator',  # Python3.3
-        'collections.abc.Iterator': 'rope.base.builtins.get_iterator',  # Python3.3
+        "builtins.list": "rope.base.builtins.get_list",
+        "builtins.tuple": "rope.base.builtins.get_tuple",
+        "builtins.set": "rope.base.builtins.get_set",
+        "builtins.dict": "rope.base.builtins.get_dict",
+        "_collections_abc.Iterable": "rope.base.builtins.get_iterator",
+        "_collections_abc.Iterator": "rope.base.builtins.get_iterator",
+        "collections.abc.Iterable": "rope.base.builtins.get_iterator",  # Python3.3
+        "collections.abc.Iterator": "rope.base.builtins.get_iterator",  # Python3.3
     }
     if pycompat.PY2:
-        _supported_mapping = dict((
-            (k.replace('builtins.', '__builtin__.').replace('_collections_abc.', '_abcoll.'), v)
-            for k, v in _supported_mapping.items()
-        ))
+        _supported_mapping = dict(
+            (
+                (
+                    k.replace("builtins.", "__builtin__.").replace(
+                        "_collections_abc.", "_abcoll."
+                    ),
+                    v,
+                )
+                for k, v in _supported_mapping.items()
+            )
+        )
 
     def __call__(self, pyobject, *args, **kwargs):
         """
@@ -144,11 +154,12 @@ class ParametrizeType(object):
         return pyobject
 
     def _get_type_factory(self, pyobject):
-        type_str = '{0}.{1}'.format(
+        type_str = "{0}.{1}".format(
             pyobject.get_module().get_name(),
             pyobject.get_name(),
         )
         if type_str in self._supported_mapping:
             return base_utils.resolve(self._supported_mapping[type_str])
+
 
 parametrize_type = ParametrizeType()

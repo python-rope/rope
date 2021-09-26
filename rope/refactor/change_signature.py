@@ -12,56 +12,69 @@ from rope.refactor import occurrences, functionutils
 
 
 class ChangeSignature(object):
-
     def __init__(self, project, resource, offset):
         self.project = project
         self.resource = resource
         self.offset = offset
         self._set_name_and_pyname()
-        if self.pyname is None or self.pyname.get_object() is None or \
-           not isinstance(self.pyname.get_object(), pyobjects.PyFunction):
+        if (
+            self.pyname is None
+            or self.pyname.get_object() is None
+            or not isinstance(self.pyname.get_object(), pyobjects.PyFunction)
+        ):
             raise rope.base.exceptions.RefactoringError(
-                'Change method signature should be performed on functions')
+                "Change method signature should be performed on functions"
+            )
 
     def _set_name_and_pyname(self):
         self.name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.project.get_pymodule(self.resource)
-        self.primary, self.pyname = evaluate.eval_location2(
-            this_pymodule, self.offset)
+        self.primary, self.pyname = evaluate.eval_location2(this_pymodule, self.offset)
         if self.pyname is None:
             return
         pyobject = self.pyname.get_object()
-        if isinstance(pyobject, pyobjects.PyClass) and \
-           '__init__' in pyobject:
-            self.pyname = pyobject['__init__']
-            self.name = '__init__'
+        if isinstance(pyobject, pyobjects.PyClass) and "__init__" in pyobject:
+            self.pyname = pyobject["__init__"]
+            self.name = "__init__"
         pyobject = self.pyname.get_object()
         self.others = None
-        if self.name == '__init__' and \
-           isinstance(pyobject, pyobjects.PyFunction) and \
-           isinstance(pyobject.parent, pyobjects.PyClass):
+        if (
+            self.name == "__init__"
+            and isinstance(pyobject, pyobjects.PyFunction)
+            and isinstance(pyobject.parent, pyobjects.PyClass)
+        ):
             pyclass = pyobject.parent
-            self.others = (pyclass.get_name(),
-                           pyclass.parent[pyclass.get_name()])
+            self.others = (pyclass.get_name(), pyclass.parent[pyclass.get_name()])
 
-    def _change_calls(self, call_changer, in_hierarchy=None, resources=None,
-                      handle=taskhandle.NullTaskHandle()):
+    def _change_calls(
+        self,
+        call_changer,
+        in_hierarchy=None,
+        resources=None,
+        handle=taskhandle.NullTaskHandle(),
+    ):
         if resources is None:
             resources = self.project.get_python_files()
-        changes = ChangeSet('Changing signature of <%s>' % self.name)
-        job_set = handle.create_jobset('Collecting Changes', len(resources))
+        changes = ChangeSet("Changing signature of <%s>" % self.name)
+        job_set = handle.create_jobset("Collecting Changes", len(resources))
         finder = occurrences.create_finder(
-            self.project, self.name, self.pyname, instance=self.primary,
-            in_hierarchy=in_hierarchy and self.is_method())
+            self.project,
+            self.name,
+            self.pyname,
+            instance=self.primary,
+            in_hierarchy=in_hierarchy and self.is_method(),
+        )
         if self.others:
             name, pyname = self.others
             constructor_finder = occurrences.create_finder(
-                self.project, name, pyname, only_calls=True)
+                self.project, name, pyname, only_calls=True
+            )
             finder = _MultipleFinders([finder, constructor_finder])
         for file in resources:
             job_set.started_job(file.path)
             change_calls = _ChangeCallsInModule(
-                self.project, finder, file, call_changer)
+                self.project, finder, file, call_changer
+            )
             changed_file = change_calls.get_changed_module()
             if changed_file is not None:
                 changes.add_change(ChangeContents(file, changed_file))
@@ -81,7 +94,7 @@ class ChangeSignature(object):
         pyfunction = self.pyname.get_object()
         return isinstance(pyfunction.parent, pyobjects.PyClass)
 
-    @utils.deprecated('Use `ChangeSignature.get_args()` instead')
+    @utils.deprecated("Use `ChangeSignature.get_args()` instead")
     def get_definition_info(self):
         return self._definfo()
 
@@ -91,40 +104,53 @@ class ChangeSignature(object):
     @utils.deprecated()
     def normalize(self):
         changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(),
-            [ArgumentNormalizer()])
+            self.pyname.get_object(), self.get_definition_info(), [ArgumentNormalizer()]
+        )
         return self._change_calls(changer)
 
     @utils.deprecated()
     def remove(self, index):
         changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(),
-            [ArgumentRemover(index)])
+            self.pyname.get_object(),
+            self.get_definition_info(),
+            [ArgumentRemover(index)],
+        )
         return self._change_calls(changer)
 
     @utils.deprecated()
     def add(self, index, name, default=None, value=None):
         changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(),
-            [ArgumentAdder(index, name, default, value)])
+            self.pyname.get_object(),
+            self.get_definition_info(),
+            [ArgumentAdder(index, name, default, value)],
+        )
         return self._change_calls(changer)
 
     @utils.deprecated()
     def inline_default(self, index):
         changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(),
-            [ArgumentDefaultInliner(index)])
+            self.pyname.get_object(),
+            self.get_definition_info(),
+            [ArgumentDefaultInliner(index)],
+        )
         return self._change_calls(changer)
 
     @utils.deprecated()
     def reorder(self, new_ordering):
         changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(),
-            [ArgumentReorderer(new_ordering)])
+            self.pyname.get_object(),
+            self.get_definition_info(),
+            [ArgumentReorderer(new_ordering)],
+        )
         return self._change_calls(changer)
 
-    def get_changes(self, changers, in_hierarchy=False, resources=None,
-                    task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(
+        self,
+        changers,
+        in_hierarchy=False,
+        resources=None,
+        task_handle=taskhandle.NullTaskHandle(),
+    ):
         """Get changes caused by this refactoring
 
         `changers` is a list of `_ArgumentChanger`.  If `in_hierarchy`
@@ -135,14 +161,15 @@ class ChangeSignature(object):
         in the project are searched.
 
         """
-        function_changer = _FunctionChangers(self.pyname.get_object(),
-                                             self._definfo(), changers)
-        return self._change_calls(function_changer, in_hierarchy,
-                                  resources, task_handle)
+        function_changer = _FunctionChangers(
+            self.pyname.get_object(), self._definfo(), changers
+        )
+        return self._change_calls(
+            function_changer, in_hierarchy, resources, task_handle
+        )
 
 
 class _FunctionChangers(object):
-
     def __init__(self, pyfunction, definition_info, changers=None):
         self.pyfunction = pyfunction
         self.definition_info = definition_info
@@ -164,20 +191,19 @@ class _FunctionChangers(object):
 
     def change_call(self, primary, pyname, call):
         call_info = functionutils.CallInfo.read(
-            primary, pyname, self.definition_info, call)
-        mapping = functionutils.ArgumentMapping(self.definition_info,
-                                                call_info)
+            primary, pyname, self.definition_info, call
+        )
+        mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
 
-        for definition_info, changer in zip(self.changed_definition_infos,
-                                            self.changers):
+        for definition_info, changer in zip(
+            self.changed_definition_infos, self.changers
+        ):
             changer.change_argument_mapping(definition_info, mapping)
 
-        return mapping.to_call_info(
-            self.changed_definition_infos[-1]).to_string()
+        return mapping.to_call_info(self.changed_definition_infos[-1]).to_string()
 
 
 class _ArgumentChanger(object):
-
     def change_definition_info(self, definition_info):
         pass
 
@@ -190,22 +216,26 @@ class ArgumentNormalizer(_ArgumentChanger):
 
 
 class ArgumentRemover(_ArgumentChanger):
-
     def __init__(self, index):
         self.index = index
 
     def change_definition_info(self, call_info):
         if self.index < len(call_info.args_with_defaults):
             del call_info.args_with_defaults[self.index]
-        elif self.index == len(call_info.args_with_defaults) and \
-                call_info.args_arg is not None:
+        elif (
+            self.index == len(call_info.args_with_defaults)
+            and call_info.args_arg is not None
+        ):
             call_info.args_arg = None
-        elif (self.index == len(call_info.args_with_defaults) and
-              call_info.args_arg is None and
-              call_info.keywords_arg is not None) or \
-                (self.index == len(call_info.args_with_defaults) + 1 and
-                 call_info.args_arg is not None and
-                 call_info.keywords_arg is not None):
+        elif (
+            self.index == len(call_info.args_with_defaults)
+            and call_info.args_arg is None
+            and call_info.keywords_arg is not None
+        ) or (
+            self.index == len(call_info.args_with_defaults) + 1
+            and call_info.args_arg is not None
+            and call_info.keywords_arg is not None
+        ):
             call_info.keywords_arg = None
 
     def change_argument_mapping(self, definition_info, mapping):
@@ -216,7 +246,6 @@ class ArgumentRemover(_ArgumentChanger):
 
 
 class ArgumentAdder(_ArgumentChanger):
-
     def __init__(self, index, name, default=None, value=None):
         self.index = index
         self.name = name
@@ -227,9 +256,9 @@ class ArgumentAdder(_ArgumentChanger):
         for pair in definition_info.args_with_defaults:
             if pair[0] == self.name:
                 raise rope.base.exceptions.RefactoringError(
-                    'Adding duplicate parameter: <%s>.' % self.name)
-        definition_info.args_with_defaults.insert(self.index,
-                                                  (self.name, self.default))
+                    "Adding duplicate parameter: <%s>." % self.name
+                )
+        definition_info.args_with_defaults.insert(self.index, (self.name, self.default))
 
     def change_argument_mapping(self, definition_info, mapping):
         if self.value is not None:
@@ -237,15 +266,16 @@ class ArgumentAdder(_ArgumentChanger):
 
 
 class ArgumentDefaultInliner(_ArgumentChanger):
-
     def __init__(self, index):
         self.index = index
         self.remove = False
 
     def change_definition_info(self, definition_info):
         if self.remove:
-            definition_info.args_with_defaults[self.index] = \
-                (definition_info.args_with_defaults[self.index][0], None)
+            definition_info.args_with_defaults[self.index] = (
+                definition_info.args_with_defaults[self.index][0],
+                None,
+            )
 
     def change_argument_mapping(self, definition_info, mapping):
         default = definition_info.args_with_defaults[self.index][1]
@@ -255,7 +285,6 @@ class ArgumentDefaultInliner(_ArgumentChanger):
 
 
 class ArgumentReorderer(_ArgumentChanger):
-
     def __init__(self, new_order, autodef=None):
         """Construct an `ArgumentReorderer`
 
@@ -291,7 +320,6 @@ class ArgumentReorderer(_ArgumentChanger):
 
 
 class _ChangeCallsInModule(object):
-
     def __init__(self, project, occurrence_finder, resource, call_changer):
         self.project = project
         self.occurrence_finder = occurrence_finder
@@ -301,20 +329,20 @@ class _ChangeCallsInModule(object):
     def get_changed_module(self):
         word_finder = worder.Worder(self.source)
         change_collector = codeanalyze.ChangeCollector(self.source)
-        for occurrence in self.occurrence_finder.find_occurrences(
-                self.resource):
+        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             if not occurrence.is_called() and not occurrence.is_defined():
                 continue
             start, end = occurrence.get_primary_range()
-            begin_parens, end_parens = word_finder.\
-                get_word_parens_range(end - 1)
+            begin_parens, end_parens = word_finder.get_word_parens_range(end - 1)
             if occurrence.is_called():
                 primary, pyname = occurrence.get_primary_and_pyname()
                 changed_call = self.call_changer.change_call(
-                    primary, pyname, self.source[start:end_parens])
+                    primary, pyname, self.source[start:end_parens]
+                )
             else:
                 changed_call = self.call_changer.change_definition(
-                    self.source[start:end_parens])
+                    self.source[start:end_parens]
+                )
             if changed_call is not None:
                 change_collector.add_change(start, end_parens, changed_call)
         return change_collector.get_changed()
@@ -339,7 +367,6 @@ class _ChangeCallsInModule(object):
 
 
 class _MultipleFinders(object):
-
     def __init__(self, finders):
         self.finders = finders
 
@@ -349,4 +376,3 @@ class _MultipleFinders(object):
             all_occurrences.extend(finder.find_occurrences(resource, pymodule))
         all_occurrences.sort(key=lambda x: x.get_primary_range())
         return all_occurrences
-

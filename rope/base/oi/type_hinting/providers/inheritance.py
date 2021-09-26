@@ -3,7 +3,6 @@ from rope.base.oi.type_hinting.providers import interfaces
 
 
 class ParamProvider(interfaces.IParamProvider):
-
     def __init__(self, delegate):
         """
         :type delegate: rope.base.oi.type_hinting.providers.interfaces.IParamProvider
@@ -25,7 +24,6 @@ class ParamProvider(interfaces.IParamProvider):
 
 
 class ReturnProvider(interfaces.IReturnProvider):
-
     def __init__(self, delegate):
         """
         :type delegate: rope.base.oi.type_hinting.providers.interfaces.IReturnProvider
@@ -46,7 +44,6 @@ class ReturnProvider(interfaces.IReturnProvider):
 
 
 class AssignmentProvider(interfaces.IAssignmentProvider):
-
     def __init__(self, delegate):
         """
         :type delegate: rope.base.oi.type_hinting.providers.interfaces.IAssignmentProvider

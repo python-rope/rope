@@ -5,7 +5,6 @@ from rope.base import ast, exceptions, utils
 
 
 class Scope(object):
-
     def __init__(self, pycore, pyobject, parent_scope):
         self.pycore = pycore
         self.pyobject = pyobject
@@ -22,7 +21,7 @@ class Scope(object):
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
         if name not in self.get_names():
-            raise exceptions.NameNotFoundError('name %s not found' % name)
+            raise exceptions.NameNotFoundError("name %s not found" % name)
         return self.get_names()[name]
 
     def __getitem__(self, key):
@@ -66,8 +65,9 @@ class Scope(object):
         return None
 
     def _create_scopes(self):
-        return [pydefined.get_scope()
-                for pydefined in self.pyobject._get_defined_objects()]
+        return [
+            pydefined.get_scope() for pydefined in self.pyobject._get_defined_objects()
+        ]
 
     def _get_global_scope(self):
         current = self
@@ -102,7 +102,6 @@ class Scope(object):
 
 
 class GlobalScope(Scope):
-
     def __init__(self, pycore, module):
         super(GlobalScope, self).__init__(pycore, module, None)
         self.names = module._get_concluded_data()
@@ -111,7 +110,7 @@ class GlobalScope(Scope):
         return 1
 
     def get_kind(self):
-        return 'Module'
+        return "Module"
 
     def get_name(self, name):
         try:
@@ -119,7 +118,7 @@ class GlobalScope(Scope):
         except exceptions.AttributeNotFoundError:
             if name in self.builtin_names:
                 return self.builtin_names[name]
-            raise exceptions.NameNotFoundError('name %s not found' % name)
+            raise exceptions.NameNotFoundError("name %s not found" % name)
 
     def get_names(self):
         if self.names.get() is None:
@@ -172,10 +171,10 @@ class CompScope(Scope):
 
 
 class FunctionScope(Scope):
-
     def __init__(self, pycore, pyobject, visitor):
-        super(FunctionScope, self).__init__(pycore, pyobject,
-                                            pyobject.parent.get_scope())
+        super(FunctionScope, self).__init__(
+            pycore, pyobject, pyobject.parent.get_scope()
+        )
         self.names = None
         self.returned_asts = None
         self.is_generator = None
@@ -217,36 +216,34 @@ class FunctionScope(Scope):
         return [pydefined.get_scope() for pydefined in self.defineds]
 
     def get_kind(self):
-        return 'Function'
+        return "Function"
 
     def invalidate_data(self):
         for pyname in self.get_names().values():
-            if isinstance(pyname, (rope.base.pynames.AssignedName,
-                                   rope.base.pynames.EvaluatedName)):
+            if isinstance(
+                pyname,
+                (rope.base.pynames.AssignedName, rope.base.pynames.EvaluatedName),
+            ):
                 pyname.invalidate()
 
 
 class ClassScope(Scope):
-
     def __init__(self, pycore, pyobject):
-        super(ClassScope, self).__init__(pycore, pyobject,
-                                         pyobject.parent.get_scope())
+        super(ClassScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
 
     def get_kind(self):
-        return 'Class'
+        return "Class"
 
     def get_propagated_names(self):
         return {}
 
 
 class _HoldingScopeFinder(object):
-
     def __init__(self, pymodule):
         self.pymodule = pymodule
 
     def get_indents(self, lineno):
-        return rope.base.codeanalyze.count_line_indents(
-            self.lines.get_line(lineno))
+        return rope.base.codeanalyze.count_line_indents(self.lines.get_line(lineno))
 
     def _get_scope_indents(self, scope):
         return self.get_indents(scope.get_start())
@@ -256,12 +253,15 @@ class _HoldingScopeFinder(object):
             line_indents = self.get_indents(lineno)
         current_scope = module_scope
         new_scope = current_scope
-        while new_scope is not None and \
-                (new_scope.get_kind() == 'Module' or
-                 self._get_scope_indents(new_scope) <= line_indents):
+        while new_scope is not None and (
+            new_scope.get_kind() == "Module"
+            or self._get_scope_indents(new_scope) <= line_indents
+        ):
             current_scope = new_scope
-            if current_scope.get_start() == lineno and \
-               current_scope.get_kind() != 'Module':
+            if (
+                current_scope.get_start() == lineno
+                and current_scope.get_kind() != "Module"
+            ):
                 return current_scope
             new_scope = None
             for scope in current_scope.get_scopes():
@@ -275,14 +275,13 @@ class _HoldingScopeFinder(object):
 
     def _is_empty_line(self, lineno):
         line = self.lines.get_line(lineno)
-        return line.strip() == '' or line.lstrip().startswith('#')
+        return line.strip() == "" or line.lstrip().startswith("#")
 
     def _get_body_indents(self, scope):
         return self.get_indents(scope.get_body_start())
 
     def get_holding_scope_for_offset(self, scope, offset):
-        return self.get_holding_scope(
-            scope, self.lines.get_line_number(offset))
+        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
 
     def find_scope_end(self, scope):
         if not scope.parent:
@@ -295,7 +294,8 @@ class _HoldingScopeFinder(object):
         else:
             body_indents = self._get_body_indents(scope)
         for l in self.logical_lines.generate_starts(
-                min(end + 1, self.lines.length()), self.lines.length() + 1):
+            min(end + 1, self.lines.length()), self.lines.length() + 1
+        ):
             if not self._is_empty_line(l):
                 if self.get_indents(l) < body_indents:
                     return end
@@ -325,7 +325,8 @@ class TemporaryScope(Scope):
 
     def __init__(self, pycore, parent_scope, names):
         super(TemporaryScope, self).__init__(
-            pycore, parent_scope.pyobject, parent_scope)
+            pycore, parent_scope.pyobject, parent_scope
+        )
         self.names = names
 
     def get_names(self):
@@ -338,4 +339,4 @@ class TemporaryScope(Scope):
         return []
 
     def get_kind(self):
-        return 'Temporary'
+        return "Temporary"

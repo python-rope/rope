@@ -10,16 +10,16 @@ except NameError:
     unicode = str
 
 
-def parse(source, filename='<string>'):
+def parse(source, filename="<string>"):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, unicode):
         source = fscommands.unicode_to_file_data(source)
-    if b'\r' in source:
-        source = source.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
-    if not source.endswith(b'\n'):
-        source += b'\n'
+    if b"\r" in source:
+        source = source.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    if not source.endswith(b"\n"):
+        source += b"\n"
     try:
-        return ast.parse(source, filename='<unknown>')
+        return ast.parse(source, filename="<unknown>")
     except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1
@@ -30,13 +30,13 @@ def parse(source, filename='<string>'):
 
 def walk(node, walker):
     """Walk the syntax tree"""
-    method_name = '_' + node.__class__.__name__
+    method_name = "_" + node.__class__.__name__
     method = getattr(walker, method_name, None)
     if method is not None:
         if isinstance(node, ast.ImportFrom) and node.module is None:
             # In python < 2.7 ``node.module == ''`` for relative imports
             # but for python 2.7 it is None. Generalizing it to ''.
-            node.module = ''
+            node.module = ""
         return method(node)
     for child in get_child_nodes(node):
         walk(child, walker)
@@ -70,7 +70,7 @@ def get_children(node):
     result = []
     if node._fields is not None:
         for name in node._fields:
-            if name in ['lineno', 'col_offset']:
+            if name in ["lineno", "col_offset"]:
                 continue
             child = getattr(node, name)
             result.append(child)

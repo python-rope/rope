@@ -5,4 +5,4 @@ and packages.
 
 """
 
-__all__ = ['project', 'libutils', 'exceptions']
+__all__ = ["project", "libutils", "exceptions"]
