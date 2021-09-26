@@ -41,48 +41,40 @@ class ExtractMethodTest(unittest.TestCase):
         return lines.get_line_start(start), lines.get_line_end(end)
 
     def test_simple_extract_function(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def a_func():
                 print('one')
                 print('two')
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, "extracted")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def a_func():
                 extracted()
                 print('two')
 
             def extracted():
                 print('one')
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_simple_extract_function_one_line(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def a_func():
                 resp = 'one'
                 print(resp)
-        """
-        )
+        """)
         selected = "'one'"
         start, end = code.index(selected), code.index(selected) + len(selected)
         refactored = self.do_extract_method(code, start, end, "extracted")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def a_func():
                 resp = extracted()
                 print(resp)
 
             def extracted():
                 return 'one'
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_function_at_the_end_of_file(self):
@@ -106,26 +98,22 @@ class ExtractMethodTest(unittest.TestCase):
 
     @testutils.only_for("3.5")
     def test_extract_function_containing_dict_generalized_unpacking(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def a_func(dict1):
                 dict2 = {}
                 a_var = {a: b, **dict1, **dict2}
-        """
-        )
+        """)
         start = code.index("{a")
         end = code.index("2}") + len("2}")
         refactored = self.do_extract_method(code, start, end, "extracted")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def a_func(dict1):
                 dict2 = {}
                 a_var = extracted(dict1, dict2)
 
             def extracted(dict1, dict2):
                 return {a: b, **dict1, **dict2}
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_simple_extract_function_with_parameter(self):
@@ -499,19 +487,16 @@ class ExtractMethodTest(unittest.TestCase):
             self.do_extract_method(code, start, end, "new_func")
 
     def test_for_loop_variable_scope(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
                     i += 1
                     print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 5)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
@@ -521,24 +506,20 @@ class ExtractMethodTest(unittest.TestCase):
                 i += 1
                 print(i)
                 return i
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_for_loop_variable_scope_read_then_write(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
                     a = i + 1
                     i = a + 1
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 5)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
@@ -548,24 +529,20 @@ class ExtractMethodTest(unittest.TestCase):
                 a = i + 1
                 i = a + 1
                 return i
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_for_loop_variable_scope_write_then_read(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
                     i = 'hello'
                     print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 5)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func():
                 i = 0
                 for dummy in range(10):
@@ -574,24 +551,20 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func():
                 i = 'hello'
                 print(i)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_for_loop_variable_scope_write_only(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func():
                 i = 0
                 for num in range(10):
                     i = 'hello' + num
                     print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 4)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func():
                 i = 0
                 for num in range(10):
@@ -601,8 +574,7 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func(num):
                 i = 'hello' + num
                 return i
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_followed_by_variable_reads_after_extraction(self):
@@ -637,20 +609,16 @@ class ExtractMethodTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher("3.6")
     def test_extract_variable_f_string(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             foo(f"abc {a_var} def", 10)
-        """
-        )
+        """)
         start = code.index('f"')
         end = code.index('def"') + 4
         refactored = self.do_extract_variable(code, start, end, "new_var")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             new_var = f"abc {a_var} def"
             foo(new_var, 10)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_variable_multiple_lines(self):
@@ -794,42 +762,35 @@ class ExtractMethodTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_extract_method(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def func(a_var):
                 foo(f"abc {a_var}", 10)
-        """
-        )
+        """)
         start = code.index('f"')
         end = code.index('}"') + 2
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def func(a_var):
                 foo(new_func(a_var), 10)
 
             def new_func(a_var):
                 return f"abc {a_var}"
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_extract_method_complex_expression(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def func(a_var):
                 b_var = int
                 c_var = 10
                 fill = 10
                 foo(f"abc {a_var + f'{b_var(a_var)}':{fill}16}" f"{c_var}", 10)
-        """
-        )
+        """)
         start = code.index('f"')
         end = code.index('c_var}"') + 7
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def func(a_var):
                 b_var = int
                 c_var = 10
@@ -838,55 +799,46 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(a_var, b_var, c_var, fill):
                 return f"abc {a_var + f'{b_var(a_var)}':{fill}16}" f"{c_var}"
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_false_comment(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def func(a_var):
                 foo(f"abc {a_var} # ", 10)
-        """
-        )
+        """)
         start = code.index('f"')
         end = code.index('# "') + 3
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def func(a_var):
                 foo(new_func(a_var), 10)
 
             def new_func(a_var):
                 return f"abc {a_var} # "
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @unittest.expectedFailure
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_false_format_value_in_regular_string(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def func(a_var):
                 b_var = 1
                 foo(f"abc {a_var} " "{b_var}" f"{b_var} def", 10)
-        """
-        )
+        """)
         start = code.index('f"')
         end = code.index('def"') + 4
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def func(a_var):
                 b_var = 1
                 foo(new_func(a_var, b_var), 10)
 
             def new_func(a_var, b_var):
                 return f"abc {a_var} " "{b_var}" f"{b_var} def"
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_in_the_same_line_as_variable_read(self):
@@ -898,39 +850,32 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_in_the_same_line_as_variable_read2(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             a = 1
             a += 1
-        """
-        )
+        """)
         start = code.index("\n") + 1
         end = len(code)
         refactored = self.do_extract_method(code, start, end, "new_f", global_=True)
-        expected = dedent(
-            """\
+        expected = dedent("""\
             a = 1
 
             def new_f(a):
                 a += 1
 
             new_f(a)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_in_the_same_line_as_variable_read3(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             a = 1
             a += 1
             print(a)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, "new_f")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             a = 1
 
             def new_f(a):
@@ -939,21 +884,17 @@ class ExtractMethodTest(unittest.TestCase):
 
             a = new_f(a)
             print(a)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_variable_writes_only(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             i = 1
             print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 1, 1)
         refactored = self.do_extract_method(code, start, end, "new_f")
-        expected = dedent(
-            """\
+        expected = dedent("""\
 
             def new_f():
                 i = 1
@@ -961,8 +902,7 @@ class ExtractMethodTest(unittest.TestCase):
 
             i = new_f()
             print(i)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_variable_and_similar_expressions(self):
@@ -1325,18 +1265,15 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_returning_conditional_updated_vars_in_extracted(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def f(a):
                 if 0:
                     a = 1
                 print(a)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, "g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def f(a):
                 a = g(a)
                 print(a)
@@ -1345,8 +1282,7 @@ class ExtractMethodTest(unittest.TestCase):
                 if 0:
                     a = 1
                 return a
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_variables_possibly_written_to(self):
@@ -1391,8 +1327,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_list_comprehension_and_iter(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo():
                 x = [e for e in []]
                 f = 23
@@ -1400,12 +1335,10 @@ class ExtractMethodTest(unittest.TestCase):
                 for x, f in x:
                     def bar():
                         x[42] = 1
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 4, 7)
         refactored = self.do_extract_method(code, start, end, "baz")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def foo():
                 x = [e for e in []]
                 f = 23
@@ -1416,8 +1349,7 @@ class ExtractMethodTest(unittest.TestCase):
                 for x, f in x:
                     def bar():
                         x[42] = 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_method_with_list_comprehension_and_orelse(self):
@@ -1494,33 +1426,28 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_extract_function_with_for_else_statemant_outside_loops(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def a_func():
                 for i in range(10):
                     a = i
                 else:
                     a=None
-        """
-        )
+        """)
         start = code.index("a = i")
         end = len(code) - 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
     def test_extract_function_with_inline_assignment_in_method(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo():
                 i = 1
                 i += 1
                 print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def foo():
                 i = 1
                 i = new_func(i)
@@ -1529,24 +1456,20 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func(i):
                 i += 1
                 return i
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_statement_with_inline_assignment_in_condition(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo(a):
                 if i := a == 5:
                     i += 1
                 print(i)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def foo(a):
                 i = new_func(a)
                 print(i)
@@ -1555,27 +1478,23 @@ class ExtractMethodTest(unittest.TestCase):
                 if i := a == 5:
                     i += 1
                 return i
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_expression_with_inline_assignment_in_condition(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo(a):
                 if i := a == 5:
                     i += 1
                 print(i)
-        """
-        )
+        """)
         extract_target = "i := a == 5"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def foo(a):
                 if i := new_func(a):
                     i += 1
@@ -1583,28 +1502,24 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(a):
                 return (i := a == 5)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_expression_with_inline_assignment_complex(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo(a):
                 if i := a == (c := 5):
                     i += 1
                     c += 1
                 print(i)
-        """
-        )
+        """)
         extract_target = "i := a == (c := 5)"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def foo(a):
                 if i, c := new_func(a):
                     i += 1
@@ -1613,22 +1528,19 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(a):
                 return (i := a == (c := 5))
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_expression_with_inline_assignment_in_inner_expression(
         self,
     ):
-        code = dedent(
-            """\
+        code = dedent("""\
             def foo(a):
                 if a == (c := 5):
                     c += 1
                 print(i)
-        """
-        )
+        """)
         extract_target = "a == (c := 5)"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -1640,58 +1552,47 @@ class ExtractMethodTest(unittest.TestCase):
             self.do_extract_method(code, start, end, "new_func")
 
     def test_extract_exec(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             exec("def f(): pass", {})
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 1, 1)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
 
             def new_func():
                 exec("def f(): pass", {})
 
             new_func()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_lower("3")
     def test_extract_exec_statement(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             exec "def f(): pass" in {}
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 1, 1)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
 
             def new_func():
                 exec "def f(): pass" in {}
 
             new_func()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
     def test_extract_async_function(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             async def my_func(my_list):
                 for x in my_list:
                     var = x + 1
                 return var
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             async def my_func(my_list):
                 for x in my_list:
                     var = new_func(x)
@@ -1700,25 +1601,21 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func(x):
                 var = x + 1
                 return var
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
     def test_extract_inner_async_function(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func(my_list):
                 async def inner_func(my_list):
                     for x in my_list:
                         var = x + 1
                 return inner_func
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 4)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func(my_list):
                 inner_func = new_func(my_list)
                 return inner_func
@@ -1728,25 +1625,21 @@ class ExtractMethodTest(unittest.TestCase):
                     for x in my_list:
                         var = x + 1
                 return inner_func
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
     def test_extract_around_inner_async_function(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def my_func(lst):
                 async def inner_func(obj):
                     for x in obj:
                         var = x + 1
                 return map(inner_func, lst)
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 5, 5)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def my_func(lst):
                 async def inner_func(obj):
                     for x in obj:
@@ -1755,24 +1648,20 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(inner_func, lst):
                 return map(inner_func, lst)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
     def test_extract_refactor_around_async_for_loop(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             async def my_func(my_list):
                 async for x in my_list:
                     var = x + 1
                 return var
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             async def my_func(my_list):
                 async for x in my_list:
                     var = new_func(x)
@@ -1781,8 +1670,7 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func(x):
                 var = x + 1
                 return var
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
@@ -1793,14 +1681,12 @@ class ExtractMethodTest(unittest.TestCase):
         higher because support for ast.PyCF_ALLOW_TOP_LEVEL_AWAIT was only
         added to the standard library in Python 3.8.
         """
-        code = dedent(
-            """\
+        code = dedent("""\
             async def my_func(my_list):
                 async for x in my_list:
                     var = x + 1
                 return var
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         with self.assertRaisesRegexp(
             rope.base.exceptions.RefactoringError,
@@ -1810,18 +1696,15 @@ class ExtractMethodTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_refactor_containing_async_for_loop_is_supported_after_py38(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             async def my_func(my_list):
                 async for x in my_list:
                     var = x + 1
                 return var
-        """
-        )
+        """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             async def my_func(my_list):
                 var = new_func(my_list)
                 return var
@@ -1830,25 +1713,21 @@ class ExtractMethodTest(unittest.TestCase):
                 async for x in my_list:
                     var = x + 1
                 return var
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.5")
     def test_extract_await_expression(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             async def my_func(my_list):
                 for url in my_list:
                     resp = await request(url)
                 return resp
-        """
-        )
+        """)
         selected = "request(url)"
         start, end = code.index(selected), code.index(selected) + len(selected)
         refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             async def my_func(my_list):
                 for url in my_list:
                     resp = await new_func(url)
@@ -1856,19 +1735,16 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func(url):
                 return request(url)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_to_staticmethod(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -1876,8 +1752,7 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(
             code, start, end, "second_method", kind="staticmethod"
         )
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -1886,19 +1761,16 @@ class ExtractMethodTest(unittest.TestCase):
                 @staticmethod
                 def second_method(a_var):
                     return a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_to_staticmethod_when_self_in_body(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = self.a_var + 1
-        """
-        )
+        """)
         extract_target = "self.a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -1906,8 +1778,7 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(
             code, start, end, "second_method", kind="staticmethod"
         )
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -1916,18 +1787,15 @@ class ExtractMethodTest(unittest.TestCase):
                 @staticmethod
                 def second_method(self):
                     return self.a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_from_function_to_staticmethod_raises_exception(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def first_method():
                 a_var = 1
                 b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -1941,18 +1809,15 @@ class ExtractMethodTest(unittest.TestCase):
             )
 
     def test_extract_method_in_classmethods(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class AClass(object):
                 @classmethod
                 def func2(cls):
                     b = 1
-        """
-        )
+        """)
         start = code.index(" 1") + 1
         refactored = self.do_extract_method(code, start, start + 1, "one", similar=True)
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class AClass(object):
                 @classmethod
                 def func2(cls):
@@ -1961,18 +1826,15 @@ class ExtractMethodTest(unittest.TestCase):
                 @classmethod
                 def one(cls):
                     return 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_from_function_to_classmethod_raises_exception(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def first_method():
                 a_var = 1
                 b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -1986,14 +1848,12 @@ class ExtractMethodTest(unittest.TestCase):
             )
 
     def test_extract_to_classmethod_when_self_in_body(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = self.a_var + 1
-        """
-        )
+        """)
         extract_target = "self.a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -2001,8 +1861,7 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(
             code, start, end, "second_method", kind="classmethod"
         )
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -2011,19 +1870,16 @@ class ExtractMethodTest(unittest.TestCase):
                 @classmethod
                 def second_method(cls, self):
                     return self.a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_to_classmethod(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
@@ -2031,8 +1887,7 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(
             code, start, end, "second_method", kind="classmethod"
         )
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -2041,26 +1896,22 @@ class ExtractMethodTest(unittest.TestCase):
                 @classmethod
                 def second_method(cls, a_var):
                     return a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_to_classmethod_when_name_starts_with_at_sign(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "@second_method")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -2069,26 +1920,22 @@ class ExtractMethodTest(unittest.TestCase):
                 @classmethod
                 def second_method(cls, a_var):
                     return a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_to_staticmethod_when_name_starts_with_dollar_sign(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
                     b_var = a_var + 1
-        """
-        )
+        """)
         extract_target = "a_var + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "$second_method")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A:
                 def first_method(self):
                     a_var = 1
@@ -2097,8 +1944,7 @@ class ExtractMethodTest(unittest.TestCase):
                 @staticmethod
                 def second_method(a_var):
                     return a_var + 1
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_raises_exception_when_sign_in_name_and_kind_mismatch(self):
@@ -2108,22 +1954,19 @@ class ExtractMethodTest(unittest.TestCase):
             self.do_extract_method("code", 0, 1, "$second_method", kind="classmethod")
 
     def test_extracting_from_static_with_function_arg(self):
-        code = dedent(
-            """\
+        code = dedent("""\
                 class A:
                     @staticmethod
                     def first_method(someargs):
                         b_var = someargs + 1
-            """
-        )
+            """)
 
         extract_target = "someargs + 1"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "second_method")
-        expected = dedent(
-            """\
+        expected = dedent("""\
                 class A:
                     @staticmethod
                     def first_method(someargs):
@@ -2132,14 +1975,12 @@ class ExtractMethodTest(unittest.TestCase):
                     @staticmethod
                     def second_method(someargs):
                         return someargs + 1
-            """
-        )
+            """)
 
         self.assertEqual(expected, refactored)
 
     def test_extract_with_list_compehention(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = sum([x for x in y])
@@ -2148,15 +1989,13 @@ class ExtractMethodTest(unittest.TestCase):
                 print(a, b)
 
             f()
-        """
-        )
+        """)
         extract_target = "    a = sum([x for x in y])\n"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_a")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = _a(y)
@@ -2169,13 +2008,11 @@ class ExtractMethodTest(unittest.TestCase):
                 return a
 
             f()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_with_generator(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = sum(x for x in y)
@@ -2184,15 +2021,13 @@ class ExtractMethodTest(unittest.TestCase):
                 print(a, b)
 
             f()
-        """
-        )
+        """)
         extract_target = "    a = sum(x for x in y)\n"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_a")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = _a(y)
@@ -2205,13 +2040,11 @@ class ExtractMethodTest(unittest.TestCase):
                 return a
 
             f()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_with_set_compehention(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = sum({x for x in y})
@@ -2220,15 +2053,13 @@ class ExtractMethodTest(unittest.TestCase):
                 print(a, b)
 
             f()
-        """
-        )
+        """)
         extract_target = "    a = sum({x for x in y})\n"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_a")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = _a(y)
@@ -2241,13 +2072,11 @@ class ExtractMethodTest(unittest.TestCase):
                 return a
 
             f()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_with_dict_compehention(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = sum({x: x for x in y})
@@ -2256,15 +2085,13 @@ class ExtractMethodTest(unittest.TestCase):
                 print(a, b)
 
             f()
-        """
-        )
+        """)
         extract_target = "    a = sum({x: x for x in y})\n"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_a")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             def f():
                 y = [1,2,3,4]
                 a = _a(y)
@@ -2277,27 +2104,23 @@ class ExtractMethodTest(unittest.TestCase):
                 return a
 
             f()
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extract_function_expression_with_assignment_to_attribute(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A(object):
                 def func(self):
                     self.var_a = 1
                     var_bb = self.var_a
-        """
-        )
+        """)
         extract_target = "= self.var_a"
         start, end = (
             code.index(extract_target) + 2,
             code.index(extract_target) + 2 + len(extract_target) - 2,
         )
         refactored = self.do_extract_method(code, start, end, "new_func", similar=True)
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A(object):
                 def func(self):
                     self.var_a = 1
@@ -2305,28 +2128,24 @@ class ExtractMethodTest(unittest.TestCase):
 
                 def new_func(self):
                     return self.var_a
-        """
-        )
+        """)
 
         self.assertEqual(expected, refactored)
 
     def test_extract_function_expression_with_assignment_index(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             class A(object):
                 def func(self, val):
                     self[val] = 1
                     var_bb = self[val]
-        """
-        )
+        """)
         extract_target = "= self[val]"
         start, end = (
             code.index(extract_target) + 2,
             code.index(extract_target) + 2 + len(extract_target) - 2,
         )
         refactored = self.do_extract_method(code, start, end, "new_func", similar=True)
-        expected = dedent(
-            """\
+        expected = dedent("""\
             class A(object):
                 def func(self, val):
                     self[val] = 1
@@ -2334,14 +2153,12 @@ class ExtractMethodTest(unittest.TestCase):
 
                 def new_func(self, val):
                     return self[val]
-        """
-        )
+        """)
 
         self.assertEqual(expected, refactored)
 
     def test_extraction_method_with_global_variable(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             g = None
 
             def f():
@@ -2351,15 +2168,13 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         extract_target = "g = 2"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             g = None
 
             def f():
@@ -2373,13 +2188,11 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extraction_method_with_global_variable_and_global_declaration(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             g = None
 
             def f():
@@ -2389,12 +2202,10 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         start, end = 23, 42
         refactored = self.do_extract_method(code, start, end, "_g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             g = None
 
             def f():
@@ -2407,13 +2218,11 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_extraction_one_line_with_global_variable_read_only(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             g = None
 
             def f():
@@ -2423,13 +2232,11 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         extract_target = "= g"
         start, end = code.index(extract_target) + 2, code.index(extract_target) + 3
         refactored = self.do_extract_method(code, start, end, "_g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             g = None
 
             def f():
@@ -2442,14 +2249,12 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extraction_one_line_with_global_variable(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             g = None
 
             def f():
@@ -2460,15 +2265,13 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         extract_target = "g := 4"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             g = None
 
             def f():
@@ -2483,14 +2286,12 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     @testutils.only_for_versions_higher("3.8")
     def test_extraction_one_line_with_global_variable_has_postread(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             g = None
 
             def f():
@@ -2501,15 +2302,13 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         extract_target = "g := 4"
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
         refactored = self.do_extract_method(code, start, end, "_g")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             g = None
 
             def f():
@@ -2524,6 +2323,5 @@ class ExtractMethodTest(unittest.TestCase):
 
             f()
             print(g)
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
