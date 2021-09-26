@@ -17,4 +17,15 @@ See git logs and the mailing list for details.
 
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://matej.ceplovi.cz"><img src="https://avatars.githubusercontent.com/u/198999?v=4" width="100px;" alt=""/><br /><sub><b>Matěj Cepl</b></sub></a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
