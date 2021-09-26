@@ -12,6 +12,8 @@ try:
 except NameError:
     basestring = (str, bytes)
 
+COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
+
 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
@@ -79,6 +81,7 @@ class _PatchingASTWalker(object):
     exec_open_paren_or_space = object()
     exec_close_paren_or_space = object()
     exec_in_or_comma = object()
+    with_or_comma_context_manager = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -140,6 +143,8 @@ class _PatchingASTWalker(object):
                     region = self.source.consume_exec_in_or_comma()
                 elif child == self.exec_close_paren_or_space:
                     region = self.source.consume_exec_close_paren_or_space()
+                elif child == self.with_or_comma_context_manager:
+                    region = self.source.consume_with_or_comma_context_manager()
                 else:
                     if hasattr(ast, "JoinedStr") and isinstance(
                         node, (ast.JoinedStr, ast.FormattedValue)
@@ -867,12 +872,16 @@ class _PatchingASTWalker(object):
 
     def _With(self, node):
         children = []
+
         for item in pycompat.get_ast_with_items(node):
-            children.extend(["with", item.context_expr])
+            children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
-                children.extend(["as", item.optional_vars])
-        children.append(":")
-        children.extend(node.body)
+                children.extend(['as', item.optional_vars])
+        if pycompat.PY2 and COMMA_IN_WITH_PATTERN.search(self.source.source):
+            children.append(node.body[0])
+        else:
+            children.append(':')
+            children.extend(node.body)
         self._handle(node, children)
 
     def _child_nodes(self, nodes, separator):
@@ -948,6 +957,10 @@ class _Source(object):
 
     def consume_exec_close_paren_or_space(self):
         repattern = re.compile(r"\)|")
+        return self._consume_pattern(repattern)
+
+    def consume_with_or_comma_context_manager(self):
+        repattern = re.compile(r"with|,")
         return self._consume_pattern(repattern)
 
     def _good_token(self, token, offset, start=None):

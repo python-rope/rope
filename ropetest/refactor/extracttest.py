@@ -2197,3 +2197,58 @@ class ExtractMethodTest(unittest.TestCase):
             print(g)
         """)
         self.assertEqual(expected, refactored)
+
+    def test_extract_method_with_nested_double_with_as(self):
+        code = dedent("""\
+            with open("test") as file1:
+                with open("test") as file2:
+                    print(file1, file2)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 4)
+        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        expected = dedent("""\
+
+            def extracted(file1, file2):
+                print(file1, file2)
+
+            with open("test") as file1:
+                with open("test") as file2:
+                    extracted(file1, file2)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_with_double_with_as(self):
+        code = dedent("""\
+            with open("test") as file1, open("test") as file2:
+                print(file1, file2)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        expected = dedent("""\
+
+            def extracted(file1, file2):
+                print(file1, file2)
+
+            with open("test") as file1, open("test") as file2:
+                extracted(file1, file2)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_with_nested_double_with_as_and_misleading_comment(self):
+        code = dedent("""\
+            with open("test") as file1, open("test") as file2:
+                # with in comment
+                bar()
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        expected = dedent("""\
+
+            def extracted():
+                bar()
+
+            with open("test") as file1, open("test") as file2:
+                # with in comment
+                extracted()
+        """)
+        self.assertEqual(expected, refactored)
