@@ -868,22 +868,6 @@ class _FunctionInformationCollector(object):
         self.written = self.written - comp_names | written
         self.maybe_written = self.maybe_written - comp_names | maybe_written
 
-    def _handle_conditional_node(self, node):
-        self.conditional = True
-        try:
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-        finally:
-            self.conditional = False
-
-    def _handle_conditional_node(self, node):
-        self.conditional = True
-        try:
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-        finally:
-            self.conditional = False
-
     def _If(self, node):
         self._handle_conditional_node(node)
 
