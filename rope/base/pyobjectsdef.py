@@ -1,3 +1,4 @@
+from rope.base.pynames import DefinedName
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -419,9 +420,17 @@ class _CompVisitor(_ExpressionVisitor):
 
     def _comprehension(self, node):
         if isinstance(node.target, ast.Tuple):
-            self.names.update({target.id: target for target in node.target.elts})
+            self.names.update(
+                {
+                    target.id: DefinedName(self._get_pyobject(node))
+                    for target in node.target.elts
+                }
+            )
         else:
-            self.names[node.target.id] = node.target
+            self.names[node.target.id] = DefinedName(self._get_pyobject(node))
+
+    def _get_pyobject(self, node):
+        return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
 
 
 class _ScopeVisitor(_ExpressionVisitor):
