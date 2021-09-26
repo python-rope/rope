@@ -60,7 +60,7 @@ Many thanks the following people:
 .. _`@soupytwist`: https://github.com/soupytwist
 .. _`@lieryan`: https://github.com/lieryan
 .. _`@mcepl`: https://github.com/mcepl
-.. _`all of our current and former contributors`: https://github.com/python-rope/rope/graphs/contributors
+.. _`all of our current and former contributors`: https://github.com/python-rope/rope/blob/master/CONTRIBUTORS.md
 
 License
 =======
