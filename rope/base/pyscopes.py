@@ -144,10 +144,8 @@ class GlobalScope(Scope):
 
 
 class CompScope(Scope):
-
     def __init__(self, pycore, pyobject, visitor):
-        super(CompScope, self).__init__(pycore, pyobject,
-                                            pyobject.parent.get_scope())
+        super(CompScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.defineds = None
@@ -168,6 +166,14 @@ class CompScope(Scope):
                 ast.walk(n, new_visitor)
             self.names = new_visitor.names
             self.defineds = new_visitor.defineds
+
+    def get_logical_end(self):
+        return self.get_start()
+
+    logical_end = property(get_logical_end)
+
+    def get_body_start(self):
+        return self.get_start()
 
 
 class FunctionScope(Scope):

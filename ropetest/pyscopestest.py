@@ -337,12 +337,15 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertNotIn("i", scope)
         self.assertIn("i", scope.get_scopes()[0])
 
-    def test_funnc(self):
+    def test_get_inner_scope_for_list_comprhension_with_many_targets(self):
         scope = libutils.get_string_scope(
-            self.project, "def funkcja():\n" "    ala = 1\n"
+            self.project, "a = [(i, j) for i,j in enumerate(range(10))]\n"
         )
-        names = scope.get_scopes()[0]
-        self.assertIn("ala", names)
+        self.assertGreater(len(scope.get_scopes()), 0)
+        self.assertNotIn("i", scope)
+        self.assertNotIn("j", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+        self.assertIn("j", scope.get_scopes()[0])
 
 
 def suite():

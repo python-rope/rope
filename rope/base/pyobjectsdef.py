@@ -125,12 +125,10 @@ class ListComp(pyobjects.PyComp):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ScopeVisitor
         rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
-        rope.base.pyobjects.PyDefinedObject.__init__(
-            self, pycore, ast_node, parent)
+        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
 
     def _create_scope(self):
-        return rope.base.pyscopes.CompScope(self.pycore, self,
-                                                _CompVisitor)
+        return rope.base.pyscopes.CompScope(self.pycore, self, _CompVisitor)
 
 
 class PyClass(pyobjects.PyClass):
@@ -359,7 +357,9 @@ class _ExpressionVisitor(object):
 
     def _ListComp(self, node):
         if hasattr(self, "scope_visitor"):
-            list_comp = ListComp(self.scope_visitor.pycore, node, self.scope_visitor.owner_object)
+            list_comp = ListComp(
+                self.scope_visitor.pycore, node, self.scope_visitor.owner_object
+            )
             self.scope_visitor.defineds.append(list_comp)
         else:
             self._GeneratorExp(node)
@@ -409,8 +409,8 @@ class _AssignVisitor(object):
     def _Slice(self, node):
         pass
 
-class _CompVisitor(_ExpressionVisitor):
 
+class _CompVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
         self.pycore = pycore
         self.owner_object = owner_object
@@ -418,7 +418,11 @@ class _CompVisitor(_ExpressionVisitor):
         self.defineds = []
 
     def _comprehension(self, node):
-        self.names[node.target.id] = node.target
+        if isinstance(node.target, ast.Tuple):
+            self.names.update({target.id: target for target in node.target.elts})
+        else:
+            self.names[node.target.id] = node.target
+
 
 class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
