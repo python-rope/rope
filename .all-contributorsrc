@@ -1,12 +1,28 @@
 {
-  "files": ["CONTRIBUTORS.md"],
+  "files": [
+    "CONTRIBUTORS.md"
+  ],
   "imageSize": 100,
   "contributorsPerLine": 7,
   "contributorsSortAlphabetically": false,
   "badgeTemplate": "[![All Contributors](https://img.shields.io/badge/all_contributors-<%= contributors.length %>-orange.svg?style=flat-square)](#contributors)",
   "contributorTemplate": "<a href=\"<%= contributor.profile %>\"><img src=\"<%= contributor.avatar_url %>\" width=\"<%= options.imageSize %>px;\" alt=\"\"/><br /><sub><b><%= contributor.name %></b></sub></a>",
-  "types": {
-  },
-  "skipCi": "true",
-  "contributors": []
+  "types": {},
+  "skipCi": true,
+  "contributors": [
+    {
+      "login": "aligrudi",
+      "name": "Ali Gholami Rudi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1139057?v=4",
+      "profile": "http://litcave.rudi.ir/",
+      "contributions": [
+        "maintenance",
+        "code"
+      ]
+    }
+  ],
+  "projectName": "rope",
+  "projectOwner": "python-rope",
+  "repoType": "github",
+  "repoHost": "https://github.com"
 }
