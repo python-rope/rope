@@ -1,4 +1,5 @@
 import sys
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -44,7 +45,7 @@ def suite():
     return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     runner = unittest.TextTestRunner()
     result = runner.run(suite())
     sys.exit(not result.wasSuccessful())

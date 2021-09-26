@@ -1,25 +1,34 @@
 from rope.base.oi.type_hinting import interfaces
 from rope.base.oi.type_hinting.providers import (
-    composite, inheritance, docstrings, numpydocstrings, pep0484_type_comments
+    composite,
+    inheritance,
+    docstrings,
+    numpydocstrings,
+    pep0484_type_comments,
 )
 from rope.base.oi.type_hinting.resolvers import composite as composite_resolvers, types
 from rope.base import utils
 
 
 class TypeHintingFactory(interfaces.ITypeHintingFactory):
-
     @utils.saveit
     def make_param_provider(self):
         providers = [
-            docstrings.ParamProvider(docstrings.DocstringParamParser(), self.make_resolver()),
-            docstrings.ParamProvider(numpydocstrings.NumPyDocstringParamParser(), self.make_resolver()),
+            docstrings.ParamProvider(
+                docstrings.DocstringParamParser(), self.make_resolver()
+            ),
+            docstrings.ParamProvider(
+                numpydocstrings.NumPyDocstringParamParser(), self.make_resolver()
+            ),
         ]
         return inheritance.ParamProvider(composite.ParamProvider(*providers))
 
     @utils.saveit
     def make_return_provider(self):
         providers = [
-            docstrings.ReturnProvider(docstrings.DocstringReturnParser(), self.make_resolver()),
+            docstrings.ReturnProvider(
+                docstrings.DocstringReturnParser(), self.make_resolver()
+            ),
         ]
         return inheritance.ReturnProvider(composite.ReturnProvider(*providers))
 
@@ -27,8 +36,12 @@ class TypeHintingFactory(interfaces.ITypeHintingFactory):
     def make_assignment_provider(self):
         providers = [
             pep0484_type_comments.AssignmentProvider(self.make_resolver()),
-            docstrings.AssignmentProvider(docstrings.DocstringParamParser(), self.make_resolver()),
-            docstrings.AssignmentProvider(numpydocstrings.NumPyDocstringParamParser(), self.make_resolver()),
+            docstrings.AssignmentProvider(
+                docstrings.DocstringParamParser(), self.make_resolver()
+            ),
+            docstrings.AssignmentProvider(
+                numpydocstrings.NumPyDocstringParamParser(), self.make_resolver()
+            ),
         ]
         return inheritance.AssignmentProvider(composite.AssignmentProvider(*providers))
 
@@ -47,15 +60,14 @@ default_type_hinting_factory = TypeHintingFactory()
 
 
 class TypeHintingFactoryAccessor(object):
-
     def __call__(self, project):
         """
         :type project: rope.base.project.Project
         :rtype: rope.base.oi.type_hinting.interfaces.ITypeHintingFactory
         """
         factory_location = project.get_prefs().get(
-            'type_hinting_factory',
-            'rope.base.oi.type_hinting.factory.default_type_hinting_factory'
+            "type_hinting_factory",
+            "rope.base.oi.type_hinting.factory.default_type_hinting_factory",
         )
         return self._get_factory(factory_location)
 
@@ -66,5 +78,6 @@ class TypeHintingFactoryAccessor(object):
         :rtype: rope.base.oi.type_hinting.interfaces.ITypeHintingFactory
         """
         return utils.resolve(factory_location)
+
 
 get_type_hinting_factory = TypeHintingFactoryAccessor()

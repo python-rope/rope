@@ -9,7 +9,6 @@ from rope.base import resources, libutils
 
 
 class MultiProjectRefactoring(object):
-
     def __init__(self, refactoring, projects, addpath=True):
         """Create a multiproject proxy for the main refactoring
 
@@ -22,24 +21,22 @@ class MultiProjectRefactoring(object):
 
     def __call__(self, project, *args, **kwds):
         """Create the refactoring"""
-        return _MultiRefactoring(self.refactoring, self.projects,
-                                 self.addpath, project, *args, **kwds)
+        return _MultiRefactoring(
+            self.refactoring, self.projects, self.addpath, project, *args, **kwds
+        )
 
 
 class _MultiRefactoring(object):
-
-    def __init__(self, refactoring, other_projects, addpath,
-                 project, *args, **kwds):
+    def __init__(self, refactoring, other_projects, addpath, project, *args, **kwds):
         self.refactoring = refactoring
         self.projects = [project] + other_projects
         for other_project in other_projects:
             for folder in self.project.get_source_folders():
-                other_project.get_prefs().add('python_path', folder.real_path)
+                other_project.get_prefs().add("python_path", folder.real_path)
         self.refactorings = []
         for other in self.projects:
             args, kwds = self._resources_for_args(other, args, kwds)
-            self.refactorings.append(
-                self.refactoring(other, *args, **kwds))
+            self.refactorings.append(self.refactoring(other, *args, **kwds))
 
     def get_all_changes(self, *args, **kwds):
         """Get a project to changes dict"""
@@ -54,13 +51,14 @@ class _MultiRefactoring(object):
 
     def _resources_for_args(self, project, args, kwds):
         newargs = [self._change_project_resource(project, arg) for arg in args]
-        newkwds = dict((name, self._change_project_resource(project, value))
-                       for name, value in kwds.items())
+        newkwds = dict(
+            (name, self._change_project_resource(project, value))
+            for name, value in kwds.items()
+        )
         return newargs, newkwds
 
     def _change_project_resource(self, project, obj):
-        if isinstance(obj, resources.Resource) and \
-           obj.project != project:
+        if isinstance(obj, resources.Resource) and obj.project != project:
             return libutils.path_to_resource(project, obj.real_path)
         return obj
 

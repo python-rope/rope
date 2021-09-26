@@ -1,5 +1,4 @@
 class ITypeHintingFactory(object):
-
     def make_param_provider(self):
         """
         :rtype: rope.base.oi.type_hinting.providers.interfaces.IParamProvider

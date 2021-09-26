@@ -4,13 +4,13 @@ from rope.base.pynames import *
 
 
 class AssignedName(pynames.AssignedName):
-
     def __init__(self, lineno=None, module=None, pyobject=None):
         self.lineno = lineno
         self.module = module
         self.assignments = []
-        self.pyobject = _Inferred(self._get_inferred,
-                                  pynames._get_concluded_data(module))
+        self.pyobject = _Inferred(
+            self._get_inferred, pynames._get_concluded_data(module)
+        )
         self.pyobject.set(pyobject)
 
     @utils.prevent_recursion(lambda: None)
@@ -36,7 +36,6 @@ class AssignedName(pynames.AssignedName):
 
 
 class ParameterName(pynames.ParameterName):
-
     def __init__(self, pyfunction, index):
         self.pyfunction = pyfunction
         self.index = index
@@ -49,10 +48,10 @@ class ParameterName(pynames.ParameterName):
 
     def get_objects(self):
         """Returns the list of objects passed as this parameter"""
-        return rope.base.oi.soi.get_passed_objects(
-            self.pyfunction, self.index)
+        return rope.base.oi.soi.get_passed_objects(self.pyfunction, self.index)
 
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
+
 
 _Inferred = pynames._Inferred

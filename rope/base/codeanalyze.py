@@ -5,7 +5,6 @@ import tokenize
 
 
 class ChangeCollector(object):
-
     def __init__(self, text):
         self.text = text
         self.changes = []
@@ -28,7 +27,7 @@ class ChangeCollector(object):
             last_changed = end
         if last_changed < len(self.text):
             pieces.append(self.text[last_changed:])
-        result = ''.join(pieces)
+        result = "".join(pieces)
         if result != self.text:
             return result
 
@@ -50,15 +49,14 @@ class SourceLinesAdapter(object):
         try:
             i = 0
             while True:
-                i = self.code.index('\n', i) + 1
+                i = self.code.index("\n", i) + 1
                 self.starts.append(i)
         except ValueError:
             pass
         self.starts.append(len(self.code) + 1)
 
     def get_line(self, lineno):
-        return self.code[self.starts[lineno - 1]:
-                         self.starts[lineno] - 1]
+        return self.code[self.starts[lineno - 1] : self.starts[lineno] - 1]
 
     def length(self):
         return len(self.starts) - 1
@@ -74,7 +72,6 @@ class SourceLinesAdapter(object):
 
 
 class ArrayLinesAdapter(object):
-
     def __init__(self, lines):
         self.lines = lines
 
@@ -86,7 +83,6 @@ class ArrayLinesAdapter(object):
 
 
 class LinesToReadline(object):
-
     def __init__(self, lines, start):
         self.lines = lines
         self.current = start
@@ -94,18 +90,17 @@ class LinesToReadline(object):
     def readline(self):
         if self.current <= self.lines.length():
             self.current += 1
-            return self.lines.get_line(self.current - 1) + '\n'
-        return ''
+            return self.lines.get_line(self.current - 1) + "\n"
+        return ""
 
     def __call__(self):
         return self.readline()
 
 
 class _CustomGenerator(object):
-
     def __init__(self, lines):
         self.lines = lines
-        self.in_string = ''
+        self.in_string = ""
         self.open_count = 0
         self.continuation = False
 
@@ -121,8 +116,10 @@ class _CustomGenerator(object):
                 while True:
                     line = self.lines.get_line(i)
                     self._analyze_line(line)
-                    if not (self.continuation or self.open_count or
-                            self.in_string) or i == size:
+                    if (
+                        not (self.continuation or self.open_count or self.in_string)
+                        or i == size
+                    ):
                         break
                     i += 1
                 result.append((start, i))
@@ -143,17 +140,19 @@ class _CustomGenerator(object):
             if token in ["'''", '"""', "'", '"']:
                 if not self.in_string:
                     self.in_string = token
-                elif self.in_string == token or (self.in_string in ['"', "'"] and token == 3*self.in_string):
-                    self.in_string = ''
+                elif self.in_string == token or (
+                    self.in_string in ['"', "'"] and token == 3 * self.in_string
+                ):
+                    self.in_string = ""
             if self.in_string:
                 continue
-            if token == '#':
+            if token == "#":
                 break
-            if token in '([{':
+            if token in "([{":
                 self.open_count += 1
-            elif token in ')]}':
+            elif token in ")]}":
                 self.open_count -= 1
-        if line and token != '#' and line.endswith('\\'):
+        if line and token != "#" and line.endswith("\\"):
             self.continuation = True
         else:
             self.continuation = False
@@ -164,7 +163,6 @@ def custom_generator(lines):
 
 
 class LogicalLineFinder(object):
-
     def __init__(self, lines):
         self.lines = lines
 
@@ -237,7 +235,7 @@ class LogicalLineFinder(object):
         current = line_number
         while current < self.lines.length():
             line = self.lines.get_line(current).strip()
-            if line and not line.startswith('#'):
+            if line and not line.startswith("#"):
                 return current
             current += 1
         return current
@@ -248,7 +246,6 @@ def tokenizer_generator(lines):
 
 
 class CachingLogicalLineFinder(object):
-
     def __init__(self, lines, generate=custom_generator):
         self.lines = lines
         self._generate = generate
@@ -302,19 +299,21 @@ def get_block_start(lines, lineno, maximum_indents=80):
     pattern = get_block_start_patterns()
     for i in range(lineno, 0, -1):
         match = pattern.search(lines.get_line(i))
-        if match is not None and \
-           count_line_indents(lines.get_line(i)) <= maximum_indents:
+        if (
+            match is not None
+            and count_line_indents(lines.get_line(i)) <= maximum_indents
+        ):
             striped = match.string.lstrip()
             # Maybe we're in a list comprehension or generator expression
-            if i > 1 and striped.startswith('if') or striped.startswith('for'):
+            if i > 1 and striped.startswith("if") or striped.startswith("for"):
                 bracs = 0
                 for j in range(i, min(i + 5, lines.length() + 1)):
                     for c in lines.get_line(j):
-                        if c == '#':
+                        if c == "#":
                             break
-                        if c in '[(':
+                        if c in "[(":
                             bracs += 1
-                        if c in ')]':
+                        if c in ")]":
                             bracs -= 1
                             if bracs < 0:
                                 break
@@ -332,8 +331,10 @@ _block_start_pattern = None
 def get_block_start_patterns():
     global _block_start_pattern
     if not _block_start_pattern:
-        pattern = '^\\s*(((def|class|if|elif|except|for|while|with)\\s)|'\
-                  '((try|else|finally|except)\\s*:))'
+        pattern = (
+            "^\\s*(((def|class|if|elif|except|for|while|with)\\s)|"
+            "((try|else|finally|except)\\s*:))"
+        )
         _block_start_pattern = re.compile(pattern, re.M)
     return _block_start_pattern
 
@@ -341,9 +342,9 @@ def get_block_start_patterns():
 def count_line_indents(line):
     indents = 0
     for char in line:
-        if char == ' ':
+        if char == " ":
             indents += 1
-        elif char == '\t':
+        elif char == "\t":
             indents += 8
         else:
             return indents
@@ -353,19 +354,20 @@ def count_line_indents(line):
 def get_string_pattern_with_prefix(prefix):
     longstr = r'%s"""(\\.|"(?!"")|\\\n|[^"\\])*"""' % prefix
     shortstr = r'%s"(\\.|\\\n|[^"\\\n])*"' % prefix
-    return '|'.join([longstr, longstr.replace('"', "'"),
-                     shortstr, shortstr.replace('"', "'")])
+    return "|".join(
+        [longstr, longstr.replace('"', "'"), shortstr, shortstr.replace('"', "'")]
+    )
 
 
 def get_string_pattern():
-    prefix = r'(?<![fF])(\b[uUbB]?[rR]?)?'
+    prefix = r"(?<![fF])(\b[uUbB]?[rR]?)?"
     return get_string_pattern_with_prefix(prefix)
 
 
 def get_formatted_string_pattern():
-    prefix = r'(\b[rR]?[fF]|[fF][rR]?)'
+    prefix = r"(\b[rR]?[fF]|[fF][rR]?)"
     return get_string_pattern_with_prefix(prefix)
 
 
 def get_comment_pattern():
-    return r'#[^\n]*'
+    return r"#[^\n]*"

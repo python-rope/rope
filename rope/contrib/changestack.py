@@ -22,8 +22,7 @@ from rope.base import change
 
 
 class ChangeStack(object):
-
-    def __init__(self, project, description='merged changes'):
+    def __init__(self, project, description="merged changes"):
         self.project = project
         self.description = description
         self.stack = []

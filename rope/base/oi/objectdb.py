@@ -2,7 +2,6 @@ from __future__ import print_function
 
 
 class ObjectDB(object):
-
     def __init__(self, db, validation):
         self.db = db
         self.validation = validation
@@ -93,12 +92,13 @@ class ObjectDB(object):
         scope_count = 0
         for file_dict in self.files.values():
             scope_count += len(file_dict)
-        return 'ObjectDB holds %s file and %s scope infos' % \
-               (len(self.files), scope_count)
+        return "ObjectDB holds %s file and %s scope infos" % (
+            len(self.files),
+            scope_count,
+        )
 
 
 class _NullScopeInfo(object):
-
     def __init__(self, error_on_write=True):
         self.error_on_write = error_on_write
 
@@ -121,13 +121,11 @@ class _NullScopeInfo(object):
 
 
 class FileInfo(dict):
-
     def create_scope(self, key):
         pass
 
 
 class FileDict(dict):
-
     def create(self, key):
         pass
 
@@ -136,7 +134,6 @@ class FileDict(dict):
 
 
 class ScopeInfo(object):
-
     def get_per_name(self, name):
         pass
 
@@ -154,7 +151,6 @@ class ScopeInfo(object):
 
 
 class CallInfo(object):
-
     def __init__(self, args, returned):
         self.args = args
         self.returned = returned
@@ -167,7 +163,6 @@ class CallInfo(object):
 
 
 class FileListObserver(object):
-
     def added(self, path):
         pass
 

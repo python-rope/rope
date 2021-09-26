@@ -3,7 +3,6 @@ from rope.refactor import patchedast, occurrences
 
 
 class Wildcard(object):
-
     def get_name(self):
         """Return the name of this wildcard"""
 
@@ -12,7 +11,6 @@ class Wildcard(object):
 
 
 class Suspect(object):
-
     def __init__(self, pymodule, node, name):
         self.name = name
         self.pymodule = pymodule
@@ -38,9 +36,9 @@ class DefaultWildcard(object):
         self.project = project
 
     def get_name(self):
-        return 'default'
+        return "default"
 
-    def matches(self, suspect, arg=''):
+    def matches(self, suspect, arg=""):
         args = parse_arg(arg)
 
         if not self._check_exact(args, suspect):
@@ -52,20 +50,19 @@ class DefaultWildcard(object):
     def _check_object(self, args, suspect):
         kind = None
         expected = None
-        unsure = args.get('unsure', False)
-        for check in ['name', 'object', 'type', 'instance']:
+        unsure = args.get("unsure", False)
+        for check in ["name", "object", "type", "instance"]:
             if check in args:
                 kind = check
                 expected = args[check]
             if expected is not None:
-                checker = _CheckObject(self.project, expected,
-                                       kind, unsure=unsure)
+                checker = _CheckObject(self.project, expected, kind, unsure=unsure)
                 return checker(suspect.pymodule, suspect.node)
         return True
 
     def _check_exact(self, args, suspect):
         node = suspect.node
-        if args.get('exact'):
+        if args.get("exact"):
             if not isinstance(node, ast.Name) or not node.id == suspect.name:
                 return False
         else:
@@ -78,10 +75,10 @@ def parse_arg(arg):
     if isinstance(arg, dict):
         return arg
     result = {}
-    tokens = arg.split(',')
+    tokens = arg.split(",")
     for token in tokens:
-        if '=' in token:
-            parts = token.split('=', 1)
+        if "=" in token:
+            parts = token.split("=", 1)
             result[parts[0].strip()] = parts[1].strip()
         else:
             result[token.strip()] = True
@@ -89,8 +86,7 @@ def parse_arg(arg):
 
 
 class _CheckObject(object):
-
-    def __init__(self, project, expected, kind='object', unsure=False):
+    def __init__(self, project, expected, kind="object", unsure=False):
         self.project = project
         self.kind = kind
         self.unsure = unsure
@@ -100,17 +96,17 @@ class _CheckObject(object):
         pyname = self._evaluate_node(pymodule, node)
         if pyname is None or self.expected is None:
             return self.unsure
-        if self._unsure_pyname(pyname, unbound=self.kind == 'name'):
+        if self._unsure_pyname(pyname, unbound=self.kind == "name"):
             return True
-        if self.kind == 'name':
+        if self.kind == "name":
             return self._same_pyname(self.expected, pyname)
         else:
             pyobject = pyname.get_object()
-            if self.kind == 'object':
+            if self.kind == "object":
                 objects = [pyobject]
-            if self.kind == 'type':
+            if self.kind == "type":
                 objects = [pyobject.get_type()]
-            if self.kind == 'instance':
+            if self.kind == "instance":
                 objects = [pyobject]
                 objects.extend(self._get_super_classes(pyobject))
                 objects.extend(self._get_super_classes(pyobject.get_type()))
@@ -137,17 +133,16 @@ class _CheckObject(object):
         return self.unsure and occurrences.unsure_pyname(pyname, unbound)
 
     def _split_name(self, name):
-        parts = name.split('.')
+        parts = name.split(".")
         expression, kind = parts[0], parts[-1]
         if len(parts) == 1:
-            kind = 'name'
+            kind = "name"
         return expression, kind
 
     def _evaluate_node(self, pymodule, node):
         scope = pymodule.get_scope().get_inner_scope_for_line(node.lineno)
         expression = node
-        if isinstance(expression, ast.Name) and \
-           isinstance(expression.ctx, ast.Store):
+        if isinstance(expression, ast.Name) and isinstance(expression.ctx, ast.Store):
             start, end = patchedast.node_region(expression)
             text = pymodule.source_code[start:end]
             return evaluate.eval_str(scope, text)
@@ -155,9 +150,10 @@ class _CheckObject(object):
             return evaluate.eval_node(scope, expression)
 
     def _evaluate(self, code):
-        attributes = code.split('.')
+        attributes = code.split(".")
         pyname = None
-        if attributes[0] in ('__builtin__', '__builtins__'):
+        if attributes[0] in ("__builtin__", "__builtins__"):
+
             class _BuiltinsStub(object):
                 def get_attribute(self, name):
                     return builtins.builtins[name]
@@ -167,6 +163,7 @@ class _CheckObject(object):
 
                 def __contains__(self, name):
                     return name in builtins.builtins
+
             pyobject = _BuiltinsStub()
         else:
             pyobject = self.project.get_module(attributes[0])

@@ -7,7 +7,6 @@ from rope.base import simplify
 
 
 class SimplifyTest(unittest.TestCase):
-
     def setUp(self):
         super(SimplifyTest, self).setUp()
 
@@ -15,7 +14,7 @@ class SimplifyTest(unittest.TestCase):
         super(SimplifyTest, self).tearDown()
 
     def test_trivial_case(self):
-        self.assertEqual('', simplify.real_code(''))
+        self.assertEqual("", simplify.real_code(""))
 
     def test_empty_strs(self):
         code = 's = ""\n'
@@ -26,7 +25,7 @@ class SimplifyTest(unittest.TestCase):
         self.assertEqual('s = "   "\n', simplify.real_code(code))
 
     def test_changing_to_double_quotes(self):
-        code = 's = \'\'\n'
+        code = "s = ''\n"
         self.assertEqual('s = ""\n', simplify.real_code(code))
 
     def test_changing_to_double_quotes2(self):
@@ -34,30 +33,29 @@ class SimplifyTest(unittest.TestCase):
         self.assertEqual('s = "     "\n', simplify.real_code(code))
 
     def test_removing_comments(self):
-        code = '# c\n'
-        self.assertEqual('   \n', simplify.real_code(code))
+        code = "# c\n"
+        self.assertEqual("   \n", simplify.real_code(code))
 
     def test_removing_comments_that_contain_strings(self):
         code = '# "c"\n'
-        self.assertEqual('     \n', simplify.real_code(code))
+        self.assertEqual("     \n", simplify.real_code(code))
 
     def test_removing_strings_containing_comments(self):
         code = '"#c"\n'
         self.assertEqual('"  "\n', simplify.real_code(code))
 
     def test_joining_implicit_continuations(self):
-        code = '(\n)\n'
-        self.assertEqual('( )\n', simplify.real_code(code))
+        code = "(\n)\n"
+        self.assertEqual("( )\n", simplify.real_code(code))
 
     def test_joining_explicit_continuations(self):
-        code = '1 + \\\n 2\n'
-        self.assertEqual('1 +    2\n', simplify.real_code(code))
+        code = "1 + \\\n 2\n"
+        self.assertEqual("1 +    2\n", simplify.real_code(code))
 
     def test_replacing_tabs(self):
-        code = '1\t+\t2\n'
-        self.assertEqual('1 + 2\n', simplify.real_code(code))
+        code = "1\t+\t2\n"
+        self.assertEqual("1 + 2\n", simplify.real_code(code))
 
     def test_replacing_semicolons(self):
-        code = 'a = 1;b = 2\n'
-        self.assertEqual('a = 1\nb = 2\n', simplify.real_code(code))
-
+        code = "a = 1;b = 2\n"
+        self.assertEqual("a = 1\nb = 2\n", simplify.real_code(code))

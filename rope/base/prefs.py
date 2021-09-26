@@ -1,5 +1,4 @@
 class Prefs(object):
-
     def __init__(self):
         self.prefs = {}
         self.callbacks = {}

@@ -2,7 +2,6 @@ from rope.base.oi.type_hinting.resolvers import interfaces
 
 
 class Resolver(interfaces.IResolver):
-
     def __init__(self, *delegates):
         """
         :type delegates: list[rope.base.oi.type_hinting.resolvers.interfaces.IResolver]
