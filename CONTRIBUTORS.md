@@ -1,6 +1,4 @@
-===================
- Rope Contributors
-===================
+# Rope Contributors
 
 See git logs and the mailing list for details.
 
@@ -17,6 +15,6 @@ See git logs and the mailing list for details.
 * Matěj Cepl <mcepl@cepl.eu>
 * Nick Smith <nicks@fastmail.fm>
 
+
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
