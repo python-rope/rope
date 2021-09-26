@@ -2223,7 +2223,3 @@ class ExtractMethodTest(unittest.TestCase):
                    "with open(\"test\") as file1, open(\"test\") as file2:\n" \
                    "    extracted(file1, file2)\n"
         self.assertEquals(expected, refactored)
-        
-
-if __name__ == '__main__':
-    unittest.main()
