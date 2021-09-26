@@ -1,4 +1,4 @@
-# Rope Contributors
+## Rope Contributors ✨
 
 See git logs and the mailing list for details.
 
@@ -16,6 +16,7 @@ See git logs and the mailing list for details.
 * Nick Smith <nicks@fastmail.fm>
 
 
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
@@ -29,3 +30,5 @@ See git logs and the mailing list for details.
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
