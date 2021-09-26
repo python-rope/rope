@@ -10,7 +10,8 @@
 Overview
 ========
 
-`Rope`_ is the world's most advanced open source Python refactoring library.
+`Rope`_ is the world's most advanced open source Python refactoring library
+(yes, I totally stole that tagline from Postgres).
 
 .. _`rope`: https://github.com/python-rope/rope
 
