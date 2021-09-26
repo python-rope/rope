@@ -21,7 +21,7 @@ patches if you encounter gaps.
 Getting Started
 ===============
 
-* Choosing rope integration: `see the Wiki <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
+* `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
 * List of features: `<docs/rope.rst>`_
 * Overview of some of rope's features: `<docs/overview.rst>`_
 * Using as a library: `<docs/library.rst>`_
