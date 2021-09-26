@@ -46,7 +46,7 @@ def real_code(source):
 
 @utils.cached(7)
 def ignored_regions(source):
-    """Return ignored regions like strings and comments in `source` """
+    """Return ignored regions like strings and comments in `source`"""
     return [(match.start(), match.end()) for match in _str.finditer(source)]
 
 
