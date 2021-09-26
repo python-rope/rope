@@ -81,21 +81,13 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 Also special thank you to rope's early and pre-Github users and contributors,
-while we hadn't been able to track them in all-contributors format, it doesn't
-make their contributions less important:
+while we hadn't been able to track all of them in all-contributors format, it 
+doesn't make their contributions less important:
 
 * Alexander Solovyov <piranha@piranha.org.ua>
 * Sebastjan Trepca <trepca@gmail.com>
-* MATSUI Tetsushi <mft@users.sf.net>
-* Kevin Turner <keturn@keturn.net>
-* Darren Syzling <dsyzling@gmail.com>
-* Orestis Markou <orestis@gmail.com>
-* Ronny Pfannschmidt <ronny.pfannschmidt@gmail.com>
 * Anton Gritsay <general@angri.ru>
 * Ivan Zakrevsky <ivzak@yandex.ru>
-* Sergey Glazyrin <sergey.glazyrin.dev@gmail.com>
-* Matěj Cepl <mcepl@cepl.eu>
-* Nick Smith <nicks@fastmail.fm>
 
 
 If you notice any errors or omissions, please let us know so we can fix them.
