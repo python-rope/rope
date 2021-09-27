@@ -342,9 +342,6 @@ class _ExpressionVisitor(object):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
-    def _assigned(self, name, assignment=None):
-        self.scope_visitor._assigned(name, assignment)
-
     def _GeneratorExp(self, node):
         list_comp = PyComprehension(
             self.scope_visitor.pycore, node, self.scope_visitor.owner_object
@@ -575,19 +572,15 @@ class _ScopeVisitor(_ExpressionVisitor):
 
 class _ComprehensionVisitor(_ScopeVisitor):
     def _comprehension(self, node):
-        if isinstance(node.target, ast.Tuple):
-            self.names.update(
-                {
-                    target.id: DefinedName(self._get_pyobject(node))
-                    for target in node.target.elts
-                }
-            )
-        else:
-            self.names[node.target.id] = DefinedName(self._get_pyobject(node))
+        ast.walk(node.target, self)
         ast.walk(node.iter, self)
 
+    def _Name(self, node):
+        if isinstance(node.ctx, ast.Store):
+            self.names[node.id] = DefinedName(self._get_pyobject(node))
+
     def _get_pyobject(self, node):
-        return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
+        return pyobjects.PyDefinedObject(None, node, self.owner_object)
 
 
 class _GlobalVisitor(_ScopeVisitor):
