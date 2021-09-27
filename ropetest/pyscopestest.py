@@ -54,6 +54,10 @@ class PyCoreScopesTest(unittest.TestCase):
             list(sorted(scope.get_defined_names())),
             ["a_var"],
         )
+        self.assertEqual(
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
+            ["b_var", "c_var"],
+        )
 
     def test_list_comprehension_scope(self):
         scope = libutils.get_string_scope(
@@ -338,18 +342,6 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertTrue("A" in scope.get_names())
         self.assertTrue("open" not in scope.get_defined_names())
         self.assertTrue("A" in scope.get_defined_names())
-
-    def test_get_inner_scope_for_list_comprhension(self):
-        scope = libutils.get_string_scope(self.project, "[i for i in range(10)]\n")
-        self.assertEqual(len(scope.get_scopes()), 1)
-        self.assertNotIn("i", scope)
-        self.assertIn("i", scope.get_scopes()[0])
-
-    def test_get_inner_scope_for_list_comprhension_in_assingment(self):
-        scope = libutils.get_string_scope(self.project, "a = [i for i in range(10)]\n")
-        self.assertEqual(len(scope.get_scopes()), 1)
-        self.assertNotIn("i", scope)
-        self.assertIn("i", scope.get_scopes()[0])
 
     def test_get_inner_scope_for_list_comprhension_with_many_targets(self):
         scope = libutils.get_string_scope(
