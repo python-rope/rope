@@ -22,12 +22,15 @@ def real_code(source):
     only in offsets.
     """
     collector = codeanalyze.ChangeCollector(source)
-    for start, end in ignored_regions(source):
+    for start, end, matchgroups in ignored_regions(source):
         if source[start] == "#":
             replacement = " " * (end - start)
+        elif "f" in matchgroups.get("prefix", "").lower():
+            replacement = None
         else:
             replacement = '"%s"' % (" " * (end - start - 2))
-        collector.add_change(start, end, replacement)
+        if replacement is not None:
+            collector.add_change(start, end, replacement)
     source = collector.get_changed() or source
     collector = codeanalyze.ChangeCollector(source)
     parens = 0
@@ -47,10 +50,18 @@ def real_code(source):
 @utils.cached(7)
 def ignored_regions(source):
     """Return ignored regions like strings and comments in `source`"""
-    return [(match.start(), match.end()) for match in _str.finditer(source)]
+    return [
+        (match.start(), match.end(), match.groupdict())
+        for match in _str.finditer(source)
+    ]
 
 
 _str = re.compile(
-    "%s|%s" % (codeanalyze.get_comment_pattern(), codeanalyze.get_string_pattern())
+    "|".join(
+        [
+            codeanalyze.get_comment_pattern(),
+            codeanalyze.get_any_string_pattern(),
+        ]
+    )
 )
 _parens = re.compile(r"[\({\[\]}\)\n]")

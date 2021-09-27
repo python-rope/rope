@@ -72,6 +72,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://sourcery.ai/"><img src="https://avatars.githubusercontent.com/u/1440886?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Brendan Maginnis</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=brendanator" title="Code">💻</a></td>
     <td align="center"><a href="https://solovyov.net/"><img src="https://avatars.githubusercontent.com/u/6553?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alexander Solovyov</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=piranha" title="Code">💻</a></td>
     <td align="center"><a href="https://mmfftt.blogspot.com/"><img src="https://avatars.githubusercontent.com/u/1430953?v=4?s=100" width="100px;" alt=""/><br /><sub><b>MATSUI Tetsushi</b></sub></a><br /><a href="https://github.com/python-rope/rope/issues?q=author%3Amft" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="https://github.com/mlao-pdx"><img src="https://avatars.githubusercontent.com/u/21014310?v=4?s=100" width="100px;" alt=""/><br /><sub><b>MLAO</b></sub></a><br /><a href="https://github.com/python-rope/rope/issues?q=author%3Amlao-pdx" title="Bug reports">🐛</a></td>
   </tr>
 </table>
 

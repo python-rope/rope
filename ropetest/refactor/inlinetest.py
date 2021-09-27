@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -668,4 +670,44 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(
             code, code.rindex("var"), remove=False, only_current=True, docs=True
         )
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.6")
+    def test_inlining_into_format_string(self):
+        code = dedent(
+            """\
+            var = 123
+            print(f"{var}")
+        """
+        )
+        expected = dedent(
+            """\
+            print(f"{123}")
+        """
+        )
+
+        refactored = self._inline(code, code.rindex("var"))
+
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.6")
+    def test_inlining_into_format_string_containing_quotes(self):
+        code = dedent(
+            '''\
+            var = 123
+            print(f" '{var}' ")
+            print(f""" "{var}" """)
+            print(f' "{var}" ')
+        '''
+        )
+        expected = dedent(
+            '''\
+            print(f" '{123}' ")
+            print(f""" "{123}" """)
+            print(f' "{123}" ')
+        '''
+        )
+
+        refactored = self._inline(code, code.rindex("var"))
+
         self.assertEqual(expected, refactored)
