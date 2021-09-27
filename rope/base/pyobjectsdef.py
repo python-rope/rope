@@ -346,20 +346,10 @@ class _ExpressionVisitor(object):
         self.scope_visitor._assigned(name, assignment)
 
     def _GeneratorExp(self, node):
-        if hasattr(self, "scope_visitor"):
-            list_comp = PyComprehension(
-                self.scope_visitor.pycore, node, self.scope_visitor.owner_object
-            )
-            self.scope_visitor.defineds.append(list_comp)
-        else:
-            for child in ["elt", "key", "value"]:
-                if hasattr(node, child):
-                    ast.walk(getattr(node, child), self)
-            for comp in node.generators:
-                ast.walk(comp.target, _AssignVisitor(self))
-                ast.walk(comp, self)
-                for if_ in comp.ifs:
-                    ast.walk(if_, self)
+        list_comp = PyComprehension(
+            self.scope_visitor.pycore, node, self.scope_visitor.owner_object
+        )
+        self.scope_visitor.defineds.append(list_comp)
 
     def _SetComp(self, node):
         self._GeneratorExp(node)
@@ -413,33 +403,7 @@ class _AssignVisitor(object):
         pass
 
 
-class _ComprehensionVisitor(_ExpressionVisitor):
-    def __init__(self, pycore, owner_object):
-        self.owner_object = owner_object
-        self.pycore = pycore
-        self.names = {}
-        self.defineds = []
-
-    def _comprehension(self, node):
-        if isinstance(node.target, ast.Tuple):
-            self.names.update(
-                {
-                    target.id: DefinedName(self._get_pyobject(node))
-                    for target in node.target.elts
-                }
-            )
-        else:
-            self.names[node.target.id] = DefinedName(self._get_pyobject(node))
-
-    def _get_pyobject(self, node):
-        return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
-
-    def _GeneratorExp(self, node):
-        list_comp = PyComprehension(self.pycore, node, self.owner_object)
-        self.defineds.append(list_comp)
-
-
-class _ScopeVisitor(_ExpressionVisitor):
+class _ScopeVisitor(object):
     def __init__(self, pycore, owner_object):
         self.pycore = pycore
         self.owner_object = owner_object
@@ -605,6 +569,50 @@ class _ScopeVisitor(_ExpressionVisitor):
                 except exceptions.AttributeNotFoundError:
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname
+
+    def _GeneratorExp(self, node):
+        list_comp = PyComprehension(self.pycore, node, self.owner_object)
+        self.defineds.append(list_comp)
+
+    def _SetComp(self, node):
+        self._GeneratorExp(node)
+
+    def _ListComp(self, node):
+        self._GeneratorExp(node)
+
+    def _DictComp(self, node):
+        self._GeneratorExp(node)
+
+    def _NamedExpr(self, node):
+        ast.walk(node.target, _AssignVisitor(self))
+        ast.walk(node.value, self)
+
+
+class _ComprehensionVisitor(_ScopeVisitor):
+    def __init__(self, pycore, owner_object):
+        self.owner_object = owner_object
+        self.pycore = pycore
+        self.names = {}
+        self.defineds = []
+
+    def _comprehension(self, node):
+        if isinstance(node.target, ast.Tuple):
+            self.names.update(
+                {
+                    target.id: DefinedName(self._get_pyobject(node))
+                    for target in node.target.elts
+                }
+            )
+        else:
+            self.names[node.target.id] = DefinedName(self._get_pyobject(node))
+        ast.walk(node.iter, self)
+
+    def _get_pyobject(self, node):
+        return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
+
+    def _GeneratorExp(self, node):
+        list_comp = PyComprehension(self.pycore, node, self.owner_object)
+        self.defineds.append(list_comp)
 
 
 class _GlobalVisitor(_ScopeVisitor):
