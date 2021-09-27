@@ -382,7 +382,7 @@ def get_formatted_string_pattern():
 
 
 def get_any_string_pattern():
-    prefix = r'[bBfFrRuU]{,4}'
+    prefix = r"[bBfFrRuU]{,4}"
     return get_string_pattern_with_prefix(
         prefix,
         prefix_group_name="prefix",

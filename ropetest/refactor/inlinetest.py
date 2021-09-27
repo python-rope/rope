@@ -673,30 +673,38 @@ class InlineTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_inlining_into_format_string(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             var = 123
             print(f"{var}")
-        """)
-        expected = dedent("""\
+        """
+        )
+        expected = dedent(
+            """\
             print(f"{123}")
-        """)
+        """
+        )
 
         refactored = self._inline(code, code.rindex("var"))
 
         self.assertEqual(expected, refactored)
 
     def test_inlining_into_format_string_containing_quotes(self):
-        code = dedent('''\
+        code = dedent(
+            '''\
             var = 123
             print(f" '{var}' ")
             print(f""" "{var}" """)
             print(f' "{var}" ')
-        ''')
-        expected = dedent('''\
+        '''
+        )
+        expected = dedent(
+            '''\
             print(f" '{123}' ")
             print(f""" "{123}" """)
             print(f' "{123}" ')
-        ''')
+        '''
+        )
 
         refactored = self._inline(code, code.rindex("var"))
 

@@ -7,7 +7,6 @@ from rope.base import simplify
 
 
 class SimplifyTest(unittest.TestCase):
-
     def test_trivial_case(self):
         self.assertEqual("", simplify.real_code(""))
 
@@ -60,9 +59,9 @@ class SimplifyTest(unittest.TestCase):
         self.assertEqual('s = f"..{hello}.."\n', simplify.real_code(code))
 
     def test_simplifying_f_string_containing_quotes(self):
-        code = '''s = f"..'{hello}'.."\n'''
-        self.assertEqual('''s = f"..'{hello}'.."\n''', simplify.real_code(code))
+        code = """s = f"..'{hello}'.."\n"""
+        self.assertEqual("""s = f"..'{hello}'.."\n""", simplify.real_code(code))
 
     def test_simplifying_uppercase_f_string_containing_quotes(self):
-        code = '''s = Fr"..'{hello}'.."\n'''
-        self.assertEqual('''s = Fr"..'{hello}'.."\n''', simplify.real_code(code))
+        code = """s = Fr"..'{hello}'.."\n"""
+        self.assertEqual("""s = Fr"..'{hello}'.."\n""", simplify.real_code(code))
