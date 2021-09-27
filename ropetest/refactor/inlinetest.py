@@ -672,6 +672,7 @@ class InlineTest(unittest.TestCase):
         )
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher("3.6")
     def test_inlining_into_format_string(self):
         code = dedent(
             """\
@@ -689,6 +690,7 @@ class InlineTest(unittest.TestCase):
 
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher("3.6")
     def test_inlining_into_format_string_containing_quotes(self):
         code = dedent(
             '''\
