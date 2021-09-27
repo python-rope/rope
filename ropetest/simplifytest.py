@@ -54,3 +54,15 @@ class SimplifyTest(unittest.TestCase):
     def test_replacing_semicolons(self):
         code = "a = 1;b = 2\n"
         self.assertEqual("a = 1\nb = 2\n", simplify.real_code(code))
+
+    def test_simplifying_f_string(self):
+        code = 's = f"..{hello}.."\n'
+        self.assertEqual('s = f"..{hello}.."\n', simplify.real_code(code))
+
+    def test_simplifying_f_string_containing_quotes(self):
+        code = '''s = f"..'{hello}'.."\n'''
+        self.assertEqual('''s = f"..'{hello}'.."\n''', simplify.real_code(code))
+
+    def test_simplifying_uppercase_f_string_containing_quotes(self):
+        code = '''s = Fr"..'{hello}'.."\n'''
+        self.assertEqual('''s = Fr"..'{hello}'.."\n''', simplify.real_code(code))
