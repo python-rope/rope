@@ -2,15 +2,16 @@
 .. _GitHub python-rope / rope: https://github.com/python-rope/rope
 
 
-========================================
- rope, a python refactoring library ...
-========================================
+=========================================================================
+ rope -- the world's most advanced open source Python refactoring library
+=========================================================================
 
 
 Overview
 ========
 
-`Rope`_ is a python refactoring library.
+`Rope`_ is the world's most advanced open source Python refactoring library
+(yes, I totally stole that tagline from Postgres).
 
 .. _`rope`: https://github.com/python-rope/rope
 
@@ -21,7 +22,7 @@ patches if you encounter gaps.
 Getting Started
 ===============
 
-* Choosing rope integration: `see the Wiki <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
+* `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
 * List of features: `<docs/rope.rst>`_
 * Overview of some of rope's features: `<docs/overview.rst>`_
 * Using as a library: `<docs/library.rst>`_
@@ -32,6 +33,15 @@ To change your project preferences edit
 the root folder of your project (this file is created the first time
 you open a project).
 
+
+Why use Rope?
+=============
+
+- Rope aims to provide powerful and safe refactoring
+- Rope is light on dependency, depending only on Python itself, unlike pyright or pylance, there is no additional dependency to another language's runtime
+- Unlike pylance, Rope is open source
+- Unlike pyright and pylance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in an environment that you are already familiar with
+- Unlike jedi, Rope is focused on refactoring, Rope supports many advanced refactoring operations that Jedi does not support
 
 Bug Reports
 ===========
@@ -60,7 +70,7 @@ Many thanks the following people:
 .. _`@soupytwist`: https://github.com/soupytwist
 .. _`@lieryan`: https://github.com/lieryan
 .. _`@mcepl`: https://github.com/mcepl
-.. _`all of our current and former contributors`: https://github.com/python-rope/rope/graphs/contributors
+.. _`all of our current and former contributors`: https://github.com/python-rope/rope/blob/master/CONTRIBUTORS.md
 
 License
 =======

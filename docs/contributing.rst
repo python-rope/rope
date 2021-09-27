@@ -93,18 +93,26 @@ Rope uses GitHub_. The repository exists at
 `https://github.com/python-rope/rope`_.
 
 
-Submitting patches
-==================
+Submitting pull requests
+========================
 
-Patches are welcome.
+Pull requests are welcome.
+
+Follow the instructions on GitHub_ on how to setup Git and fork the
+`python-rope/rope`_ repository. Once your changes are ready, send a
+`pull request`_ for review.
+
 
 Programming Style
 -----------------
 
+* Follow `black codestyle`_
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests when appropriate.
 * Rope test suite should pass after patching
+
+.. _`black codestyle`: https://github.com/psf/black
 
 Testing
 -------
@@ -121,14 +129,6 @@ submission.
 All required packages for development could be installed with::
 
     pip install -e .[dev]
-
-
-Sending Patches
----------------
-
-Follow the instructions on GitHub_ on how to setup Git and fork the
-`python-rope/rope`_ repository. Once your changes are ready, send a
-`pull request`_ for review.
 
 .. _GitHub: http://github.com/
 .. _`python-rope/rope`: https://github.com/python-rope/rope

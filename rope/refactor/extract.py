@@ -843,6 +843,31 @@ class _FunctionInformationCollector(object):
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
+    def _ListComp(self, node):
+        self._comp_exp(node)
+
+    def _GeneratorExp(self, node):
+        self._comp_exp(node)
+
+    def _SetComp(self, node):
+        self._comp_exp(node)
+
+    def _DictComp(self, node):
+        self._comp_exp(node)
+
+    def _comp_exp(self, node):
+        read = OrderedSet(self.read)
+        written = OrderedSet(self.written)
+        maybe_written = OrderedSet(self.maybe_written)
+
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, self)
+
+        comp_names = set([name.target.id for name in node.generators])
+        self.read = self.read - comp_names | read
+        self.written = self.written - comp_names | written
+        self.maybe_written = self.maybe_written - comp_names | maybe_written
+
     def _If(self, node):
         self._handle_conditional_node(node)
 
