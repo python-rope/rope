@@ -403,8 +403,10 @@ class _AssignVisitor(object):
         pass
 
 
-class _ScopeVisitor(object):
+class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
+        _ExpressionVisitor.__init__(self, scope_visitor=self)
+        self.scope_visitor = self
         self.pycore = pycore
         self.owner_object = owner_object
         self.names = {}
@@ -570,31 +572,8 @@ class _ScopeVisitor(object):
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname
 
-    def _GeneratorExp(self, node):
-        list_comp = PyComprehension(self.pycore, node, self.owner_object)
-        self.defineds.append(list_comp)
-
-    def _SetComp(self, node):
-        self._GeneratorExp(node)
-
-    def _ListComp(self, node):
-        self._GeneratorExp(node)
-
-    def _DictComp(self, node):
-        self._GeneratorExp(node)
-
-    def _NamedExpr(self, node):
-        ast.walk(node.target, _AssignVisitor(self))
-        ast.walk(node.value, self)
-
 
 class _ComprehensionVisitor(_ScopeVisitor):
-    def __init__(self, pycore, owner_object):
-        self.owner_object = owner_object
-        self.pycore = pycore
-        self.names = {}
-        self.defineds = []
-
     def _comprehension(self, node):
         if isinstance(node.target, ast.Tuple):
             self.names.update(
@@ -609,10 +588,6 @@ class _ComprehensionVisitor(_ScopeVisitor):
 
     def _get_pyobject(self, node):
         return pyobjects.PyDefinedObject(None, node.target, self.owner_object)
-
-    def _GeneratorExp(self, node):
-        list_comp = PyComprehension(self.pycore, node, self.owner_object)
-        self.defineds.append(list_comp)
 
 
 class _GlobalVisitor(_ScopeVisitor):
