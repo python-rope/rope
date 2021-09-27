@@ -136,7 +136,7 @@ def guess_def_lineno(module, node):
         body_col_offset = node.body[0].col_offset
         return indent_col_offset < body_col_offset
 
-    if sys.version_info >= (3, 8):
+    if sys.version_info >= (3, 8) or not hasattr(node, "body"):
         return node.lineno
 
     possible_def_line = (
