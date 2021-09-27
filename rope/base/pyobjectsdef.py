@@ -403,7 +403,6 @@ class _AssignVisitor(object):
 class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
         _ExpressionVisitor.__init__(self, scope_visitor=self)
-        self.scope_visitor = self
         self.pycore = pycore
         self.owner_object = owner_object
         self.names = {}
