@@ -385,13 +385,3 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertEqual(len(scope.get_scopes()[0].get_scopes()), 1)
         self.assertIn("j", scope.get_scopes()[0].get_scopes()[0])
         self.assertIn("i", scope.get_scopes()[0].get_scopes()[0])
-
-
-def suite():
-    result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(PyCoreScopesTest))
-    return result
-
-
-if __name__ == "__main__":
-    unittest.main()
