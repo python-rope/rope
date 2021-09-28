@@ -247,6 +247,10 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     """Only a placeholder"""
 
 
+class PyComprehension(PyDefinedObject, PyObject):
+    """Only a placeholder"""
+
+
 class PyClass(PyDefinedObject, AbstractClass):
     """Only a placeholder"""
 

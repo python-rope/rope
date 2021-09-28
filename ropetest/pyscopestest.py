@@ -52,7 +52,11 @@ class PyCoreScopesTest(unittest.TestCase):
         )
         self.assertEqual(
             list(sorted(scope.get_defined_names())),
-            ["a_var", "b_var", "c_var"],
+            ["a_var"],
+        )
+        self.assertEqual(
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
+            ["b_var", "c_var"],
         )
 
     def test_list_comprehension_scope(self):
@@ -60,7 +64,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project, "[b_var + d_var for b_var, c_var in e_var]\n"
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
             ["b_var", "c_var"],
         )
 
@@ -69,7 +73,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project, "{b_var + d_var for b_var, c_var in e_var}\n"
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
             ["b_var", "c_var"],
         )
 
@@ -78,7 +82,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project, "(b_var + d_var for b_var, c_var in e_var)\n"
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
             ["b_var", "c_var"],
         )
 
@@ -87,7 +91,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project, "{b_var: d_var for b_var, c_var in e_var}\n"
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
             ["b_var", "c_var"],
         )
 
@@ -102,8 +106,12 @@ class PyCoreScopesTest(unittest.TestCase):
             ]""",
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
-            ["a_var", "b_var", "f_var", "h_var", "i_var", "j_var"],
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
+            ["a_var", "b_var", "f_var"],
+        )
+        self.assertEqual(
+            list(sorted(scope.get_scopes()[0].get_scopes()[0].get_defined_names())),
+            ["i_var", "j_var"],
         )
 
     def test_nested_comprehension(self):
@@ -116,8 +124,12 @@ class PyCoreScopesTest(unittest.TestCase):
             ]\n""",
         )
         self.assertEqual(
-            list(sorted(scope.get_defined_names())),
-            ["b_var", "c_var", "e_var"],
+            list(sorted(scope.get_scopes()[0].get_defined_names())),
+            ["b_var", "c_var"],
+        )
+        self.assertEqual(
+            list(sorted(scope.get_scopes()[0].get_scopes()[0].get_defined_names())),
+            ["e_var"],
         )
 
     def test_simple_class_scope(self):
@@ -330,3 +342,46 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertTrue("A" in scope.get_names())
         self.assertTrue("open" not in scope.get_defined_names())
         self.assertTrue("A" in scope.get_defined_names())
+
+    def test_get_inner_scope_for_list_comprhension_with_many_targets(self):
+        scope = libutils.get_string_scope(
+            self.project, "a = [(i, j) for i,j in enumerate(range(10))]\n"
+        )
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertNotIn("j", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+        self.assertIn("j", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_generator(self):
+        scope = libutils.get_string_scope(self.project, "a = (i for i in range(10))\n")
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_set_comprehension(self):
+        scope = libutils.get_string_scope(self.project, "a = {i for i in range(10)}\n")
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_dict_comprehension(self):
+        scope = libutils.get_string_scope(
+            self.project, "a = {i:i for i in range(10)}\n"
+        )
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+
+    def test_get_inner_scope_for_nested_list_comprhension(self):
+        scope = libutils.get_string_scope(
+            self.project, "a = [[i + j for j in range(10)] for i in range(10)]\n"
+        )
+
+        self.assertEqual(len(scope.get_scopes()), 1)
+        self.assertNotIn("i", scope)
+        self.assertNotIn("j", scope)
+        self.assertIn("i", scope.get_scopes()[0])
+        self.assertEqual(len(scope.get_scopes()[0].get_scopes()), 1)
+        self.assertIn("j", scope.get_scopes()[0].get_scopes()[0])
+        self.assertIn("i", scope.get_scopes()[0].get_scopes()[0])

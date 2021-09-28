@@ -7,7 +7,7 @@
 ## Bug fixes
 - #391, #396 Extract method similar no longer replace the left-hand side of assignment
 - #303 Fix inlining into f-string containing quote characters
-
+- Added scopes for comprehension expressions as part of #293 (@climbus)
 
 
 

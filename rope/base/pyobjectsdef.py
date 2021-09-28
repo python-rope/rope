@@ -1,3 +1,4 @@
+from rope.base.pynames import DefinedName
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -119,6 +120,18 @@ class PyFunction(pyobjects.PyFunction):
             return getattr(self.ast_node, "decorator_list")
         except AttributeError:
             return getattr(self.ast_node, "decorators", None)
+
+
+class PyComprehension(pyobjects.PyComprehension):
+    def __init__(self, pycore, ast_node, parent):
+        self.visitor_class = _ComprehensionVisitor
+        rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
+        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+
+    def _create_scope(self):
+        return rope.base.pyscopes.ComprehensionScope(
+            self.pycore, self, _ComprehensionVisitor
+        )
 
 
 class PyClass(pyobjects.PyClass):
@@ -329,23 +342,16 @@ class _ExpressionVisitor(object):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
-    def _assigned(self, name, assignment=None):
-        self.scope_visitor._assigned(name, assignment)
-
     def _GeneratorExp(self, node):
-        for child in ["elt", "key", "value"]:
-            if hasattr(node, child):
-                ast.walk(getattr(node, child), self)
-        for comp in node.generators:
-            ast.walk(comp.target, _AssignVisitor(self))
-            ast.walk(comp, self)
-            for if_ in comp.ifs:
-                ast.walk(if_, self)
-
-    def _ListComp(self, node):
-        self._GeneratorExp(node)
+        list_comp = PyComprehension(
+            self.scope_visitor.pycore, node, self.scope_visitor.owner_object
+        )
+        self.scope_visitor.defineds.append(list_comp)
 
     def _SetComp(self, node):
+        self._GeneratorExp(node)
+
+    def _ListComp(self, node):
         self._GeneratorExp(node)
 
     def _DictComp(self, node):
@@ -396,6 +402,7 @@ class _AssignVisitor(object):
 
 class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
+        _ExpressionVisitor.__init__(self, scope_visitor=self)
         self.pycore = pycore
         self.owner_object = owner_object
         self.names = {}
@@ -560,6 +567,19 @@ class _ScopeVisitor(_ExpressionVisitor):
                 except exceptions.AttributeNotFoundError:
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname
+
+
+class _ComprehensionVisitor(_ScopeVisitor):
+    def _comprehension(self, node):
+        ast.walk(node.target, self)
+        ast.walk(node.iter, self)
+
+    def _Name(self, node):
+        if isinstance(node.ctx, ast.Store):
+            self.names[node.id] = DefinedName(self._get_pyobject(node))
+
+    def _get_pyobject(self, node):
+        return pyobjects.PyDefinedObject(None, node, self.owner_object)
 
 
 class _GlobalVisitor(_ScopeVisitor):
