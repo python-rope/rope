@@ -21,10 +21,10 @@ Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
 
 class PatchedASTTest(unittest.TestCase):
     def setUp(self):
-        super(PatchedASTTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(PatchedASTTest, self).tearDown()
+        super().tearDown()
 
     def test_bytes_string(self):
         source = '1 + b"("\n'

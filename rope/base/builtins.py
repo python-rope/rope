@@ -14,7 +14,7 @@ from rope.base import pynames, pyobjects, arguments, utils
 
 class BuiltinModule(pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
-        super(BuiltinModule, self).__init__()
+        super().__init__()
         self.name = name
         self.pycore = pycore
         self.initial = initial
@@ -112,7 +112,7 @@ class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
 
 class BuiltinUnknown(_BuiltinElement, pyobjects.PyObject):
     def __init__(self, builtin):
-        super(BuiltinUnknown, self).__init__(pyobjects.get_unknown())
+        super().__init__(pyobjects.get_unknown())
         self.builtin = builtin
         self.type = pyobjects.get_unknown()
 
@@ -302,7 +302,7 @@ class List(BuiltinClass):
         except AttributeError:
             pass
 
-        super(List, self).__init__(list, collector.attributes)
+        super().__init__(list, collector.attributes)
 
     def _new_list(self, args):
         return _create_builtin(args, get_list)
@@ -362,7 +362,7 @@ class Dict(BuiltinClass):
         collector("__getitem__", function=self._value_get, parent=self)
         collector("__iter__", function=self._key_iter, parent=self)
         collector("update", function=self._self_set, parent=self)
-        super(Dict, self).__init__(dict, collector.attributes)
+        super().__init__(dict, collector.attributes)
 
     def _new_dict(self, args):
         def do_create(holding=None):
@@ -454,7 +454,7 @@ class Tuple(BuiltinClass):
             "__new__": BuiltinName(BuiltinFunction(function=self._new_tuple)),
             "__iter__": BuiltinName(BuiltinFunction(get_iterator(first))),
         }
-        super(Tuple, self).__init__(tuple, attributes)
+        super().__init__(tuple, attributes)
 
     def get_holding_objects(self):
         return self.objects
@@ -490,7 +490,7 @@ class Set(BuiltinClass):
 
         collector("pop", function=self._set_get, parent=self)
         collector("__iter__", function=self._iterator_get, parent=self)
-        super(Set, self).__init__(set, collector.attributes)
+        super().__init__(set, collector.attributes)
 
     def _new_set(self, args):
         return _create_builtin(args, get_set)
@@ -565,7 +565,7 @@ class Str(BuiltinClass):
         for method in ["rsplit", "split", "splitlines"]:
             collector(method, get_list(self_object), parent=self)
 
-        super(Str, self).__init__(str, collector.attributes)
+        super().__init__(str, collector.attributes)
 
     def get_doc(self):
         return str.__doc__
@@ -588,7 +588,7 @@ class BuiltinName(pynames.PyName):
 
 class Iterator(pyobjects.AbstractClass):
     def __init__(self, holding=None):
-        super(Iterator, self).__init__()
+        super().__init__()
         self.holding = holding
         self.attributes = {
             "next": BuiltinName(BuiltinFunction(self.holding)),
@@ -607,7 +607,7 @@ get_iterator = _create_builtin_getter(Iterator)
 
 class Generator(pyobjects.AbstractClass):
     def __init__(self, holding=None):
-        super(Generator, self).__init__()
+        super().__init__()
         self.holding = holding
         self.attributes = {
             "next": BuiltinName(BuiltinFunction(self.holding)),
@@ -658,7 +658,7 @@ class File(BuiltinClass):
             "writelines",
         ]:
             add(method)
-        super(File, self).__init__(open, attributes)
+        super().__init__(open, attributes)
 
 
 get_file = _create_builtin_getter(File)
@@ -675,7 +675,7 @@ class Property(BuiltinClass):
             "fdel": BuiltinName(pynames.UnboundName()),
             "__new__": BuiltinName(BuiltinFunction(function=_property_function)),
         }
-        super(Property, self).__init__(property, attributes)
+        super().__init__(property, attributes)
 
     def get_property_object(self, args):
         if isinstance(self._fget, pyobjects.AbstractFunction):
@@ -689,7 +689,7 @@ def _property_function(args):
 
 class Lambda(pyobjects.AbstractFunction):
     def __init__(self, node, scope):
-        super(Lambda, self).__init__()
+        super().__init__()
         self.node = node
         self.arguments = node.args
         self.scope = scope
@@ -738,12 +738,12 @@ class Lambda(pyobjects.AbstractFunction):
 
 class BuiltinObject(BuiltinClass):
     def __init__(self):
-        super(BuiltinObject, self).__init__(object, {})
+        super().__init__(object, {})
 
 
 class BuiltinType(BuiltinClass):
     def __init__(self):
-        super(BuiltinType, self).__init__(type, {})
+        super().__init__(type, {})
 
 
 def _infer_sequence_for_pyname(pyname):

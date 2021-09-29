@@ -103,7 +103,7 @@ class Scope(object):
 
 class GlobalScope(Scope):
     def __init__(self, pycore, module):
-        super(GlobalScope, self).__init__(pycore, module, None)
+        super().__init__(pycore, module, None)
         self.names = module._get_concluded_data()
 
     def get_start(self):
@@ -123,7 +123,7 @@ class GlobalScope(Scope):
     def get_names(self):
         if self.names.get() is None:
             result = dict(self.builtin_names)
-            result.update(super(GlobalScope, self).get_names())
+            result.update(super().get_names())
             self.names.set(result)
         return self.names.get()
 
@@ -145,7 +145,7 @@ class GlobalScope(Scope):
 
 class ComprehensionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super(ComprehensionScope, self).__init__(
+        super().__init__(
             pycore, pyobject, pyobject.parent.get_scope()
         )
         self.names = None
@@ -181,7 +181,7 @@ class ComprehensionScope(Scope):
 
 class FunctionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super(FunctionScope, self).__init__(
+        super().__init__(
             pycore, pyobject, pyobject.parent.get_scope()
         )
         self.names = None
@@ -238,7 +238,7 @@ class FunctionScope(Scope):
 
 class ClassScope(Scope):
     def __init__(self, pycore, pyobject):
-        super(ClassScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
 
     def get_kind(self):
         return "Class"
@@ -333,7 +333,7 @@ class TemporaryScope(Scope):
     """
 
     def __init__(self, pycore, parent_scope, names):
-        super(TemporaryScope, self).__init__(
+        super().__init__(
             pycore, parent_scope.pyobject, parent_scope
         )
         self.names = names

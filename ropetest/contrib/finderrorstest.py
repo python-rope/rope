@@ -10,13 +10,13 @@ from ropetest import testutils
 
 class FindErrorsTest(unittest.TestCase):
     def setUp(self):
-        super(FindErrorsTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod = self.project.root.create_file("mod.py")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(FindErrorsTest, self).tearDown()
+        super().tearDown()
 
     def test_unresolved_variables(self):
         self.mod.write("print(var)\n")

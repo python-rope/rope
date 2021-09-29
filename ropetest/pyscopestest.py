@@ -10,13 +10,13 @@ from ropetest import testutils
 
 class PyCoreScopesTest(unittest.TestCase):
     def setUp(self):
-        super(PyCoreScopesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(PyCoreScopesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_scope(self):
         scope = libutils.get_string_scope(

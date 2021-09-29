@@ -93,7 +93,7 @@ class _Inliner(object):
 
 class InlineMethod(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineMethod, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
@@ -238,7 +238,7 @@ class InlineMethod(_Inliner):
 
 class InlineVariable(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineVariable, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
         self._check_exceptional_conditions()
@@ -327,7 +327,7 @@ class InlineVariable(_Inliner):
 
 class InlineParameter(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineParameter, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         resource, offset = self._function_location()
         index = self.pyname.index
         self.changers = [change_signature.ArgumentDefaultInliner(index)]

@@ -247,7 +247,7 @@ class Match(object):
 
 class ExpressionMatch(Match):
     def __init__(self, ast, mapping):
-        super(ExpressionMatch, self).__init__(mapping)
+        super().__init__(mapping)
         self.ast = ast
 
     def get_region(self):
@@ -256,7 +256,7 @@ class ExpressionMatch(Match):
 
 class StatementMatch(Match):
     def __init__(self, ast_list, mapping):
-        super(StatementMatch, self).__init__(mapping)
+        super().__init__(mapping)
         self.ast_list = ast_list
 
     def get_region(self):

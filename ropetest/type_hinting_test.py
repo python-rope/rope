@@ -11,12 +11,12 @@ from ropetest import testutils
 
 class AbstractHintingTest(unittest.TestCase):
     def setUp(self):
-        super(AbstractHintingTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(AbstractHintingTest, self).tearDown()
+        super().tearDown()
 
     def _assist(self, code, offset=None, resource=None, **kwds):
         if offset is None:
@@ -40,7 +40,7 @@ class AbstractHintingTest(unittest.TestCase):
     def run(self, result=None):
         if self.__class__.__name__.startswith("Abstract"):
             return
-        super(AbstractHintingTest, self).run(result)
+        super().run(result)
 
 
 class DocstringParamHintingTest(AbstractHintingTest):

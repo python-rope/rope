@@ -263,7 +263,7 @@ class CreateFolder(CreateResource):
 
     def __init__(self, parent, name):
         resource = parent.project.get_folder(self._get_child_path(parent, name))
-        super(CreateFolder, self).__init__(resource)
+        super().__init__(resource)
 
 
 class CreateFile(CreateResource):
@@ -274,7 +274,7 @@ class CreateFile(CreateResource):
 
     def __init__(self, parent, name):
         resource = parent.project.get_file(self._get_child_path(parent, name))
-        super(CreateFile, self).__init__(resource)
+        super().__init__(resource)
 
 
 class RemoveResource(Change):

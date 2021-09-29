@@ -115,7 +115,7 @@ class ExtractVariable(_ExtractRefactoring):
     def __init__(self, *args, **kwds):
         kwds = dict(kwds)
         kwds["variable"] = True
-        super(ExtractVariable, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
     kind = "variable"
 

@@ -26,14 +26,14 @@ from ropetest.refactor import change_signature_test, similarfindertest
 
 class MethodObjectTest(unittest.TestCase):
     def setUp(self):
-        super(MethodObjectTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(MethodObjectTest, self).tearDown()
+        super().tearDown()
 
     def test_empty_method(self):
         code = "def func():\n    pass\n"
@@ -164,13 +164,13 @@ class MethodObjectTest(unittest.TestCase):
 
 class IntroduceFactoryTest(unittest.TestCase):
     def setUp(self):
-        super(IntroduceFactoryTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(IntroduceFactoryTest, self).tearDown()
+        super().tearDown()
 
     def _introduce_factory(self, resource, offset, *args, **kwds):
         factory_introducer = IntroduceFactory(self.project, resource, offset)
@@ -480,7 +480,7 @@ class IntroduceFactoryTest(unittest.TestCase):
 
 class EncapsulateFieldTest(unittest.TestCase):
     def setUp(self):
-        super(EncapsulateFieldTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
@@ -499,7 +499,7 @@ class EncapsulateFieldTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(EncapsulateFieldTest, self).tearDown()
+        super().tearDown()
 
     def _encapsulate(self, resource, offset, **args):
         changes = EncapsulateField(self.project, resource, offset).get_changes(**args)
@@ -677,14 +677,14 @@ class EncapsulateFieldTest(unittest.TestCase):
 
 class LocalToFieldTest(unittest.TestCase):
     def setUp(self):
-        super(LocalToFieldTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(LocalToFieldTest, self).tearDown()
+        super().tearDown()
 
     def _perform_convert_local_variable_to_field(self, resource, offset):
         changes = LocalToField(self.project, resource, offset).get_changes()
@@ -748,14 +748,14 @@ class LocalToFieldTest(unittest.TestCase):
 
 class IntroduceParameterTest(unittest.TestCase):
     def setUp(self):
-        super(IntroduceParameterTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(IntroduceParameterTest, self).tearDown()
+        super().tearDown()
 
     def _introduce_parameter(self, offset, name):
         rope.refactor.introduce_parameter.IntroduceParameter(

@@ -17,13 +17,13 @@ from ropetest import testutils
 
 class PyCoreTest(unittest.TestCase):
     def setUp(self):
-        super(PyCoreTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(PyCoreTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_module(self):
         testutils.create_module(self.project, "mod")
@@ -688,7 +688,7 @@ class PyCoreTest(unittest.TestCase):
 
 class PyCoreInProjectsTest(unittest.TestCase):
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")
@@ -708,7 +708,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(self.__class__, self).tearDown()
+        super().tearDown()
 
     def test_simple_import(self):
         mod = libutils.get_string_module(self.project, "import samplemod\n")
@@ -1095,13 +1095,13 @@ class TextChangeDetectorTest(unittest.TestCase):
 
 class PyCoreProjectConfigsTest(unittest.TestCase):
     def setUp(self):
-        super(PyCoreProjectConfigsTest, self).setUp()
+        super().setUp()
         self.project = None
 
     def tearDown(self):
         if self.project:
             testutils.remove_project(self.project)
-        super(PyCoreProjectConfigsTest, self).tearDown()
+        super().tearDown()
 
     def test_python_files_config(self):
         self.project = testutils.sample_project(python_files=["myscript"])

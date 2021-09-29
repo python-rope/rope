@@ -289,4 +289,4 @@ class DOITextualToPyObject(TextualToPyObject):
         relpath = rope.base.libutils.path_relative_to_project_root(self.project, path)
         if relpath is not None:
             path = relpath
-        return super(DOITextualToPyObject, self).path_to_resource(path)
+        return super().path_to_resource(path)

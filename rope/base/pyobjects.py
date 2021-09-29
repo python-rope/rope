@@ -56,7 +56,7 @@ class PyObject(object):
         if type(self) == PyObject and self != self.type:
             return hash(self.type) + 1
         else:
-            return super(PyObject, self).__hash__()
+            return super().__hash__()
 
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
@@ -118,7 +118,7 @@ def get_unknown():
 
 class AbstractClass(PyObject):
     def __init__(self):
-        super(AbstractClass, self).__init__(get_base_type("Type"))
+        super().__init__(get_base_type("Type"))
 
     def get_name(self):
         pass
@@ -132,7 +132,7 @@ class AbstractClass(PyObject):
 
 class AbstractFunction(PyObject):
     def __init__(self):
-        super(AbstractFunction, self).__init__(get_base_type("Function"))
+        super().__init__(get_base_type("Function"))
 
     def get_name(self):
         pass
@@ -149,7 +149,7 @@ class AbstractFunction(PyObject):
 
 class AbstractModule(PyObject):
     def __init__(self, doc=None):
-        super(AbstractModule, self).__init__(get_base_type("Module"))
+        super().__init__(get_base_type("Module"))
 
     def get_doc(self):
         pass

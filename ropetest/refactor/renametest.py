@@ -15,12 +15,12 @@ from ropetest import testutils
 
 class RenameRefactoringTest(unittest.TestCase):
     def setUp(self):
-        super(RenameRefactoringTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(RenameRefactoringTest, self).tearDown()
+        super().tearDown()
 
     def _local_rename(self, source_code, offset, new_name):
         testmod = testutils.create_module(self.project, "testmod")
@@ -818,7 +818,7 @@ class ChangeOccurrencesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ChangeOccurrencesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         self.mod.write("a_var = 1\nprint(a_var)\n")
@@ -862,7 +862,7 @@ class ChangeOccurrencesTest(unittest.TestCase):
 
 class ImplicitInterfacesTest(unittest.TestCase):
     def setUp(self):
-        super(ImplicitInterfacesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.pycore
         self.mod1 = testutils.create_module(self.project, "mod1")
@@ -870,7 +870,7 @@ class ImplicitInterfacesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ImplicitInterfacesTest, self).tearDown()
+        super().tearDown()
 
     def _rename(self, resource, offset, new_name, **kwds):
         changes = Rename(self.project, resource, offset).get_changes(new_name, **kwds)

@@ -14,10 +14,10 @@ from ropetest import testutils
 
 class SourceLinesAdapterTest(unittest.TestCase):
     def setUp(self):
-        super(SourceLinesAdapterTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(SourceLinesAdapterTest, self).tearDown()
+        super().tearDown()
 
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter("line1\nline2\n")
@@ -52,10 +52,10 @@ class SourceLinesAdapterTest(unittest.TestCase):
 
 class WordRangeFinderTest(unittest.TestCase):
     def setUp(self):
-        super(WordRangeFinderTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(WordRangeFinderTest, self).tearDown()
+        super().tearDown()
 
     def _find_primary(self, code, offset):
         word_finder = worder.Worder(code)
@@ -360,12 +360,12 @@ class WordRangeFinderTest(unittest.TestCase):
 
 class ScopeNameFinderTest(unittest.TestCase):
     def setUp(self):
-        super(ScopeNameFinderTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ScopeNameFinderTest, self).tearDown()
+        super().tearDown()
 
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`
     # exception, but not in class bodies
@@ -505,10 +505,10 @@ class ScopeNameFinderTest(unittest.TestCase):
 
 class LogicalLineFinderTest(unittest.TestCase):
     def setUp(self):
-        super(LogicalLineFinderTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(LogicalLineFinderTest, self).tearDown()
+        super().tearDown()
 
     def _logical_finder(self, code):
         return LogicalLineFinder(SourceLinesAdapter(code))

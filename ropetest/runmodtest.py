@@ -12,13 +12,13 @@ from ropetest import testutils
 
 class PythonFileRunnerTest(unittest.TestCase):
     def setUp(self):
-        super(PythonFileRunnerTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(PythonFileRunnerTest, self).tearDown()
+        super().tearDown()
 
     def make_sample_python_file(self, file_path, get_text_function_source=None):
         self.project.root.create_file(file_path)

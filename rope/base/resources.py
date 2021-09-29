@@ -104,7 +104,7 @@ class File(Resource):
     """Represents a file"""
 
     def __init__(self, project, name):
-        super(File, self).__init__(project, name)
+        super().__init__(project, name)
 
     def read(self):
         data = self.read_bytes()
@@ -141,7 +141,7 @@ class Folder(Resource):
     """Represents a folder"""
 
     def __init__(self, project, name):
-        super(Folder, self).__init__(project, name)
+        super().__init__(project, name)
 
     def is_folder(self):
         return True

@@ -326,7 +326,7 @@ class NamedParamProposal(CompletionProposal):
     def __init__(self, name, function):
         self.argname = name
         name = "%s=" % name
-        super(NamedParamProposal, self).__init__(name, "parameter_keyword")
+        super().__init__(name, "parameter_keyword")
         self._function = function
 
     def get_default(self):
@@ -722,7 +722,7 @@ class TemplateProposal(CodeAssistProposal):
         warnings.warn(
             "TemplateProposal is deprecated.", DeprecationWarning, stacklevel=2
         )
-        super(TemplateProposal, self).__init__(name, "template")
+        super().__init__(name, "template")
         self.template = template
 
 

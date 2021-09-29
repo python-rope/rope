@@ -426,7 +426,7 @@ class _UnboundNameFinder(object):
 
 class _GlobalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pymodule, wanted_pyobject):
-        super(_GlobalUnboundNameFinder, self).__init__(pymodule)
+        super().__init__(pymodule)
         self.unbound = set()
         self.names = set()
         for name, pyname in pymodule._get_structural_attributes().items():
@@ -454,7 +454,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
 
 class _LocalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pyobject, parent):
-        super(_LocalUnboundNameFinder, self).__init__(pyobject)
+        super().__init__(pyobject)
         self.parent = parent
 
     def _get_root(self):

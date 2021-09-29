@@ -10,14 +10,14 @@ from rope.refactor.usefunction import UseFunction
 
 class UseFunctionTest(unittest.TestCase):
     def setUp(self):
-        super(UseFunctionTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.mod2 = testutils.create_module(self.project, "mod2")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(UseFunctionTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         code = "def f():\n    pass\n"

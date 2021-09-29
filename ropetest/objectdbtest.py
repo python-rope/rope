@@ -43,7 +43,7 @@ class _MockFileListObserver(object):
 
 class ObjectDBTest(unittest.TestCase):
     def setUp(self):
-        super(ObjectDBTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         validation = _MockValidation()
         self.dbs = [objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation)]
@@ -52,7 +52,7 @@ class ObjectDBTest(unittest.TestCase):
         for db in self.dbs:
             db.write()
         testutils.remove_project(self.project)
-        super(ObjectDBTest, self).tearDown()
+        super().tearDown()
 
     @_do_for_all_dbs
     def test_simple_per_name(self, db):

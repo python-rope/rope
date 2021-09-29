@@ -10,7 +10,7 @@ from ropetest import testutils
 
 class MoveRefactoringTest(unittest.TestCase):
     def setUp(self):
-        super(MoveRefactoringTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.mod2 = testutils.create_module(self.project, "mod2")
@@ -21,7 +21,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(MoveRefactoringTest, self).tearDown()
+        super().tearDown()
 
     def _move(self, resource, offset, dest_resource):
         changes = move.create_move(self.project, resource, offset).get_changes(

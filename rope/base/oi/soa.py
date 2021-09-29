@@ -141,7 +141,7 @@ class SOAVisitor(object):
 
 class _SOAAssignVisitor(astutils._NodeNameCollector):
     def __init__(self):
-        super(_SOAAssignVisitor, self).__init__()
+        super().__init__()
         self.nodes = []
 
     def _added(self, node, levels):
