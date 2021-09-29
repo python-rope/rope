@@ -1095,6 +1095,20 @@ class PatchedASTTest(unittest.TestCase):
             ["with", " ", "Name", " ", "as", " ", "Name", "", ":", "\n    ", "Pass"],
         )
 
+    @testutils.only_for("3.5")
+    def test_async_with_node(self):
+        source = dedent("""\
+            async def afunc():
+                async with a as b:
+                    pass\n
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "AsyncWith",
+            ["async", " ", "with", " ", "Name", " ", "as", " ", "Name", "", ":", "\n        ", "Pass"],
+        )
+
     def test_try_finally_node(self):
         source = dedent("""\
             try:
