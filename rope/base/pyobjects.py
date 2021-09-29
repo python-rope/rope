@@ -171,6 +171,13 @@ class PyDefinedObject(object):
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
 
+    def __repr__(self):
+        return '<%s.%s "%s">' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            str(self.get_name()),
+        )
+
     visitor_class = None
 
     @utils.prevent_recursion(lambda: {})

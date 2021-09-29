@@ -41,6 +41,13 @@ class Resource(object):
         self.project = project
         self._path = path
 
+    def __repr__(self):
+        return '<%s.%s "%s">' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.path,
+        )
+
     def move(self, new_location):
         """Move resource to `new_location`"""
         self._perform_change(
