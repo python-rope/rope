@@ -100,7 +100,7 @@ class AutoImport(object):
         if resources is None:
             resources = self.project.get_python_files()
         job_set = task_handle.create_jobset(
-            "Generatig autoimport cache", len(resources)
+            "Generating autoimport cache", len(resources)
         )
         for file in resources:
             job_set.started_job("Working on <%s>" % file.path)
@@ -112,7 +112,7 @@ class AutoImport(object):
     ):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
-            "Generatig autoimport cache for modules", len(modules)
+            "Generating autoimport cache for modules", len(modules)
         )
         for modname in modules:
             job_set.started_job("Working on <%s>" % modname)
