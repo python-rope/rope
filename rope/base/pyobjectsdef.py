@@ -342,6 +342,9 @@ class _ExpressionVisitor(object):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
+    def _assigned(self, name, assignment=None):
+        self.scope_visitor._assigned(name, assignment)
+
     def _GeneratorExp(self, node):
         list_comp = PyComprehension(
             self.scope_visitor.pycore, node, self.scope_visitor.owner_object
