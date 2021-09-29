@@ -95,6 +95,17 @@ class PyCoreScopesTest(unittest.TestCase):
             ["b_var", "c_var"],
         )
 
+    # @testutils.only_for_versions_higher("3.8")
+    def test_inline_assignment(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            """values = (a_var := 2,)""",
+        )
+        self.assertEqual(
+            list(sorted(scope.get_defined_names())),
+            ["a_var", "values"],
+        )
+
     @testutils.only_for_versions_higher("3.8")
     def test_inline_assignment_in_comprehensions(self):
         scope = libutils.get_string_scope(
