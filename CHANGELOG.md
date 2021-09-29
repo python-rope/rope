@@ -5,10 +5,10 @@
 - #392 Add extract method refactoring of code containing `global` (@climbus)
 
 ## Bug fixes
-- #391, #396 Extract method similar no longer replace the left-hand side of assignment
-- #303 Fix inlining into f-string containing quote characters
+- #391, #396 Extract method similar no longer replace the left-hand side of assignment (@climbus)
+- #303 Fix inlining into f-string containing quote characters (@lieryan)
 - Added scopes for comprehension expressions as part of #293 (@climbus)
-- #423 Fix `AttributeError: '_ExpressionVisitor' object has no attribute 'defineds'`
+- #423 Fix `AttributeError: '_ExpressionVisitor' object has no attribute 'defineds'` (@lieryan)
 
 
 # Release 0.20.1
