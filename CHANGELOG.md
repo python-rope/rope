@@ -1,4 +1,4 @@
-# Release **unreleased**
+# **Upcoming release**
 
 # Syntax support
 
@@ -42,3 +42,8 @@ Date: 2021-09-18
 ## Bug fixes
 
 - #380 Fix list of variables that are returned and/or turned into argument when extracting method in a loop
+
+
+# Previous releases
+
+[Changelog from pre-0.10.0](https://github.com/python-rope/rope/blob/595af418e7e7e844dcce600778e1c650c2fc0ba1/docs/done.rst).
