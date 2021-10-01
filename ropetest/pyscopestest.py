@@ -310,6 +310,12 @@ class PyCoreScopesTest(unittest.TestCase):
         f_in_c = c_scope.get_scopes()[0]
         self.assertEqual(f_in_c, scope.get_inner_scope_for_line(4))
 
+    def test_get_scope_for_offset_for_comprehension(self):
+        scope = libutils.get_string_scope(self.project, "a = [i for i in range(10)]\n")
+        c_scope = scope.get_scopes()[0]
+        self.assertEqual(c_scope, scope.get_inner_scope_for_offset(10))
+        self.assertEqual(scope, scope.get_inner_scope_for_offset(1))
+
     def test_getting_overwritten_scopes(self):
         scope = libutils.get_string_scope(
             self.project, "def f():\n    pass\ndef f():\n    pass\n"
