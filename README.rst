@@ -38,10 +38,11 @@ Why use Rope?
 =============
 
 - Rope aims to provide powerful and safe refactoring
-- Rope is light on dependency, depending only on Python itself, unlike pyright or pylance, there is no additional dependency to another language's runtime
+- Rope is light on dependency, Rope only depends on Python itself
+- Unlike pyright or pylance, Rope does not depend on Node.js
 - Unlike pylance, Rope is open source
-- Unlike pyright and pylance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in an environment that you are already familiar with
-- Unlike jedi, Rope is focused on refactoring, Rope supports many advanced refactoring operations that Jedi does not support
+- Unlike pyright and pylance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in a language that you are already familiar with
+- In comparison to Jedi, Rope is focused on refactoring. While Jedi provides some basic refactoring capabilities, Rope supports many more advanced refactoring operations and options that Jedi does not.
 
 Bug Reports
 ===========
