@@ -104,6 +104,13 @@ class Scope(object):
     def get_start_offset(self):
         return self.get_region()[0]
 
+    start_offset = property(get_start_offset)
+
+    def get_end_offset(self):
+        return self.get_region()[1]
+
+    end_offset = property(get_end_offset)
+
     @utils.saveit
     def get_region(self):
         node = patchedast.patch_ast(
@@ -111,12 +118,6 @@ class Scope(object):
         )
         region = patchedast.node_region(node)
         return region
-
-    def get_end_offset(self):
-        return self.get_region()[1]
-
-    start_offset = property(get_start_offset)
-    end_offset = property(get_end_offset)
 
 
 class GlobalScope(Scope):
