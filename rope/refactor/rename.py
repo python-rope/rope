@@ -187,13 +187,8 @@ class ChangeOccurrences(object):
         return word_finder.get_primary_at(self.offset)
 
     def _get_scope_offset(self):
-        lines = self.pymodule.lines
-        scope = self.pymodule.get_scope().get_inner_scope_for_line(
-            lines.get_line_number(self.offset)
-        )
-        start = lines.get_line_start(scope.get_start())
-        end = lines.get_line_end(scope.get_end())
-        return start, end
+        scope = self.pymodule.get_scope().get_inner_scope_for_offset(self.offset)
+        return scope.get_region()
 
     def get_changes(self, new_name, only_calls=False, reads=True, writes=True):
         changes = ChangeSet(
