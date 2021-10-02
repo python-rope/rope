@@ -101,16 +101,6 @@ class Scope(object):
     def get_kind(self):
         pass
 
-    def get_start_offset(self):
-        return self.get_region()[0]
-
-    start_offset = property(get_start_offset)
-
-    def get_end_offset(self):
-        return self.get_region()[1]
-
-    end_offset = property(get_end_offset)
-
     @utils.saveit
     def get_region(self):
         node = patchedast.patch_ast(
@@ -118,6 +108,12 @@ class Scope(object):
         )
         region = patchedast.node_region(node)
         return region
+
+    def in_region(self, offset):
+        "Checks if offset is in scope region"
+
+        region = self.get_region()
+        return region[0] < offset < region[1]
 
 
 class GlobalScope(Scope):
@@ -311,7 +307,7 @@ class _HoldingScopeFinder(object):
     @staticmethod
     def get_holding_scope_for_offset(scope, offset):
         for inner_scope in scope.get_scopes():
-            if inner_scope.start_offset < offset < inner_scope.end_offset:
+            if inner_scope.in_region(offset):
                 return _HoldingScopeFinder.get_holding_scope_for_offset(
                     inner_scope, offset
                 )
