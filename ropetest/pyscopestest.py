@@ -316,6 +316,18 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertEqual(c_scope, scope.get_inner_scope_for_offset(10))
         self.assertEqual(scope, scope.get_inner_scope_for_offset(1))
 
+    def test_get_scope_for_offset_for_in_nested_comprehension(self):
+        scope = libutils.get_string_scope(self.project, "[i for i in [j for j in k]]\n")
+        c_scope = scope.get_scopes()[0]
+        self.assertEqual(c_scope, scope.get_inner_scope_for_offset(5))
+        inner_scope = c_scope.get_scopes()[0]
+        self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(15))
+
+    def test_get_scope_for_offset_for_scope_with_indent(self):
+        scope = libutils.get_string_scope(self.project, "def f(a):\n" "    print(a)\n")
+        inner_scope = scope.get_scopes()[0]
+        self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(10))
+
     def test_getting_overwritten_scopes(self):
         scope = libutils.get_string_scope(
             self.project, "def f():\n    pass\ndef f():\n    pass\n"
