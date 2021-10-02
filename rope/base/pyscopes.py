@@ -115,6 +115,9 @@ class Scope(object):
     def get_end_offset(self):
         return self.get_region()[1]
 
+    start_offset = property(get_start_offset)
+    end_offset = property(get_end_offset)
+
 
 class GlobalScope(Scope):
     def __init__(self, pycore, module):
@@ -304,15 +307,13 @@ class _HoldingScopeFinder(object):
     def _get_body_indents(self, scope):
         return self.get_indents(scope.get_body_start())
 
-    def get_holding_scope_for_offset(self, scope, offset):
-        return _HoldingScopeFinder._get_scope_for_offset(offset, scope)
-        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
-
     @staticmethod
-    def _get_scope_for_offset(offset, scope):
-        for sc in scope.get_scopes():
-            if sc.get_start_offset() < offset < sc.get_end_offset():
-                return _HoldingScopeFinder._get_scope_for_offset(offset, sc)
+    def get_holding_scope_for_offset(scope, offset):
+        for inner_scope in scope.get_scopes():
+            if inner_scope.start_offset < offset < inner_scope.end_offset:
+                return _HoldingScopeFinder.get_holding_scope_for_offset(
+                    inner_scope, offset
+                )
         return scope
 
     def find_scope_end(self, scope):
