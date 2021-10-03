@@ -437,25 +437,23 @@ class _ExceptionalConditionChecker(object):
                 extracted = "(%s)" % extracted
             if _UnmatchedBreakOrContinueFinder.has_errors(extracted):
                 raise RefactoringError(
-                    "A break/continue without having a " "matching for/while loop."
+                    "A break/continue without having a matching for/while loop."
                 )
         except SyntaxError:
             raise RefactoringError(
-                "Extracted piece should " "contain complete statements."
+                "Extracted piece should contain complete statements."
             )
 
     def one_line_conditions(self, info):
         if self._is_region_on_a_word(info):
             raise RefactoringError("Should extract complete statements.")
         if info.variable and not info.one_line:
-            raise RefactoringError(
-                "Extract variable should not " "span multiple lines."
-            )
+            raise RefactoringError("Extract variable should not span multiple lines.")
         if usefunction._named_expr_count(
             info._parsed_extracted
         ) - usefunction._namedexpr_last(info._parsed_extracted):
             raise RefactoringError(
-                "Extracted piece cannot " "contain named expression (:= operator)."
+                "Extracted piece cannot contain named expression (:= operator)."
             )
 
     def multi_line_conditions(self, info):
@@ -464,10 +462,10 @@ class _ExceptionalConditionChecker(object):
         extracted = info.extracted
         if count > 1:
             raise RefactoringError(
-                "Extracted piece can have only one " "return statement."
+                "Extracted piece can have only one return statement."
             )
         if usefunction._yield_count(node):
-            raise RefactoringError("Extracted piece cannot " "have yield statements.")
+            raise RefactoringError("Extracted piece cannot have yield statements.")
         if not hasattr(
             ast, "PyCF_ALLOW_TOP_LEVEL_AWAIT"
         ) and _AsyncStatementFinder.has_errors(extracted):
@@ -480,7 +478,7 @@ class _ExceptionalConditionChecker(object):
             raise RefactoringError("Return should be the last statement.")
         if info.region != info.lines_region:
             raise RefactoringError(
-                "Extracted piece should " "contain complete statements."
+                "Extracted piece should contain complete statements."
             )
 
     def _is_region_on_a_word(self, info):
@@ -611,7 +609,7 @@ class _ExtractMethodParts(object):
             self_name = self._get_self_name()
             if self_name is None:
                 raise RefactoringError(
-                    "Extracting a method from a function " "with no self argument."
+                    "Extracting a method from a function with no self argument."
                 )
             if self_name in args:
                 args.remove(self_name)
