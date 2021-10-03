@@ -110,7 +110,7 @@ class Scope(object):
         return region
 
     def in_region(self, offset):
-        "Checks if offset is in scope region"
+        """ Checks if offset is in scope region """
 
         region = self.get_region()
         return region[0] < offset < region[1]
