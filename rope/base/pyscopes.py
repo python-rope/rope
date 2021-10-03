@@ -2,6 +2,7 @@ import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.pynames
 from rope.base import ast, exceptions, utils
+from rope.refactor import patchedast
 
 
 class Scope(object):
@@ -99,6 +100,20 @@ class Scope(object):
 
     def get_kind(self):
         pass
+
+    @utils.saveit
+    def get_region(self):
+        node = patchedast.patch_ast(
+            self.pyobject.get_ast(), self.pyobject.get_module().source_code
+        )
+        region = patchedast.node_region(node)
+        return region
+
+    def in_region(self, offset):
+        "Checks if offset is in scope region"
+
+        region = self.get_region()
+        return region[0] < offset < region[1]
 
 
 class GlobalScope(Scope):
@@ -289,8 +304,14 @@ class _HoldingScopeFinder(object):
     def _get_body_indents(self, scope):
         return self.get_indents(scope.get_body_start())
 
-    def get_holding_scope_for_offset(self, scope, offset):
-        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
+    @staticmethod
+    def get_holding_scope_for_offset(scope, offset):
+        for inner_scope in scope.get_scopes():
+            if inner_scope.in_region(offset):
+                return _HoldingScopeFinder.get_holding_scope_for_offset(
+                    inner_scope, offset
+                )
+        return scope
 
     def find_scope_end(self, scope):
         if not scope.parent:

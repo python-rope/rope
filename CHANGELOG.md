@@ -10,6 +10,7 @@
 - #391, #396 Extract method similar no longer replace the left-hand side of assignment (@climbus)
 - #303 Fix inlining into f-string containing quote characters (@lieryan)
 - Added scopes for comprehension expressions as part of #293 (@climbus)
+- Added support for checking scopes by offset as part of #293 (@climbus)
 - #423 Fix `AttributeError: '_ExpressionVisitor' object has no attribute 'defineds'` (@lieryan)
 - #398, #104 Fix parsing of nested `with` statement/context manager (@climbus)
 - #391, #376 Fix improper replacement when extracting attribute access expression with `similar=True` (@climbus)
