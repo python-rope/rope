@@ -43,7 +43,7 @@ def get_version():
     ) as inif:
         for line in inif:
             if line.startswith("VERSION"):
-                version = line.split("=")[1].strip(" \t'\n")
+                version = line.split("=")[1].strip(" \t\"'\n")
                 break
     return version
 
