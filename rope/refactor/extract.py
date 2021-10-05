@@ -386,11 +386,14 @@ class _DefinitionLocationFinder(object):
     def find_lineno(self):
         if self.info.variable and not self.info.make_global:
             return self._get_before_line()
-        if self.info.make_global or self.info.global_:
+        if self.info.global_:
             toplevel = self._find_toplevel(self.info.scope)
             ast = self.info.pymodule.get_ast()
             newlines = sorted(self.matched_lines + [toplevel.get_end() + 1])
             return suites.find_visible(ast, newlines)
+        if self.info.make_global:
+            toplevel = self._find_toplevel(self.info.scope)
+            return toplevel.get_end() + 1
         return self._get_after_scope()
 
     def _find_toplevel(self, scope):

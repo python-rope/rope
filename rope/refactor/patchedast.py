@@ -874,9 +874,9 @@ class _PatchingASTWalker(object):
     def _handle_with_node(self, node, is_async):
         children = []
 
+        if is_async:
+            children.extend(["async"])
         for item in pycompat.get_ast_with_items(node):
-            if is_async:
-                children.extend(["async"])
             children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
                 children.extend(["as", item.optional_vars])

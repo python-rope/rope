@@ -1601,7 +1601,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_extract_method_with_multiple_methods(self):  # noqa
+    def test_global_extract_method_with_multiple_methods(self):
         code = dedent("""\
             class AClass(object):
                 def a_func(self):
@@ -2951,5 +2951,40 @@ class ExtractMethodTest(unittest.TestCase):
             with open("test") as file1, open("test") as file2:
                 # with in comment
                 extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_async_with_simple(self):
+        code = dedent("""\
+            async def afunc():
+                async with open("test") as file1:
+                    print(file1)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        expected = dedent("""\
+            async def afunc():
+                async with open("test") as file1:
+                    extracted(file1)
+
+            def extracted(file1):
+                print(file1)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_async_with_double_with_as(self):
+        code = dedent("""\
+            async with open("test") as file1, open("test") as file2:
+                print(file1, file2)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        expected = dedent("""\
+
+            def extracted(file1, file2):
+                print(file1, file2)
+
+            async with open("test") as file1, open("test") as file2:
+                extracted(file1, file2)
         """)
         self.assertEqual(expected, refactored)

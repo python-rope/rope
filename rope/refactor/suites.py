@@ -114,6 +114,9 @@ class _SuiteWalker(object):
     def _With(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
 
+    def _AsyncWith(self, node):
+        self.suites.append(Suite(node.body, node.lineno, self.suite))
+
     def _TryFinally(self, node):
         proceed_to_except_handler = False
         if len(node.finalbody) == 1:
@@ -151,6 +154,9 @@ class _SuiteWalker(object):
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
     def _FunctionDef(self, node):
+        self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
+
+    def _AsyncFunctionDef(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
 
     def _ClassDef(self, node):
