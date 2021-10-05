@@ -68,7 +68,7 @@ class IntroduceParameter(object):
         header_start, header_end = self._get_header_offsets()
         body_start, body_end = sourceutils.get_body_region(self.pyfunction)
         collector.add_change(header_start, header_end, definition_info.to_string())
-        self._change_function_occurances(collector, body_start, body_end, new_parameter)
+        self._change_function_occurrences(collector, body_start, body_end, new_parameter)
         changes = rope.base.change.ChangeSet("Introduce parameter <%s>" % new_parameter)
         change = rope.base.change.ChangeContents(self.resource, collector.get_changed())
         changes.add_change(change)
@@ -84,7 +84,7 @@ class IntroduceParameter(object):
         end = self.pymodule.source_code.rfind(":", start, end)
         return start, end
 
-    def _change_function_occurances(
+    def _change_function_occurrences(
         self, collector, function_start, function_end, new_name
     ):
         finder = occurrences.create_finder(self.project, self.name, self.pyname)

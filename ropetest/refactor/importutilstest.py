@@ -869,7 +869,7 @@ class ImportUtilsTest(unittest.TestCase):
             changed_module,
         )
 
-    def test_transforming_froms_to_normal_changing_occurances(self):
+    def test_transforming_froms_to_normal_changing_occurrences(self):
         self.mod1.write("def a_func():\n    pass\n")
         self.mod.write("from pkg1.mod1 import a_func\na_func()")
         pymod = self.project.get_module("mod")

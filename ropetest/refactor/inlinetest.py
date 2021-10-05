@@ -137,7 +137,7 @@ class InlineTest(unittest.TestCase):
             range(3)""")
         self.assertEqual(expected, refactored)
 
-    def test_a_function_with_no_occurance(self):
+    def test_a_function_with_no_occurrence(self):
         self.mod.write(
             dedent("""\
                 def a_func():
@@ -147,7 +147,7 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index("a_func") + 1)
         self.assertEqual("", self.mod.read())
 
-    def test_a_function_with_no_occurance2(self):
+    def test_a_function_with_no_occurrence2(self):
         self.mod.write(
             dedent("""\
                 a_var = 10

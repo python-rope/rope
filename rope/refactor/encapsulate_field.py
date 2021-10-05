@@ -196,8 +196,8 @@ class _FindChangesForModule(object):
             self.last_modified = self.last_set
             self.last_set = None
 
-    def _is_assigned_in_a_tuple_assignment(self, occurance):
-        offset = occurance.get_word_range()[0]
+    def _is_assigned_in_a_tuple_assignment(self, occurrence):
+        offset = occurrence.get_word_range()[0]
         return self.worder.is_assigned_in_a_tuple_assignment(offset)
 
     @property

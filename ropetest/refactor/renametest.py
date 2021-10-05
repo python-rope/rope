@@ -359,7 +359,7 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    def test_renaming_all_occurances_in_containing_scope(self):
+    def test_renaming_all_occurrences_in_containing_scope(self):
         code = dedent("""\
             if True:
                 a_var = 1
