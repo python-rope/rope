@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -33,7 +35,9 @@ class SimilarFinderTest(unittest.TestCase):
         self.assertEqual(result, list(finder.get_match_regions("10")))
 
     def test_bool_is_not_similar_to_integer(self):
-        source = "a = False\nb = 0"
+        source = dedent("""\
+            a = False
+            b = 0""")
         finder = self._create_finder(source)
         result = [(source.index("False"), source.index("False") + len("False"))]
         self.assertEqual(result, list(finder.get_match_regions("False")))
@@ -58,7 +62,10 @@ class SimilarFinderTest(unittest.TestCase):
         )
 
     def test_simple_multiline_statements(self):
-        source = "a = 1\nb = 2\n"
+        source = dedent("""\
+            a = 1
+            b = 2
+        """)
         finder = self._create_finder(source)
         self.assertEqual(
             [(0, len(source) - 1)], list(finder.get_match_regions("a = 1\nb = 2"))
@@ -75,7 +82,13 @@ class SimilarFinderTest(unittest.TestCase):
         self.assertEqual((start2, start2 + 1), result[1])
 
     def test_multiple_matches2(self):
-        source = "a = 1\nb = 2\n\na = 1\nb = 2\n"
+        source = dedent("""\
+            a = 1
+            b = 2
+
+            a = 1
+            b = 2
+        """)
         finder = self._create_finder(source)
         self.assertEqual(2, len(list(finder.get_match_regions("a = 1\nb = 2"))))
 
@@ -154,13 +167,27 @@ class SimilarFinderTest(unittest.TestCase):
         self.assertEqual(0, len(list(finder.get_matches("f(1)"))))
 
     def test_matching_nested_try_finally(self):
-        source = "if 1:\n    try:\n        pass\n    except:\n        pass\n"
-        pattern = "try:\n    pass\nexcept:\n    pass\n"
+        source = dedent("""\
+            if 1:
+                try:
+                    pass
+                except:
+                    pass
+        """)
+        pattern = dedent("""\
+            try:
+                pass
+            except:
+                pass
+        """)
         finder = self._create_finder(source)
         self.assertEqual(1, len(list(finder.get_matches(pattern))))
 
     def test_matching_dicts_inside_functions(self):
-        source = "def f(p):\n    d = {1: p.x}\n"
+        source = dedent("""\
+            def f(p):
+                d = {1: p.x}
+        """)
         pattern = "{1: ${a}.x}"
         finder = self._create_finder(source)
         self.assertEqual(1, len(list(finder.get_matches(pattern))))
@@ -183,28 +210,51 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEqual([], list(finder.get_matches("10", {})))
 
     def test_simple_finding(self):
-        self.mod1.write("class A(object):\n    pass\na = A()\n")
+        self.mod1.write(
+            dedent("""\
+                class A(object):
+                    pass
+                a = A()
+            """)
+        )
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${A}()", {}))
         self.assertEqual(1, len(result))
 
     def test_not_matching_when_the_name_does_not_match(self):
-        self.mod1.write("class A(object):\n    pass\na = list()\n")
+        self.mod1.write(
+            dedent("""\
+                class A(object):
+                    pass
+                a = list()
+            """)
+        )
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${C}()", {"C": "name=mod1.A"}))
         self.assertEqual(0, len(result))
 
     def test_not_matching_unknowns_finding(self):
-        self.mod1.write("class A(object):\n    pass\na = unknown()\n")
+        self.mod1.write(
+            dedent("""\
+                class A(object):
+                    pass
+                a = unknown()
+            """)
+        )
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${C}()", {"C": "name=mod1.A"}))
         self.assertEqual(0, len(result))
 
     def test_finding_and_matching_pyobjects(self):
-        source = "class A(object):\n    pass\nNewA = A\na = NewA()\n"
+        source = dedent("""\
+            class A(object):
+                pass
+            NewA = A
+            a = NewA()
+        """)
         self.mod1.write(source)
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
@@ -216,9 +266,13 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEqual((start, len(source) - 1), result[0].get_region())
 
     def test_finding_and_matching_types(self):
-        source = (
-            "class A(object):\n    def f(self):\n        pass\n" "a = A()\nb = a.f()\n"
-        )
+        source = dedent("""\
+            class A(object):
+                def f(self):
+                    pass
+            a = A()
+            b = a.f()
+        """)
         self.mod1.write(source)
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
@@ -230,7 +284,13 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEqual((start, len(source) - 1), result[0].get_region())
 
     def test_checking_the_type_of_an_ass_name_node(self):
-        self.mod1.write("class A(object):\n    pass\nan_a = A()\n")
+        self.mod1.write(
+            dedent("""\
+                class A(object):
+                    pass
+                an_a = A()
+            """)
+        )
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${a} = ${assigned}", {"a": "type=mod1.A"}))
@@ -238,7 +298,13 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_checking_instance_of_an_ass_name_node(self):
         self.mod1.write(
-            "class A(object):\n    pass\n" "class B(A):\n    pass\nb = B()\n"
+            dedent("""\
+                class A(object):
+                    pass
+                class B(A):
+                    pass
+                b = B()
+            """)
         )
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
@@ -249,8 +315,18 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_checking_equality_of_imported_pynames(self):
         mod2 = testutils.create_module(self.project, "mod2")
-        mod2.write("class A(object):\n    pass\n")
-        self.mod1.write("from mod2 import A\nan_a = A()\n")
+        mod2.write(
+            dedent("""\
+                class A(object):
+                    pass
+            """)
+        )
+        self.mod1.write(
+            dedent("""\
+                from mod2 import A
+                an_a = A()
+            """)
+        )
         pymod1 = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymod1)
         result = list(finder.get_matches("${a_class}()", {"a_class": "name=mod2.A"}))

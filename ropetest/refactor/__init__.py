@@ -1,4 +1,5 @@
 from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
