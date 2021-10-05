@@ -828,6 +828,23 @@ class RenameRefactoringTest(unittest.TestCase):
         expected = 'f = 1\nwith open("1.txt") as file:\n    print(file)\n'
         self.assertEqual(expected, mod1.read())
 
+    def test_rename_in_list_comprehension(self):
+        code = dedent(
+            """\
+            some_var = 1
+            compr = [some_var for some_var in range(10)]
+        """
+        )
+        offset = code.index("some_var")
+        refactored = self._local_rename(code, offset, "new_var")
+        expected = dedent(
+            """\
+            new_var = 1
+            compr = [some_var for some_var in range(10)]
+        """
+        )
+        self.assertEqual(refactored, expected)
+
 
 class ChangeOccurrencesTest(unittest.TestCase):
     def setUp(self):
@@ -876,23 +893,6 @@ class ChangeOccurrencesTest(unittest.TestCase):
         )
         changer.get_changes("b", writes=False).do()
         self.assertEqual("a = 1\nb = 2\nprint(b)\n", self.mod.read())
-
-    def test_rename_in_list_comprehension(self):
-        code = dedent(
-            """\
-            some_var = 1
-            compr = [some_var for some_var in range(10)]
-        """
-        )
-        offset = code.index("some_var")
-        refactored = self._local_rename(code, offset, "new_var")
-        expected = dedent(
-            """\
-            new_var = 1
-            compr = [some_var for some_var in range(10)]
-        """
-        )
-        self.assertEqual(refactored, expected)
 
 
 class ImplicitInterfacesTest(unittest.TestCase):
