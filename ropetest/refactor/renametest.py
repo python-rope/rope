@@ -41,138 +41,170 @@ class RenameRefactoringTest(unittest.TestCase):
 
     def test_variable_renaming_only_in_its_scope(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 20
                 def a_func():
                     a_var = 10
-            """),
+            """
+            ),
             32,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 20
                 def a_func():
                     new_var = 10
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_not_renaming_dot_name(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 replace = True
                 'aaa'.replace('a', 'b')
-            """),
+            """
+            ),
             1,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = True
                 'aaa'.replace('a', 'b')
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_multiple_names_in_the_same_line(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 10
                 a_var = 10 + a_var / 2
-            """),
+            """
+            ),
             2,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 10
                 new_var = 10 + new_var / 2
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_names_when_getting_some_attribute(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 'a b c'
                 a_var.split('\\n')
-            """),
+            """
+            ),
             2,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 'a b c'
                 new_var.split('\\n')
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_names_when_getting_some_attribute2(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 'a b c'
                 a_var.split('\\n')
-            """),
+            """
+            ),
             20,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 'a b c'
                 new_var.split('\\n')
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_function_parameters1(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 def f(a_param):
                     print(a_param)
-            """),
+            """
+            ),
             8,
             "new_param",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f(new_param):
                     print(new_param)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_function_parameters2(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 def f(a_param):
                     print(a_param)
-            """),
+            """
+            ),
             30,
             "new_param",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f(new_param):
                     print(new_param)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_occurrences_inside_functions(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(p1):
                 a = p1
             a_func(1)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.index("p1") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     a = new_param
                 a_func(1)
-            """),
+            """
+            ),
             refactored,
         )
 
@@ -211,10 +243,12 @@ class RenameRefactoringTest(unittest.TestCase):
         )
         refactored = self._local_rename(code, code.index("b_var") + 1, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 [new_var for new_var, c_var in d_var if new_var == c_var]
                 b_var = 10
-            """),
+            """
+            ),
             refactored,
         )
 
@@ -238,65 +272,81 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_renaming_arguments_for_normal_args_changing_calls(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(p1=None, p2=None):
                 pass
             a_func(p2=1)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.index("p2") + 1, "p3")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(p1=None, p3=None):
                     pass
                 a_func(p3=1)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_function_parameters_of_class_init(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             class A(object):
                 def __init__(self, a_param):
                     pass
             a_var = A(a_param=1)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.index("a_param") + 1, "new_param")
-        expected = dedent("""\
+        expected = dedent(
+            """\
             class A(object):
                 def __init__(self, new_param):
                     pass
             a_var = A(new_param=1)
-        """)
+        """
+        )
         self.assertEqual(expected, refactored)
 
     def test_rename_functions_parameters_and_occurences_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(a_param):
                     print(a_param)
-            """)
+            """
+            )
         )
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 from mod1 import a_func
                 a_func(a_param=10)
-            """)
+            """
+            )
         )
         self._rename(mod1, mod1.read().index("a_param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 from mod1 import a_func
                 a_func(new_param=10)
-            """),
+            """
+            ),
             mod2.read(),
         )
 
@@ -346,91 +396,112 @@ class RenameRefactoringTest(unittest.TestCase):
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 20
                 a_string=f'{"a_var"}'
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_not_renaming_string_contents(self):
         refactored = self._local_rename("a_var = 20\na_string='a_var'\n", 2, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 20
                 a_string='a_var'
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_not_renaming_comment_contents(self):
         refactored = self._local_rename("a_var = 20\n# a_var\n", 2, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 20
                 # a_var
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_all_occurrences_in_containing_scope(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             if True:
                 a_var = 1
             else:
                 a_var = 20
-        """)
+        """
+        )
         refactored = self._local_rename(code, 16, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 if True:
                     new_var = 1
                 else:
                     new_var = 20
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_a_variable_with_arguement_name(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 10
             def a_func(a_var):
                 print(a_var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, 1, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 10
                 def a_func(a_var):
                     print(a_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_an_arguement_with_variable_name(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 10
             def a_func(a_var):
                 print(a_var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, len(code) - 3, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 10
                 def a_func(new_var):
                     print(new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_function_with_local_variable_name(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func():
                 a_func=20
-            a_func()""")
+            a_func()"""
+        )
         refactored = self._local_rename(code, len(code) - 3, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     a_func=20
                 new_func()"""
@@ -439,30 +510,37 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_renaming_functions(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func():
                 pass
             a_func()
-        """)
+        """
+        )
         refactored = self._local_rename(code, len(code) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     pass
                 new_func()
-            """),
+            """
+            ),
             refactored,
         )
 
     @testutils.only_for("3.5")
     def test_renaming_async_function(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             async def a_func():
                 pass
-            a_func()""")
+            a_func()"""
+        )
         refactored = self._local_rename(code, len(code) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 async def new_func():
                     pass
                 new_func()"""
@@ -472,14 +550,17 @@ class RenameRefactoringTest(unittest.TestCase):
 
     @testutils.only_for("3.5")
     def test_renaming_await(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             async def b_func():
                 pass
             async def a_func():
-                await b_func()""")
+                await b_func()"""
+        )
         refactored = self._local_rename(code, len(code) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 async def new_func():
                     pass
                 async def a_func():
@@ -491,142 +572,176 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_renaming_functions_across_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.a_func()
-            """)
+            """
+            )
         )
         self._rename(mod1, len(mod1.read()) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     pass
                 new_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.new_func()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     def test_renaming_functions_across_modules_from_import(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 from mod1 import a_func
                 a_func()
-            """)
+            """
+            )
         )
         self._rename(mod1, len(mod1.read()) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     pass
                 new_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 from mod1 import new_func
                 new_func()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     def test_renaming_functions_from_another_module(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.a_func()
-            """)
+            """
+            )
         )
         self._rename(mod2, len(mod2.read()) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     pass
                 new_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.new_func()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     def test_applying_all_changes_together(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod2
                 mod2.a_func()
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """)
+            """
+            )
         )
         self._rename(mod2, len(mod2.read()) - 5, "new_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod2
                 mod2.new_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def new_func():
                     pass
                 new_func()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     def test_renaming_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write("from mod1 import a_func\n")
@@ -639,17 +754,21 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_renaming_modules_aliased(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1 as m
                 m.a_func()
-            """)
+            """
+            )
         )
         self._rename(mod1, None, "newmod")
         self.assertTrue(
@@ -661,10 +780,12 @@ class RenameRefactoringTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2", pkg)
         mod2.write("from pkg.mod1 import a_func\n")
@@ -676,54 +797,67 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_module_dependencies(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 class AClass(object):
                     pass
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.AClass()
-            """)
+            """
+            )
         )
         self.project.get_pymodule(mod2).get_attributes()["mod1"]
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def AClass():
                     return 0
-            """)
+            """
+            )
         )
 
         self._rename(mod2, len(mod2.read()) - 3, "a_func")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     return 0
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.a_func()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     def test_renaming_class_attributes(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 class AClass(object):
                     def __init__(self):
                         self.an_attr = 10
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.AClass()
                 another_var = a_var.an_attr"""
@@ -732,35 +866,41 @@ class RenameRefactoringTest(unittest.TestCase):
 
         self._rename(mod1, mod1.read().index("an_attr"), "attr")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class AClass(object):
                     def __init__(self):
                         self.attr = 10
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.AClass()
                 another_var = a_var.attr"""
             ),
-            mod2.read()
+            mod2.read(),
         )
 
     def test_renaming_class_attributes2(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 class AClass(object):
                     def __init__(self):
                         an_attr = 10
                         self.an_attr = 10
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.AClass()
                 another_var = a_var.an_attr"""
@@ -769,16 +909,19 @@ class RenameRefactoringTest(unittest.TestCase):
 
         self._rename(mod1, mod1.read().rindex("an_attr"), "attr")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class AClass(object):
                     def __init__(self):
                         an_attr = 10
                         self.attr = 10
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 a_var = mod1.AClass()
                 another_var = a_var.attr"""
@@ -789,35 +932,40 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_renaming_methods_in_subclasses(self):
         mod = testutils.create_module(self.project, "mod1")
         mod.write(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def a_method(self):
                         pass
                 class B(A):
                     def a_method(self):
                         pass
-            """)
+            """
+            )
         )
 
         self._rename(
             mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def new_method(self):
                         pass
                 class B(A):
                     def new_method(self):
                         pass
-            """),
+            """
+            ),
             mod.read(),
         )
 
     def test_renaming_methods_in_sibling_classes(self):
         mod = testutils.create_module(self.project, "mod1")
         mod.write(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def a_method(self):
                         pass
@@ -827,14 +975,16 @@ class RenameRefactoringTest(unittest.TestCase):
                 class C(A):
                     def a_method(self):
                         pass
-            """)
+            """
+            )
         )
 
         self._rename(
             mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def new_method(self):
                         pass
@@ -844,65 +994,76 @@ class RenameRefactoringTest(unittest.TestCase):
                 class C(A):
                     def new_method(self):
                         pass
-            """),
+            """
+            ),
             mod.read(),
         )
 
     def test_not_renaming_methods_in_hierarchies(self):
         mod = testutils.create_module(self.project, "mod1")
         mod.write(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def a_method(self):
                         pass
                 class B(A):
                     def a_method(self):
                         pass
-            """)
+            """
+            )
         )
 
         self._rename(
             mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=False
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class A(object):
                     def a_method(self):
                         pass
                 class B(A):
                     def new_method(self):
                         pass
-            """),
+            """
+            ),
             mod.read(),
         )
 
     def test_undoing_refactorings(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """)
+            """
+            )
         )
         self._rename(mod1, len(mod1.read()) - 5, "new_func")
         self.project.history.undo()
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
                 a_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_undoing_renaming_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def a_func():
                     pass
-            """)
+            """
+            )
         )
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write("from mod1 import a_func\n")
@@ -921,135 +1082,168 @@ class RenameRefactoringTest(unittest.TestCase):
             finder, "new_var", pymodule=pymod, replace_primary=True
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 10
                 print(1+new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_for_loop_variable(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             for var in range(10):
                 print(var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("var") + 1, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 for new_var in range(10):
                     print(new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     @testutils.only_for("3.5")
     def test_renaming_async_for_loop_variable(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             async def func():
                 async for var in range(10):
                     print(var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("var") + 1, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 async def func():
                     async for new_var in range(10):
                         print(new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     @testutils.only_for("3.5")
     def test_renaming_async_with_context_manager(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_cm(): pass
             async def a_func():
-                async with a_cm() as x: pass""")
+                async with a_cm() as x: pass"""
+        )
         refactored = self._local_rename(code, code.find("a_cm") + 1, "another_cm")
-        expected = dedent("""\
+        expected = dedent(
+            """\
             def another_cm(): pass
             async def a_func():
-                async with another_cm() as x: pass""")
+                async with another_cm() as x: pass"""
+        )
         self.assertEqual(refactored, expected)
 
     @testutils.only_for("3.5")
     def test_renaming_async_with_as_variable(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             async def func():
                 async with a_func() as var:
                     print(var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("var") + 1, "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 async def func():
                     async with a_func() as new_var:
                         print(new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             a_func(param=hey)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 a_func(new_param=hey)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_assigned_parameters(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def f(p):
                 p = p + 1
                 return p
             f(p=1)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("p"), "arg")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f(arg):
                     arg = arg + 1
                     return arg
                 f(arg=1)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters_not_renaming_others(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             param=10
             a_func(param)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 param=10
                 a_func(param)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters_not_renaming_others2(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             param=10
-            a_func(param=param)""")
+            a_func(param=param)"""
+        )
         refactored = self._local_rename(code, code.find("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 param=10
@@ -1059,82 +1253,102 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_renaming_parameters_with_multiple_params(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param1, param2):
                 print(param1)
             a_func(param1=1, param2=2)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("param1") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param, param2):
                     print(new_param)
                 a_func(new_param=1, param2=2)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters_with_multiple_params2(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param1, param2):
                 print(param1)
             a_func(param1=1, param2=2)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.rfind("param2") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(param1, new_param):
                     print(param1)
                 a_func(param1=1, new_param=2)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters_on_calls(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             a_func(param = hey)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.rfind("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 a_func(new_param = hey)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameters_spaces_before_call(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             a_func  (param=hey)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.rfind("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 a_func  (new_param=hey)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_parameter_like_objects_after_keywords(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def a_func(param):
                 print(param)
             dict(param=hey)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.find("param") + 1, "new_param")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def a_func(new_param):
                     print(new_param)
                 dict(param=hey)
-            """),
+            """
+            ),
             refactored,
         )
 
@@ -1194,60 +1408,72 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEqual("import newpkg\nmy_pkg = newpkg", mod1.read())
 
     def test_renaming_global_variables(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 1
             def a_func():
                 global a_var
                 var = a_var
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.index("a_var"), "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 1
                 def a_func():
                     global new_var
                     var = new_var
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_global_variables2(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 1
             def a_func():
                 global a_var
                 var = a_var
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.rindex("a_var"), "new_var")
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 1
                 def a_func():
                     global new_var
                     var = new_var
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_when_unsure(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             class C(object):
                 def a_func(self):
                     pass
             def f(arg):
                 arg.a_func()
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_func"), "new_func", unsure=self._true)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class C(object):
                     def new_func(self):
                         pass
                 def f(arg):
                     arg.new_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
 
@@ -1258,29 +1484,34 @@ class RenameRefactoringTest(unittest.TestCase):
         def confirm(occurrence):
             return False
 
-        code = dedent("""\
+        code = dedent(
+            """\
             class C(object):
                 def a_func(self):
                     pass
             def f(arg):
                 arg.a_func()
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_func"), "new_func", unsure=confirm)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class C(object):
                     def new_func(self):
                         pass
                 def f(arg):
                     arg.a_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_renaming_when_unsure_not_renaming_knowns(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             class C1(object):
                 def a_func(self):
                     pass
@@ -1291,12 +1522,14 @@ class RenameRefactoringTest(unittest.TestCase):
             c1.a_func()
             c2 = C2()
             c2.a_func()
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_func"), "new_func", unsure=self._true)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 class C1(object):
                     def new_func(self):
                         pass
@@ -1307,92 +1540,111 @@ class RenameRefactoringTest(unittest.TestCase):
                 c1.new_func()
                 c2 = C2()
                 c2.a_func()
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_renaming_in_strings_and_comments(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 1
             # a_var
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_var"), "new_var", docs=True)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 1
                 # new_var
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_not_renaming_in_strings_and_comments_where_not_visible(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def f():
                 a_var = 1
             # a_var
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_var"), "new_var", docs=True)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f():
                     new_var = 1
                 # a_var
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_not_renaming_all_text_occurrences_in_strings_and_comments(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             a_var = 1
             # a_vard _a_var
-        """)
+        """
+        )
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.index("a_var"), "new_var", docs=True)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 1
                 # a_vard _a_var
-            """),
+            """
+            ),
             mod1.read(),
         )
 
     def test_renaming_occurrences_in_overwritten_scopes(self):
         refactored = self._local_rename(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 20
                 def f():
                     print(a_var)
                 def f():
                     print(a_var)
-            """),
+            """
+            ),
             2,
             "new_var",
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 20
                 def f():
                     print(new_var)
                 def f():
                     print(new_var)
-            """),
+            """
+            ),
             refactored,
         )
 
     def test_renaming_occurrences_in_overwritten_scopes2(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def f():
                 a_var = 1
                 print(a_var)
             def f():
                 a_var = 1
                 print(a_var)
-        """)
+        """
+        )
         refactored = self._local_rename(code, code.index("a_var") + 1, "new_var")
         self.assertEqual(code.replace("a_var", "new_var", 2), refactored)
 
@@ -1440,30 +1692,38 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def f():
                     pass
-            """)
+            """
+            )
         )
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.f()
-            """)
+            """
+            )
         )
         self._rename(mod1, mod1.read().rindex("f"), "g", resources=[mod1])
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def g():
                     pass
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.f()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
@@ -1471,51 +1731,63 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write(
-            dedent("""\
+            dedent(
+                """\
                 def f():
                     pass
-            """)
+            """
+            )
         )
         mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.f()
-            """)
+            """
+            )
         )
         self._rename(mod1, mod1.read().rindex("f"), "g", resources=[mod2])
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f():
                     pass
-            """),
+            """
+            ),
             mod1.read(),
         )
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
                 mod1.g()
-            """),
+            """
+            ),
             mod2.read(),
         )
 
     # XXX: with variables should not leak
     @testutils.only_for("2.5")
     def xxx_test_with_statement_variables_should_not_leak(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             f = 1
             with open("1.txt") as f:
                 print(f)
-        """)
+        """
+        )
         if sys.version_info < (2, 6, 0):
             code = "from __future__ import with_statement\n" + code
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         self._rename(mod1, code.rindex("f"), "file")
-        expected = dedent("""\
+        expected = dedent(
+            """\
             f = 1
             with open("1.txt") as file:
                 print(file)
-        """)
+        """
+        )
         self.assertEqual(expected, mod1.read())
 
     def test_rename_in_list_comprehension(self):
@@ -1547,91 +1819,107 @@ class ChangeOccurrencesTest(unittest.TestCase):
 
     def test_simple_case(self):
         self.mod.write(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 1
                 print(a_var)
-            """)
+            """
+            )
         )
         changer = rename.ChangeOccurrences(
             self.project, self.mod, self.mod.read().index("a_var")
         )
         changer.get_changes("new_var").do()
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 new_var = 1
                 print(new_var)
-            """),
+            """
+            ),
             self.mod.read(),
         )
 
     def test_only_performing_inside_scopes(self):
         self.mod.write(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 1
                 new_var = 2
                 def f():
                     print(a_var)
-            """)
+            """
+            )
         )
         changer = rename.ChangeOccurrences(
             self.project, self.mod, self.mod.read().rindex("a_var")
         )
         changer.get_changes("new_var").do()
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 a_var = 1
                 new_var = 2
                 def f():
                     print(new_var)
-            """),
+            """
+            ),
             self.mod.read(),
         )
 
     def test_only_performing_on_calls(self):
         self.mod.write(
-            dedent("""\
+            dedent(
+                """\
                 def f1():
                     pass
                 def f2():
                     pass
                 g = f1
                 a = f1()
-            """)
+            """
+            )
         )
         changer = rename.ChangeOccurrences(
             self.project, self.mod, self.mod.read().rindex("f1")
         )
         changer.get_changes("f2", only_calls=True).do()
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 def f1():
                     pass
                 def f2():
                     pass
                 g = f1
                 a = f2()
-            """),
+            """
+            ),
             self.mod.read(),
         )
 
     def test_only_performing_on_reads(self):
         self.mod.write(
-            dedent("""\
+            dedent(
+                """\
                 a = 1
                 b = 2
                 print(a)
-            """)
+            """
+            )
         )
         changer = rename.ChangeOccurrences(
             self.project, self.mod, self.mod.read().rindex("a")
         )
         changer.get_changes("b", writes=False).do()
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 a = 1
                 b = 2
                 print(b)
-            """),
+            """
+            ),
             self.mod.read(),
         )
 
@@ -1655,7 +1943,8 @@ class ImplicitInterfacesTest(unittest.TestCase):
     def test_performing_rename_on_parameters(self):
         self.mod1.write("def f(arg):\n    arg.run()\n")
         self.mod2.write(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
 
 
@@ -1667,13 +1956,15 @@ class ImplicitInterfacesTest(unittest.TestCase):
                         pass
                 mod1.f(A())
                 mod1.f(B())
-            """)
+            """
+            )
         )
         self.pycore.analyze_module(self.mod2)
         self._rename(self.mod1, self.mod1.read().index("run"), "newrun")
         self.assertEqual("def f(arg):\n    arg.newrun()\n", self.mod1.read())
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
                 import mod1
 
 
@@ -1685,6 +1976,7 @@ class ImplicitInterfacesTest(unittest.TestCase):
                         pass
                 mod1.f(A())
                 mod1.f(B())
-            """),
+            """
+            ),
             self.mod2.read(),
         )
