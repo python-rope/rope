@@ -3,6 +3,8 @@ try:
 except ImportError:
     import unittest
 
+from textwrap import dedent
+
 from rope.base import libutils
 from rope.base.pyobjects import get_base_type
 from ropetest import testutils
@@ -328,6 +330,15 @@ class PyCoreScopesTest(unittest.TestCase):
         inner_scope = scope.get_scopes()[0]
         self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(10))
 
+    @testutils.only_for("3.5")
+    def test_get_scope_for_offset_for_function_scope_and_async_with_statement(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            "async def func():\n    async with a_func() as var:\n        print(var)\n",
+        )
+        inner_scope = scope.get_scopes()[0]
+        self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(27))
+
     def test_getting_overwritten_scopes(self):
         scope = libutils.get_string_scope(
             self.project, "def f():\n    pass\ndef f():\n    pass\n"
@@ -414,3 +425,35 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertEqual(len(scope.get_scopes()[0].get_scopes()), 1)
         self.assertIn("j", scope.get_scopes()[0].get_scopes()[0])
         self.assertIn("i", scope.get_scopes()[0].get_scopes()[0])
+
+    def test_get_scope_region(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            dedent(
+                """
+                def func1(ala):
+                   pass
+
+                def func2(o):
+                   pass"""
+            ),
+        )
+
+        self.assertEqual(scope.get_region(), (0, 47))
+        self.assertEqual(scope.get_scopes()[0].get_region(), (1, 24))
+        self.assertEqual(scope.get_scopes()[1].get_region(), (26, 47))
+
+    def test_only_get_inner_scope_region(self):
+        scope = libutils.get_string_scope(
+            self.project,
+            dedent(
+                """
+                def func1(ala):
+                   pass
+
+                def func2(o):
+                   pass"""
+            ),
+        )
+
+        self.assertEqual(scope.get_scopes()[1].get_region(), (26, 47))

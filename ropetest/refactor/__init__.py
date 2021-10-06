@@ -1,4 +1,5 @@
 from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -271,7 +272,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self._introduce_factory(mod, mod.read().index("AClass") + 1, "create")
         self.assertEqual(expected, mod.read())
 
-    def test_changing_occurances_in_the_main_module(self):
+    def test_changing_occurrences_in_the_main_module(self):
         code = dedent("""\
             class AClass(object):
                 an_attr = 10
@@ -289,7 +290,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self._introduce_factory(mod, mod.read().index("AClass") + 1, "create")
         self.assertEqual(expected, mod.read())
 
-    def test_changing_occurances_with_arguments(self):
+    def test_changing_occurrences_with_arguments(self):
         code = dedent("""\
             class AClass(object):
                 def __init__(self, arg):
@@ -311,7 +312,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self._introduce_factory(mod, mod.read().index("AClass") + 1, "create")
         self.assertEqual(expected, mod.read())
 
-    def test_changing_occurances_in_other_modules(self):
+    def test_changing_occurrences_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write("class AClass(object):\n    an_attr = 10\n")
@@ -356,7 +357,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEqual(code1, mod1.read())
         self.assertEqual(code2, mod2.read())
 
-    def test_using_on_an_occurance_outside_the_main_module(self):
+    def test_using_on_an_occurrence_outside_the_main_module(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write("class AClass(object):\n    an_attr = 10\n")
@@ -439,7 +440,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                 mod, mod.read().index("AClass") + 1, "create", global_factory=True
             )
 
-    def test_changing_occurances_in_the_main_module_for_global_factories(self):
+    def test_changing_occurrences_in_the_main_module_for_global_factories(self):
         code = dedent("""\
             class AClass(object):
                 an_attr = 10
@@ -458,7 +459,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         )
         self.assertEqual(expected, mod.read())
 
-    def test_changing_occurances_in_other_modules_for_global_factories(self):
+    def test_changing_occurrences_in_other_modules_for_global_factories(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write("class AClass(object):\n    an_attr = 10\n")
@@ -499,7 +500,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEqual(expected1, mod1.read())
         self.assertEqual(expected2, mod2.read())
 
-    def test_changing_occurances_for_renamed_classes(self):
+    def test_changing_occurrences_for_renamed_classes(self):
         code = dedent("""\
             class AClass(object):
                 an_attr = 10
@@ -709,7 +710,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         """)
         self.assertEqual(expected, self.mod1.read())
 
-    def test_changing_main_module_occurances(self):
+    def test_changing_main_module_occurrences(self):
         code = self.a_class + "a_var = A()\n" "a_var.attr = a_var.attr * 2\n"
         self.mod1.write(code)
         self._encapsulate(self.mod1, self.mod1.read().index("attr") + 1)

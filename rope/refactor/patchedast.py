@@ -97,14 +97,6 @@ class _PatchingASTWalker(object):
             node.sorted_children = ast.get_children(node)
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
-        if hasattr(node, "region"):
-            # ???: The same node was seen twice; what should we do?
-            warnings.warn(
-                "Node <%s> has been already patched; please report!"
-                % node.__class__.__name__,
-                RuntimeWarning,
-            )
-            return
         base_children = collections.deque(base_children)
         self.children_stack.append(base_children)
         children = collections.deque()
@@ -883,6 +875,9 @@ class _PatchingASTWalker(object):
             children.append(":")
             children.extend(node.body)
         self._handle(node, children)
+
+    def _AsyncWith(self, node):
+        return self._With(node)
 
     def _child_nodes(self, nodes, separator):
         children = []
