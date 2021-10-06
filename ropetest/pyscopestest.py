@@ -330,6 +330,7 @@ class PyCoreScopesTest(unittest.TestCase):
         inner_scope = scope.get_scopes()[0]
         self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(10))
 
+    @testutils.only_for("3.5")
     def test_get_scope_for_offset_for_function_scope_and_async_with_statement(self):
         scope = libutils.get_string_scope(
             self.project,
