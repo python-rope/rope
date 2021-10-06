@@ -102,10 +102,13 @@ class Scope(object):
         pass
 
     def get_region(self):
-        self.pyobject.get_module().get_scope().get_region()
+        self._calculate_scope_regions_for_module()
         node = self.pyobject.get_ast()
         region = patchedast.node_region(node)
         return region
+
+    def _calculate_scope_regions_for_module(self):
+        self._get_global_scope().calculate_scope_regions()
 
     def in_region(self, offset):
         """Checks if offset is in scope region"""
@@ -134,11 +137,9 @@ class GlobalScope(Scope):
             raise exceptions.NameNotFoundError("name %s not found" % name)
 
     @utils.saveit
-    def get_region(self):
+    def calculate_scope_regions(self):
         source = self._get_source()
-        node = patchedast.patch_ast(self.pyobject.get_ast(), source)
-        region = patchedast.node_region(node)
-        return region
+        patchedast.patch_ast(self.pyobject.get_ast(), source)
 
     def _get_source(self):
         return self.pyobject.source_code
