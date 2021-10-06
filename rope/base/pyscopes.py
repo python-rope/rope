@@ -190,8 +190,8 @@ class ComprehensionScope(Scope):
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for node in ast.get_child_nodes(self.pyobject.get_ast()):
                 ast.walk(node, new_visitor)
-            self.names = new_visitor.names
-            self.names.update(self.parent.get_names())
+            self.names = dict(self.parent.get_names())
+            self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
 
     def get_logical_end(self):

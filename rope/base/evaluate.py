@@ -84,9 +84,7 @@ class ScopeNameFinder(object):
 
     def get_primary_and_pyname_at(self, offset):
         lineno = self.lines.get_line_number(offset)
-        holding_scope = self.module_scope.get_inner_scope_for_line(
-            lineno
-        )  # self.module_scope.get_inner_scope_for_offset(offset)
+        holding_scope = self.module_scope.get_inner_scope_for_offset(offset)
         # function keyword parameter
         if self.worder.is_function_keyword_parameter(offset):
             keyword_name = self.worder.get_word_at(offset)

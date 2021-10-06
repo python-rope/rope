@@ -502,6 +502,17 @@ class ScopeNameFinderTest(unittest.TestCase):
         pyname = name_finder.get_pyname_at(code.rindex("var"))
         self.assertEqual(pymod["var"], pyname)
 
+    def test_var_in_list_comprehension_differs_from_var_outside(self):
+        code = "var = 1\n[var for var in range(1)]\n"
+        pymod = libutils.get_string_module(self.project, code)
+
+        name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
+
+        outside_pyname = name_finder.get_pyname_at(code.index("var"))
+        inside_pyname = name_finder.get_pyname_at(code.rindex("var"))
+
+        self.assertNotEqual(outside_pyname, inside_pyname)
+
 
 class LogicalLineFinderTest(unittest.TestCase):
     def setUp(self):
@@ -623,7 +634,8 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual([4, 5], list(line_finder.generate_starts(4)))
 
     def test_false_triple_quoted_string(self):
-        code = dedent("""\
+        code = dedent(
+            """\
             def foo():
                 a = 0
                 p = 'foo'''
@@ -631,7 +643,8 @@ class LogicalLineFinderTest(unittest.TestCase):
             def bar():
                 a = 1
                 a += 1
-        """)
+        """
+        )
         line_finder = self._logical_finder(code)
         self.assertEqual([1, 2, 3, 5, 6, 7], list(line_finder.generate_starts()))
         self.assertEqual((3, 3), line_finder.logical_line_in(3))
