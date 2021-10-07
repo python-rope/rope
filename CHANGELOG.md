@@ -15,6 +15,7 @@
 - #398, #104 Fix parsing of nested `with` statement/context manager (@climbus)
 - #391, #376 Fix improper replacement when extracting attribute access expression with `similar=True` (@climbus)
 - #396 Fix improper replacement when extracting index access expression with `similar=True` (@lieryan)
+- #270 Fix rename import statement with dots and as keyword (@climbus)
 
 ## Misc
 
