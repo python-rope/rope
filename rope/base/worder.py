@@ -3,6 +3,8 @@ import keyword
 
 import rope.base.simplify
 
+MINIMAL_LEN_FOR_AS = 5
+
 
 def get_name_at(resource, offset):
     source_code = resource.read()
@@ -370,15 +372,23 @@ class _RealFinder(object):
         ):
             return False
         try:
-
-            end = self._find_word_end(offset)
-            while self.code[end + 1] == ".":
-                end = self._find_word_end(end + 2)
+            end = self._find_import_main_part_end(offset)
+            if not self._has_enought_len_for_as(end):
+                return False
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
             return self.code[as_start : as_end + 1] == "as"
         except ValueError:
             return False
+
+    def _has_enought_len_for_as(self, end):
+        return len(self.code) > end + MINIMAL_LEN_FOR_AS
+
+    def _find_import_main_part_end(self, offset):
+        end = self._find_word_end(offset)
+        while len(self.code) > end + 2 and self.code[end + 1] == ".":
+            end = self._find_word_end(end + 2)
+        return end
 
     def is_a_name_after_from_import(self, offset):
         try:
