@@ -27,16 +27,16 @@ class UseFunction(object):
         node = self.pyfunction.get_ast()
         if _yield_count(node):
             raise exceptions.RefactoringError(
-                "Use function should not " "be used on generators."
+                "Use function should not be used on generatorS."
             )
         returns = _return_count(node)
         if returns > 1:
             raise exceptions.RefactoringError(
-                "usefunction: Function has more " "than one return statement."
+                "usefunction: Function has more than one return statement."
             )
         if returns == 1 and not _returns_last(node):
             raise exceptions.RefactoringError(
-                "usefunction: return should " "be the last statement."
+                "usefunction: return should be the last statement."
             )
 
     def get_changes(self, resources=None, task_handle=taskhandle.NullTaskHandle()):
