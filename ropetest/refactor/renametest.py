@@ -1790,17 +1790,9 @@ class RenameRefactoringTest(unittest.TestCase):
         )
         self.assertEqual(expected, mod1.read())
 
-    def test_renaming_modules_aliased2(self):
+    def test_renaming_modules_aliased_with_dots(self):
         pkg = testutils.create_package(self.project, "json")
         mod1 = testutils.create_module(self.project, "utils", pkg)
-        mod1.write(
-            dedent(
-                """\
-                def a_func():
-                    pass
-            """
-            )
-        )
 
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write(
@@ -1815,6 +1807,24 @@ class RenameRefactoringTest(unittest.TestCase):
             not mod1.exists() and self.project.find_module("new_json.utils") is not None
         )
         self.assertEqual("import new_json.utils as stdlib_json_utils\n", mod2.read())
+
+    def test_renaming_modules_aliased_many_dots(self):
+        pkg = testutils.create_package(self.project, "json")
+        mod1 = testutils.create_module(self.project, "utils", pkg)
+
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod2.write(
+            dedent(
+                """\
+                import json.utils.a as stdlib_json_utils
+            """
+            )
+        )
+        self._rename(pkg, None, "new_json")
+        self.assertTrue(
+            not mod1.exists() and self.project.find_module("new_json.utils") is not None
+        )
+        self.assertEqual("import new_json.utils.a as stdlib_json_utils\n", mod2.read())
 
 
 class ChangeOccurrencesTest(unittest.TestCase):
