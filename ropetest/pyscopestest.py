@@ -429,14 +429,13 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_get_scope_region(self):
         scope = libutils.get_string_scope(
             self.project,
-            dedent(
-                """
+            dedent("""
                 def func1(ala):
                    pass
 
                 def func2(o):
-                   pass"""
-            ),
+                   pass
+            """),
         )
 
         self.assertEqual(scope.get_region(), (0, 47))
@@ -446,14 +445,13 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_only_get_inner_scope_region(self):
         scope = libutils.get_string_scope(
             self.project,
-            dedent(
-                """
+            dedent("""
                 def func1(ala):
                    pass
 
                 def func2(o):
-                   pass"""
-            ),
+                   pass
+            """),
         )
 
         self.assertEqual(scope.get_scopes()[1].get_region(), (26, 47))
