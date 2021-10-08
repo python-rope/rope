@@ -200,12 +200,10 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_renaming_comprehension_loop_variables_scope(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             [b_var for b_var, c_var in d_var if b_var == c_var]
             b_var = 10
-        """
-        )
+        """)
         refactored = self._local_rename(code, code.index("b_var") + 1, "new_var")
         self.assertEqual(
             dedent("""\
@@ -217,20 +215,16 @@ class RenameRefactoringTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher("3.8")
     def test_renaming_inline_assignment(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             while a_var := next(foo):
                 print(a_var)
-        """
-        )
+        """)
         refactored = self._local_rename(code, code.index("a_var") + 1, "new_var")
         self.assertEqual(
-            dedent(
-                """\
+            dedent("""\
                 while new_var := next(foo):
                     print(new_var)
-            """
-            ),
+            """),
             refactored,
         )
 
@@ -305,35 +299,27 @@ class RenameRefactoringTest(unittest.TestCase):
 
     @testutils.only_for("3.6")
     def test_renaming_occurrence_in_f_string(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             a_var = 20
             a_string=f'value: {a_var}'
-        """
-        )
-        expected = dedent(
-            """\
+        """)
+        expected = dedent("""\
             new_var = 20
             a_string=f'value: {new_var}'
-        """
-        )
+        """)
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
     @testutils.only_for("3.6")
     def test_renaming_occurrence_in_nested_f_string(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             a_var = 20
             a_string=f'{f"{a_var}"}'
-        """
-        )
-        expected = dedent(
-            """\
+        """)
+        expected = dedent("""\
             new_var = 20
             a_string=f'{f"{new_var}"}'
-        """
-        )
+        """)
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
@@ -1395,25 +1381,21 @@ class RenameRefactoringTest(unittest.TestCase):
 
     @testutils.only_for_versions_higher("3.5")
     def test_renaming_in_generalized_dict_unpacking(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             a_var = {**{'stuff': 'can'}, **{'stuff': 'crayon'}}
 
             if "stuff" in a_var:
                 print("ya")
-        """
-        )
+        """)
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(code)
         refactored = self._local_rename(code, code.index("a_var") + 1, "new_var")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             new_var = {**{'stuff': 'can'}, **{'stuff': 'crayon'}}
 
             if "stuff" in new_var:
                 print("ya")
-        """
-        )
+        """)
         self.assertEqual(expected, refactored)
 
     def test_dos_line_ending_and_renaming(self):
@@ -1516,20 +1498,16 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, mod1.read())
 
     def test_rename_in_list_comprehension(self):
-        code = dedent(
-            """\
+        code = dedent("""\
             some_var = 1
             compr = [some_var for some_var in range(10)]
-        """
-        )
+        """)
         offset = code.index("some_var")
         refactored = self._local_rename(code, offset, "new_var")
-        expected = dedent(
-            """\
+        expected = dedent("""\
             new_var = 1
             compr = [some_var for some_var in range(10)]
-        """
-        )
+        """)
         self.assertEqual(refactored, expected)
 
 
