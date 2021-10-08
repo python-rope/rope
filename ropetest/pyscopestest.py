@@ -334,7 +334,11 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_get_scope_for_offset_for_function_scope_and_async_with_statement(self):
         scope = libutils.get_string_scope(
             self.project,
-            "async def func():\n    async with a_func() as var:\n        print(var)\n",
+            dedent("""\
+                async def func():
+                    async with a_func() as var:
+                        print(var)
+            """)
         )
         inner_scope = scope.get_scopes()[0]
         self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(27))
@@ -438,7 +442,7 @@ class PyCoreScopesTest(unittest.TestCase):
             """),
         )
 
-        self.assertEqual(scope.get_region(), (0, 47))
+        self.assertEqual(scope.get_region(), (0, 48))
         self.assertEqual(scope.get_scopes()[0].get_region(), (1, 24))
         self.assertEqual(scope.get_scopes()[1].get_region(), (26, 47))
 
