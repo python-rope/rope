@@ -108,7 +108,7 @@ class Scope(object):
         return region
 
     def _calculate_scope_regions_for_module(self):
-        self._get_global_scope().calculate_scope_regions()
+        self._get_global_scope()._calculate_scope_regions()
 
     def in_region(self, offset):
         """Checks if offset is in scope region"""
@@ -137,7 +137,7 @@ class GlobalScope(Scope):
             raise exceptions.NameNotFoundError("name %s not found" % name)
 
     @utils.saveit
-    def calculate_scope_regions(self):
+    def _calculate_scope_regions(self):
         source = self._get_source()
         patchedast.patch_ast(self.pyobject.get_ast(), source)
 
