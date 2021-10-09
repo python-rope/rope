@@ -231,12 +231,8 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @unittest.expectedFailure
     def test_renaming_comprehension_loop_variables_scope(self):
-        # FIXME: variable scoping for comprehensions is incorrect, we currently
-        #        don't create a scope for comprehension
-        code = dedent(
-            """\
+        code = dedent("""\
             [b_var for b_var, c_var in d_var if b_var == c_var]
             b_var = 10
         """
@@ -1790,6 +1786,7 @@ class RenameRefactoringTest(unittest.TestCase):
         )
         self.assertEqual(expected, mod1.read())
 
+<<<<<<< HEAD
     def test_renaming_modules_aliased_with_dots(self):
         pkg = testutils.create_package(self.project, "json")
         mod1 = testutils.create_module(self.project, "utils", pkg)
@@ -1825,6 +1822,19 @@ class RenameRefactoringTest(unittest.TestCase):
             not mod1.exists() and self.project.find_module("new_json.utils") is not None
         )
         self.assertEqual("import new_json.utils.a as stdlib_json_utils\n", mod2.read())
+
+    def test_rename_in_list_comprehension(self):
+        code = dedent("""\
+            some_var = 1
+            compr = [some_var for some_var in range(10)]
+        """)
+        offset = code.index("some_var")
+        refactored = self._local_rename(code, offset, "new_var")
+        expected = dedent("""\
+            new_var = 1
+            compr = [some_var for some_var in range(10)]
+        """)
+        self.assertEqual(refactored, expected)
 
 
 class ChangeOccurrencesTest(unittest.TestCase):

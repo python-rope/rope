@@ -16,6 +16,7 @@
 - #391, #376 Fix improper replacement when extracting attribute access expression with `similar=True` (@climbus)
 - #396 Fix improper replacement when extracting index access expression with `similar=True` (@lieryan)
 - #270 Fix rename import statement with dots and as keyword (@climbus)
+- #293 Fix rename global var affects list comprehension (@climbus)
 
 ## Misc
 

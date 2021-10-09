@@ -105,6 +105,7 @@ class _PatchingASTWalker(object):
                 RuntimeWarning,
             )
             return
+
         base_children = collections.deque(base_children)
         self.children_stack.append(base_children)
         children = collections.deque()
@@ -883,6 +884,9 @@ class _PatchingASTWalker(object):
             children.append(":")
             children.extend(node.body)
         self._handle(node, children)
+
+    def _AsyncWith(self, node):
+        return self._With(node)
 
     def _child_nodes(self, nodes, separator):
         children = []

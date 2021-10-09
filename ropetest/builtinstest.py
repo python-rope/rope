@@ -1,3 +1,4 @@
+from textwrap import dedent
 try:
     import unittest2 as unittest
 except ImportError:
@@ -25,7 +26,14 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertTrue("append" in pymod["l"].get_object())
 
     def test_holding_type_information(self):
-        self.mod.write("class C(object):\n    pass\n" "l = [C()]\na_var = l.pop()\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                a_var = l.pop()
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
@@ -33,9 +41,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_get_items(self):
         self.mod.write(
-            "class C(object):"
-            "\n    def __getitem__(self, i):\n        return C()\n"
-            "c = C()\na_var = c[0]"
+            dedent("""\
+                class C(object):
+                    def __getitem__(self, i):
+                        return C()
+                c = C()
+                a_var = c[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -43,14 +55,28 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_get_items_for_lists(self):
-        self.mod.write("class C(object):\n    pass\nl = [C()]\na_var = l[0]\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                a_var = l[0]
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
 
     def test_get_items_from_slices(self):
-        self.mod.write("class C(object):\n    pass" "\nl = [C()]\na_var = l[:].pop()\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                a_var = l[:].pop()
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
@@ -58,7 +84,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_simple_for_loops(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n" "for c in l:\n    a_var = c\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                for c in l:
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -67,7 +99,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_definition_location_for_loop_variables(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n" "for c in l:\n    pass\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                for c in l:
+                    pass
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_var = pymod["c"]
@@ -79,21 +117,38 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertTrue("get" in pymod["d"].get_object())
 
     def test_get_item_for_dicts(self):
-        self.mod.write("class C(object):\n    pass\n" "d = {1: C()}\na_var = d[1]\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                d = {1: C()}
+                a_var = d[1]
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
 
     def test_dict_function_parent(self):
-        self.mod.write("d = {1: 2}\n" "a_var = d.keys()")
+        self.mod.write(
+            dedent("""\
+                d = {1: 2}
+                a_var = d.keys()"""
+            )
+        )
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod["d"].get_object()["keys"].get_object()
         self.assertEqual(type(a_var.parent), Dict)
 
     def test_popping_dicts(self):
         self.mod.write(
-            "class C(object):\n    pass\n" "d = {1: C()}\na_var = d.pop(1)\n"
+            dedent("""\
+                class C(object):
+                    pass
+                d = {1: C()}
+                a_var = d.pop(1)
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -102,9 +157,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_keys_from_dicts(self):
         self.mod.write(
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nfor c in d.keys():\n    a_var = c\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for c in d.keys():
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C1"].get_object()
@@ -113,10 +174,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_values_from_dicts(self):
         self.mod.write(
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nfor c in d.values():"
-            "\n    a_var = c\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for c in d.values():
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C2"].get_object()
@@ -125,9 +191,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_iterkeys_from_dicts(self):
         self.mod.write(
-            "class C1(object):\n    pass"
-            "\nclass C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nfor c in d.keys():\n    a_var = c\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for c in d.keys():
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C1"].get_object()
@@ -136,10 +208,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_itervalues_from_dicts(self):
         self.mod.write(
-            "class C1(object):\n    pass"
-            "\nclass C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nfor c in d.values():"
-            "\n    a_var = c\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for c in d.values():
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C2"].get_object()
@@ -148,9 +225,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_using_copy_for_dicts(self):
         self.mod.write(
-            "class C1(object):\n    pass"
-            "\nclass C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nfor c in d.copy():\n    a_var = c\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for c in d.copy():
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C1"].get_object()
@@ -159,9 +242,14 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_tuple_assignments_for_items(self):
         self.mod.write(
-            "class C1(object):\n    pass"
-            "\nclass C2(object):\n    pass\n"
-            "d = {C1(): C2()}\nkey, value = d.items()[0]\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                key, value = d.items()[0]
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -172,7 +260,14 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEqual(c2_class, value.get_type())
 
     def test_tuple_assignment_for_lists(self):
-        self.mod.write("class C(object):\n    pass\n" "l = [C(), C()]\na, b = l\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C(), C()]
+                a, b = l
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a"].get_object()
@@ -182,10 +277,16 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_tuple_assignments_for_iteritems_in_fors(self):
         self.mod.write(
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    pass\n"
-            "d = {C1(): C2()}\n"
-            "for x, y in d.items():\n    a = x;\n    b = y\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                d = {C1(): C2()}
+                for x, y in d.items():
+                    a = x;
+                    b = y
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -197,9 +298,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_simple_tuple_assignments(self):
         self.mod.write(
-            "class C1(object):"
-            "\n    pass\nclass C2(object):\n    pass\n"
-            "a, b = C1(), C2()\n"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                a, b = C1(), C2()
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -210,7 +315,13 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_overriding_builtin_names(self):
-        self.mod.write("class C(object):\n    pass\nlist = C\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                list = C
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         list_var = pymod["list"].get_object()
@@ -228,7 +339,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_making_lists_using_the_passed_argument_to_init(self):
         self.mod.write(
-            "class C(object):\n    pass\nl1 = [C()]\n" "l2 = list(l1)\na_var = l2.pop()"
+            dedent("""\
+                class C(object):
+                    pass
+                l1 = [C()]
+                l2 = list(l1)
+                a_var = l2.pop()"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -237,7 +354,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_making_tuples_using_the_passed_argument_to_init(self):
         self.mod.write(
-            "class C(object):\n    pass\nl1 = [C()]\n" "l2 = tuple(l1)\na_var = l2[0]"
+            dedent("""\
+                class C(object):
+                    pass
+                l1 = [C()]
+                l2 = tuple(l1)
+                a_var = l2[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -246,7 +369,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_making_sets_using_the_passed_argument_to_init(self):
         self.mod.write(
-            "class C(object):\n    pass\nl1 = [C()]\n" "l2 = set(l1)\na_var = l2.pop()"
+            dedent("""\
+                class C(object):
+                    pass
+                l1 = [C()]
+                l2 = set(l1)
+                a_var = l2.pop()"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -255,10 +384,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_making_dicts_using_the_passed_argument_to_init(self):
         self.mod.write(
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    pass\n"
-            "l1 = [(C1(), C2())]\n"
-            "l2 = dict(l1)\na, b = l2.items()[0]"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                l1 = [(C1(), C2())]
+                l2 = dict(l1)
+                a, b = l2.items()[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -276,8 +410,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_reversed_builtin_function(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n"
-            "for x in reversed(l):\n    a_var = x\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                for x in reversed(l):
+                    a_var = x
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -286,7 +425,12 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_sorted_builtin_function(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n" "a_var = sorted(l).pop()\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                a_var = sorted(l).pop()
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -295,11 +439,17 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_super_builtin_function(self):
         self.mod.write(
-            "class C(object):\n    pass\n"
-            "class A(object):\n    def a_f(self):\n        return C()\n"
-            "class B(A):\n    def b_f(self):\n        "
-            "return super(B, self).a_f()\n"
-            "a_var = B.b_f()\n"
+            dedent("""\
+                class C(object):
+                    pass
+                class A(object):
+                    def a_f(self):
+                        return C()
+                class B(A):
+                    def b_f(self):
+                        return super(B, self).a_f()
+                a_var = B.b_f()
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -307,7 +457,12 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_file_builtin_type(self):
-        self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
+        self.mod.write(
+            dedent("""\
+                for line in open("file.txt"):
+                    a_var = line
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod["a_var"].get_object()
         self.assertTrue(isinstance(a_var.get_type(), builtins.Str))
@@ -340,9 +495,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_builtin_zip_function(self):
         self.mod.write(
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "c1_list = [C1()]\nc2_list = [C2()]\n"
-            "a, b = zip(c1_list, c2_list)[0]"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                c1_list = [C1()]
+                c2_list = [C2()]
+                a, b = zip(c1_list, c2_list)[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -354,9 +515,15 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_builtin_zip_function_with_more_than_two_args(self):
         self.mod.write(
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "c1_list = [C1()]\nc2_list = [C2()]\n"
-            "a, b, c = zip(c1_list, c2_list, c1_list)[0]"
+            dedent("""\
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                c1_list = [C1()]
+                c2_list = [C2()]
+                a, b, c = zip(c1_list, c2_list, c1_list)[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -370,8 +537,12 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_wrong_arguments_to_zip_function(self):
         self.mod.write(
-            "class C1(object):\n    pass\nc1_list = [C1()]\n"
-            "a, b = zip(c1_list, 1)[0]"
+            dedent("""\
+                class C1(object):
+                    pass
+                c1_list = [C1()]
+                a, b = zip(c1_list, 1)[0]"""
+            )
         )
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -381,8 +552,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_enumerate_builtin_function(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n"
-            "for i, x in enumerate(l):\n    a_var = x\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                for i, x in enumerate(l):
+                    a_var = x
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -396,7 +572,12 @@ class BuiltinTypesTest(unittest.TestCase):
         )
 
     def test_star_args_and_double_star_args(self):
-        self.mod.write("def func(p, *args, **kwds):\n    pass\n")
+        self.mod.write(
+            dedent("""\
+                def func(p, *args, **kwds):
+                    pass
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         func_scope = pymod["func"].get_object().get_scope()
         args = func_scope["args"].get_object()
@@ -418,8 +599,13 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_iter_builtin_function(self):
         self.mod.write(
-            "class C(object):\n    pass\nl = [C()]\n"
-            "for c in iter(l):\n    a_var = c\n"
+            dedent("""\
+                class C(object):
+                    pass
+                l = [C()]
+                for c in iter(l):
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -491,12 +677,12 @@ class BuiltinTypesTest(unittest.TestCase):
         )
 
     def test_unknown_return_object(self):
-        src = (
-            "import sys\n"
-            "def foo():\n"
-            "  res = set(sys.builtin_module_names)\n"
-            "  if foo: res.add(bar)\n"
-        )
+        src = dedent("""\
+            import sys
+            def foo():
+              res = set(sys.builtin_module_names)
+              if foo: res.add(bar)
+        """)
         self.project.prefs["import_dynload_stdmods"] = True
         self.mod.write(src)
         self.project.pycore.analyze_module(self.mod)
@@ -541,7 +727,12 @@ class BuiltinModulesTest(unittest.TestCase):
         pymod["invalid"].get_object()
 
     def test_nonexistent_modules_2(self):
-        self.mod.write("import invalid\nimport invalid.sub")
+        self.mod.write(
+            dedent("""\
+                import invalid
+                import invalid.sub"""
+            )
+        )
         pymod = self.project.get_pymodule(self.mod)
         invalid = pymod["invalid"].get_object()
         self.assertTrue("sub" in invalid)

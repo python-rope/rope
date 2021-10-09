@@ -101,13 +101,14 @@ class Scope(object):
     def get_kind(self):
         pass
 
-    @utils.saveit
     def get_region(self):
-        node = patchedast.patch_ast(
-            self.pyobject.get_ast(), self.pyobject.get_module().source_code
-        )
+        self._calculate_scope_regions_for_module()
+        node = self.pyobject.get_ast()
         region = patchedast.node_region(node)
         return region
+
+    def _calculate_scope_regions_for_module(self):
+        self._get_global_scope()._calculate_scope_regions()
 
     def in_region(self, offset):
         """Checks if offset is in scope region"""
@@ -134,6 +135,14 @@ class GlobalScope(Scope):
             if name in self.builtin_names:
                 return self.builtin_names[name]
             raise exceptions.NameNotFoundError("name %s not found" % name)
+
+    @utils.saveit
+    def _calculate_scope_regions(self):
+        source = self._get_source()
+        patchedast.patch_ast(self.pyobject.get_ast(), source)
+
+    def _get_source(self):
+        return self.pyobject.source_code
 
     def get_names(self):
         if self.names.get() is None:
@@ -181,8 +190,8 @@ class ComprehensionScope(Scope):
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for node in ast.get_child_nodes(self.pyobject.get_ast()):
                 ast.walk(node, new_visitor)
-            self.names = new_visitor.names
-            self.names.update(self.parent.get_names())
+            self.names = dict(self.parent.get_names())
+            self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
 
     def get_logical_end(self):
