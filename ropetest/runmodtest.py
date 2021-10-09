@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 
 try:
     import unittest2 as unittest
@@ -52,9 +53,11 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_passing_arguments(self):
         file_path = "sample.py"
-        function_source = (
-            "import sys\ndef get_text():" "\n    return str(sys.argv[1:])\n"
-        )
+        function_source = dedent("""\
+            import sys
+            def get_text():
+                return str(sys.argv[1:])
+        """)
         self.make_sample_python_file(file_path, function_source)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource, args=["hello", "world"])
@@ -65,9 +68,11 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_passing_arguments_with_spaces(self):
         file_path = "sample.py"
-        function_source = (
-            "import sys\ndef get_text():" "\n    return str(sys.argv[1:])\n"
-        )
+        function_source = dedent("""\
+            import sys
+            def get_text():
+                return str(sys.argv[1:])
+        """)
         self.make_sample_python_file(file_path, function_source)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource, args=["hello world"])
@@ -78,12 +83,15 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_killing_runner(self):
         file_path = "sample.py"
+        code = dedent("""\
+            def get_text():
+                import time
+                time.sleep(1)
+                return 'run'
+        """)
         self.make_sample_python_file(
             file_path,
-            "def get_text():"
-            "\n    import time"
-            "\n    time.sleep(1)"
-            "\n    return 'run'\n",
+            code,
         )
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
@@ -101,11 +109,12 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_setting_process_input(self):
         file_path = "sample.py"
-        self.make_sample_python_file(
-            file_path,
-            "def get_text():" + "\n    import sys"
-            "\n    return sys.stdin.readline()\n",
-        )
+        code = dedent("""\
+            def get_text():
+                import sys
+                return sys.stdin.readline()
+        """)
+        self.make_sample_python_file(file_path, code)
         temp_file_name = "processtest.tmp"
         try:
             temp_file = open(temp_file_name, "w")
@@ -122,10 +131,12 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_setting_process_output(self):
         file_path = "sample.py"
-        self.make_sample_python_file(
-            file_path,
-            "def get_text():" + "\n    print('output text')" "\n    return 'run'\n",
-        )
+        code = dedent("""\
+            def get_text():
+                print('output text')
+                return 'run'
+        """)
+        self.make_sample_python_file(file_path, code)
         temp_file_name = "processtest.tmp"
         try:
             file_resource = self.project.get_resource(file_path)
@@ -145,12 +156,13 @@ class PythonFileRunnerTest(unittest.TestCase):
         src.get_child("sample.py").write("def f():\n    pass\n")
         self.project.root.create_folder("test")
         file_path = "test/test.py"
-        self.make_sample_python_file(
-            file_path,
-            "def get_text():\n"
-            "    import sample"
-            "\n    sample.f()\n    return'run'\n",
-        )
+        code = dedent("""\
+            def get_text():
+                import sample
+                sample.f()
+                return'run'
+        """)
+        self.make_sample_python_file(file_path, code)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
