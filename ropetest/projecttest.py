@@ -1008,10 +1008,12 @@ class RopeFolderTest(unittest.TestCase):
         if not config.exists():
             config.create()
         config.write(
-            "def set_prefs(prefs):\n"
-            '    prefs["ignored_resources"] = ["myfile.txt"]\n'
-            "def project_opened(project):\n"
-            '    project.root.create_file("loaded")\n'
+            dedent("""\
+                def set_prefs(prefs):
+                    prefs["ignored_resources"] = ["myfile.txt"]
+                def project_opened(project):
+                    project.root.create_file("loaded")
+            """)
         )
         self.project.close()
         self.project = Project(self.project.address, ropefolder=".ropeproject")

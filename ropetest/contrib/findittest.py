@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -29,7 +31,12 @@ class FindItTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write("a_var = 1\n")
-        mod2.write("import mod1\nmy_var = mod1.a_var")
+        mod2.write(
+            dedent("""\
+                import mod1
+                my_var = mod1.a_var"""
+            )
+        )
         result = find_occurrences(self.project, mod1, 1)
         self.assertEqual(2, len(result))
         modules = (result[0].resource, result[1].resource)
@@ -38,8 +45,13 @@ class FindItTest(unittest.TestCase):
     def test_finding_occurrences_matching_when_unsure(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            "class C(object):\n    def a_func(self):\n        pass\n"
-            "def f(arg):\n    arg.a_func()\n"
+            dedent("""\
+                class C(object):
+                    def a_func(self):
+                        pass
+                def f(arg):
+                    arg.a_func()
+            """)
         )
         result = find_occurrences(
             self.project, mod1, mod1.read().index("a_func"), unsure=True
@@ -50,7 +62,12 @@ class FindItTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write("a_var = 1\n")
-        mod2.write("import mod1\nmy_var = mod1.a_var")
+        mod2.write(
+            dedent("""\
+                import mod1
+                my_var = mod1.a_var"""
+            )
+        )
         result = find_occurrences(self.project, mod1, 1, resources=[mod1])
         self.assertEqual(1, len(result))
         self.assertEqual((mod1, 0), (result[0].resource, result[0].offset))
@@ -58,8 +75,14 @@ class FindItTest(unittest.TestCase):
     def test_find_occurrences_and_class_hierarchies(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            "class A(object):\n    def f():\n        pass\n"
-            "class B(A):\n    def f():\n        pass\n"
+            dedent("""\
+                class A(object):
+                    def f():
+                        pass
+                class B(A):
+                    def f():
+                        pass
+            """)
         )
         offset = mod1.read().rindex("f")
         result1 = find_occurrences(self.project, mod1, offset)
@@ -69,7 +92,13 @@ class FindItTest(unittest.TestCase):
 
     def test_trivial_find_implementations(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write("class A(object):\n    def f(self):\n        pass\n")
+        mod1.write(
+            dedent("""\
+                class A(object):
+                    def f(self):
+                        pass
+            """)
+        )
         offset = mod1.read().rindex("f(")
         result = find_implementations(self.project, mod1, offset)
         self.assertEqual([], result)
@@ -77,8 +106,14 @@ class FindItTest(unittest.TestCase):
     def test_find_implementations_and_not_returning_parents(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            "class A(object):\n    def f(self):\n        pass\n"
-            "class B(A):\n    def f(self):\n        pass\n"
+            dedent("""\
+                class A(object):
+                    def f(self):
+                        pass
+                class B(A):
+                    def f(self):
+                        pass
+            """)
         )
         offset = mod1.read().rindex("f(")
         result = find_implementations(self.project, mod1, offset)
@@ -87,8 +122,14 @@ class FindItTest(unittest.TestCase):
     def test_find_implementations_real_implementation(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(
-            "class A(object):\n    def f(self):\n        pass\n"
-            "class B(A):\n    def f(self):\n        pass\n"
+            dedent("""\
+                class A(object):
+                    def f(self):
+                        pass
+                class B(A):
+                    def f(self):
+                        pass
+            """)
         )
         offset = mod1.read().index("f(")
         result = find_implementations(self.project, mod1, offset)
@@ -103,7 +144,10 @@ class FindItTest(unittest.TestCase):
             find_implementations(self.project, mod1, offset)
 
     def test_trivial_find_definition(self):
-        code = "def a_func():\n    pass\na_func()"
+        code = dedent("""\
+            def a_func():
+                pass
+            a_func()""")
         result = find_definition(self.project, code, code.rindex("a_func"))
         start = code.index("a_func")
         self.assertEqual(start, result.offset)
@@ -114,7 +158,10 @@ class FindItTest(unittest.TestCase):
     def test_find_definition_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write("var = 1\n")
-        code = "import mod1\nprint(mod1.var)\n"
+        code = dedent("""\
+            import mod1
+            print(mod1.var)
+        """)
         result = find_definition(self.project, code, code.index("var"))
         self.assertEqual(mod1, result.resource)
         self.assertEqual(0, result.offset)

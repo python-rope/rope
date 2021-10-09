@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -45,42 +47,41 @@ class AbstractHintingTest(unittest.TestCase):
 
 class DocstringParamHintingTest(AbstractHintingTest):
     def test_hint_param(self):
-        code = (
-            "class Sample(object):\n"
-            "    def a_method(self, a_arg):\n"
-            '        """:type a_arg: threading.Thread"""\n'
-            "        a_arg.is_a"
-        )
+        code = dedent('''\
+            class Sample(object):
+                def a_method(self, a_arg):
+                    """:type a_arg: threading.Thread"""
+                    a_arg.is_a''')
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hierarchical_hint_param(self):
-        code = (
-            "class ISample(object):\n"
-            "    def a_method(self, a_arg):\n"
-            '        """:type a_arg: threading.Thread"""\n'
-            "\n\n"
-            "class Sample(ISample):\n"
-            "    def a_method(self, a_arg):\n"
-            "        a_arg.is_a"
-        )
+        code = dedent('''\
+            class ISample(object):
+                def a_method(self, a_arg):
+                    """:type a_arg: threading.Thread"""
+
+
+            class Sample(ISample):
+                def a_method(self, a_arg):
+                    a_arg.is_a''')
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
 
 class DocstringReturnHintingTest(AbstractHintingTest):
     def test_hierarchical_hint_rtype(self):
-        code = (
-            "class ISample(object):\n"
-            "    def b_method(self):\n"
-            '        """:rtype: threading.Thread"""\n'
-            "\n\n"
-            "class Sample(ISample):\n"
-            "    def b_method(self):\n"
-            "        pass\n"
-            "    def a_method(self):\n"
-            "        self.b_method().is_a"
-        )
+        code = dedent('''\
+            class ISample(object):
+                def b_method(self):
+                    """:rtype: threading.Thread"""
+
+
+            class Sample(ISample):
+                def b_method(self):
+                    pass
+                def a_method(self):
+                    self.b_method().is_a''')
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
@@ -396,18 +397,19 @@ class EvaluateTest(unittest.TestCase):
 class RegressionHintingTest(AbstractHintingTest):
     def test_hierarchical_hint_for_mutable_attr_type(self):
         """Test for #157, AttributeError: 'PyObject' object has no attribute 'get_doc'"""
-        code = (
-            "class SuperClass(object):\n"
-            "    def __init__(self):\n"
-            "        self.foo = None\n"
-            "\n\n"
-            "class SubClass(SuperClass):\n"
-            "    def __init__(self):\n"
-            "        super(SubClass, self).__init__()\n"
-            "        self.bar = 3\n"
-            "\n\n"
-            "    def foo(self):\n"
-            "        return self.bar"
-        )
+        code = dedent("""\
+            class SuperClass(object):
+                def __init__(self):
+                    self.foo = None
+
+
+            class SubClass(SuperClass):
+                def __init__(self):
+                    super(SubClass, self).__init__()
+                    self.bar = 3
+
+
+                def foo(self):
+                    return self.bar""")
         result = self._assist(code)
         self.assert_completion_in_result("bar", "attribute", result)
