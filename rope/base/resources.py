@@ -104,6 +104,8 @@ class File(Resource):
     """Represents a file"""
 
     def __init__(self, project, name):
+        # from rope.base.project import Project
+        # self.project = Project()
         super(File, self).__init__(project, name)
 
     def read(self):
@@ -114,11 +116,7 @@ class File(Resource):
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):
-        handle = open(self.real_path, "rb")
-        try:
-            return handle.read()
-        finally:
-            handle.close()
+        return self.project.fscommands.read(self.real_path)
 
     def write(self, contents):
         try:

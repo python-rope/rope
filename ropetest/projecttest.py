@@ -916,6 +916,10 @@ class _MockFSCommands(object):
         self.log += "remove "
         self.fscommands.remove(path)
 
+    def read(self, path):
+        self.log += "read "
+        return self.fscommands.read(path)
+
 
 class RopeFolderTest(unittest.TestCase):
     def setUp(self):

@@ -60,6 +60,10 @@ class FileSystemCommands(object):
         finally:
             file_.close()
 
+    def read(self, path):
+        with open(path, "rb") as handle:
+            return handle.read()
+
 
 class SubversionCommands(object):
     def __init__(self, *args):
@@ -84,6 +88,9 @@ class SubversionCommands(object):
 
     def write(self, path, data):
         self.normal_actions.write(path, data)
+
+    def read(self, path):
+        return self.normal_actions.read(path)
 
 
 class MercurialCommands(object):
@@ -133,6 +140,9 @@ class MercurialCommands(object):
     def write(self, path, data):
         self.normal_actions.write(path, data)
 
+    def read(self, path):
+        return self.normal_actions.read(path)
+
 
 class GITCommands(object):
     def __init__(self, root):
@@ -156,6 +166,9 @@ class GITCommands(object):
     def write(self, path, data):
         # XXX: should we use ``git add``?
         self.normal_actions.write(path, data)
+
+    def read(self, path):
+        return self.normal_actions.read(path)
 
     def _do(self, args):
         _execute(["git"] + args, cwd=self.root)
@@ -184,6 +197,9 @@ class DarcsCommands(object):
 
     def remove(self, path):
         self.normal_actions.remove(path)
+
+    def read(self, path):
+        return self.normal_actions.read(path)
 
     def write(self, path, data):
         self.normal_actions.write(path, data)
