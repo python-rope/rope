@@ -117,9 +117,11 @@ class File(Resource):
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):
-        if not hasattr(self.project.fscommands, 'read'):
+        if not hasattr(self.project.fscommands, "read"):
             warnings.warn(
-                "FileSystemCommands should implement read() method", DeprecationWarning, stacklevel=2
+                "FileSystemCommands should implement read() method",
+                DeprecationWarning,
+                stacklevel=2,
             )
             with open(self.real_path, "rb") as handle:
                 return handle.read()
