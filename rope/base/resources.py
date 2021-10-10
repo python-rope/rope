@@ -28,6 +28,7 @@ from and writing to the resource, moving the resource, etc.
 
 import os
 import re
+import warnings
 
 from rope.base import change
 from rope.base import exceptions
@@ -116,6 +117,12 @@ class File(Resource):
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):
+        if not hasattr(self.project.fscommands, 'read'):
+            warnings.warn(
+                "FileSystemCommands should implement read() method", DeprecationWarning, stacklevel=2
+            )
+            with open(self.real_path, "rb") as handle:
+                return handle.read()
         return self.project.fscommands.read(self.real_path)
 
     def write(self, contents):
