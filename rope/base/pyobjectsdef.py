@@ -579,10 +579,10 @@ class _ComprehensionVisitor(_ScopeVisitor):
 
     def _Name(self, node):
         if isinstance(node.ctx, ast.Store):
-            self.names[node.id] = DefinedName(self._get_pyobject(node))
+            self.names[node.id] = self._get_pyobject(node)
 
     def _get_pyobject(self, node):
-        return pyobjects.PyDefinedObject(None, node, self.owner_object)
+        return pynames.AssignedName(lineno=node.lineno, module=self.get_module())
 
 
 class _GlobalVisitor(_ScopeVisitor):
