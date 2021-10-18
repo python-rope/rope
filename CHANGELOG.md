@@ -17,6 +17,7 @@
 - #396 Fix improper replacement when extracting index access expression with `similar=True` (@lieryan)
 - #293 Fix rename global var affects list comprehension (@climbus)
 - #387 Implement extract refactoring for code containing `async with`
+- #434 Move read() to FileSystemCommands
 
 ## Misc
 

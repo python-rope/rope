@@ -916,6 +916,32 @@ class _MockFSCommands(object):
         self.log += "remove "
         self.fscommands.remove(path)
 
+    def read(self, path):
+        self.log += "read "
+        return self.fscommands.read(path)
+
+
+class _DeprecatedFSCommands(object):
+    def __init__(self):
+        self.log = ""
+        self.fscommands = FileSystemCommands()
+
+    def create_file(self, path):
+        self.log += "create_file "
+        self.fscommands.create_file(path)
+
+    def create_folder(self, path):
+        self.log += "create_folder "
+        self.fscommands.create_folder(path)
+
+    def move(self, path, new_location):
+        self.log += "move "
+        self.fscommands.move(path, new_location)
+
+    def remove(self, path):
+        self.log += "remove "
+        self.fscommands.remove(path)
+
 
 class RopeFolderTest(unittest.TestCase):
     def setUp(self):
@@ -996,6 +1022,13 @@ class RopeFolderTest(unittest.TestCase):
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
         self.assertEqual("", fscommands.log)
+
+    def test_deprecated_fscommands(self):
+        fscommands = _DeprecatedFSCommands()
+        self.project = testutils.sample_project(fscommands=fscommands)
+        myfile = self.project.get_file("myfile.txt")
+        myfile.create()
+        self.assertTrue("create_file ", fscommands.log)
 
     def test_ignored_resources_and_prefixes(self):
         self.project = testutils.sample_project(ignored_resources=[".hg"])
