@@ -1124,3 +1124,12 @@ class NewStaticOITest(unittest.TestCase):
         a_class = pymod["A"].get_object()
         x_var = pymod["x"].get_object().get_type()
         self.assertEqual(a_class, x_var)
+
+    def test_set_comprehension(self):
+        code = dedent("""\
+            x = {s.strip() for s in X()}
+            x.add('x')
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        x_var = pymod['x'].pyobject.get()
