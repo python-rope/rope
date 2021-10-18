@@ -30,14 +30,14 @@ Date: 2021-10-18
 
 ## New feature
 
-- #434 Move read() to FileSystemCommands
+- #434 Move read() to FileSystemCommands (@lieryan)
 
 ## Misc
 
 - #410 Setup all-contributors bot (@lieryan)
 - #404 Blacken source code, rope now follows black code style (@climbus)
-- #399 Add Github Actions to enforce black code style
-- #403 Remove plain 'unittest' only runner
+- #399 Add Github Actions to enforce black code style (@lieryan)
+- #403 Remove plain 'unittest' only runner (@lieryan)
 
 
 # Release 0.20.1
