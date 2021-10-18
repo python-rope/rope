@@ -4,6 +4,8 @@ TODO
 
 # Release 0.21.0
 
+Date: 2021-10-18
+
 ## Syntax support
 
 - #392, #316 Handle `global` keyword when extracting method (@climbus)
