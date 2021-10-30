@@ -412,7 +412,28 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex("g")))
 
-    def test_one_letter_function_keyword_arguments(self):
+    def test_is_function_keyword_parameter(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            func(param=1)
+                ++++++
+            func(
+
+                param=1
+               ++++++
+            )
+
+            def func(param=1):
+                    ++++++
+                pass
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assertEqual(
+            self._make_offset_annotation(code, word_finder.is_function_keyword_parameter),
+            annotations,
+        )
+
+    def test_one_letter_is_function_keyword_parameter(self):
         code = "f(p=1)\n"
         word_finder = worder.Worder(code)
         index = code.rindex("p")
