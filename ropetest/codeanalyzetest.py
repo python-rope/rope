@@ -545,12 +545,10 @@ class ScopeNameFinderTest(unittest.TestCase):
     def test_modules_after_from_statements(self):
         root_folder = self.project.root
         mod = testutils.create_module(self.project, "mod", root_folder)
-        mod.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        mod.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = "from mod import a_func\n"
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
@@ -560,12 +558,10 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_renaming_functions_with_from_import_and_parens(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write(
-            dedent("""\
-                def afunc():
-                    pass
-            """)
-        )
+        mod1.write(dedent("""\
+            def afunc():
+                pass
+        """))
         code = dedent("""\
             from mod1 import (
                 afunc as func)
@@ -583,12 +579,10 @@ class ScopeNameFinderTest(unittest.TestCase):
         pkg2 = testutils.create_package(self.project, "pkg2", pkg1)
         mod1 = testutils.create_module(self.project, "mod1", pkg1)
         mod2 = testutils.create_module(self.project, "mod2", pkg2)
-        mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = "from ..mod1 import a_func\n"
         mod2.write(code)
         mod2_scope = self.project.get_pymodule(mod2).get_scope()
