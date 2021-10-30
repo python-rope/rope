@@ -62,6 +62,62 @@ class WordRangeFinderTest(unittest.TestCase):
         result = word_finder.get_primary_at(offset)
         return result
 
+    def _annotated_code(self, annotated_code):
+        """
+        Split annotated code into raw code and annotation.
+
+        Odd lines in `annotated_code` is the actual Python code.
+
+        Even lines in `annotated_code` are single-char annotation for the
+        previous line.
+
+        The annotation may contain one extra character which annotates the
+        newline/end of line character.
+        """
+        code_lines = annotated_code.splitlines()[::2]
+        annotations_lines = annotated_code.splitlines()[1::2]
+        if len(annotations_lines) < len(code_lines):
+            annotations_lines.append("")
+        for idx, (line, line_ann) in enumerate(zip(code_lines, annotations_lines)):
+            newline_ann_char = 1  # for annotation of the end of line character
+            self.assertLessEqual(
+                len(line_ann),
+                len(line) + newline_ann_char,
+                msg="Extra character in annotations",
+            )
+            line_ann = line_ann.rstrip()
+            line_ann += " " * (len(line) - len(line_ann))
+            if len(line_ann) != len(line) + newline_ann_char:
+                line_ann += " "
+            self.assertEqual(len(line_ann), len(line) + newline_ann_char)
+            annotations_lines[idx] = line_ann
+        code, annotations = "\n".join(code_lines), "\n".join(annotations_lines)
+        if code[-1] != "\n":
+            annotations = annotations[:-1]
+        self.assertEqual(len(code) + code.count("\n"), len(annotations))
+        return code, annotations
+
+    def _make_offset_annotation(self, code, func):
+        """
+        Create annotation by calling `func(offset)` for every offset in `code`.
+
+        For example, when the annotated code looks like so:
+
+            import a.b.c.d
+                   ++++++++
+
+        This means that `func(offset)` returns True whenever offset points to
+        the 'a.b.c.d' part and returns False everywhere else.
+        """
+
+        def _annotation_char(offset):
+            ann_char = "+" if func(offset) else " "
+            if code[offset] == "\n":
+                ann_char = ann_char + "\n"
+            return ann_char
+
+        return "".join([_annotation_char(offset) for offset in range(len(code))])
+
     def test_keyword_before_parens(self):
         code = dedent("""\
             if (a_var).an_attr:
@@ -224,7 +280,22 @@ class WordRangeFinderTest(unittest.TestCase):
         code = '"" + # var2.\n  var3'
         self.assertEqual("var3", self._find_primary(code, 21))
 
-    def test_import_statement_finding(self):
+    def test_is_import_statement(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+                   ++++++++
+            from a.b import c
+
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assertEqual(
+            self._make_offset_annotation(code, word_finder.is_import_statement),
+            annotations,
+        )
+
+    def test_is_import_statement_finding(self):
         code = dedent("""\
             import mod
             a_var = 10
@@ -233,7 +304,7 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertTrue(word_finder.is_import_statement(code.index("mod") + 1))
         self.assertFalse(word_finder.is_import_statement(code.index("a_var") + 1))
 
-    def test_import_statement_finding2(self):
+    def test_is_import_statement_finding2(self):
         code = dedent("""\
             import a.b.c.d
             result = a.b.c.d.f()
