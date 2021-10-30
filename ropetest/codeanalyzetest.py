@@ -13,12 +13,6 @@ from ropetest import testutils
 
 
 class SourceLinesAdapterTest(unittest.TestCase):
-    def setUp(self):
-        super(SourceLinesAdapterTest, self).setUp()
-
-    def tearDown(self):
-        super(SourceLinesAdapterTest, self).tearDown()
-
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter("line1\nline2\n")
         self.assertEqual("line1", to_lines.get_line(1))
@@ -51,12 +45,6 @@ class SourceLinesAdapterTest(unittest.TestCase):
 
 
 class WordRangeFinderTest(unittest.TestCase):
-    def setUp(self):
-        super(WordRangeFinderTest, self).setUp()
-
-    def tearDown(self):
-        super(WordRangeFinderTest, self).tearDown()
-
     def _find_primary(self, code, offset):
         word_finder = worder.Worder(code)
         result = word_finder.get_primary_at(offset)
@@ -736,12 +724,6 @@ class ScopeNameFinderTest(unittest.TestCase):
 
 
 class LogicalLineFinderTest(unittest.TestCase):
-    def setUp(self):
-        super(LogicalLineFinderTest, self).setUp()
-
-    def tearDown(self):
-        super(LogicalLineFinderTest, self).tearDown()
-
     def _logical_finder(self, code):
         return LogicalLineFinder(SourceLinesAdapter(code))
 
