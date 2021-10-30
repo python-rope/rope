@@ -286,6 +286,10 @@ class WordRangeFinderTest(unittest.TestCase):
                    ++++++++
             from a.b import c
 
+            import a.b.c.d as d
+                   +++++++++++++
+            from a.b import c as e
+
             result = a.b.c.d.f()
 
         """))
@@ -378,6 +382,25 @@ class WordRangeFinderTest(unittest.TestCase):
         code = "a, b = (1, 2)\n"
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
+
+    def test_is_from_statement(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+                 +++++++++++++
+            import a.b.c.d as d
+
+            from a.b import c as e
+                 ++++++++++++++++++
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assertEqual(
+            self._make_offset_annotation(code, word_finder.is_from_statement),
+            annotations,
+        )
 
     def test_is_from_with_from_import_and_multiline_parens(self):
         code = "from mod import \\\n  (f,\n  g, h)\n"
