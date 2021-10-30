@@ -494,7 +494,20 @@ class WordRangeFinderTest(unittest.TestCase):
             code.index("("), finder.find_parens_start_from_inside(len(code) - 1)
         )
 
-    def test_is_on_function_keyword(self):
+    def test_is_on_function_call_keyword(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            myfunc(va
+                  +++
+        """))
+
+        finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, finder.is_on_function_call_keyword),
+        )
+
+    def test_is_on_function_keyword_partial(self):
         code = "myfunc(va"
         finder = worder.Worder(code)
         self.assertTrue(finder.is_on_function_call_keyword(len(code) - 1))
