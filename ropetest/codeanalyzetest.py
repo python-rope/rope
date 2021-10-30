@@ -118,6 +118,18 @@ class WordRangeFinderTest(unittest.TestCase):
 
         return "".join([_annotation_char(offset) for offset in range(len(code))])
 
+    def assert_equal_annotation(self, code, expected, actual):
+        if expected != actual:
+            msg = ["Annotation does not match:\n"]
+            for line, line_exp, line_actual in zip(
+                code.splitlines(), expected.splitlines(), actual.splitlines()
+            ):
+                msg.append("  " + line + "\n")
+                if line_exp != line_actual:
+                    msg.append("e " + line_exp + "\n")
+                    msg.append("a " + line_actual + "\n")
+            self.fail("".join(msg))
+
     def test_keyword_before_parens(self):
         code = dedent("""\
             if (a_var).an_attr:
@@ -294,9 +306,10 @@ class WordRangeFinderTest(unittest.TestCase):
 
         """))
         word_finder = worder.Worder(code)
-        self.assertEqual(
-            self._make_offset_annotation(code, word_finder.is_import_statement),
+        self.assert_equal_annotation(
+            code,
             annotations,
+            self._make_offset_annotation(code, word_finder.is_import_statement),
         )
 
     def test_is_import_statement_finding(self):
@@ -397,9 +410,10 @@ class WordRangeFinderTest(unittest.TestCase):
 
         """))
         word_finder = worder.Worder(code)
-        self.assertEqual(
-            self._make_offset_annotation(code, word_finder.is_from_statement),
+        self.assert_equal_annotation(
+            code,
             annotations,
+            self._make_offset_annotation(code, word_finder.is_from_statement),
         )
 
     def test_is_from_with_from_import_and_multiline_parens(self):
@@ -428,9 +442,12 @@ class WordRangeFinderTest(unittest.TestCase):
 
         """))
         word_finder = worder.Worder(code)
-        self.assertEqual(
-            self._make_offset_annotation(code, word_finder.is_function_keyword_parameter),
+        self.assert_equal_annotation(
+            code,
             annotations,
+            self._make_offset_annotation(
+                code, word_finder.is_function_keyword_parameter
+            ),
         )
 
     def test_one_letter_is_function_keyword_parameter(self):
