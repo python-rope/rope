@@ -17,6 +17,10 @@ class Worder(object):
 
     Note that in these methods, offset should be the index of the
     character not the index of the character after it.
+
+    Some of the methods here doesn't exactly do what their name might lead you
+    to think they do, these probably should be fixed. Refer to
+    ropetest/codeanalyzetest.py for what these methods returns.
     """
 
     def __init__(self, code, handle_ignores=False):
