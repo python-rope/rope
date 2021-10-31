@@ -745,6 +745,10 @@ You can implement your own fscommands object:
         """Write `data` to file at `path`"""
         # ...
 
+    def read(self, path):
+        """Read `data` from file at `path`"""
+        # ...
+
 And you can create a project like this:
 
 .. code-block:: python

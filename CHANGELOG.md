@@ -1,27 +1,43 @@
 # **Upcoming release**
 
+- #270 Fix rename import statement with dots and as keyword (@climbus)
+
+# Release 0.21.0
+
+Date: 2021-10-18
+
 ## Syntax support
 
-- #392 Add extract method refactoring of code containing `global` (@climbus)
-- #392 Handle `global` declaration when extracting method (@climbus)
+- #392, #316 Handle `global` keyword when extracting method (@climbus)
+- context manager:
+  - #387, #433 Implement extract refactoring for code containing `async with` (@lieryan)
+  - #398, #104 Fix parsing of nested `with` statement/context manager (@climbus)
+- list/set/dict/generator comprehension scope issues:
+  - #422 Added scopes for comprehension expressions as part of #293 (@climbus)
+  - #426, #429 Added support for checking scopes by offset as part of #293 (@climbus)
+  - #293, #430 Fix renaming global var affects list comprehension (@climbus)
+  - #395, #315 Reuse of variable in comprehensions confuses method extraction (@climbus)
+  - #436 Fix error `TypeError: 'PyDefinedObject' object is not subscriptable` (@lieryan)
+- f-string:
+  - #303, #420 Fix inlining into f-string containing quote characters (@lieryan)
+- inline assignment/walrus operator:
+  - #423 Fix `AttributeError: '_ExpressionVisitor' object has no attribute 'defineds'` (@lieryan)
 
 ## Bug fixes
 
-- #391, #396 Extract method similar no longer replace the left-hand side of assignment (@climbus)
-- #303 Fix inlining into f-string containing quote characters (@lieryan)
-- Added scopes for comprehension expressions as part of #293 (@climbus)
-- Added support for checking scopes by offset as part of #293 (@climbus)
-- #423 Fix `AttributeError: '_ExpressionVisitor' object has no attribute 'defineds'` (@lieryan)
-- #398, #104 Fix parsing of nested `with` statement/context manager (@climbus)
 - #391, #376 Fix improper replacement when extracting attribute access expression with `similar=True` (@climbus)
 - #396 Fix improper replacement when extracting index access expression with `similar=True` (@lieryan)
-- #270 Fix rename import statement with dots and as keyword (@climbus)
-- #293 Fix rename global var affects list comprehension (@climbus)
+
+## New feature
+
+- #434 Move read() to FileSystemCommands (@lieryan)
 
 ## Misc
 
 - #410 Setup all-contributors bot (@lieryan)
 - #404 Blacken source code, rope now follows black code style (@climbus)
+- #399 Add Github Actions to enforce black code style (@lieryan)
+- #403 Remove plain 'unittest' only runner (@lieryan)
 
 
 # Release 0.20.1
