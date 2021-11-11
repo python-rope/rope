@@ -73,6 +73,7 @@ setup(
     classifiers=classifiers,
     extras_require={
         "dev": [
+            "build",
             "pytest",
             "pytest-timeout",
         ]
