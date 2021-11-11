@@ -2,6 +2,14 @@
 
 TODO
 
+# Release 0.21.1
+
+Date: 2021-11-11
+
+## Bug fixes
+
+- #441. Start publishing wheel packages to allow offline installs
+
 # Release 0.21.0
 
 ## Syntax support
