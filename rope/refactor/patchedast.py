@@ -863,6 +863,10 @@ class _PatchingASTWalker(object):
             children.append(node.value)
         self._handle(node, children)
 
+    def _YieldFrom(self, node):
+        children = ["yield", "from", node.value]
+        self._handle(node, children)
+
     def _While(self, node):
         children = ["while", node.test, ":"]
         children.extend(node.body)
