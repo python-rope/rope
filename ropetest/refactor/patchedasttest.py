@@ -1067,6 +1067,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Yield", ["yield", " ", NameConstant])
 
+    @testutils.only_for_versions_higher("3.3")
     def test_yield_from_node(self):
         source = dedent("""\
             def f(lst):

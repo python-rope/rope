@@ -266,6 +266,7 @@ class RestructureTest(unittest.TestCase):
         self.project.do(refactoring.get_changes())
         self.assertEqual(mod_text, self.mod.read())
 
+    @testutils.only_for_versions_higher("3.3")
     def test_yield_from(self):
         mod_text = dedent("""\
             def f(lst):
