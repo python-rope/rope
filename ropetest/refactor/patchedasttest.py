@@ -1067,6 +1067,15 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Yield", ["yield", " ", NameConstant])
 
+    def test_yield_from_node(self):
+        source = dedent("""\
+            def f(lst):
+                yield from lst
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("YieldFrom", ["yield", " ", "from", " ", "Name"])
+
     def test_while_node(self):
         source = dedent("""\
             while True:

@@ -265,3 +265,27 @@ class RestructureTest(unittest.TestCase):
         refactoring = restructure.Restructure(self.project, "${a}", "${a}")
         self.project.do(refactoring.get_changes())
         self.assertEqual(mod_text, self.mod.read())
+
+    def test_yield_from(self):
+        mod_text = dedent("""\
+            def f(lst):
+                yield from lst
+        """)
+        self.mod.write(mod_text)
+        refactoring = restructure.Restructure(
+            self.project,
+            "yield from ${a}",
+            dedent("""\
+                for it in ${a}:
+                   yield it"""),
+        )
+        self.project.do(refactoring.get_changes())
+        self.assertEqual(
+            dedent("""\
+            def f(lst):
+                for it in lst:
+                   yield it
+            """),
+            self.mod.read(),
+        )
+

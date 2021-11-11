@@ -1,6 +1,11 @@
 # **Upcoming release**
 
-- #270 Fix rename import statement with dots and as keyword (@climbus)
+## Syntax support
+
+- #443 Implement `yield from` syntax support to patchedast.py
+
+## Bug fixes
+- #270, #432 Fix rename import statement with dots and as keyword (@climbus)
 
 # Release 0.21.1
 
