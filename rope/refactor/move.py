@@ -234,7 +234,7 @@ class MoveGlobal(object):
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         if self.old_pyname is None:
             raise exceptions.RefactoringError(
-                "Move refactoring should be performed on a " "class/function/variable."
+                "Move refactoring should be performed on a class/function/variable."
             )
         if self._is_variable(self.old_pyname):
             self.old_name = worder.get_name_at(resource, offset)
