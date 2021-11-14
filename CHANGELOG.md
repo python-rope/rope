@@ -5,6 +5,10 @@
 - #443 Implement `yield from` syntax support to patchedast.py
 
 ## Bug fixes
+
+- #445 Improve empty tuple and handling of parentheses around tuple
+
+## Bug fixes
 - #270, #432 Fix rename import statement with dots and as keyword (@climbus)
 
 # Release 0.21.1
