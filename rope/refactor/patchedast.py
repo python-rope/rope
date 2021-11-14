@@ -842,7 +842,18 @@ class _PatchingASTWalker(object):
 
     def _Tuple(self, node):
         if node.elts:
-            self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
+            children = collections.deque(self._child_nodes(node.elts, ","))
+            start = self.source.offset
+            inner_start = (
+                self.lines.get_line_start(node.elts[0].lineno) + node.elts[0].col_offset
+            )
+            while start <= inner_start:
+                inner_start = self.source.rfind_token("(", start, inner_start)
+                if inner_start is None:
+                    break
+                children.appendleft("(")
+                children.append(")")
+            self._handle(node, children, eat_parens=True)
         else:
             self._handle(node, ["(", ")"])
 
