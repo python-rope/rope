@@ -1063,7 +1063,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
-            "Tuple", ["(", "", "Tuple", "", ",", " ", "Constant", "", ")"]
+            "Tuple", ["(", "", "Tuple", "", ",", " ", NameConstant, "", ")"]
         )
 
     def test_empty_tuple_node3(self):
@@ -1071,7 +1071,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
-            "Tuple", ["Tuple", "", ",", " ", "Constant"]
+            "Tuple", ["Tuple", "", ",", " ", NameConstant]
         )
 
     def test_tuple_with_complex_parentheses(self):
@@ -1079,7 +1079,7 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
-            "Tuple", ["(", " # (he\n ", "(", "", "(", "", "(", "", "Tuple", "", ",", " ", "Constant", "", ")", "", ")", "", ")", "", ")"]
+            "Tuple", ["(", " # (he\n ", "(", "", "(", "", "(", "", "Tuple", "", ",", " ", NameConstant, "", ")", "", ")", "", ")", "", ")"]
         )
 
     def test_yield_node(self):
