@@ -290,6 +290,12 @@ class WordRangeFinderTest(unittest.TestCase):
                    +++++++++++++
             from a.b import c as e
 
+            from a.b import (
+
+                abc
+
+            )
+
             result = a.b.c.d.f()
 
         """))
@@ -394,6 +400,12 @@ class WordRangeFinderTest(unittest.TestCase):
 
             from a.b import c as e
                  ++++++++++++++++++
+            from a.b import (
+                 +++++++++++++
+                abc
+            ++++++++
+            )
+            ++
             result = a.b.c.d.f()
 
         """))
@@ -402,6 +414,64 @@ class WordRangeFinderTest(unittest.TestCase):
             code,
             annotations,
             self._make_offset_annotation(code, word_finder.is_from_statement),
+        )
+
+    def test_is_from_statement_module(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+                +++++
+            import a.b.c.d as d
+
+            from a.b import c as e
+                +++++
+            from a.b import (
+                +++++
+                abc
+
+            )
+
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, word_finder.is_from_statement_module),
+        )
+
+    def test_is_import_statement_aliased_module(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+
+            import a.b.c.d as d
+                   +++++++
+            from a.b import c as e
+
+            from a.b import (
+
+                abc
+
+            )
+
+            import mod1, \\
+
+                mod2 as c, mod3, mod4 as d
+               +++++            +++++
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(
+                code, word_finder.is_import_statement_aliased_module
+            ),
         )
 
     def test_is_from_aliased(self):
@@ -414,6 +484,16 @@ class WordRangeFinderTest(unittest.TestCase):
 
             from a.b import c as e
                            ++
+            from a.b import (
+
+                abc
+
+            )
+
+            from a.b import mod1, \\
+
+                mod2 as c, mod3, mod4 as d
+               +++++            +++++
             result = a.b.c.d.f()
 
         """))
