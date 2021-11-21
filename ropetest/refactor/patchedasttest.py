@@ -1046,6 +1046,30 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Tuple", ["Num", "", ",", " ", "Num"])
 
+    def test_tuple_with_complex_parentheses1(self):
+        source = "a = ( # (he\n ((((), None))))\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "Tuple", ["(", "", "Tuple", "", ",", " ", NameConstant, "", ")"]
+        )
+
+    def test_tuple_with_complex_parentheses2(self):
+        source = "a = ( # (he\n ((((('a')), ('b')))))\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "Tuple", ["(", "", "((", "Str", "))", ",", " (", "Str", ")", "", ")"]
+        )
+
+    def test_tuple_with_complex_parentheses3(self):
+        source = "a = ((), (([],), []),)"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "Tuple", ["(", "", "Tuple", "", ",", " ", "Tuple", ",", ")"]
+        )
+
     def test_one_item_tuple_node(self):
         source = "(1,)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1056,7 +1080,7 @@ class PatchedASTTest(unittest.TestCase):
         source = "()\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children("Tuple", ["(", "", ")"])
+        checker.check_children("Tuple", ["()"])
 
     def test_empty_tuple_node2(self):
         source = "a = ((), None)\n"
@@ -1072,14 +1096,6 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
             "Tuple", ["Tuple", "", ",", " ", NameConstant]
-        )
-
-    def test_tuple_with_complex_parentheses(self):
-        source = "a = ( # (he\n ((((), None))))\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_children(
-            "Tuple", ["(", " # (he\n ", "(", "", "(", "", "(", "", "Tuple", "", ",", " ", NameConstant, "", ")", "", ")", "", ")", "", ")"]
         )
 
     def test_yield_node(self):

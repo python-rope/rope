@@ -82,6 +82,7 @@ class _PatchingASTWalker(object):
     exec_close_paren_or_space = object()
     exec_in_or_comma = object()
     with_or_comma_context_manager = object()
+    empty_tuple = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -128,6 +129,8 @@ class _PatchingASTWalker(object):
                     )
                 elif child is self.Number:
                     region = self.source.consume_number()
+                elif child == self.empty_tuple:
+                    region = self.source.consume_empty_tuple()
                 elif child == "!=":
                     # INFO: This has been added to handle deprecated ``<>``
                     region = self.source.consume_not_equal()
@@ -842,20 +845,9 @@ class _PatchingASTWalker(object):
 
     def _Tuple(self, node):
         if node.elts:
-            children = collections.deque(self._child_nodes(node.elts, ","))
-            start = self.source.offset
-            inner_start = (
-                self.lines.get_line_start(node.elts[0].lineno) + node.elts[0].col_offset
-            )
-            while start <= inner_start:
-                inner_start = self.source.rfind_token("(", start, inner_start)
-                if inner_start is None:
-                    break
-                children.appendleft("(")
-                children.append(")")
-            self._handle(node, children, eat_parens=True)
+            self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
         else:
-            self._handle(node, ["(", ")"])
+            self._handle(node, [self.empty_tuple])
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
@@ -960,6 +952,9 @@ class _Source(object):
             _Source._number_pattern = re.compile(self._get_number_pattern())
         repattern = _Source._number_pattern
         return self._consume_pattern(repattern)
+
+    def consume_empty_tuple(self):
+        return self._consume_pattern(re.compile(r"\(\s*\)"))
 
     def consume_not_equal(self):
         if _Source._not_equals_pattern is None:
