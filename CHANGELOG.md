@@ -7,9 +7,11 @@
 ## Bug fixes
 
 - #445 Improve empty tuple and handling of parentheses around tuple
-
-## Bug fixes
 - #270, #432 Fix rename import statement with dots and as keyword (@climbus)
+
+## Misc
+
+- #447 Add Python 3.10 to tests
 
 # Release 0.21.1
 
