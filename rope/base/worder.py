@@ -20,7 +20,9 @@ class Worder(object):
 
     Some of the methods here doesn't exactly do what their name might lead you
     to think they do, these probably should be fixed. Refer to
-    ropetest/codeanalyzetest.py for what these methods returns.
+    ropetest/codeanalyzetest.py for what these methods returns. Note that
+    codeanalyzetest.py documents the current behavior, rather than what they
+    should've been.
     """
 
     def __init__(self, code, handle_ignores=False):
