@@ -1,5 +1,11 @@
 # **Upcoming release**
 
+...
+
+# Release 0.22.0
+
+Date: 2021-11-23
+
 ## Syntax support
 
 - #443 Implement `yield from` syntax support to patchedast.py
