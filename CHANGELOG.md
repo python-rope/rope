@@ -6,9 +6,7 @@
 
 ## Bug fixes
 
-- #445 Improve empty tuple and handling of parentheses around tuple
-
-## Bug fixes
+- #445, #446 Improve empty tuple and handling of parentheses around tuple
 - #270, #432 Fix rename import statement with dots and as keyword (@climbus)
 
 # Release 0.21.1
