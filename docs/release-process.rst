@@ -5,3 +5,4 @@
 5. ``python3 -m build``
 6. ``twine upload -s dist/rope-$VERSION.{tar.gz,whl}``
 7. Publish to Discussions Announcement
+8. Close milestone
