@@ -16,7 +16,7 @@ Overview
 .. _`rope`: https://github.com/python-rope/rope
 
 
-Most Python syntax from Python 2.7 up to Python 3.9 is supported. Please file bugs and contribute
+Most Python syntax from Python 2.7 up to Python 3.10 is supported. Please file bugs and contribute
 patches if you encounter gaps.
 
 Getting Started

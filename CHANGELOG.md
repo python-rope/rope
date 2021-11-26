@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #449 Add Python 3.10, remove Python 3.5
 ...
 
 # Release 0.22.0
