@@ -3,3 +3,13 @@
 target-version = ['py27', 'py33', 'py34', 'py35', 'py36', 'py37', 'py38', 'py39']
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest'
+
+[tool.pytest.ini_options]
+
+python_files = [
+   "*test.py",
+   "__init__.py",
+]
+markers = [
+    "time_limit: sets a maximum amount of time the test can run",
+]
