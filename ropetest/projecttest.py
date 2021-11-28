@@ -439,7 +439,7 @@ class ProjectTest(unittest.TestCase):
         file.close()
         self.assertEqual(contents, sample_file.read_bytes())
 
-    def test_read_on_file_with_unix_line_ending(self):
+    def test_file_with_unix_line_ending(self):
         sample_file = self.project.root.create_file("my_file.txt")
         contents = b"1\n"
         file = open(sample_file.real_path, "wb")
@@ -449,7 +449,10 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual("1\n", sample_file.read())
         self.assertEqual("\n", sample_file.newlines)
 
-    def test_read_on_file_with_dos_line_ending(self):
+        sample_file.write("1\n")
+        self.assertEqual(b"1\n", sample_file.read_bytes())
+
+    def test_file_with_dos_line_ending(self):
         sample_file = self.project.root.create_file("my_file.txt")
         contents = b"1\r\n"
         file = open(sample_file.real_path, "wb")
@@ -459,7 +462,10 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual("1\n", sample_file.read())
         self.assertEqual("\r\n", sample_file.newlines)
 
-    def test_read_on_file_with_mac_line_ending(self):
+        sample_file.write("1\n")
+        self.assertEqual(b"1\r\n", sample_file.read_bytes())
+
+    def test_file_with_mac_line_ending(self):
         sample_file = self.project.root.create_file("my_file.txt")
         contents = b"1\r"
         file = open(sample_file.real_path, "wb")
@@ -468,6 +474,9 @@ class ProjectTest(unittest.TestCase):
         self.assertIsNone(sample_file.newlines)
         self.assertEqual("1\n", sample_file.read())
         self.assertEqual("\r", sample_file.newlines)
+
+        sample_file.write("1\n")
+        self.assertEqual(b"1\r", sample_file.read_bytes())
 
     # TODO: Detecting utf-16 encoding
     def xxx_test_using_utf16(self):

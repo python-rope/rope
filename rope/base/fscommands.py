@@ -214,7 +214,9 @@ def _execute(args, cwd=None):
     return process.returncode
 
 
-def unicode_to_file_data(contents, encoding=None):
+def unicode_to_file_data(contents, encoding=None, newlines=None):
+    if newlines and newlines != "\n":
+        contents = contents.replace("\n", newlines)
     if not isinstance(contents, unicode):
         return contents
     if encoding is None:
