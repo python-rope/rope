@@ -1,6 +1,8 @@
 # **Upcoming release**
 
-...
+## Bug fixes
+
+- #134, #453 Preserve newline format when writing files 
 
 # Release 0.22.0
 
