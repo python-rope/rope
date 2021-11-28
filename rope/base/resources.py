@@ -105,8 +105,6 @@ class File(Resource):
     """Represents a file"""
 
     def __init__(self, project, name):
-        # from rope.base.project import Project
-        # self.project = Project()
         super(File, self).__init__(project, name)
 
     def read(self):
