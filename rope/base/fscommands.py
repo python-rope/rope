@@ -229,9 +229,14 @@ def unicode_to_file_data(contents, encoding=None):
 
 def file_data_to_unicode(data, encoding=None):
     result = _decode_data(data, encoding)
+    newline = "\n"
+    if "\r\n" in result:
+        result = result.replace("\r\n", "\n")
+        newline = "\r\n"
     if "\r" in result:
-        result = result.replace("\r\n", "\n").replace("\r", "\n")
-    return result
+        result = result.replace("\r", "\n")
+        newline = "\r"
+    return result, newline
 
 
 def _decode_data(data, encoding):

@@ -199,7 +199,7 @@ class PyModule(pyobjects.PyModule):
         try:
             if source_code is None:
                 source_bytes = resource.read_bytes()
-                source_code = fscommands.file_data_to_unicode(source_bytes)
+                source_code, _ = fscommands.file_data_to_unicode(source_bytes)
             else:
                 if isinstance(source_code, unicode):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
