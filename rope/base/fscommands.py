@@ -215,10 +215,10 @@ def _execute(args, cwd=None):
 
 
 def unicode_to_file_data(contents, encoding=None, newlines=None):
-    if newlines and newlines != "\n":
-        contents = contents.replace("\n", newlines)
     if not isinstance(contents, unicode):
         return contents
+    if newlines and newlines != "\n":
+        contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
     if encoding is not None:

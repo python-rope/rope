@@ -478,6 +478,19 @@ class ProjectTest(unittest.TestCase):
         sample_file.write("1\n")
         self.assertEqual(b"1\r", sample_file.read_bytes())
 
+    def test_file_binary(self):
+        sample_file = self.project.root.create_file("my_file.txt")
+        contents = b"1\r\n"
+        file = open(sample_file.real_path, "wb")
+        file.write(contents)
+        file.close()
+        self.assertIsNone(sample_file.newlines)
+        self.assertEqual(b"1\r\n", sample_file.read_bytes())
+        self.assertIsNone(sample_file.newlines)
+
+        sample_file.write(b"1\nx\r")
+        self.assertEqual((b"1\nx\r"), sample_file.read_bytes())
+
     # TODO: Detecting utf-16 encoding
     def xxx_test_using_utf16(self):
         sample_file = self.project.root.create_file("my_file.txt")
