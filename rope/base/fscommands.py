@@ -214,9 +214,11 @@ def _execute(args, cwd=None):
     return process.returncode
 
 
-def unicode_to_file_data(contents, encoding=None):
+def unicode_to_file_data(contents, encoding=None, newlines=None):
     if not isinstance(contents, unicode):
         return contents
+    if newlines and newlines != "\n":
+        contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
     if encoding is not None:
@@ -229,9 +231,14 @@ def unicode_to_file_data(contents, encoding=None):
 
 def file_data_to_unicode(data, encoding=None):
     result = _decode_data(data, encoding)
+    newline = "\n"
+    if "\r\n" in result:
+        result = result.replace("\r\n", "\n")
+        newline = "\r\n"
     if "\r" in result:
-        result = result.replace("\r\n", "\n").replace("\r", "\n")
-    return result
+        result = result.replace("\r", "\n")
+        newline = "\r"
+    return result, newline
 
 
 def _decode_data(data, encoding):

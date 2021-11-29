@@ -330,7 +330,10 @@ class _ResourceOperations(object):
         return self.fscommands
 
     def write_file(self, resource, contents):
-        data = rope.base.fscommands.unicode_to_file_data(contents)
+        data = rope.base.fscommands.unicode_to_file_data(
+            contents,
+            newlines=resource.newlines,
+        )
         fscommands = self._get_fscommands(resource)
         fscommands.write(resource.real_path, data)
         for observer in list(self.project.observers):
