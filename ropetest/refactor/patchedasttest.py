@@ -1404,6 +1404,20 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_wildcard(self):
+        source = dedent("""\
+            match x:
+                case _:
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "_"
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_as_capture_pattern(self):
         source = dedent("""\
             match x:
@@ -1451,6 +1465,38 @@ class PatchedASTTest(unittest.TestCase):
             "(",
             "",
             "MatchAs",
+            "",
+            ")",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_class_named_argument(self):
+        source = dedent("""\
+            match x:
+                case Foo(x=10, y="20"):
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchClass")
+        checker.check_children("MatchClass", [
+            "Name",
+            "",
+            "(",
+            "",
+            "x",
+            "",
+            "=",
+            "",
+            "MatchValue",
+            "",
+            ",",
+            " ",
+            "y",
+            "",
+            "=",
+            "",
+            "MatchValue",
             "",
             ")",
         ])

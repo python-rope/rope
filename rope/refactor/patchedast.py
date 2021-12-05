@@ -249,6 +249,21 @@ class _PatchingASTWalker(object):
                     return child.col_offset + self.lines.get_line_start(child.lineno)
         return len(self.source.source)
 
+    def _flatten(self, iterable, separator):
+        iterable = iter(iterable)
+        for o in next(iterable, []):
+            yield o
+        for item in iterable:
+            yield separator
+            for o in item:
+                yield o
+
+    def _flatten_keywords(self, keywords):
+        return self._flatten(
+            [[attr, "=", pattern] for attr, pattern in keywords],
+            separator=",",
+        )
+
     _operators = {
         "And": "and",
         "Or": "or",
@@ -924,6 +939,8 @@ class _PatchingASTWalker(object):
     def _MatchAs(self, node):
         if node.pattern:
             children = [node.pattern, "as", node.name]
+        elif node.name is None:
+            children = ["_"]
         else:
             children = [node.name]
         self._handle(node, children)
@@ -932,6 +949,7 @@ class _PatchingASTWalker(object):
         children = []
         children.extend([node.cls, "("])
         children.extend(self._child_nodes(node.patterns, ","))
+        children.extend(self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)))
         children.append(")")
         self._handle(node, children)
 
