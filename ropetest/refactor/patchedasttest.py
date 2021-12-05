@@ -26,6 +26,26 @@ class PatchedASTTest(unittest.TestCase):
     def tearDown(self):
         super(PatchedASTTest, self).tearDown()
 
+    def assert_single_case_match_block(self, checker, match_type):
+        checker.check_children("Match", [
+            "match",
+            " ",
+            "Name",
+            "",
+            ":",
+            "\n    ",
+            "match_case",
+        ])
+        checker.check_children("match_case", [
+            "case",
+            " ",
+            match_type,
+            "",
+            ":",
+            "\n        ",
+            "Expr",
+        ])
+
     def test_bytes_string(self):
         source = '1 + b"("\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1355,24 +1375,7 @@ class PatchedASTTest(unittest.TestCase):
         """)
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children("Match", [
-            "match",
-            " ",
-            "Name",
-            "",
-            ":",
-            "\n    ",
-            "match_case",
-        ])
-        checker.check_children("match_case", [
-            "case",
-            " ",
-            "MatchValue",
-            "",
-            ":",
-            "\n        ",
-            "Expr",
-        ])
+        self.assert_single_case_match_block(checker, "MatchValue")
         checker.check_children("MatchValue", [
             "Constant"
         ])
@@ -1386,23 +1389,15 @@ class PatchedASTTest(unittest.TestCase):
         """)
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        checker.check_children("Match", [
-            "match",
-            " ",
+        self.assert_single_case_match_block(checker, "MatchClass")
+        checker.check_children("MatchClass", [
             "Name",
             "",
-            ":",
-            "\n    ",
-            "match_case",
-        ])
-        checker.check_children("match_case", [
-            "case",
-            " ",
-            "MatchClass",
+            "(",
             "",
-            ":",
-            "\n        ",
-            "Expr",
+            "MatchValue",
+            "",
+            ")",
         ])
         checker.check_children("MatchValue", [
             "Constant"
