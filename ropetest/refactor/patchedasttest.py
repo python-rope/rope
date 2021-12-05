@@ -1346,6 +1346,37 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Await", ["await", " ", "Call"])
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_constant_match_value(self):
+        source = dedent("""\
+            match x:
+                case 1:
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("Match", [
+            "match",
+            " ",
+            "Name",
+            "",
+            ":",
+            "\n    ",
+            "match_case",
+        ])
+        checker.check_children("match_case", [
+            "case",
+            " ",
+            "MatchValue",
+            "",
+            ":",
+            "\n        ",
+            "Expr",
+        ])
+        checker.check_children("MatchValue", [
+            "Constant"
+        ])
+
 
 class _ResultChecker(object):
     def __init__(self, test_case, ast):

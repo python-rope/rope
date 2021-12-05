@@ -911,6 +911,19 @@ class _PatchingASTWalker(object):
     def _Starred(self, node):
         self._handle(node, [node.value])
 
+    def _Match(self, node):
+        children = ["match", node.subject, ":"]
+        children.extend(node.cases)
+        self._handle(node, children)
+
+    def _match_case(self, node):
+        children = ["case", node.pattern, ":"]
+        children.extend(node.body)
+        self._handle(node, children)
+
+    def _MatchValue(self, node):
+        self._handle(node, [node.value])
+
 
 class _Source(object):
     def __init__(self, source):
