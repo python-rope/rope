@@ -928,7 +928,10 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _match_case(self, node):
-        children = ["case", node.pattern, ":"]
+        children = ["case", node.pattern]
+        if node.guard:
+            children.extend(["if", node.guard])
+        children.append(":")
         children.extend(node.body)
         self._handle(node, children)
 

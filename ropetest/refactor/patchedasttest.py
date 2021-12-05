@@ -1381,6 +1381,38 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_match_case_with_guard(self):
+        source = dedent("""\
+            match x:
+                case int(n) if x < 10:
+                    print(n)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("Match", [
+            "match",
+            " ",
+            "Name",
+            "",
+            ":",
+            "\n    ",
+            "match_case",
+        ])
+        checker.check_children("match_case", [
+            "case",
+            " ",
+            "MatchClass",
+            " ",
+            "if",
+            " ",
+            "Compare",
+            "",
+            ":",
+            "\n        ",
+            "Expr",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_class(self):
         source = dedent("""\
             match x:
@@ -1527,6 +1559,8 @@ class PatchedASTTest(unittest.TestCase):
             "",
             ")",
         ])
+
+
 class _ResultChecker(object):
     def __init__(self, test_case, ast):
         self.test_case = test_case
