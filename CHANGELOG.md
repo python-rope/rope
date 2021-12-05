@@ -1,12 +1,20 @@
 # **Upcoming release**
 
+## Bug fixes
+
+- #134, #453 Preserve newline format when writing files 
+
+# Release 0.22.0
+
+Date: 2021-11-23
+
 ## Syntax support
 
 - #443 Implement `yield from` syntax support to patchedast.py
 
 ## Bug fixes
 
-- #445 Improve empty tuple and handling of parentheses around tuple
+- #445, #446 Improve empty tuple and handling of parentheses around tuple
 - #270, #432 Fix rename import statement with dots and as keyword (@climbus)
 
 ## Misc
