@@ -1418,6 +1418,24 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_as_capture_pattern_with_explicit_name(self):
+        source = dedent("""\
+            match x:
+                case "foo" as myval:
+                    print(myval)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "MatchValue",
+            " ",
+            "as",
+            " ",
+            "myval",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_class_simple_match_as_capture_pattern(self):
         source = dedent("""\
             match x:
@@ -1427,6 +1445,33 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         self.assert_single_case_match_block(checker, "MatchClass")
+        checker.check_children("MatchClass", [
+            "Name",
+            "",
+            "(",
+            "",
+            "MatchAs",
+            "",
+            ")",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_class_match_as_capture_pattern_with_explicit_name(self):
+        source = dedent("""\
+            match x:
+                case Foo(x) as b:
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "MatchClass",
+            " ",
+            "as",
+            " ",
+            "b",
+        ])
         checker.check_children("MatchClass", [
             "Name",
             "",

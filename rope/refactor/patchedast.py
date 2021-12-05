@@ -922,7 +922,11 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _MatchAs(self, node):
-        self._handle(node, [node.name])
+        if node.pattern:
+            children = [node.pattern, "as", node.name]
+        else:
+            children = [node.name]
+        self._handle(node, children)
 
     def _MatchClass(self, node):
         children = []
