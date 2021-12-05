@@ -76,10 +76,14 @@ def _remove_recursively(path):
         shutil.rmtree(path)
 
 
+def parse_version(version):
+    return tuple(map(int, version.split('.')))
+
+
 def only_for(version):
     """Should be used as a decorator for a unittest.TestCase test method"""
     return unittest.skipIf(
-        sys.version < version,
+        sys.version_info < parse_version(version),
         "This test requires at least {0} version of Python.".format(version),
     )
 
@@ -87,7 +91,7 @@ def only_for(version):
 def only_for_versions_lower(version):
     """Should be used as a decorator for a unittest.TestCase test method"""
     return unittest.skipIf(
-        sys.version > version,
+        sys.version_info > parse_version(version),
         "This test requires version of Python lower than {0}".format(version),
     )
 
@@ -95,7 +99,7 @@ def only_for_versions_lower(version):
 def only_for_versions_higher(version):
     """Should be used as a decorator for a unittest.TestCase test method"""
     return unittest.skipIf(
-        sys.version < version,
+        sys.version_info < parse_version(version),
         "This test requires version of Python higher than {0}".format(version),
     )
 
