@@ -921,8 +921,8 @@ class _PatchingASTWalker(object):
         children.extend(node.body)
         self._handle(node, children)
 
-    def _MatchValue(self, node):
-        self._handle(node, [node.value])
+    def _MatchAs(self, node):
+        self._handle(node, [node.name])
 
     def _MatchClass(self, node):
         children = []
@@ -930,6 +930,9 @@ class _PatchingASTWalker(object):
         children.extend(self._child_nodes(node.patterns, ","))
         children.append(")")
         self._handle(node, children)
+
+    def _MatchValue(self, node):
+        self._handle(node, [node.value])
 
 
 class _Source(object):
