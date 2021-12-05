@@ -2,6 +2,7 @@ import collections
 import numbers
 import re
 import warnings
+from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
 from rope.base.utils import pycompat
@@ -249,20 +250,23 @@ class _PatchingASTWalker(object):
                     return child.col_offset + self.lines.get_line_start(child.lineno)
         return len(self.source.source)
 
-    def _flatten(self, iterable, separator):
+    def _join(self, iterable, separator):
         iterable = iter(iterable)
-        for o in next(iterable, []):
-            yield o
-        for item in iterable:
+        try:
+            yield next(iterable)
+        except StopIteration:
+            return
+        for child in iterable:
             yield separator
-            for o in item:
-                yield o
+            yield child
 
-    def _flatten_keywords(self, keywords):
-        return self._flatten(
-            [[attr, "=", pattern] for attr, pattern in keywords],
-            separator=",",
-        )
+    def _flatten_keywords(self, iterable):
+        iterable = ([attr, "=", pattern] for attr, pattern in iterable)
+        iterable = self._join(iterable, separator=[","])
+        return chain.from_iterable(iterable)
+
+    def _child_nodes(self, nodes, separator):
+        return list(self._join(nodes, separator=separator))
 
     _operators = {
         "And": "and",
@@ -914,14 +918,6 @@ class _PatchingASTWalker(object):
 
     def _AsyncWith(self, node):
         self._handle_with_node(node, is_async=True)
-
-    def _child_nodes(self, nodes, separator):
-        children = []
-        for index, child in enumerate(nodes):
-            children.append(child)
-            if index < len(nodes) - 1:
-                children.append(separator)
-        return children
 
     def _Starred(self, node):
         self._handle(node, [node.value])
