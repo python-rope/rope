@@ -1,3 +1,5 @@
+from itertools import chain
+
 from rope.base import ast
 from rope.base.utils import pycompat
 
@@ -116,6 +118,10 @@ class _SuiteWalker(object):
 
     def _AsyncWith(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
+
+    def _Match(self, node):
+        case_bodies = list(chain.from_iterable([[case.pattern] + case.body for case in node.cases]))
+        self.suites.append(Suite(case_bodies, node.lineno, self.suite))
 
     def _TryFinally(self, node):
         proceed_to_except_handler = False
