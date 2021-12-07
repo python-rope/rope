@@ -2991,3 +2991,48 @@ class ExtractMethodTest(unittest.TestCase):
                 print(file1, file2)
         """)
         self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_extract_method_containing_structural_pattern_match(self):
+        code = dedent("""\
+            match var:
+                case Foo("xx"):
+                    print(x)
+                case Foo(x):
+                    print(x)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 5, 5)
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                print(x)
+
+            match var:
+                case Foo("xx"):
+                    print(x)
+                case Foo(x):
+                    extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_extract_method_containing_structural_pattern_match_2(self):
+        code = dedent("""\
+            def foo():
+                match var:
+                    case Foo(x):
+                        print(x)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+            def foo():
+                match var:
+                    case Foo(x):
+                        extracted(x)
+
+            def extracted(x):
+                print(x)
+        """)
+        self.assertEqual(expected, refactored)
