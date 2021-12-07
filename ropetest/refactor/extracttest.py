@@ -2962,7 +2962,7 @@ class ExtractMethodTest(unittest.TestCase):
                     print(file1)
         """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
-        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        refactored = self.do_extract_method(code, start, end, "extracted", global_=True)
         expected = dedent("""\
             async def afunc():
                 extracted()
@@ -2981,7 +2981,7 @@ class ExtractMethodTest(unittest.TestCase):
                     print(file1, file2)
         """)
         start, end = self._convert_line_range_to_offset(code, 3, 3)
-        refactored = self.do_extract_method(code, start, end, 'extracted', global_=True)
+        refactored = self.do_extract_method(code, start, end, "extracted", global_=True)
         expected = dedent("""\
             async def afunc():
                 async with open("test") as file1, open("test") as file2:
