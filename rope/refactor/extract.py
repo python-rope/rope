@@ -833,6 +833,8 @@ class _FunctionInformationCollector(object):
 
     def _MatchAs(self, node):
         self._written_variable(node.name, node.lineno)
+        if node.pattern:
+            ast.walk(node.pattern, self)
 
     def _Assign(self, node):
         ast.walk(node.value, self)

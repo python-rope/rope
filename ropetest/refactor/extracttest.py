@@ -3036,3 +3036,24 @@ class ExtractMethodTest(unittest.TestCase):
                 print(x)
         """)
         self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_extract_method_containing_structural_pattern_match_3(self):
+        code = dedent("""\
+            def foo():
+                match var:
+                    case {"hello": x} as y:
+                        print(x)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+            def foo():
+                match var:
+                    case {"hello": x} as y:
+                        extracted(x)
+
+            def extracted(x):
+                print(x)
+        """)
+        self.assertEqual(expected, refactored)
