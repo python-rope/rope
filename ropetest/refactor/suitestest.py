@@ -7,6 +7,7 @@ except ImportError:
 
 from rope.base import ast
 from rope.refactor import suites
+from ropetest import testutils
 
 
 class SuiteTest(unittest.TestCase):
@@ -239,6 +240,7 @@ class SuiteTest(unittest.TestCase):
         )
         self.assertEqual(1, suites.find_visible_for_suite(root, [1, 3]))
 
+    @testutils.only_for_versions_higher("3.10")
     def test_match_case(self):
         root = source_suite_tree(
             dedent("""\
