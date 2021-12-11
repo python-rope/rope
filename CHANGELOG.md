@@ -1,8 +1,13 @@
 # **Upcoming release**
 
+## Syntax support
+
+- #451, $456 Implement structural pattern matching (PEP634) (@lieryan)
+
 ## Bug fixes
 
-- #134, #453 Preserve newline format when writing files 
+- #134, #453 Preserve newline format when writing files  (@lieryan)
+
 
 # Release 0.22.0
 
