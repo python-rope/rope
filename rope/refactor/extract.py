@@ -501,7 +501,20 @@ class _ExceptionalConditionChecker(object):
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(object):
+class _ExtractParts(object):
+    def _get_single_expression_body(self, extracted):
+        extracted = sourceutils.fix_indentation(extracted, 0)
+        already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+        large_multiline = extracted.count("\n") >= 2 and already_parenthesized
+        if not large_multiline:
+            extracted = _join_lines(extracted)
+        multiline_expression = "\n" in extracted
+        if self.info.returning_named_expr or (multiline_expression and not large_multiline):
+            extracted = "(" + extracted + ")"
+        return extracted
+
+
+class _ExtractMethodParts(_ExtractParts):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -710,7 +723,7 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            return self._get_one_line_function_body()
+            return self._get_single_expression_function_body()
         return self._get_multiline_function_body(returns)
 
     def _get_multiline_function_body(self, returns):
@@ -720,17 +733,8 @@ class _ExtractMethodParts(object):
             unindented_body += "\nreturn %s" % self._get_comma_form(returns)
         return unindented_body
 
-    def _get_one_line_function_body(self):
-        extracted = sourceutils.fix_indentation(self.info.extracted, 0)
-        already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
-        large_multiline = extracted.count("\n") >= 2 and already_parenthesized
-        if not large_multiline:
-            extracted = _join_lines(extracted)
-        multiline_expression = "\n" in extracted
-        if self.info.returning_named_expr or (multiline_expression and not large_multiline):
-            body = "return " + "(" + extracted + ")"
-        else:
-            body = "return " + extracted
+    def _get_single_expression_function_body(self):
+        body = "return " + self._get_single_expression_body(self.info.extracted)
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
