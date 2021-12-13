@@ -721,7 +721,8 @@ class _ExtractMethodParts(object):
         return unindented_body
 
     def _get_single_expression_function_body(self):
-        body = "return " + _get_single_expression_body(self.info.extracted, info=self.info)
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        body = "return " + extracted
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
@@ -750,7 +751,8 @@ class _ExtractVariableParts(object):
         self.info = info
 
     def get_definition(self):
-        result = self.info.new_name + " = " + _get_single_expression_body(self.info.extracted, info=self.info) + "\n"
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        result = self.info.new_name + " = " + extracted + "\n"
         return result
 
     def get_body_pattern(self):
@@ -1090,7 +1092,9 @@ def _join_lines(code):
 
 def _get_single_expression_body(extracted, info):
     extracted = sourceutils.fix_indentation(extracted, 0)
-    already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+    already_parenthesized = (
+        extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+    )
     large_multiline = extracted.count("\n") >= 2 and already_parenthesized
     if not large_multiline:
         extracted = _join_lines(extracted)
