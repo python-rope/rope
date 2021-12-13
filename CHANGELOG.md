@@ -7,6 +7,8 @@
 ## Bug fixes
 
 - #134, #453 Preserve newline format when writing files  (@lieryan)
+- #457 Fix extract info collection for list comprehension with multiple targets
+  (@lieryan)
 
 
 # Release 0.22.0
