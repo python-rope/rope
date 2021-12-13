@@ -722,8 +722,12 @@ class _ExtractMethodParts(object):
 
     def _get_one_line_function_body(self):
         extracted = sourceutils.fix_indentation(self.info.extracted, 0)
+        already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+        large_multiline = extracted.count("\n") >= 2 and already_parenthesized
+        if not large_multiline:
+            extracted = _join_lines(extracted)
         multiline_expression = "\n" in extracted
-        if self.info.returning_named_expr or multiline_expression:
+        if self.info.returning_named_expr or (multiline_expression and not large_multiline):
             body = "return " + "(" + extracted + ")"
         else:
             body = "return " + extracted

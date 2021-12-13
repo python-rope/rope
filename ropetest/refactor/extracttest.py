@@ -584,8 +584,7 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def new_func():
-                return (10 +\\
-                    20)
+                return 10 + 20
 
             a_var = new_func()
         """)
@@ -602,10 +601,37 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def new_func():
-                return ((10,\\
-                    20))
+                return (10, 20)
 
             a_var = new_func()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_single_line_extract_method_with_large_multiline_expression(self):
+        code = dedent("""\
+            a_var = func(
+                {
+                    "hello": 1,
+                    "world": 2,
+                },
+                blah=foo,
+            )
+        """)
+        start = code.index("{") - 1
+        end = code.index("}") + 1
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+
+            def new_func():
+                return {
+                    "hello": 1,
+                    "world": 2,
+                }
+
+            a_var = func(
+                new_func(),
+                blah=foo,
+            )
         """)
         self.assertEqual(expected, refactored)
 
@@ -1798,8 +1824,7 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def f():
-                return ("1"
-                  "2")
+                return "1" "2"
 
             s = (f())
         """)
