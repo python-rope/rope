@@ -221,11 +221,11 @@ def unicode_to_file_data(contents, encoding=None, newlines=None):
         contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
-    if encoding is not None:
-        return contents.encode(encoding)
     try:
+        if encoding is not None:
+            return contents.encode(encoding)
         return contents.encode()
-    except UnicodeEncodeError:
+    except (LookupError, UnicodeEncodeError):
         return contents.encode("utf-8")
 
 

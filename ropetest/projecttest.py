@@ -422,6 +422,15 @@ class ProjectTest(unittest.TestCase):
         file.close()
         self.assertEqual(contents, sample_file.read().encode("latin-1"))
 
+    def test_file_unknown_encoding_on_write(self):
+        sample_file = self.project.root.create_file("my_file.txt")
+        contents = (
+            "# -*- coding: utf-8-fake -*-\n"
+            + r"#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n"
+        )
+        sample_file.write(contents)
+        self.assertEqual(contents.encode("utf-8"), sample_file.read_bytes())
+
     def test_not_an_encoding_declaration(self):
         sample_file = self.project.root.create_file("my_file.txt")
         contents = b"def my_method(self, encoding='latin-1'):\n    var = {}\n\xc2\xa9\n"
