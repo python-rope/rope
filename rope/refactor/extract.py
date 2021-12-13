@@ -1,5 +1,6 @@
 import re
 from contextlib import contextmanager
+from itertools import chain
 
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
@@ -869,10 +870,24 @@ class _FunctionInformationCollector(object):
         for child in ast.get_child_nodes(node):
             ast.walk(child, self)
 
-        comp_names = set([name.target.id for name in node.generators])
+        comp_names = list(
+            chain.from_iterable(
+                self._flatten_nested_tuple_of_names(generator.target)
+                for generator in node.generators
+            )
+        )
         self.read = self.read - comp_names | read
         self.written = self.written - comp_names | written
         self.maybe_written = self.maybe_written - comp_names | maybe_written
+
+    def _flatten_nested_tuple_of_names(self, node):
+        if isinstance(node, ast.Tuple):
+            for elt in node.elts:
+                yield self._flatten_nested_tuple_of_names(elt)
+        elif isinstance(node, ast.Name):
+            yield node.id
+        else:
+            assert False, f"Unexpected node type in list comprehension target: {node}"
 
     def _If(self, node):
         self._handle_conditional_node(node)
