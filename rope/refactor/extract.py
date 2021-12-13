@@ -710,7 +710,7 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            return self._get_one_line_function_body()
+            return self._get_single_expression_function_body()
         return self._get_multiline_function_body(returns)
 
     def _get_multiline_function_body(self, returns):
@@ -720,11 +720,9 @@ class _ExtractMethodParts(object):
             unindented_body += "\nreturn %s" % self._get_comma_form(returns)
         return unindented_body
 
-    def _get_one_line_function_body(self):
-        if self.info.returning_named_expr:
-            body = "return " + "(" + _join_lines(self.info.extracted) + ")"
-        else:
-            body = "return " + _join_lines(self.info.extracted)
+    def _get_single_expression_function_body(self):
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        body = "return " + extracted
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
@@ -753,7 +751,8 @@ class _ExtractVariableParts(object):
         self.info = info
 
     def get_definition(self):
-        result = self.info.new_name + " = " + _join_lines(self.info.extracted) + "\n"
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        result = self.info.new_name + " = " + extracted + "\n"
         return result
 
     def get_body_pattern(self):
@@ -1089,3 +1088,17 @@ def _join_lines(code):
         else:
             lines.append(line.strip())
     return " ".join(lines)
+
+
+def _get_single_expression_body(extracted, info):
+    extracted = sourceutils.fix_indentation(extracted, 0)
+    already_parenthesized = (
+        extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+    )
+    large_multiline = extracted.count("\n") >= 2 and already_parenthesized
+    if not large_multiline:
+        extracted = _join_lines(extracted)
+    multiline_expression = "\n" in extracted
+    if info.returning_named_expr or (multiline_expression and not large_multiline):
+        extracted = "(" + extracted + ")"
+    return extracted

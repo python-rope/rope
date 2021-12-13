@@ -3,6 +3,8 @@
 ## Syntax support
 
 - #451, $456 Implement structural pattern matching (PEP634) (@lieryan)
+- #458 Improve the heuristic for joining lines when extracting one line
+  expression (@lieryan)
 
 ## Bug fixes
 
