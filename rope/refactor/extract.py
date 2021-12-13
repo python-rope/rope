@@ -501,20 +501,7 @@ class _ExceptionalConditionChecker(object):
         return next.isalnum() or next == "_"
 
 
-class _ExtractParts(object):
-    def _get_single_expression_body(self, extracted):
-        extracted = sourceutils.fix_indentation(extracted, 0)
-        already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
-        large_multiline = extracted.count("\n") >= 2 and already_parenthesized
-        if not large_multiline:
-            extracted = _join_lines(extracted)
-        multiline_expression = "\n" in extracted
-        if self.info.returning_named_expr or (multiline_expression and not large_multiline):
-            extracted = "(" + extracted + ")"
-        return extracted
-
-
-class _ExtractMethodParts(_ExtractParts):
+class _ExtractMethodParts(object):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -734,7 +721,7 @@ class _ExtractMethodParts(_ExtractParts):
         return unindented_body
 
     def _get_single_expression_function_body(self):
-        body = "return " + self._get_single_expression_body(self.info.extracted)
+        body = "return " + _get_single_expression_body(self.info.extracted, info=self.info)
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
@@ -1099,3 +1086,15 @@ def _join_lines(code):
         else:
             lines.append(line.strip())
     return " ".join(lines)
+
+
+def _get_single_expression_body(extracted, info):
+    extracted = sourceutils.fix_indentation(extracted, 0)
+    already_parenthesized = extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+    large_multiline = extracted.count("\n") >= 2 and already_parenthesized
+    if not large_multiline:
+        extracted = _join_lines(extracted)
+    multiline_expression = "\n" in extracted
+    if info.returning_named_expr or (multiline_expression and not large_multiline):
+        extracted = "(" + extracted + ")"
+    return extracted
