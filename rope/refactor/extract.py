@@ -750,7 +750,7 @@ class _ExtractVariableParts(object):
         self.info = info
 
     def get_definition(self):
-        result = self.info.new_name + " = " + _join_lines(self.info.extracted) + "\n"
+        result = self.info.new_name + " = " + _get_single_expression_body(self.info.extracted, info=self.info) + "\n"
         return result
 
     def get_body_pattern(self):
