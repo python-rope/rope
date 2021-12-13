@@ -584,7 +584,8 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def new_func():
-                return 10 + 20
+                return (10 +\\
+                    20)
 
             a_var = new_func()
         """)
@@ -601,7 +602,8 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def new_func():
-                return (10, 20)
+                return ((10,\\
+                    20))
 
             a_var = new_func()
         """)
@@ -1796,7 +1798,8 @@ class ExtractMethodTest(unittest.TestCase):
         expected = dedent("""\
 
             def f():
-                return "1" "2"
+                return ("1"
+                  "2")
 
             s = (f())
         """)

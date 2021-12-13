@@ -721,10 +721,12 @@ class _ExtractMethodParts(object):
         return unindented_body
 
     def _get_one_line_function_body(self):
-        if self.info.returning_named_expr:
-            body = "return " + "(" + _join_lines(self.info.extracted) + ")"
+        extracted = sourceutils.fix_indentation(self.info.extracted, 0)
+        multiline_expression = "\n" in extracted
+        if self.info.returning_named_expr or multiline_expression:
+            body = "return " + "(" + extracted + ")"
         else:
-            body = "return " + _join_lines(self.info.extracted)
+            body = "return " + extracted
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
