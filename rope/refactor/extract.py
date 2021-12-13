@@ -887,7 +887,7 @@ class _FunctionInformationCollector(object):
         elif isinstance(node, ast.Name):
             yield node.id
         else:
-            assert False, f"Unexpected node type in list comprehension target: {node}"
+            assert False, "Unexpected node type in list comprehension target: %s" % node
 
     def _If(self, node):
         self._handle_conditional_node(node)
