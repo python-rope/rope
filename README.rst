@@ -23,10 +23,10 @@ Getting Started
 ===============
 
 * `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
-* List of features: `<docs/rope.rst>`_
-* Overview of some of rope's features: `<docs/overview.rst>`_
-* Using as a library: `<docs/library.rst>`_
-* Contributing: `<docs/contributing.rst>`_
+* `List of features <docs/rope.rst>`_
+* `Overview of some of rope's features <docs/overview.rst>`_
+* `Using as a library <docs/library.rst>`_
+* `Contributing <docs/contributing.rst>`_
 
 To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
