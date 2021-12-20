@@ -32,7 +32,7 @@ classifiers = [
 
 def get_long_description():
     lines = io.open("README.rst", "r", encoding="utf8").read().splitlines(False)
-    end = lines.index("Getting Started")
+    end = lines.index("Maintainers")
     return "\n" + "\n".join(lines[:end]) + "\n"
 
 
