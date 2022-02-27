@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+# Release 0.23.0
+
 ## Syntax support
 
 - #451, $456 Implement structural pattern matching (PEP634) (@lieryan)
