@@ -12,6 +12,10 @@
 - #457 Fix extract info collection for list comprehension with multiple targets
   (@lieryan)
 
+## Documentation
+
+- #455 Fix typo (@Jasha10)
+
 
 # Release 0.22.0
 
