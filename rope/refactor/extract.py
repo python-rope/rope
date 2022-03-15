@@ -843,8 +843,12 @@ class _FunctionInformationCollector(object):
 
     def _AugAssign(self, node):
         ast.walk(node.value, self)
-        self._read_variable(node.target.id, node.target.lineno)
-        self._written_variable(node.target.id, node.target.lineno)
+        if isinstance(node.target, ast.Subscript):
+            target_id = node.target.value.id
+        else:
+            target_id = node.target.id
+        self._read_variable(target_id, node.target.lineno)
+        self._written_variable(target_id, node.target.lineno)
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
