@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+## Bug fixes
+
+- #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
+
 # Release 0.23.0
 
 ## Syntax support
