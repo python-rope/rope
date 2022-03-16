@@ -1762,6 +1762,30 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_method_and_augmentedj_assignment_in_try_block(self):
+        code = dedent("""\
+            def f():
+                any_subscriptable = [0]
+                try:
+                    any_subscriptable[0] += 1
+                except Exception:
+                    pass
+        """)
+        start, end = self._convert_line_range_to_offset(code, 2, 6)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                g()
+
+            def g():
+                any_subscriptable = [0]
+                try:
+                    any_subscriptable[0] += 1
+                except Exception:
+                    pass
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_and_not_passing_global_functions(self):
         code = dedent("""\
             def next(p):
