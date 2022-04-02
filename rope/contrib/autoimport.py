@@ -1,13 +1,12 @@
+import pathlib
 import re
+import sqlite3
+from os import listdir
+from pkgutil import walk_packages
+from typing import Dict
 
-from rope.base import builtins
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import resources
-from rope.base import resourceobserver
-from rope.base import taskhandle
+from rope.base import (builtins, exceptions, libutils, pynames, pyobjects,
+                       resourceobserver, resources, taskhandle)
 from rope.refactor import importutils
 
 
@@ -19,6 +18,8 @@ class AutoImport(object):
 
     """
 
+    packages: Dict[str, Dict[str, str]] = {}
+
     def __init__(self, project, observe=True, underlined=False):
         """Construct an AutoImport object
 
@@ -29,10 +30,9 @@ class AutoImport(object):
         """
         self.project = project
         self.underlined = underlined
-        self.names = project.data_files.read_data("globalnames")
-        if self.names is None:
-            self.names = {}
-        project.data_files.add_write_hook(self._write)
+        self.connection = sqlite3.connect(f"{project.ropefolder.path}/autoimport.db")
+        self.connection.execute("create table if not exists names(name, module)")
+        self._check_all()
         # XXX: using a filtered observer
         observer = resourceobserver.ResourceObserver(
             changed=self._changed, moved=self._moved, removed=self._removed
@@ -40,44 +40,60 @@ class AutoImport(object):
         if observe:
             project.add_observer(observer)
 
+    def _check_import(self, module):
+        """
+        Checks the ability to import an external package, removes it if not avalible
+        """
+        # Not Implemented Yet, silently will fail
+        pass
+
+    def _check_all(self):
+        """
+        Checks all modules and removes bad ones
+        """
+        pass
+
     def import_assist(self, starting):
         """Return a list of ``(name, module)`` tuples
 
         This function tries to find modules that have a global name
         that starts with `starting`.
         """
-        # XXX: breaking if gave up! use generators
-        result = []
-        for module in self.names:
-            for global_name in self.names[module]:
-                if global_name.startswith(starting):
-                    result.append((global_name, module))
-        return result
+        results = self.connection.execute(
+            "select (name, module) from name where name like (?)", (starting,)
+        )
+        for result in results:
+            if not self._check_import(result(1)):
+                del results[result]
+        return results
 
     def get_modules(self, name):
         """Return the list of modules that have global `name`"""
-        result = []
-        for module in self.names:
-            if name in self.names[module]:
-                result.append(module)
-        return result
+        results = self.connection.execute(
+            "SELECT module FROM names WHERE name LIKE (?)", (name,)
+        ).fetchall()
+        for result in results:
+            if not self._check_import(result(0)):
+                del results[result]
+        return results
 
     def get_all_names(self):
         """Return the list of all cached global names"""
-        result = set()
-        for module in self.names:
-            result.update(set(self.names[module]))
-        return result
+        self._check_all()
+        results = self.connection.execute(
+            "select module from names where name"
+        ).fetchall()
+        return results
 
-    def get_name_locations(self, name):
+    def get_name_locations(self, target_name):
         """Return a list of ``(resource, lineno)`` tuples"""
         result = []
-        for module in self.names:
-            if name in self.names[module]:
+        for name, module in self.connection.execute("select (name, module) "):
+            if target_name in name:
                 try:
                     pymodule = self.project.get_module(module)
-                    if name in pymodule:
-                        pyname = pymodule[name]
+                    if target_name in pymodule:
+                        pyname = pymodule[target_name]
                         module, lineno = pyname.get_definition_location()
                         if module is not None:
                             resource = module.get_module().get_resource()
@@ -107,23 +123,44 @@ class AutoImport(object):
             self.update_resource(file, underlined)
             job_set.finished_job()
 
+    def _handle_import_error(self, *args):
+        pass
+
     def generate_modules_cache(
-        self, modules, underlined=None, task_handle=taskhandle.NullTaskHandle()
+        self, modules=None, underlined=None, task_handle=taskhandle.NullTaskHandle()
     ):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
-            "Generating autoimport cache for modules", len(modules)
+            "Generating autoimport cache for modules",
+            "all" if modules is None else len(modules),
         )
-        for modname in modules:
-            job_set.started_job("Working on <%s>" % modname)
-            if modname.endswith(".*"):
-                mod = self.project.find_module(modname[:-2])
-                if mod:
-                    for sub in submodules(mod):
-                        self.update_resource(sub, underlined)
-            else:
-                self.update_module(modname, underlined)
-            job_set.finished_job()
+        if modules is None:
+            folders = self.project.get_python_path_folders()
+            for package in walk_packages(onerror=self._handle_import_error):
+                self._generate_module_cache(
+                    f"{package.name}",
+                    job_set,
+                    underlined,
+                    task_handle,
+                )
+
+        else:
+            for modname in modules:
+                self._generate_module_cache(modname, job_set, underlined, task_handle)
+
+    def _generate_module_cache(
+        self, modname, job_set, underlined=None, task_handle=taskhandle.NullTaskHandle()
+    ):
+        job_set.started_job("Working on <%s>" % modname)
+        if modname.endswith(".*"):
+            # This is wildly inneffecient given that we know the path already
+            mod = self.project.find_module(modname[:-2])
+            if mod:
+                for sub in submodules(mod):
+                    self.update_resource(sub, underlined)
+        else:
+            self.update_module(modname, underlined)
+        job_set.finished_job()
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -132,7 +169,7 @@ class AutoImport(object):
         regenerating global names.
 
         """
-        self.names.clear()
+        self.connection.execute("drop table names")
 
     def find_insertion_line(self, code):
         """Guess at what line the new import should be inserted"""
@@ -158,6 +195,7 @@ class AutoImport(object):
             pymodule = self.project.get_pymodule(resource)
             modname = self._module_name(resource)
             self._add_names(pymodule, modname, underlined)
+
         except exceptions.ModuleSyntaxError:
             pass
 
@@ -167,6 +205,10 @@ class AutoImport(object):
         `modname` is the name of a module.
         """
         try:
+            if self.connection.execute(
+                "select count(1) from names where module is (?)", (modname,)
+            ):
+                return
             pymodule = self.project.get_module(modname)
             self._add_names(pymodule, modname, underlined)
         except exceptions.ModuleNotFoundError:
@@ -178,22 +220,19 @@ class AutoImport(object):
     def _add_names(self, pymodule, modname, underlined):
         if underlined is None:
             underlined = self.underlined
-        globals = []
         if isinstance(pymodule, pyobjects.PyDefinedObject):
             attributes = pymodule._get_structural_attributes()
         else:
             attributes = pymodule.get_attributes()
         for name, pyname in attributes.items():
-            if not underlined and name.startswith("_"):
-                continue
-            if isinstance(pyname, (pynames.AssignedName, pynames.DefinedName)):
-                globals.append(name)
-            if isinstance(pymodule, builtins.BuiltinModule):
-                globals.append(name)
-        self.names[modname] = globals
-
-    def _write(self):
-        self.project.data_files.write_data("globalnames", self.names)
+            if underlined or name.startswith("_"):
+                if isinstance(
+                    pyname,
+                    (pynames.AssignedName, pynames.DefinedName, builtins.BuiltinModule),
+                ):
+                    self.connection.execute(
+                        "insert into names(name,module) values (?,?)", (name, modname)
+                    )
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -202,15 +241,19 @@ class AutoImport(object):
     def _moved(self, resource, newresource):
         if not resource.is_folder():
             modname = self._module_name(resource)
-            if modname in self.names:
-                del self.names[modname]
+            self._del_if_exist(modname)
             self.update_resource(newresource)
+
+    def _del_if_exist(self, module_name):
+        self.connection.execute("delete from names where module = ?", (module_name,))
 
     def _removed(self, resource):
         if not resource.is_folder():
             modname = self._module_name(resource)
-            if modname in self.names:
-                del self.names[modname]
+            self._del_if_exist(modname)
+
+    def close(self):
+        self.connection.close()
 
 
 def submodules(mod):
