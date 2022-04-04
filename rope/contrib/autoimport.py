@@ -6,7 +6,7 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -27,7 +27,7 @@ Name = Tuple[str, str, str, int]
 def _get_names(
     modpath: pathlib.Path,
     modname: str,
-    package: str,
+    package_name: str,
     package_source: Source,
 ) -> List[Name]:
     """Update the cache for global names in `modname` module
@@ -36,12 +36,30 @@ def _get_names(
     """
     # TODO use __all__ parsing if avalible
     if modpath.is_dir():
-        names: List[Name] = []
+        names: List[Name]
+        if modpath / "__init__.py":
+            names = _get_names_from_file(
+                modpath / "__init__.py",
+                modname,
+                package_name,
+                package_source,
+                only_all=True,
+            )
+            if len(names) > 0:
+                return names
+        names = []
         for file in modpath.glob("*.py"):
-            names.extend(_get_names(file, modname, package, package_source))
+            names.extend(
+                _get_names_from_file(
+                    file,
+                    modname + f".{file.name.removesuffix('.py')}",
+                    package_name,
+                    package_source,
+                )
+            )
         return names
     else:
-        return list(_get_names_from_file(modpath, modname, package, package_source))
+        return _get_names_from_file(modpath, modname, package_name, package_source)
 
 
 def _find_all_names_in_package(
@@ -61,6 +79,7 @@ def _find_all_names_in_package(
         modules.append((package_path, stripped_name))
     elif recursive:
         for sub in submodules(package_path):
+            print(sub)
             modname = (
                 sub.relative_to(package_path)
                 .as_posix()
@@ -365,13 +384,11 @@ class AutoImport(object):
         self.connection.close()
 
 
-def submodules(mod: pathlib.Path):
+def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
     """Simple submodule finder that doesn't try to import anything"""
-    if mod.suffix == ".py" and mod.name != "__init__.py":
-        return set([mod])
-    if not (mod / "__init__.py").exists():
-        return set()
-    result = set([mod])
-    for child in mod.iterdir():
-        result |= submodules(child)
+    result = set()
+    if mod.is_dir() and (mod / "__init__.py").exists():
+        result.add(mod)
+        for child in mod.iterdir():
+            result |= submodules(child)
     return result
