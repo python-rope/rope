@@ -10,6 +10,7 @@ from typing import List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
+from rope.base.resources import Resource
 from rope.refactor import importutils
 
 
@@ -62,6 +63,18 @@ def _get_names(
         return _get_names_from_file(modpath, modname, package_name, package_source)
 
 
+def _get_modname_from_path(modpath: pathlib.Path, package_path: pathlib.Path) -> str:
+    package_name: str = package_path.name
+    modname = (
+        modpath.relative_to(package_path)
+        .as_posix()
+        .removesuffix(".py")
+        .replace("/", ".")
+    )
+    modname = package_name if modname == "." else package_name + "." + modname
+    return modname
+
+
 def _find_all_names_in_package(
     package_path: pathlib.Path,
     recursive=True,
@@ -72,6 +85,8 @@ def _find_all_names_in_package(
         package_source = get_package_source(package_path)
     if package_name.endswith(".egg-info"):
         return []
+    if package_name.endswith(".so"):
+        return []
         # TODO add so handling
     modules: List[Tuple[pathlib.Path, str]] = []
     if package_name.endswith(".py"):
@@ -79,16 +94,9 @@ def _find_all_names_in_package(
         modules.append((package_path, stripped_name))
     elif recursive:
         for sub in submodules(package_path):
-            print(sub)
-            modname = (
-                sub.relative_to(package_path)
-                .as_posix()
-                .removesuffix(".py")
-                .replace("/", ".")
-            )
+            modname = _get_modname_from_path(sub, package_path)
             if modname.__contains__("_"):
-                continue
-            modname = package_name if modname == "." else package_name + "." + modname
+                continue  # Exclude private items
             modules.append((sub, modname))
     else:
         modules.append((package_path, package_name))
@@ -112,10 +120,13 @@ def _get_names_from_file(
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
+                    assert isinstance(target, ast.Name)
                     if target.id == "__all__":
                         # TODO use all somehow
                         all_results: List[Name] = []
+                        assert isinstance(node.value, ast.List)
                         for item in node.value.elts:
+                            assert isinstance(item, ast.Constant)
                             all_results.append(
                                 (
                                     str(item.value),
@@ -126,7 +137,7 @@ def _get_names_from_file(
                             )
                         return all_results
 
-                except AttributeError:
+                except (AttributeError, AssertionError):
                     # TODO handle tuple assignment
                     pass
         if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not only_all:
@@ -258,7 +269,7 @@ class AutoImport(object):
         results = self.connection.execute("select * from names").fetchall()
         return results
 
-    def generate_cache(
+    def generate_resource_cache(
         self, resources=None, underlined=None, task_handle=taskhandle.NullTaskHandle()
     ):
         """Generate global name cache for project files
@@ -346,20 +357,15 @@ class AutoImport(object):
         lineno = code.count("\n", 0, offset) + 1
         return lineno
 
-    def update_resource(self, resource):
+    def update_resource(self, resource: Resource, underlined: List[str] = None):
         """Update the cache for global names in `resource`"""
-        try:
-            self._add_names(
-                [
-                    resource.path,
-                    resource.path.name,
-                    self.project.address,
-                    Source.PROJECT.value,
-                ]
-            )
-
-        except exceptions.ModuleSyntaxError:
-            pass
+        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+        package_path: pathlib.Path = pathlib.Path(self.project.address)
+        resource_modname: str = _get_modname_from_path(resource_path, package_path)
+        names = _get_names_from_file(
+            resource_path, resource_modname, package_path.name, Source.PROJECT
+        )
+        self._add_names(names)
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -391,4 +397,5 @@ def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
         result.add(mod)
         for child in mod.iterdir():
             result |= submodules(child)
+    return result
     return result
