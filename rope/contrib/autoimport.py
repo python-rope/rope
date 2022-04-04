@@ -5,9 +5,10 @@ import sqlite3
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from typing import Generator, List, Tuple
+from typing import Generator, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
+from rope.base.project import Project
 from rope.refactor import importutils
 
 
@@ -91,8 +92,12 @@ def _get_names_from_file(
                 yield (node.name, modname, package, package_source.value)
 
 
-def get_package_source(package: pathlib.Path) -> Source:
+def get_package_source(
+    package: pathlib.Path, project: Optional[Project] = None
+) -> Source:
     """Detect the source of a given package. Rudimentary implementation."""
+    if project is not None and package.as_posix().__contains__(project.address):
+        return Source.PROJECT
     if package.as_posix().__contains__("site-packages"):
         return Source.SITE_PACKAGE
     if package.as_posix().startswith(sys.prefix):
@@ -154,12 +159,31 @@ class AutoImport(object):
         that starts with `starting`.
         """
         results = self.connection.execute(
-            "select name, module from names where name like (?)", (starting,)
+            "select name, module from names where name like (?)%", (starting,)
         ).fetchall()
         for result in results:
             if not self._check_import(result[1]):
                 del results[result]
-        return results
+        return set(
+            results
+        )  # Remove duplicates from multiple occurences of the same item
+
+    def search(self, name) -> Set[str]:
+        """Searches both modules and names for an import string"""
+        results: List[str] = []
+        for name, module in self.connection.execute(
+            "SELECT name, module FROM names WHERE name LIKE (?)", (name,)
+        ):
+            results.append(f"from {module} import {name}")
+        for module in self.connection.execute(
+            "Select module FROM names where module LIKE (?)", ("%." + name,)
+        ):
+            results.append(f"from {module[0].removesuffix(f'.{name}')} import {name}")
+        for module in self.connection.execute(
+            "Select module from names where module LIKE (?)", (name,)
+        ):
+            results.append(f"import {name}")
+        return set(results)
 
     def exact_match(self, target: str):
         # TODO implement exact match
@@ -168,19 +192,24 @@ class AutoImport(object):
     def get_modules(self, name):
         """Return the list of modules that have global `name`"""
         results = self.connection.execute(
-            "SELECT module FROM names WHERE name LIKE (?)", (name,)
+            "SELECT module FROM names WHERE module LIKE (?)", (name,)
         ).fetchall()
         for result in results:
             if not self._check_import(result[0]):
                 del results[result]
-        return results
+        return set(*results)
 
-    def get_all_names(self):
+    def get_all_names(self) -> List[str]:
         """Return the list of all cached global names"""
         self._check_all()
         results = self.connection.execute("select name from names").fetchall()
         return results
 
+    def get_all(self) -> List[Name]:
+        """Dumps the entire database"""
+        self._check_all()
+        results = self.connection.execute("select * from names").fetchall()
+        return results
 
     # def get_name_locations(self, target_name):
     #     """Return a list of ``(resource, lineno)`` tuples"""
@@ -239,7 +268,8 @@ class AutoImport(object):
                     package_name = package.name
                     if (
                         self.connection.execute(
-                            "select * from names where package is (?)", (package_name,)
+                            "select * from names where package LIKE (?)",
+                            (package_name,),
                         ).fetchone()
                         is None
                     ):
@@ -247,14 +277,17 @@ class AutoImport(object):
 
         else:
             for modname in modules:
-                # TODO: need to find path
+                # TODO: need to find path, somehow
                 packages.append(modname)
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(_find_all_names_in_package, packages):
-                self.connection.executemany(
-                    "insert into names(name,module,package,source) values (?,?,?,?)",
-                    name_list,
-                )
+                self._add_names(name_list)
+
+    def _add_names(self, names: List[Name]):
+        self.connection.executemany(
+            "insert into names(name,module,package,source) values (?,?,?,?)",
+            names,
+        )
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -283,33 +316,20 @@ class AutoImport(object):
         lineno = code.count("\n", 0, offset) + 1
         return lineno
 
-    # def update_resource(self, resource, underlined=None):
-    #     """Update the cache for global names in `resource`"""
-    #     try:
-    #         pymodule = self.project.get_pymodule(resource)
-    #         modname = self._module_name(resource)
-    #         self._add_names(pymodule, modname, underlined)
-    #
-    #     except exceptions.ModuleSyntaxError:
-    #         pass
-    #
+    def update_resource(self, resource):
+        """Update the cache for global names in `resource`"""
+        try:
+            self._add_names(
+                [
+                    resource.path,
+                    resource.path.name,
+                    self.project.address,
+                    Source.PROJECT.value,
+                ]
+            )
 
-    # def _add_names(self, pymodule, modname, underlined):
-    #     if underlined is None:
-    #         underlined = self.underlined
-    #     if isinstance(pymodule, pyobjects.PyDefinedObject):
-    #         attributes = pymodule._get_structural_attributes()
-    #     else:
-    #         attributes = pymodule.get_attributes()
-    #     for name, pyname in attributes.items():
-    #         if underlined or name.startswith("_"):
-    #             if isinstance(
-    #                 pyname,
-    #                 (pynames.AssignedName, pynames.DefinedName, builtins.BuiltinModule),
-    #             ):
-    #                 self.connection.execute(
-    #                     "insert into names(name,module) values (?,?)", (name, modname)
-    #                 )
+        except exceptions.ModuleSyntaxError:
+            pass
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -317,7 +337,7 @@ class AutoImport(object):
 
     def _moved(self, resource, newresource):
         if not resource.is_folder():
-            modname = self._module_name(resource)
+            modname = libutils.modname(resource)
             self._del_if_exist(modname)
             self.update_resource(newresource)
 
@@ -326,10 +346,11 @@ class AutoImport(object):
 
     def _removed(self, resource):
         if not resource.is_folder():
-            modname = self._module_name(resource)
+            modname = libutils.modname(resource)
             self._del_if_exist(modname)
 
     def close(self):
+        self.connection.commit()
         self.connection.close()
 
 
