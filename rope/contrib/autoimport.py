@@ -30,6 +30,7 @@ def _get_names(
     modname: str,
     package_name: str,
     package_source: Source,
+    underlined: bool = False,
 ) -> List[Name]:
     """Update the cache for global names in `modname` module
 
@@ -56,11 +57,14 @@ def _get_names(
                     modname + f".{file.name.removesuffix('.py')}",
                     package_name,
                     package_source,
+                    underlined=underlined,
                 )
             )
         return names
     else:
-        return _get_names_from_file(modpath, modname, package_name, package_source)
+        return _get_names_from_file(
+            modpath, modname, package_name, package_source, underlined=underlined
+        )
 
 
 class PackageType(Enum):
@@ -101,6 +105,7 @@ def _find_all_names_in_package(
     package_path: pathlib.Path,
     recursive=True,
     package_source: Source = None,
+    underlined: bool = False,
 ) -> List[Name]:
     package_tuple = _get_package_name_from_path(package_path)
     if package_tuple is None:
@@ -116,14 +121,16 @@ def _find_all_names_in_package(
     elif recursive:
         for sub in submodules(package_path):
             modname = _get_modname_from_path(sub, package_path)
-            if modname.__contains__("_"):
+            if underlined or modname.__contains__("_"):
                 continue  # Exclude private items
             modules.append((sub, modname))
     else:
         modules.append((package_path, package_name))
     result: List[Name] = []
     for module in modules:
-        result.extend(_get_names(module[0], module[1], package_name, package_source))
+        result.extend(
+            _get_names(module[0], module[1], package_name, package_source, underlined)
+        )
     return result
 
 
@@ -133,20 +140,23 @@ def _get_names_from_file(
     package: str,
     package_source: Source,
     only_all: bool = False,
+    underlined: bool = False,
 ) -> List[Name]:
     with open(module, mode="rb") as file:
         try:
             root_node = ast.parse(file.read())
-        except SyntaxError:
+        except SyntaxError as e:
+            print(e)
             return []
     results: List[Name] = []
     for node in ast.iter_child_nodes(root_node):
+        node_names: List[str] = []
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
                     assert isinstance(target, ast.Name)
                     if target.id == "__all__":
-                        # TODO use all somehow
+                        # TODO add tuple handling
                         all_results: List[Name] = []
                         assert isinstance(node.value, ast.List)
                         for item in node.value.elts:
@@ -160,13 +170,18 @@ def _get_names_from_file(
                                 )
                             )
                         return all_results
-
+                    else:
+                        node_names.append(target.id)
                 except (AttributeError, AssertionError):
                     # TODO handle tuple assignment
                     pass
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not only_all:
-            if not node.name.startswith("_"):
-                results.append((node.name, modname, package, package_source.value))
+        elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            node_names = [node.name]
+        for node_name in node_names:
+            if underlined or not node_name.startswith("_"):
+                results.append((node_name, modname, package, package_source.value))
+    if only_all:
+        return []
     return results
 
 
@@ -211,6 +226,8 @@ class AutoImport(object):
     """
 
     connection: sqlite3.Connection
+    underlined: bool
+    project: Project
 
     def __init__(self, project, observe=True, underlined=False, memory=True):
         """Construct an AutoImport object
@@ -235,18 +252,6 @@ class AutoImport(object):
         if observe:
             project.add_observer(observer)
 
-    def _check_import(self, module) -> bool:
-        """
-        Checks the ability to import an external package, removes it if not avalible
-        """
-        # Not Implemented Yet, silently will fail
-        return True
-
-    def _check_all(self):
-        """
-        Checks all modules and removes bad ones
-        """
-        pass
 
     def import_assist(self, starting):
         """Return a list of ``(name, module)`` tuples
@@ -284,24 +289,10 @@ class AutoImport(object):
             results.append((f"import {name}", source))
         return _sort_and_deduplicate(results)
 
-    def exact_match(self, target: str):
-        # TODO implement exact match
-        pass
-
     def get_modules(self, name) -> List[str]:
         """Return the list of modules that have global `name`"""
         results = self.connection.execute(
-            "SELECT module, source FROM names WHERE module LIKE (?)", (name,)
-        ).fetchall()
-        for result in results:
-            if not self._check_import(result[0]):
-                del results[result]
-        return _sort_and_deduplicate(results)
-
-    def get_names(self, name: str) -> List[str]:
-        """Return the list of names that have global `name`"""
-        results = self.connection.execute(
-            "SELECT name, source FROM names WHERE name LIKE (?)", (name,)
+            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
         ).fetchall()
         for result in results:
             if not self._check_import(result[0]):
@@ -321,7 +312,10 @@ class AutoImport(object):
         return results
 
     def generate_resource_cache(
-        self, resources=None, underlined=None, task_handle=taskhandle.NullTaskHandle()
+        self,
+        resources=None,
+        underlined: bool = False,
+        task_handle=taskhandle.NullTaskHandle(),
     ):
         """Generate global name cache for project files
 
@@ -340,21 +334,11 @@ class AutoImport(object):
             self.update_resource(file, underlined)
             job_set.finished_job()
 
-    def _handle_import_error(self, *args):
-        pass
-
-    def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
-        for folder in self.project.get_python_path_folders():
-            for package in pathlib.Path(folder.path).iterdir():
-                package_tuple = _get_package_name_from_path(package)
-                if package_tuple is None:
-                    continue
-                if package_tuple[0] == package_name:
-                    return package
-        return None
 
     def generate_modules_cache(
-        self, modules=None, task_handle=taskhandle.NullTaskHandle()
+        self,
+        modules=None,
+        task_handle=taskhandle.NullTaskHandle(),
     ):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
@@ -393,12 +377,9 @@ class AutoImport(object):
     def update_module(self, module: str):
         self.generate_modules_cache([module])
 
-    def _add_names(self, names: List[Name]):
-        self.connection.executemany(
-            "insert into names(name,module,package,source) values (?,?,?,?)",
-            names,
-        )
+    def close(self):
         self.connection.commit()
+        self.connection.close()
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -408,6 +389,7 @@ class AutoImport(object):
 
         """
         self.connection.execute("drop table names")
+        self.connection.commit()
 
     def find_insertion_line(self, code):
         """Guess at what line the new import should be inserted"""
@@ -427,18 +409,25 @@ class AutoImport(object):
         lineno = code.count("\n", 0, offset) + 1
         return lineno
 
-    def update_resource(self, resource: Resource, underlined: List[str] = None):
+    def update_resource(self, resource: Resource, underlined: bool = False):
         """Update the cache for global names in `resource`"""
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
         resource_modname: str = _get_modname_from_path(resource_path, package_path)
         package_tuple = _get_package_name_from_path(package_path)
+        underlined = underlined if underlined else self.underlined
         if package_tuple is None:
             return None
         package_name = package_tuple[0]
+        print((resource_path, resource_modname, package_path.name, Source.PROJECT))
         names = _get_names_from_file(
-            resource_path, resource_modname, package_path.name, Source.PROJECT
+            resource_path,
+            resource_modname,
+            package_name,
+            Source.PROJECT,
+            underlined,
         )
+        print(names)
         self._add_names(names)
 
     def _changed(self, resource):
@@ -460,10 +449,35 @@ class AutoImport(object):
             modname = libutils.modname(resource)
             self._del_if_exist(modname)
 
-    def close(self):
+    def _add_names(self, names: List[Name]):
+        self.connection.executemany(
+            "insert into names(name,module,package,source) values (?,?,?,?)",
+            names,
+        )
         self.connection.commit()
-        self.connection.close()
 
+    def _check_import(self, module) -> bool:
+        """
+        Checks the ability to import an external package, removes it if not avalible
+        """
+        # Not Implemented Yet, silently will fail
+        return True
+
+    def _check_all(self):
+        """
+        Checks all modules and removes bad ones
+        """
+        pass
+    
+    def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
+        for folder in self.project.get_python_path_folders():
+            for package in pathlib.Path(folder.path).iterdir():
+                package_tuple = _get_package_name_from_path(package)
+                if package_tuple is None:
+                    continue
+                if package_tuple[0] == package_name:
+                    return package
+        return None
 
 def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
     """Simple submodule finder that doesn't try to import anything"""
