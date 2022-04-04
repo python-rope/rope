@@ -119,7 +119,7 @@ def _find_all_names_in_package(
     elif package_type is PackageType.COMPILED:
         return []
     elif recursive:
-        for sub in submodules(package_path):
+        for sub in _submodules(package_path):
             modname = _get_modname_from_path(sub, package_path)
             if underlined or modname.__contains__("_"):
                 continue  # Exclude private items
@@ -252,7 +252,6 @@ class AutoImport(object):
         if observe:
             project.add_observer(observer)
 
-
     def import_assist(self, starting):
         """Return a list of ``(name, module)`` tuples
 
@@ -333,7 +332,6 @@ class AutoImport(object):
             job_set.started_job("Working on <%s>" % file.path)
             self.update_resource(file, underlined)
             job_set.finished_job()
-
 
     def generate_modules_cache(
         self,
@@ -468,7 +466,7 @@ class AutoImport(object):
         Checks all modules and removes bad ones
         """
         pass
-    
+
     def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
         for folder in self.project.get_python_path_folders():
             for package in pathlib.Path(folder.path).iterdir():
@@ -479,12 +477,13 @@ class AutoImport(object):
                     return package
         return None
 
-def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
+
+def _submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
     """Simple submodule finder that doesn't try to import anything"""
     result = set()
     if mod.is_dir() and (mod / "__init__.py").exists():
         result.add(mod)
         for child in mod.iterdir():
-            result |= submodules(child)
+            result |= _submodules(child)
     return result
     return result

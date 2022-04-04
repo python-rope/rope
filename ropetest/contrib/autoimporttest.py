@@ -11,6 +11,7 @@ class AutoImportTest(unittest.TestCase):
     def setUp(self):
         super(AutoImportTest, self).setUp()
         self.project = testutils.sample_project(extension_modules=["sys"])
+        self.project_name = "sample_project"
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
@@ -51,7 +52,9 @@ class AutoImportTest(unittest.TestCase):
     def test_get_modules(self):
         self.mod1.write("myvar = None\n")
         self.importer.update_resource(self.mod1)
-        self.assertEqual(["mod1"], self.importer.get_modules("myvar"))
+        self.assertEqual(
+            [f"{self.project_name}.mod1"], self.importer.get_modules("myvar")
+        )
 
     def test_get_modules_inside_packages(self):
         self.mod1.write("myvar = None\n")
@@ -59,7 +62,8 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
         self.assertEqual(
-            set(["mod1", "pkg.mod2"]), set(self.importer.get_modules("myvar"))
+            set([f"{self.project_name}.mod1", f"{self.project_name}.pkg.mod2"]),
+            set(self.importer.get_modules("myvar")),
         )
 
     def test_trivial_insertion_line(self):
@@ -85,7 +89,9 @@ class AutoImportTest(unittest.TestCase):
     def test_empty_cache(self):
         self.mod1.write("myvar = None\n")
         self.importer.update_resource(self.mod1)
-        self.assertEqual(["mod1"], self.importer.get_modules("myvar"))
+        self.assertEqual(
+            [f"{self.project_name}.mod1"], self.importer.get_modules("myvar")
+        )
         self.importer.clear_cache()
         self.assertEqual([], self.importer.get_modules("myvar"))
 
@@ -121,10 +127,6 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module("sys")
         self.assertTrue("sys" in self.importer.get_modules("exit"))
 
-    def test_submodules(self):
-        self.assertEqual(set([self.mod1]), autoimport.submodules(self.mod1))
-        self.assertEqual(set([self.mod2, self.pkg]), autoimport.submodules(self.pkg))
-
 
 class AutoImportObservingTest(unittest.TestCase):
     def setUp(self):
@@ -134,7 +136,7 @@ class AutoImportObservingTest(unittest.TestCase):
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
         self.importer = autoimport.AutoImport(self.project, observe=True, memory=True)
-
+        self.project_name = "sample_project"
     def tearDown(self):
         testutils.remove_project(self.project)
         self.importer.close()
@@ -142,12 +144,16 @@ class AutoImportObservingTest(unittest.TestCase):
 
     def test_writing_files(self):
         self.mod1.write("myvar = None\n")
-        self.assertEqual(["mod1"], self.importer.get_modules("myvar"))
+        self.assertEqual(
+            [f"{self.project_name}.mod1"], self.importer.get_modules("myvar")
+        )
 
     def test_moving_files(self):
         self.mod1.write("myvar = None\n")
         self.mod1.move("mod3.py")
-        self.assertEqual(["mod3"], self.importer.get_modules("myvar"))
+        self.assertEqual(
+            [f"{self.project_name}.mod3"], self.importer.get_modules("myvar")
+        )
 
     def test_removing_files(self):
         self.mod1.write("myvar = None\n")
