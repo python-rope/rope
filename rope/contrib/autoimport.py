@@ -63,6 +63,28 @@ def _get_names(
         return _get_names_from_file(modpath, modname, package_name, package_source)
 
 
+class PackageType(Enum):
+    STANDARD = 1  # Just a folder
+    COMPILED = 2  # .so module
+    SINGLE_FILE = 3  # a .py file
+
+
+def _get_package_name_from_path(
+    package_path: pathlib.Path,
+) -> Optional[Tuple[str, PackageType]]:
+    package_name = package_path.name
+    if package_name.endswith(".egg-info"):
+        return None
+    if package_name.endswith(".so"):
+        name = package_name.split(".")[0]
+        return (name, PackageType.COMPILED)
+        # TODO add so handling
+    if package_name.endswith(".py"):
+        stripped_name = package_name.removesuffix(".py")
+        return (stripped_name, PackageType.SINGLE_FILE)
+    return (package_name, PackageType.STANDARD)
+
+
 def _get_modname_from_path(modpath: pathlib.Path, package_path: pathlib.Path) -> str:
     package_name: str = package_path.name
     modname = (
@@ -80,18 +102,17 @@ def _find_all_names_in_package(
     recursive=True,
     package_source: Source = None,
 ) -> List[Name]:
-    package_name = package_path.name
+    package_tuple = _get_package_name_from_path(package_path)
+    if package_tuple is None:
+        return []
+    package_name, package_type = package_tuple
     if package_source is None:
         package_source = get_package_source(package_path)
-    if package_name.endswith(".egg-info"):
-        return []
-    if package_name.endswith(".so"):
-        return []
-        # TODO add so handling
     modules: List[Tuple[pathlib.Path, str]] = []
-    if package_name.endswith(".py"):
-        stripped_name = package_name.removesuffix(".py")
-        modules.append((package_path, stripped_name))
+    if package_type is PackageType.SINGLE_FILE:
+        modules.append((package_path, package_name))
+    elif package_type is PackageType.COMPILED:
+        return []
     elif recursive:
         for sub in submodules(package_path):
             modname = _get_modname_from_path(sub, package_path)
@@ -114,7 +135,10 @@ def _get_names_from_file(
     only_all: bool = False,
 ) -> List[Name]:
     with open(module, mode="rb") as file:
-        root_node = ast.parse(file.read())
+        try:
+            root_node = ast.parse(file.read())
+        except SyntaxError:
+            return []
     results: List[Name] = []
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
@@ -158,6 +182,24 @@ def get_package_source(
         return Source.STANDARD
     else:
         return Source.UNKNOWN
+
+
+def _sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
+    if len(results) == 0:
+        return []
+    results.sort(key=lambda y: y[-1])
+    results_sorted = list(zip(*results))[0]
+    return list(OrderedDict.fromkeys(results_sorted))
+
+
+def _sort_and_deduplicate_tuple(
+    results: List[Tuple[str, str, int]]
+) -> List[Tuple[str, str]]:
+    if len(results) == 0:
+        return []
+    results.sort(key=lambda y: y[-1])
+    results_sorted = list(zip(*results))[:-1]
+    return list(OrderedDict.fromkeys(results_sorted))
 
 
 class AutoImport(object):
@@ -213,12 +255,13 @@ class AutoImport(object):
         that starts with `starting`.
         """
         results = self.connection.execute(
-            "select name, module from names where name like (?)%", (starting,)
+            "select name, module, source from names where name like (?)",
+            (starting + "%",),
         ).fetchall()
         for result in results:
             if not self._check_import(result[1]):
                 del results[result]
-        return set(
+        return _sort_and_deduplicate_tuple(
             results
         )  # Remove duplicates from multiple occurences of the same item
 
@@ -239,23 +282,31 @@ class AutoImport(object):
             "Select module, source from names where module LIKE (?)", (name,)
         ):
             results.append((f"import {name}", source))
-        results.sort(key=lambda y: y[1])
-        results_sorted = list(zip(*results))[0]
-        return list(OrderedDict.fromkeys(results_sorted))
+        return _sort_and_deduplicate(results)
 
     def exact_match(self, target: str):
         # TODO implement exact match
         pass
 
-    def get_modules(self, name):
+    def get_modules(self, name) -> List[str]:
         """Return the list of modules that have global `name`"""
         results = self.connection.execute(
-            "SELECT module FROM names WHERE module LIKE (?)", (name,)
+            "SELECT module, source FROM names WHERE module LIKE (?)", (name,)
         ).fetchall()
         for result in results:
             if not self._check_import(result[0]):
                 del results[result]
-        return set(*results)
+        return _sort_and_deduplicate(results)
+
+    def get_names(self, name: str) -> List[str]:
+        """Return the list of names that have global `name`"""
+        results = self.connection.execute(
+            "SELECT name, source FROM names WHERE name LIKE (?)", (name,)
+        ).fetchall()
+        for result in results:
+            if not self._check_import(result[0]):
+                del results[result]
+        return _sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Return the list of all cached global names"""
@@ -292,6 +343,16 @@ class AutoImport(object):
     def _handle_import_error(self, *args):
         pass
 
+    def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
+        for folder in self.project.get_python_path_folders():
+            for package in pathlib.Path(folder.path).iterdir():
+                package_tuple = _get_package_name_from_path(package)
+                if package_tuple is None:
+                    continue
+                if package_tuple[0] == package_name:
+                    return package
+        return None
+
     def generate_modules_cache(
         self, modules=None, task_handle=taskhandle.NullTaskHandle()
     ):
@@ -305,7 +366,10 @@ class AutoImport(object):
             folders = self.project.get_python_path_folders()
             for folder in folders:
                 for package in pathlib.Path(folder.path).iterdir():
-                    package_name = package.name
+                    package_tuple = _get_package_name_from_path(package)
+                    if package_tuple is None:
+                        continue
+                    package_name = package_tuple[0]
                     if (
                         self.connection.execute(
                             "select * from names where package LIKE (?)",
@@ -317,18 +381,24 @@ class AutoImport(object):
 
         else:
             for modname in modules:
-                # TODO: need to find path, somehow
-                packages.append(modname)
+                package_path = self._find_package_path(modname)
+                if package_path is None:
+                    continue
+                packages.append(package_path)
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(_find_all_names_in_package, packages):
                 self._add_names(name_list)
         self.connection.commit()
+
+    def update_module(self, module: str):
+        self.generate_modules_cache([module])
 
     def _add_names(self, names: List[Name]):
         self.connection.executemany(
             "insert into names(name,module,package,source) values (?,?,?,?)",
             names,
         )
+        self.connection.commit()
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -362,6 +432,10 @@ class AutoImport(object):
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
         resource_modname: str = _get_modname_from_path(resource_path, package_path)
+        package_tuple = _get_package_name_from_path(package_path)
+        if package_tuple is None:
+            return None
+        package_name = package_tuple[0]
         names = _get_names_from_file(
             resource_path, resource_modname, package_path.name, Source.PROJECT
         )
@@ -379,6 +453,7 @@ class AutoImport(object):
 
     def _del_if_exist(self, module_name):
         self.connection.execute("delete from names where module = ?", (module_name,))
+        self.connection.commit()
 
     def _removed(self, resource):
         if not resource.is_folder():
