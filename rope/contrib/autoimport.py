@@ -3,9 +3,10 @@ import pathlib
 import re
 import sqlite3
 import sys
+from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from typing import Generator, List, Optional, Set, Tuple
+from typing import List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -58,7 +59,7 @@ def _find_all_names_in_package(
     if package_name.endswith(".py"):
         stripped_name = package_name.removesuffix(".py")
         modules.append((package_path, stripped_name))
-    if recursive:
+    elif recursive:
         for sub in submodules(package_path):
             modname = (
                 sub.relative_to(package_path)
@@ -83,13 +84,36 @@ def _get_names_from_file(
     modname: str,
     package: str,
     package_source: Source,
-) -> Generator[Name, None, None]:
+    only_all: bool = False,
+) -> List[Name]:
     with open(module, mode="rb") as file:
         root_node = ast.parse(file.read())
+    results: List[Name] = []
     for node in ast.iter_child_nodes(root_node):
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                try:
+                    if target.id == "__all__":
+                        # TODO use all somehow
+                        all_results: List[Name] = []
+                        for item in node.value.elts:
+                            all_results.append(
+                                (
+                                    str(item.value),
+                                    modname,
+                                    package,
+                                    package_source.value,
+                                )
+                            )
+                        return all_results
+
+                except AttributeError:
+                    # TODO handle tuple assignment
+                    pass
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not only_all:
             if not node.name.startswith("_"):
-                yield (node.name, modname, package, package_source.value)
+                results.append((node.name, modname, package, package_source.value))
+    return results
 
 
 def get_package_source(
@@ -168,22 +192,26 @@ class AutoImport(object):
             results
         )  # Remove duplicates from multiple occurences of the same item
 
-    def search(self, name) -> Set[str]:
+    def search(self, name) -> List[str]:
         """Searches both modules and names for an import string"""
-        results: List[str] = []
-        for name, module in self.connection.execute(
-            "SELECT name, module FROM names WHERE name LIKE (?)", (name,)
+        results: List[Tuple[str, int]] = []
+        for name, module, source in self.connection.execute(
+            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
         ):
-            results.append(f"from {module} import {name}")
-        for module in self.connection.execute(
-            "Select module FROM names where module LIKE (?)", ("%." + name,)
+            results.append((f"from {module} import {name}", source))
+        for module, source in self.connection.execute(
+            "Select module, source FROM names where module LIKE (?)", ("%." + name,)
         ):
-            results.append(f"from {module[0].removesuffix(f'.{name}')} import {name}")
-        for module in self.connection.execute(
-            "Select module from names where module LIKE (?)", (name,)
+            results.append(
+                (f"from {module.removesuffix(f'.{name}')} import {name}", source)
+            )
+        for module, source in self.connection.execute(
+            "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results.append(f"import {name}")
-        return set(results)
+            results.append((f"import {name}", source))
+        results.sort(key=lambda y: y[1])
+        results_sorted = list(zip(*results))[0]
+        return list(OrderedDict.fromkeys(results_sorted))
 
     def exact_match(self, target: str):
         # TODO implement exact match
@@ -210,24 +238,6 @@ class AutoImport(object):
         self._check_all()
         results = self.connection.execute("select * from names").fetchall()
         return results
-
-    # def get_name_locations(self, target_name):
-    #     """Return a list of ``(resource, lineno)`` tuples"""
-    #     result = []
-    #     for name, module in self.connection.execute("select (name, module) from names"):
-    #         if target_name in name:
-    #             try:
-    #                 pymodule = self.project.get_module(module)
-    #                 if target_name in pymodule:
-    #                     pyname = pymodule[target_name]
-    #                     module, lineno = pyname.get_definition_location()
-    #                     if module is not None:
-    #                         resource = module.get_module().get_resource()
-    #                         if resource is not None and lineno is not None:
-    #                             result.append((resource, lineno))
-    #             except exceptions.ModuleNotFoundError:
-    #                 pass
-    #     return result
 
     def generate_cache(
         self, resources=None, underlined=None, task_handle=taskhandle.NullTaskHandle()
@@ -282,6 +292,7 @@ class AutoImport(object):
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(_find_all_names_in_package, packages):
                 self._add_names(name_list)
+        self.connection.commit()
 
     def _add_names(self, names: List[Name]):
         self.connection.executemany(
