@@ -3,12 +3,11 @@ import pathlib
 import re
 import sqlite3
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Generator, List, Tuple
 
-from rope.base import (builtins, exceptions, libutils, pynames, pyobjects,
-                       resourceobserver, resources, taskhandle)
-from rope.base.project import File, Folder
+from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.refactor import importutils
 
 
@@ -18,6 +17,78 @@ class Source(Enum):
     STANDARD = 2  # We want to favor standard library items
     SITE_PACKAGE = 3
     UNKNOWN = 4
+
+
+Name = Tuple[str, str, str, int]
+
+
+def _get_names(
+    modpath: pathlib.Path,
+    modname: str,
+    package: str,
+    package_source: Source,
+) -> List[Name]:
+    """Update the cache for global names in `modname` module
+
+    `modname` is the name of a module.
+    """
+    # TODO use __all__ parsing if avalible
+    if modpath.is_dir():
+        names: List[Name] = []
+        for file in modpath.glob("*.py"):
+            names.extend(_get_names(file, modname, package, package_source))
+        return names
+    else:
+        return list(_get_names_from_file(modpath, modname, package, package_source))
+
+
+def _find_all_names_in_package(
+    package_path: pathlib.Path,
+    recursive=True,
+    package_source: Source = None,
+) -> List[Name]:
+    package_name = package_path.name
+    if package_source is None:
+        package_source = get_package_source(package_path)
+    if package_name.endswith(".egg-info"):
+        return []
+        # TODO add so handling
+    modules: List[Tuple[pathlib.Path, str]] = []
+    if package_name.endswith(".py"):
+        stripped_name = package_name.removesuffix(".py")
+        modules.append((package_path, stripped_name))
+    if recursive:
+        for sub in submodules(package_path):
+            modname = (
+                sub.relative_to(package_path)
+                .as_posix()
+                .removesuffix(".py")
+                .replace("/", ".")
+            )
+            if modname.__contains__("_"):
+                continue
+            modname = package_name if modname == "." else package_name + "." + modname
+            modules.append((sub, modname))
+    else:
+        modules.append((package_path, package_name))
+    result: List[Name] = []
+    for module in modules:
+        result.extend(_get_names(module[0], module[1], package_name, package_source))
+    return result
+
+
+def _get_names_from_file(
+    module: pathlib.Path,
+    modname: str,
+    package: str,
+    package_source: Source,
+) -> Generator[Name, None, None]:
+    with open(module, mode="rb") as file:
+        root_node = ast.parse(file.read())
+    for node in ast.iter_child_nodes(root_node):
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            if not node.name.startswith("_"):
+                yield (node.name, modname, package, package_source.value)
 
 
 def get_package_source(package: pathlib.Path) -> Source:
@@ -110,6 +181,7 @@ class AutoImport(object):
         results = self.connection.execute("select name from names").fetchall()
         return results
 
+
     # def get_name_locations(self, target_name):
     #     """Return a list of ``(resource, lineno)`` tuples"""
     #     result = []
@@ -159,81 +231,30 @@ class AutoImport(object):
             "Generating autoimport cache for modules",
             "all" if modules is None else len(modules),
         )
+        packages: List[pathlib.Path] = []
         if modules is None:
             folders = self.project.get_python_path_folders()
             for folder in folders:
                 for package in pathlib.Path(folder.path).iterdir():
-                    self._generate_module_cache(
-                        package,
-                        job_set,
-                        task_handle,
-                    )
+                    package_name = package.name
+                    if (
+                        self.connection.execute(
+                            "select * from names where package is (?)", (package_name,)
+                        ).fetchone()
+                        is None
+                    ):
+                        packages.append(package)
 
         else:
             for modname in modules:
                 # TODO: need to find path
-                self._generate_module_cache(
-                    modname, job_set, task_handle, package_source=Source.MANUAL
+                packages.append(modname)
+        with ProcessPoolExecutor() as exectuor:
+            for name_list in exectuor.map(_find_all_names_in_package, packages):
+                self.connection.executemany(
+                    "insert into names(name,module,package,source) values (?,?,?,?)",
+                    name_list,
                 )
-
-    def _generate_module_cache(
-        self,
-        packagepath: pathlib.Path,
-        job_set,
-        task_handle=taskhandle.NullTaskHandle(),
-        recursive=True,
-        package_source: Source = None,
-    ):
-        if package_source is None:
-            package_source = get_package_source(packagepath)
-        package_name = packagepath.name
-        job_set.started_job("Working on <%s>" % packagepath.name)
-        if package_name.endswith(".egg-info"):
-            return
-        # TODO add so handling
-        if self.connection.execute(
-            "select * from names where package is (?)", (package_name,)
-        ).fetchone() is not None:
-            return
-        if recursive:
-            for sub in submodules(packagepath):
-                modname = (
-                    sub.relative_to(packagepath)
-                    .as_posix()
-                    .removesuffix(".py")
-                    .replace("/", ".")
-                )
-                if modname.__contains__("_"):
-                    continue
-                modname = (
-                    package_name if modname == "." else package_name + "." + modname
-                )
-                self._update_module(sub, modname, packagepath.name, package_source)
-        else:
-            self._update_module(
-                packagepath, packagepath.name, packagepath.name, package_source
-            )
-        job_set.finished_job()
-
-    def _get_names(
-        self,
-        module: pathlib.Path,
-        modname: str,
-        package: str,
-        package_source: Source,
-    ) -> Generator[Tuple[str, str, str, int], None, None]:
-        with open(module, mode="rb") as file:
-            root_node = ast.parse(file.read())
-        for node in ast.iter_child_nodes(root_node):
-            if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-                if not node.name.startswith("_"):
-                    yield (node.name, modname, package, package_source.value)
-
-    def _add_names(self, names_to_add, *args):
-        self.connection.executemany(
-            "insert into names(name,module,package,source) values (?,?,?,?)",
-            names_to_add(*args),
-        )
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -272,27 +293,6 @@ class AutoImport(object):
     #     except exceptions.ModuleSyntaxError:
     #         pass
     #
-    def _update_module(
-        self,
-        modpath: pathlib.Path,
-        modname: str,
-        package: str,
-        package_source: Source,
-    ):
-        """Update the cache for global names in `modname` module
-
-        `modname` is the name of a module.
-        """
-        # TODO use __all__ parsing if avalible
-        if modpath.is_dir():
-            for file in modpath.glob("*.py"):
-                self._update_module(file, modname, package, package_source)
-
-        else:
-            self._add_names(self._get_names, modpath, modname, package, package_source)
-
-    def _module_name(self, resource):
-        return libutils.modname(resource)
 
     # def _add_names(self, pymodule, modname, underlined):
     #     if underlined is None:
