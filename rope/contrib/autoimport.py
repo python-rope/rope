@@ -213,7 +213,9 @@ def _sort_and_deduplicate_tuple(
     if len(results) == 0:
         return []
     results.sort(key=lambda y: y[-1])
-    results_sorted = list(zip(*results))[:-1]
+    results_sorted = []
+    for result in results:
+        results_sorted.append(result[:-1])
     return list(OrderedDict.fromkeys(results_sorted))
 
 
@@ -241,16 +243,18 @@ class AutoImport(object):
         self.underlined = underlined
         db_path = ":memory:" if memory else f"{project.ropefolder.path}/autoimport.db"
         self.connection = sqlite3.connect(db_path)
+        self._setup_db()
+        self._check_all()
+        if observe:
+            observer = resourceobserver.ResourceObserver(
+                changed=self._changed, moved=self._moved, removed=self._removed
+            )
+            project.add_observer(observer)
+
+    def _setup_db(self):
         self.connection.execute(
             "create table if not exists names(name TEXT, module TEXT, package TEXT, source INTEGER)"
         )
-        self._check_all()
-        # XXX: using a filtered observer
-        observer = resourceobserver.ResourceObserver(
-            changed=self._changed, moved=self._moved, removed=self._removed
-        )
-        if observe:
-            project.add_observer(observer)
 
     def import_assist(self, starting):
         """Return a list of ``(name, module)`` tuples
@@ -387,6 +391,7 @@ class AutoImport(object):
 
         """
         self.connection.execute("drop table names")
+        self._setup_db()
         self.connection.commit()
 
     def find_insertion_line(self, code):
@@ -432,9 +437,10 @@ class AutoImport(object):
         if not resource.is_folder():
             self.update_resource(resource)
 
-    def _moved(self, resource, newresource):
+    def _moved(self, resource: Resource, newresource: Resource):
         if not resource.is_folder():
-            modname = libutils.modname(resource)
+            modname = self._modname(resource)
+            print(modname)
             self._del_if_exist(modname)
             self.update_resource(newresource)
 
@@ -442,9 +448,15 @@ class AutoImport(object):
         self.connection.execute("delete from names where module = ?", (module_name,))
         self.connection.commit()
 
+    def _modname(self, resource: Resource):
+        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+        package_path: pathlib.Path = pathlib.Path(self.project.address)
+        resource_modname: str = _get_modname_from_path(resource_path, package_path)
+        return resource_modname
+
     def _removed(self, resource):
         if not resource.is_folder():
-            modname = libutils.modname(resource)
+            modname = self._modname(resource)
             self._del_if_exist(modname)
 
     def _add_names(self, names: List[Name]):

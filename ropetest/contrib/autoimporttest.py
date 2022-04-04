@@ -37,7 +37,6 @@ def pkg(importer, project):
 
 @pytest.fixture
 def importer_observing(project):
-    project = testutils.sample_project()
     importer = autoimport.AutoImport(project, observe=True, memory=True)
     yield importer
     importer.close()
@@ -45,7 +44,7 @@ def importer_observing(project):
 
 @pytest.fixture
 def mod2(importer, project, pkg):
-    mod2 = testutils.create_module(project, "mod2")
+    mod2 = testutils.create_module(project, "mod2", pkg)
     yield mod2
 
 
@@ -53,15 +52,15 @@ class TestAutoImport:
     def test_simple_case(self, importer):
         assert [] == importer.import_assist("A")
 
-    def test_update_resource(self, importer, mod1):
+    def test_update_resource(self, importer, mod1, project_name):
         mod1.write("myvar = None\n")
         importer.update_resource(mod1)
-        assert [("myvar", "mod1")] == importer.import_assist("myva")
+        assert [("myvar", f"{project_name}.mod1")] == importer.import_assist("myva")
 
-    def test_update_module(self, importer, mod1):
+    def test_update_module(self, importer, mod1, project_name):
         mod1.write("myvar = None")
-        importer.update_module("mod1")
-        assert [("myvar", "mod1")] == importer.import_assist("myva")
+        importer.update_module(f"{project_name}.mod1")
+        assert [("myvar", f"{project_name}.mod1")] == importer.import_assist("myva")
 
     def test_update_non_existent_module(self, importer):
         importer.update_module("does_not_exists_this")
@@ -87,9 +86,10 @@ class TestAutoImport:
         mod2.write("myvar = None\n")
         importer.update_resource(mod1)
         importer.update_resource(mod2)
-        assert set([f"{project_name}.mod1", f"{project_name}.pkg.mod2"]) == set(
-            importer.get_modules("myvar")
-        )
+        assert [
+            f"{project_name}.mod1",
+            f"{project_name}.pkg.mod2",
+        ] == importer.get_modules("myvar")
 
     def test_trivial_insertion_line(self, importer):
         result = importer.find_insertion_line("")
@@ -143,7 +143,7 @@ class TestAutoImport:
         mod2.write("\nmyvar = None\n")
         importer.update_resource(mod1)
         importer.update_resource(mod2)
-        assert set([(mod1, 1), (mod2, 2)]) == set(importer.get_name_locations("myvar"))
+        assert [(mod1, 1), (mod2, 2)] == importer.get_name_locations("myvar")
 
     def test_handling_builtin_modules(self, importer):
         importer.update_module("sys")
