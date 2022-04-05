@@ -8,11 +8,11 @@ from importlib import import_module
 from typing import Iterable, List, Tuple
 
 from .defs import Name, PackageType, Source
-from .utils import (_get_modname_from_path, _get_package_name_from_path,
-                    _submodules, get_package_source)
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    get_package_source, submodules)
 
 
-def _get_names(
+def get_names(
     modpath: pathlib.Path,
     modname: str,
     package_name: str,
@@ -27,7 +27,7 @@ def _get_names(
     if modpath.is_dir():
         names: List[Name]
         if modpath / "__init__.py":
-            names = _get_names_from_file(
+            names = get_names_from_file(
                 modpath / "__init__.py",
                 modname,
                 package_name,
@@ -39,7 +39,7 @@ def _get_names(
         names = []
         for file in modpath.glob("*.py"):
             names.extend(
-                _get_names_from_file(
+                get_names_from_file(
                     file,
                     modname + f".{file.name.removesuffix('.py')}",
                     package_name,
@@ -49,12 +49,12 @@ def _get_names(
             )
         return names
     else:
-        return _get_names_from_file(
+        return get_names_from_file(
             modpath, modname, package_name, package_source, underlined=underlined
         )
 
 
-def _get_names_from_file(
+def get_names_from_file(
     module: pathlib.Path,
     modname: str,
     package: str,
@@ -105,13 +105,13 @@ def _get_names_from_file(
     return results
 
 
-def _find_all_names_in_package(
+def find_all_names_in_package(
     package_path: pathlib.Path,
     recursive=True,
     package_source: Source = None,
     underlined: bool = False,
 ) -> List[Name]:
-    package_tuple = _get_package_name_from_path(package_path)
+    package_tuple = get_package_name_from_path(package_path)
     if package_tuple is None:
         return []
     package_name, package_type = package_tuple
@@ -123,8 +123,8 @@ def _find_all_names_in_package(
     elif package_type is PackageType.COMPILED:
         return []
     elif recursive:
-        for sub in _submodules(package_path):
-            modname = _get_modname_from_path(sub, package_path)
+        for sub in submodules(package_path):
+            modname = get_modname_from_path(sub, package_path)
             if underlined or modname.__contains__("_"):
                 continue  # Exclude private items
             modules.append((sub, modname))
@@ -133,12 +133,12 @@ def _find_all_names_in_package(
     result: List[Name] = []
     for module in modules:
         result.extend(
-            _get_names(module[0], module[1], package_name, package_source, underlined)
+            get_names(module[0], module[1], package_name, package_source, underlined)
         )
     return result
 
 
-def _get_names_from_builtins(
+def get_names_from_builtins(
     underlined: bool = False, packages: Iterable[str] = sys.builtin_module_names
 ) -> List[Name]:
     """Gets names from builtin modules. These are the only modules it is safe to get the names from"""

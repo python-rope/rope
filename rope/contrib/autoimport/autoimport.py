@@ -11,10 +11,10 @@ from rope.base.resources import Resource
 from rope.refactor import importutils
 
 from .defs import Name, Source
-from .parse import (_find_all_names_in_package, _get_names_from_builtins,
-                    _get_names_from_file)
-from .utils import (_get_modname_from_path, _get_package_name_from_path,
-                    _sort_and_deduplicate, _sort_and_deduplicate_tuple)
+from .parse import (find_all_names_in_package, get_names_from_builtins,
+                    get_names_from_file)
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    sort_and_deduplicate, sort_and_deduplicate_tuple)
 
 
 class AutoImport(object):
@@ -67,7 +67,7 @@ class AutoImport(object):
         for result in results:
             if not self._check_import(result[1]):
                 del results[result]
-        return _sort_and_deduplicate_tuple(
+        return sort_and_deduplicate_tuple(
             results
         )  # Remove duplicates from multiple occurences of the same item
 
@@ -88,7 +88,7 @@ class AutoImport(object):
             "Select module, source from names where module LIKE (?)", (name,)
         ):
             results.append((f"import {name}", source))
-        return _sort_and_deduplicate(results)
+        return sort_and_deduplicate(results)
 
     def get_modules(self, name) -> List[str]:
         """Return the list of modules that have global `name`"""
@@ -98,7 +98,7 @@ class AutoImport(object):
         for result in results:
             if not self._check_import(result[0]):
                 del results[result]
-        return _sort_and_deduplicate(results)
+        return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Return the list of all cached global names"""
@@ -150,11 +150,11 @@ class AutoImport(object):
         packages: List[pathlib.Path] = []
         if modules is None:
             # Get builtins first
-            self._add_names(_get_names_from_builtins(self.underlined))
+            self._add_names(get_names_from_builtins(self.underlined))
             folders = self.project.get_python_path_folders()
             for folder in folders:
                 for package in pathlib.Path(folder.path).iterdir():
-                    package_tuple = _get_package_name_from_path(package)
+                    package_tuple = get_package_name_from_path(package)
                     if package_tuple is None:
                         continue
                     package_name = package_tuple[0]
@@ -170,9 +170,7 @@ class AutoImport(object):
         else:
             for modname in modules:
                 if modname in sys.builtin_module_names:
-                    names = _get_names_from_builtins(
-                        underlined=True, packages=[modname]
-                    )
+                    names = get_names_from_builtins(underlined=True, packages=[modname])
                     self._add_names(names)
                 else:
                     package_path = self._find_package_path(modname)
@@ -186,7 +184,7 @@ class AutoImport(object):
         except ValueError:
             pass
         with ProcessPoolExecutor() as exectuor:
-            for name_list in exectuor.map(_find_all_names_in_package, packages):
+            for name_list in exectuor.map(find_all_names_in_package, packages):
                 self._add_names(name_list)
 
     def update_module(self, module: str):
@@ -250,13 +248,13 @@ class AutoImport(object):
         """Update the cache for global names in `resource`"""
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = _get_modname_from_path(resource_path, package_path)
-        package_tuple = _get_package_name_from_path(package_path)
+        resource_modname: str = get_modname_from_path(resource_path, package_path)
+        package_tuple = get_package_name_from_path(package_path)
         underlined = underlined if underlined else self.underlined
         if package_tuple is None:
             return None
         package_name = package_tuple[0]
-        names = _get_names_from_file(
+        names = get_names_from_file(
             resource_path,
             resource_modname,
             package_name,
@@ -282,7 +280,7 @@ class AutoImport(object):
     @property
     def _project_name(self):
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        package_tuple = _get_package_name_from_path(package_path)
+        package_tuple = get_package_name_from_path(package_path)
         if package_tuple is None:
             return None
         return package_tuple[0]
@@ -290,7 +288,7 @@ class AutoImport(object):
     def _modname(self, resource: Resource):
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = _get_modname_from_path(resource_path, package_path)
+        resource_modname: str = get_modname_from_path(resource_path, package_path)
         return resource_modname
 
     def _removed(self, resource):
@@ -321,7 +319,7 @@ class AutoImport(object):
     def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
         for folder in self.project.get_python_path_folders():
             for package in pathlib.Path(folder.path).iterdir():
-                package_tuple = _get_package_name_from_path(package)
+                package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue
                 if package_tuple[0] == package_name:

@@ -9,7 +9,7 @@ from rope.base.project import Project
 from .defs import PackageType, Source
 
 
-def _get_package_name_from_path(
+def get_package_name_from_path(
     package_path: pathlib.Path,
 ) -> Optional[Tuple[str, PackageType]]:
     package_name = package_path.name
@@ -25,7 +25,7 @@ def _get_package_name_from_path(
     return (package_name, PackageType.STANDARD)
 
 
-def _get_modname_from_path(modpath: pathlib.Path, package_path: pathlib.Path) -> str:
+def get_modname_from_path(modpath: pathlib.Path, package_path: pathlib.Path) -> str:
     package_name: str = package_path.name
     modname = (
         modpath.relative_to(package_path)
@@ -51,7 +51,7 @@ def get_package_source(
         return Source.UNKNOWN
 
 
-def _sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
+def sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
     if len(results) == 0:
         return []
     results.sort(key=lambda y: y[-1])
@@ -59,7 +59,7 @@ def _sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
     return list(OrderedDict.fromkeys(results_sorted))
 
 
-def _sort_and_deduplicate_tuple(
+def sort_and_deduplicate_tuple(
     results: List[Tuple[str, str, int]]
 ) -> List[Tuple[str, str]]:
     if len(results) == 0:
@@ -71,12 +71,12 @@ def _sort_and_deduplicate_tuple(
     return list(OrderedDict.fromkeys(results_sorted))
 
 
-def _submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
+def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
     """Simple submodule finder that doesn't try to import anything"""
     result = set()
     if mod.is_dir() and (mod / "__init__.py").exists():
         result.add(mod)
         for child in mod.iterdir():
-            result |= _submodules(child)
+            result |= submodules(child)
     return result
     return result
