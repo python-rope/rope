@@ -834,9 +834,11 @@ can use this module to auto-import names.  ``AutoImport.get_modules()``
 returns the list of modules with the given global name.
 ``AutoImport.import_assist()`` tries to find the modules that have a
 global name that starts with the given prefix.
+
 It uses an sqllite3 database, which can be made persistent by passing memory as false to the constructor.
-It must be closed when done with the ```AutoImport.close()``` method 
-It can search for a name from both modules and statements you can import from them
+It must be closed when done with the ```AutoImport.close()``` method.
+
+AutoImport can search for a name from both modules and statements you can import from them.
 
 .. code-block:: python
 
@@ -847,7 +849,7 @@ It can search for a name from both modules and statements you can import from th
   autoimport = AutoImport(project, memory=False)
   autoimport.generate_resource_cache()  # Generates a cache of the local modules, from the project you're working on
   autoimport.generate_modules_cache()  # Generates a cache of external modules
-  print(autoimport.search("AutoImport"))
+  print(autoimport.search("Dict"))
   autoimport.close()
 
 
