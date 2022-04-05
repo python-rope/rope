@@ -19,6 +19,8 @@ def get_package_name_from_path(
     Returns None if not a viable package.
     """
     package_name = package_path.name
+    if package_name.startswith(".") or package_name == "__pycache__":
+        return None
     if package_path.is_file():
         if package_name.endswith(".so"):
             name = package_name.split(".")[0]
