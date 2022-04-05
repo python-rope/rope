@@ -1,3 +1,4 @@
+"""AutoImport module for rope."""
 import pathlib
 import re
 import sqlite3
@@ -11,14 +12,21 @@ from rope.base.resources import Resource
 from rope.refactor import importutils
 
 from .defs import Name, PackageType, Source
-from .parse import (find_all_names_in_package, get_names_from_builtins,
-                    get_names_from_file)
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    sort_and_deduplicate, sort_and_deduplicate_tuple)
+from .parse import (
+    find_all_names_in_package,
+    get_names_from_compiled,
+    get_names_from_file,
+)
+from .utils import (
+    get_modname_from_path,
+    get_package_name_from_path,
+    sort_and_deduplicate,
+    sort_and_deduplicate_tuple,
+)
 
 
-class AutoImport(object):
-    """A class for finding the module that provides a name
+class AutoImport:
+    """A class for finding the module that provides a name.
 
     This class maintains a cache of global names in python modules.
     Note that this cache is not accurate and might be out of date.
@@ -30,12 +38,16 @@ class AutoImport(object):
     project: Project
 
     def __init__(self, project, observe=True, underlined=False, memory=True):
-        """Construct an AutoImport object
+        """Construct an AutoImport object.
 
-        If `observe` is `True`, listen for project changes and update
-        the cache.
-
-        If `underlined` is `True`, underlined names are cached, too.
+        Parameters
+        ___________
+        project : rope.base.project.Project
+            the project to use for project imports
+        observe : bool
+            if true, listen for project changes and update the cache.
+        underlined : bool
+            If `underlined` is `True`, underlined names are cached, too.
         """
         self.project = project
         self.underlined = underlined
@@ -50,15 +62,20 @@ class AutoImport(object):
             project.add_observer(observer)
 
     def _setup_db(self):
-        self.connection.execute(
-            "create table if not exists names(name TEXT, module TEXT, package TEXT, source INTEGER)"
-        )
+        table = "(name TEXT, module TEXT, package TEXT, source INTEGER)"
+        self.connection.execute(f"create table if not exists names{table}")
 
-    def import_assist(self, starting):
-        """Return a list of ``(name, module)`` tuples
+    def import_assist(self, starting: str):
+        """
+        Find modules that have a global name that starts with `starting`.
 
-        This function tries to find modules that have a global name
-        that starts with `starting`.
+        Parameters
+        __________
+        starting : str
+            what all the names should start with
+        Return
+        __________
+        Return a list of ``(name, module)`` tuples
         """
         results = self.connection.execute(
             "select name, module, source from names WHERE name LIKE (?)",
@@ -72,10 +89,10 @@ class AutoImport(object):
         )  # Remove duplicates from multiple occurences of the same item
 
     def search(self, name) -> List[str]:
-        """Searches both modules and names for an import string"""
+        """Search both modules and names for an import string."""
         results: List[Tuple[str, int]] = []
-        for name, module, source in self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
+        for module, source in self.connection.execute(
+            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
         ):
             results.append((f"from {module} import {name}", source))
         for module, source in self.connection.execute(
@@ -91,7 +108,7 @@ class AutoImport(object):
         return sort_and_deduplicate(results)
 
     def get_modules(self, name) -> List[str]:
-        """Return the list of modules that have global `name`"""
+        """Get the list of modules that have global `name`."""
         results = self.connection.execute(
             "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
         ).fetchall()
@@ -101,13 +118,13 @@ class AutoImport(object):
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
-        """Return the list of all cached global names"""
+        """Get the list of all cached global names."""
         self._check_all()
         results = self.connection.execute("select name from names").fetchall()
         return results
 
     def get_all(self) -> List[Name]:
-        """Dumps the entire database"""
+        """Dump the entire database."""
         self._check_all()
         results = self.connection.execute("select * from names").fetchall()
         return results
@@ -118,7 +135,7 @@ class AutoImport(object):
         underlined: bool = False,
         task_handle=taskhandle.NullTaskHandle(),
     ):
-        """Generate global name cache for project files
+        """Generate global name cache for project files.
 
         If `resources` is a list of `rope.base.resource.File`, only
         those files are searched; otherwise all python modules in the
@@ -131,7 +148,7 @@ class AutoImport(object):
         )
         # Should be very fast, so doesn't need multithreaded computation
         for file in resources:
-            job_set.started_job("Working on <%s>" % file.path)
+            job_set.started_job(f"Working on {file.path}")
             self.update_resource(file, underlined, commit=False)
             job_set.finished_job()
         self.connection.commit()
@@ -141,38 +158,18 @@ class AutoImport(object):
         modules: List[str] = None,
         task_handle=taskhandle.NullTaskHandle(),
     ):
-        """Generate global name cache for external modules listed in `modules`.
+        """
+        Generate global name cache for external modules listed in `modules`.
+
         If no modules are provided, it will generate a cache for every module avalible.
         This method searches in your sys.path and configured python folders.
         Do not use this for generating your own project's internal names,
-        use generate_resource_cache for that instead."""
-        job_set = task_handle.create_jobset(
-            "Generating autoimport cache for modules",
-            "all" if modules is None else len(modules),
-        )
+        use generate_resource_cache for that instead.
+        """
         packages: List[pathlib.Path] = []
         compiled_packages: List[str] = []
         if modules is None:
-            # Get builtins first
-            compiled_packages.extend(sys.builtin_module_names)
-            folders = self.project.get_python_path_folders()
-            for folder in folders:
-                for package in pathlib.Path(folder.path).iterdir():
-                    package_tuple = get_package_name_from_path(package)
-                    if package_tuple is None:
-                        continue
-                    package_name, package_type = package_tuple
-                    if (
-                        self.connection.execute(
-                            "select * from names where package LIKE (?)",
-                            (package_name,),
-                        ).fetchone()
-                        is None
-                    ):
-                        if package_type == PackageType.COMPILED:
-                            compiled_packages.append(package_name)
-                        packages.append(package)
-
+            packages, compiled_packages = self._get_avalible_packages()
         else:
             for modname in modules:
                 mod_tuple = self._find_package_path(modname)
@@ -193,20 +190,23 @@ class AutoImport(object):
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(find_all_names_in_package, packages):
                 self._add_names(name_list)
-            for name_list in exectuor.map(get_names_from_builtins, compiled_packages):
+            for name_list in exectuor.map(get_names_from_compiled, compiled_packages):
                 self._add_names(name_list)
 
         self.connection.commit()
 
     def update_module(self, module: str):
+        """Update a module in the cache, or add it if it doesn't exist."""
+        self._del_if_exist(module)
         self.generate_modules_cache([module])
 
     def close(self):
+        """Close the autoimport database."""
         self.connection.commit()
         self.connection.close()
 
     def get_name_locations(self, name):
-        """Return a list of ``(resource, lineno)`` tuples"""
+        """Return a list of ``(resource, lineno)`` tuples."""
         result = []
         names = self.connection.execute(
             "select module from names where name like (?)", (name,)
@@ -227,7 +227,7 @@ class AutoImport(object):
         return result
 
     def clear_cache(self):
-        """Clear all entries in global-name cache
+        """Clear all entries in global-name cache.
 
         It might be a good idea to use this function before
         regenerating global names.
@@ -238,7 +238,7 @@ class AutoImport(object):
         self.connection.commit()
 
     def find_insertion_line(self, code):
-        """Guess at what line the new import should be inserted"""
+        """Guess at what line the new import should be inserted."""
         match = re.search(r"^(def|class)\s+", code)
         if match is not None:
             code = code[: match.start()]
@@ -258,14 +258,14 @@ class AutoImport(object):
     def update_resource(
         self, resource: Resource, underlined: bool = False, commit: bool = True
     ):
-        """Update the cache for global names in `resource`"""
+        """Update the cache for global names in `resource`."""
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
         resource_modname: str = get_modname_from_path(resource_path, package_path)
         package_tuple = get_package_name_from_path(package_path)
         underlined = underlined if underlined else self.underlined
         if package_tuple is None:
-            return None
+            return
         package_name = package_tuple[0]
         self._del_if_exist(module_name=resource_modname, commit=False)
         names = get_names_from_file(
@@ -294,6 +294,29 @@ class AutoImport(object):
         if commit:
             self.connection.commit()
 
+    def _get_avalible_packages(self) -> Tuple[List[pathlib.Path], List[str]]:
+        packages: List[pathlib.Path] = []
+        # Get builtins first
+        compiled_packages: List[str] = list(sys.builtin_module_names)
+        folders = self.project.get_python_path_folders()
+        for folder in folders:
+            for package in pathlib.Path(folder.path).iterdir():
+                package_tuple = get_package_name_from_path(package)
+                if package_tuple is None:
+                    continue
+                package_name, package_type = package_tuple
+                if (
+                    self.connection.execute(
+                        "select * from names where package LIKE (?)",
+                        (package_name,),
+                    ).fetchone()
+                    is None
+                ):
+                    if package_type == PackageType.COMPILED:
+                        compiled_packages.append(package_name)
+                    packages.append(package)
+        return packages, compiled_packages
+
     @property
     def _project_name(self):
         package_path: pathlib.Path = pathlib.Path(self.project.address)
@@ -319,17 +342,22 @@ class AutoImport(object):
             names,
         )
 
-    def _check_import(self, module) -> bool:
+    def _check_import(self, module: pathlib.Path) -> bool:
         """
-        Checks the ability to import an external package, removes it if not avalible
+        Check the ability to import an external package, removes it if not avalible.
+
+        Parameters
+        ----------
+        module: pathlib.path
+            The module to check
+        Returns
+        ----------
         """
         # Not Implemented Yet, silently will fail
         return True
 
     def _check_all(self):
-        """
-        Checks all modules and removes bad ones
-        """
+        """Check all modules and removes bad ones."""
         pass
 
     def _find_package_path(
@@ -342,7 +370,7 @@ class AutoImport(object):
                 package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue
-                name, type = package_tuple
+                name, package_type = package_tuple
                 if name == target_name:
-                    return (package, name, type)
+                    return (package, name, package_type)
         return None
