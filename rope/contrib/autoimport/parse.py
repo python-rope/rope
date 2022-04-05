@@ -146,13 +146,14 @@ def get_names_from_builtins(
         return []  # Builtins is redundant since you don't have to import it.
     results: List[Name] = []
     try:
-        module = import_module(package)
+        module = import_module(str(package))
     except ImportError:
         # print(f"couldn't import {package}")
         return []
     if hasattr(module, "__all__"):
         for name in module.__all__:
             results.append((str(name), package, package, Source.BUILTIN.value))
+    else:
         for name, value in inspect.getmembers(module):
             if underlined or not name.startswith("_"):
                 if (

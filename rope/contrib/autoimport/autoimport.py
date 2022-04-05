@@ -129,10 +129,12 @@ class AutoImport(object):
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
+        # Should be very fast, so doesn't need multithreaded computation
         for file in resources:
             job_set.started_job("Working on <%s>" % file.path)
-            self.update_resource(file, underlined)
+            self.update_resource(file, underlined, commit=False)
             job_set.finished_job()
+        self.connection.commit()
 
     def generate_modules_cache(
         self,
@@ -173,12 +175,14 @@ class AutoImport(object):
 
         else:
             for modname in modules:
-                if modname in sys.builtin_module_names:
-                    compiled_packages.append(modname)
+                mod_tuple = self._find_package_path(modname)
+                if mod_tuple is None:
+                    continue
+                package_path, package_name, package_type = mod_tuple
+                if package_type in (PackageType.COMPILED, PackageType.BUILTIN):
+                    compiled_packages.append(package_name)
                 else:
-                    package_path = self._find_package_path(modname)
-                    if package_path is None:
-                        continue
+                    assert package_path  # Should only return none for a builtin
                     packages.append(package_path)
         try:
             packages.remove(
@@ -191,6 +195,8 @@ class AutoImport(object):
                 self._add_names(name_list)
             for name_list in exectuor.map(get_names_from_builtins, compiled_packages):
                 self._add_names(name_list)
+
+        self.connection.commit()
 
     def update_module(self, module: str):
         self.generate_modules_cache([module])
@@ -249,7 +255,9 @@ class AutoImport(object):
         lineno = code.count("\n", 0, offset) + 1
         return lineno
 
-    def update_resource(self, resource: Resource, underlined: bool = False):
+    def update_resource(
+        self, resource: Resource, underlined: bool = False, commit: bool = True
+    ):
         """Update the cache for global names in `resource`"""
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
@@ -259,6 +267,7 @@ class AutoImport(object):
         if package_tuple is None:
             return None
         package_name = package_tuple[0]
+        self._del_if_exist(module_name=resource_modname, commit=False)
         names = get_names_from_file(
             resource_path,
             resource_modname,
@@ -267,6 +276,8 @@ class AutoImport(object):
             underlined=underlined,
         )
         self._add_names(names)
+        if commit:
+            self.connection.commit()
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -278,9 +289,10 @@ class AutoImport(object):
             self._del_if_exist(modname)
             self.update_resource(newresource)
 
-    def _del_if_exist(self, module_name):
+    def _del_if_exist(self, module_name, commit: bool = True):
         self.connection.execute("delete from names where module = ?", (module_name,))
-        self.connection.commit()
+        if commit:
+            self.connection.commit()
 
     @property
     def _project_name(self):
@@ -306,7 +318,6 @@ class AutoImport(object):
             "insert into names(name,module,package,source) values (?,?,?,?)",
             names,
         )
-        self.connection.commit()
 
     def _check_import(self, module) -> bool:
         """
@@ -321,12 +332,17 @@ class AutoImport(object):
         """
         pass
 
-    def _find_package_path(self, package_name: str) -> Optional[pathlib.Path]:
+    def _find_package_path(
+        self, target_name: str
+    ) -> Optional[Tuple[Optional[pathlib.Path], str, PackageType]]:
+        if target_name in sys.builtin_module_names:
+            return (None, target_name, PackageType.BUILTIN)
         for folder in self.project.get_python_path_folders():
             for package in pathlib.Path(folder.path).iterdir():
                 package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue
-                if package_tuple[0] == package_name:
-                    return package
+                name, type = package_tuple
+                if name == target_name:
+                    return (package, name, type)
         return None

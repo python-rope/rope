@@ -1,7 +1,6 @@
 """Definitions of types for the Autoimport program"""
-from typing import Tuple
-
 from enum import Enum
+from typing import Tuple
 
 
 class Source(Enum):
@@ -17,6 +16,7 @@ Name = Tuple[str, str, str, int]
 
 
 class PackageType(Enum):
+    BUILTIN = 0
     STANDARD = 1  # Just a folder
     COMPILED = 2  # .so module
     SINGLE_FILE = 3  # a .py file
