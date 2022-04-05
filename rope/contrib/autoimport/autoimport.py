@@ -268,7 +268,7 @@ class AutoImport:
             resource_path, package_path, add_package_name=False
         )
         package_tuple = get_package_name_from_path(package_path)
-        underlined = underlined if underlined else self.underlined
+
         if package_tuple is None:
             return
         package_name = package_tuple[0]
@@ -300,7 +300,7 @@ class AutoImport:
             self.connection.commit()
 
     def _get_avalible_packages(
-        self,
+        self, underlined: bool = False
     ) -> Tuple[List[pathlib.Path], List[str], List[Package]]:
         packages: List[pathlib.Path] = []
         package_names: List[
@@ -310,6 +310,7 @@ class AutoImport:
         compiled_packages: List[str] = list(sys.builtin_module_names)
         folders = self.project.get_python_path_folders()
         existing = self._get_existing()
+        underlined = underlined if underlined else self.underlined
         for folder in folders:
             for package in pathlib.Path(folder.path).iterdir():
                 package_tuple = get_package_name_from_path(package)
@@ -317,6 +318,8 @@ class AutoImport:
                     continue
                 package_name, package_type = package_tuple
                 if package_name in existing:
+                    continue
+                if package_name.startswith("_") and not underlined:
                     continue
                 if package_type == PackageType.COMPILED:
                     compiled_packages.append(package_name)
