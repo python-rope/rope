@@ -3,9 +3,8 @@
 import ast
 import inspect
 import pathlib
-import sys
 from importlib import import_module
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 
 from .defs import Name, PackageType, Source
 from .utils import (get_modname_from_path, get_package_name_from_path,
@@ -139,27 +138,27 @@ def find_all_names_in_package(
 
 
 def get_names_from_builtins(
-    underlined: bool = False, packages: Iterable[str] = sys.builtin_module_names
+    package: str,
+    underlined: bool = False,
 ) -> List[Name]:
     """Gets names from builtin modules. These are the only modules it is safe to get the names from"""
+    if package == "builtins" or (package.startswith("_") and not underlined):
+        return []  # Builtins is redundant since you don't have to import it.
     results: List[Name] = []
-    for package in packages:
-        if package == "builtins":
-            continue  # Builtins is redundant since you don't have to import it.
-        if underlined or not package.startswith("_"):
-            module = import_module(package)
-            if hasattr(module, "__all__"):
-                for name in module.__all__:
+    try:
+        module = import_module(package)
+    except ImportError:
+        # print(f"couldn't import {package}")
+        return []
+    if hasattr(module, "__all__"):
+        for name in module.__all__:
+            results.append((str(name), package, package, Source.BUILTIN.value))
+        for name, value in inspect.getmembers(module):
+            if underlined or not name.startswith("_"):
+                if (
+                    inspect.isclass(value)
+                    or inspect.isfunction(value)
+                    or inspect.isbuiltin(value)
+                ):
                     results.append((str(name), package, package, Source.BUILTIN.value))
-            for name, value in inspect.getmembers(module):
-                if underlined or not name.startswith("_"):
-                    if (
-                        inspect.isclass(value)
-                        or inspect.isfunction(value)
-                        or inspect.isbuiltin(value)
-                    ):
-                        results.append(
-                            (str(name), package, package, Source.BUILTIN.value)
-                        )
-
     return results

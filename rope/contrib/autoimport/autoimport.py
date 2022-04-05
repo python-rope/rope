@@ -10,7 +10,7 @@ from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.refactor import importutils
 
-from .defs import Name, Source
+from .defs import Name, PackageType, Source
 from .parse import (find_all_names_in_package, get_names_from_builtins,
                     get_names_from_file)
 from .utils import (get_modname_from_path, get_package_name_from_path,
@@ -142,22 +142,24 @@ class AutoImport(object):
         """Generate global name cache for external modules listed in `modules`.
         If no modules are provided, it will generate a cache for every module avalible.
         This method searches in your sys.path and configured python folders.
-        Do not use this for generating your own project's internal names, use generate_resource_cache for that instead."""
+        Do not use this for generating your own project's internal names,
+        use generate_resource_cache for that instead."""
         job_set = task_handle.create_jobset(
             "Generating autoimport cache for modules",
             "all" if modules is None else len(modules),
         )
         packages: List[pathlib.Path] = []
+        compiled_packages: List[str] = []
         if modules is None:
             # Get builtins first
-            self._add_names(get_names_from_builtins(self.underlined))
+            compiled_packages.extend(sys.builtin_module_names)
             folders = self.project.get_python_path_folders()
             for folder in folders:
                 for package in pathlib.Path(folder.path).iterdir():
                     package_tuple = get_package_name_from_path(package)
                     if package_tuple is None:
                         continue
-                    package_name = package_tuple[0]
+                    package_name, package_type = package_tuple
                     if (
                         self.connection.execute(
                             "select * from names where package LIKE (?)",
@@ -165,13 +167,14 @@ class AutoImport(object):
                         ).fetchone()
                         is None
                     ):
+                        if package_type == PackageType.COMPILED:
+                            compiled_packages.append(package_name)
                         packages.append(package)
 
         else:
             for modname in modules:
                 if modname in sys.builtin_module_names:
-                    names = get_names_from_builtins(underlined=True, packages=[modname])
-                    self._add_names(names)
+                    compiled_packages.append(modname)
                 else:
                     package_path = self._find_package_path(modname)
                     if package_path is None:
@@ -185,6 +188,8 @@ class AutoImport(object):
             pass
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(find_all_names_in_package, packages):
+                self._add_names(name_list)
+            for name_list in exectuor.map(get_names_from_builtins, compiled_packages):
                 self._add_names(name_list)
 
     def update_module(self, module: str):
