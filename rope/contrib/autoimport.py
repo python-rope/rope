@@ -342,7 +342,9 @@ class AutoImport(object):
         modules=None,
         task_handle=taskhandle.NullTaskHandle(),
     ):
-        """Generate global name cache for modules listed in `modules`"""
+        """Generate global name cache for external modules listed in `modules`.
+        If no modules are provided, it will generate a cache for every module avalible.
+        This method searches in your sys.path and configured python folders"""
         job_set = task_handle.create_jobset(
             "Generating autoimport cache for modules",
             "all" if modules is None else len(modules),
@@ -372,6 +374,10 @@ class AutoImport(object):
                 if package_path is None:
                     continue
                 packages.append(package_path)
+        try:
+            packages.remove(self._project_name)
+        except ValueError:
+            pass
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(_find_all_names_in_package, packages):
                 self._add_names(name_list)
