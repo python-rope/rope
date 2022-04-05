@@ -4,6 +4,7 @@ import re
 import sqlite3
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from itertools import chain
 from typing import List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
@@ -11,7 +12,7 @@ from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.refactor import importutils
 
-from .defs import Name, PackageType, Source
+from .defs import Name, Package, PackageType, Source
 from .parse import (find_all_names_in_package, get_names_from_compiled,
                     get_names_from_file)
 from .utils import (get_modname_from_path, get_package_name_from_path,
@@ -57,8 +58,11 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        table = "(name TEXT, module TEXT, package TEXT, source INTEGER)"
-        self.connection.execute(f"create table if not exists names{table}")
+        packages_table = "(pacakge TEXT)"
+        names_table = "(name TEXT, module TEXT, package TEXT, source INTEGER)"
+        self.connection.execute(f"create table if not exists names{names_table}")
+        self.connection.execute(f"create table if not exists packages{packages_table}")
+        self.connection.commit()
 
     def import_assist(self, starting: str):
         """
@@ -118,11 +122,12 @@ class AutoImport:
         results = self.connection.execute("select name from names").fetchall()
         return results
 
-    def get_all(self) -> List[Name]:
+    def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
         self._check_all()
-        results = self.connection.execute("select * from names").fetchall()
-        return results
+        name_results = self.connection.execute("select * from names").fetchall()
+        package_results = self.connection.execute("select * from packages").fetchall()
+        return name_results, package_results
 
     def generate_resource_cache(
         self,
@@ -163,25 +168,25 @@ class AutoImport:
         """
         packages: List[pathlib.Path] = []
         compiled_packages: List[str] = []
+        to_add: List[Package] = []
         if modules is None:
-            packages, compiled_packages = self._get_avalible_packages()
-            try:
-                packages.remove(
-                    self._project_path
-                )  # Don't want to generate the cache for the user's project
-            except ValueError:
-                pass
+            packages, compiled_packages, to_add = self._get_avalible_packages()
         else:
+            existing = self._get_existing()
             for modname in modules:
                 mod_tuple = self._find_package_path(modname)
                 if mod_tuple is None:
                     continue
                 package_path, package_name, package_type = mod_tuple
+                if package_name in existing:
+                    continue
                 if package_type in (PackageType.COMPILED, PackageType.BUILTIN):
                     compiled_packages.append(package_name)
                 else:
                     assert package_path  # Should only return none for a builtin
                     packages.append(package_path)
+                to_add.append((package_name,))
+        self._add_packages(to_add)
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(find_all_names_in_package, packages):
                 self._add_names(name_list)
@@ -294,28 +299,41 @@ class AutoImport:
         if commit:
             self.connection.commit()
 
-    def _get_avalible_packages(self) -> Tuple[List[pathlib.Path], List[str]]:
+    def _get_avalible_packages(
+        self,
+    ) -> Tuple[List[pathlib.Path], List[str], List[Package]]:
         packages: List[pathlib.Path] = []
+        package_names: List[
+            Package
+        ] = []  # List of packages to add to the package table
         # Get builtins first
         compiled_packages: List[str] = list(sys.builtin_module_names)
         folders = self.project.get_python_path_folders()
+        existing = self._get_existing()
         for folder in folders:
             for package in pathlib.Path(folder.path).iterdir():
                 package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue
                 package_name, package_type = package_tuple
-                if (
-                    self.connection.execute(
-                        "select * from names where package LIKE (?)",
-                        (package_name,),
-                    ).fetchone()
-                    is None
-                ):
-                    if package_type == PackageType.COMPILED:
-                        compiled_packages.append(package_name)
+                if package_name in existing:
+                    continue
+                if package_type == PackageType.COMPILED:
+                    compiled_packages.append(package_name)
+                else:
                     packages.append(package)
-        return packages, compiled_packages
+                package_names.append((package_name,))
+        return packages, compiled_packages, package_names
+
+    def _add_packages(self, packages: List[Package]):
+        self.connection.executemany("INSERT into packages values(?)", packages)
+
+    def _get_existing(self) -> List[str]:
+        existing: List[str] = list(
+            chain(*self.connection.execute("select * from packages").fetchall())
+        )
+        existing.append(self._project_name)
+        return existing
 
     @property
     def _project_name(self):

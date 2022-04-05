@@ -15,7 +15,7 @@ class Source(Enum):
 
 
 Name = Tuple[str, str, str, int]
-
+Package = Tuple[str]
 
 class PackageType(Enum):
     """Describes the type of package, to determine how to get the names from it."""

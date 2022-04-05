@@ -12,16 +12,23 @@ from .defs import PackageType, Source
 def get_package_name_from_path(
     package_path: pathlib.Path,
 ) -> Optional[Tuple[str, PackageType]]:
-    """Get package name and type from a path."""
+    """
+    Get package name and type from a path.
+
+    Checks for common issues, such as not being a viable python module
+    Returns None if not a viable package.
+    """
     package_name = package_path.name
-    if package_name.endswith(".egg-info"):
+    if package_path.is_file():
+        if package_name.endswith(".so"):
+            name = package_name.split(".")[0]
+            return (name, PackageType.COMPILED)
+        if package_name.endswith(".py"):
+            stripped_name = package_name.removesuffix(".py")
+            return (stripped_name, PackageType.SINGLE_FILE)
         return None
-    if package_name.endswith(".so"):
-        name = package_name.split(".")[0]
-        return (name, PackageType.COMPILED)
-    if package_name.endswith(".py"):
-        stripped_name = package_name.removesuffix(".py")
-        return (stripped_name, PackageType.SINGLE_FILE)
+    if package_name.endswith((".egg-info", ".dist-info")):
+        return None
     return (package_name, PackageType.STANDARD)
 
 
