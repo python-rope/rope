@@ -12,17 +12,10 @@ from rope.base.resources import Resource
 from rope.refactor import importutils
 
 from .defs import Name, PackageType, Source
-from .parse import (
-    find_all_names_in_package,
-    get_names_from_compiled,
-    get_names_from_file,
-)
-from .utils import (
-    get_modname_from_path,
-    get_package_name_from_path,
-    sort_and_deduplicate,
-    sort_and_deduplicate_tuple,
-)
+from .parse import (find_all_names_in_package, get_names_from_compiled,
+                    get_names_from_file)
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    sort_and_deduplicate, sort_and_deduplicate_tuple)
 
 
 class AutoImport:
@@ -48,6 +41,8 @@ class AutoImport:
             if true, listen for project changes and update the cache.
         underlined : bool
             If `underlined` is `True`, underlined names are cached, too.
+        memory : bool
+            if true, don't persist to disk
         """
         self.project = project
         self.underlined = underlined
@@ -171,6 +166,12 @@ class AutoImport:
         if modules is None:
             packages, compiled_packages = self._get_avalible_packages()
         else:
+            try:
+                modules.remove(
+                    self._project_name
+                )  # Don't want to generate the cache for the user's project
+            except ValueError:
+                pass
             for modname in modules:
                 mod_tuple = self._find_package_path(modname)
                 if mod_tuple is None:
@@ -183,7 +184,7 @@ class AutoImport:
                     packages.append(package_path)
         try:
             packages.remove(
-                self._project_name
+                self._project_path
             )  # Don't want to generate the cache for the user's project
         except ValueError:
             pass
@@ -260,8 +261,13 @@ class AutoImport:
     ):
         """Update the cache for global names in `resource`."""
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
-        package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = get_modname_from_path(resource_path, package_path)
+        package_path: pathlib.Path = self._project_path
+        # The project doesn't need its name added to the path,
+        # since the standard python file layout accounts for that
+        # so we set add_package_name to False
+        resource_modname: str = get_modname_from_path(
+            resource_path, package_path, add_package_name=False
+        )
         package_tuple = get_package_name_from_path(package_path)
         underlined = underlined if underlined else self.underlined
         if package_tuple is None:
@@ -325,10 +331,14 @@ class AutoImport:
             return None
         return package_tuple[0]
 
+    @property
+    def _project_path(self):
+        return pathlib.Path(self.project.address)
+
     def _modname(self, resource: Resource):
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = get_modname_from_path(resource_path, package_path)
+        resource_modname: str = get_modname_from_path(resource_path, package_path, add_package_name=False)
         return resource_modname
 
     def _removed(self, resource):

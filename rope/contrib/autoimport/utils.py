@@ -25,16 +25,22 @@ def get_package_name_from_path(
     return (package_name, PackageType.STANDARD)
 
 
-def get_modname_from_path(modpath: pathlib.Path, package_path: pathlib.Path) -> str:
+def get_modname_from_path(
+    modpath: pathlib.Path, package_path: pathlib.Path, add_package_name: bool = True
+) -> str:
     """Get module name from a path in respect to package."""
     package_name: str = package_path.name
     modname = (
         modpath.relative_to(package_path)
         .as_posix()
+        .removesuffix("/__init__.py")
         .removesuffix(".py")
         .replace("/", ".")
     )
-    modname = package_name if modname == "." else package_name + "." + modname
+    if add_package_name:
+        modname = package_name if modname == "." else package_name + "." + modname
+    else:
+        assert modname != "."
     return modname
 
 
