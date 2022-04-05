@@ -837,9 +837,12 @@ global name that starts with the given prefix.
 It uses an sqllite3 database, which can be made persistent by passing memory as false to the constructor.
 It must be closed when done with the ```AutoImport.close()``` method 
 It can search for a name from both modules and statements you can import from them
-.. code-block:: python 
+
+.. code-block:: python
+
   from rope.base.project import Project
   from rope.contrib.autoimport import AutoImport
+
   project = Project("/path/to/project")
   autoimport = AutoImport(project, memory=False)
   autoimport.generate_resource_cache()  # Generates a cache of the local modules, from the project you're working on
