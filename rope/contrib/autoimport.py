@@ -1,4 +1,5 @@
 import ast
+import inspect
 import pathlib
 import re
 import sqlite3
@@ -6,7 +7,8 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from typing import List, Optional, Set, Tuple
+from importlib import import_module
+from typing import Iterable, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -17,9 +19,10 @@ from rope.refactor import importutils
 class Source(Enum):
     PROJECT = 0  # Obviously any project packages come first
     MANUAL = 1  # Any packages manually added are probably important to the user
-    STANDARD = 2  # We want to favor standard library items
-    SITE_PACKAGE = 3
-    UNKNOWN = 4
+    BUILTIN = 2
+    STANDARD = 3  # We want to favor standard library items
+    SITE_PACKAGE = 4
+    UNKNOWN = 5
 
 
 Name = Tuple[str, str, str, int]
@@ -71,6 +74,29 @@ class PackageType(Enum):
     STANDARD = 1  # Just a folder
     COMPILED = 2  # .so module
     SINGLE_FILE = 3  # a .py file
+
+
+def _get_names_from_builtins(
+    underlined: bool = False, packages: Iterable[str] = sys.builtin_module_names
+) -> List[Name]:
+    """Gets names from builtin modules. These are the only modules it is safe to get the names from"""
+    results: List[Name] = []
+    for package in packages:
+        if package == "builtins":
+            continue  # Builtins is redundant since you don't have to import it.
+        if underlined or not package.startswith("_"):
+            module = import_module(package)
+            if hasattr(module, "__all__"):
+                for name in module.__all__:
+                    results.append((str(name), package, package, Source.BUILTIN.value))
+            for name, value in inspect.getmembers(module):
+                if underlined or not name.startswith("_"):
+                    if inspect.isclass(value) or inspect.isfunction(value) or inspect.isbuiltin(value):
+                        results.append(
+                            (str(name), package, package, Source.BUILTIN.value)
+                        )
+
+    return results
 
 
 def _get_package_name_from_path(
@@ -316,7 +342,7 @@ class AutoImport(object):
 
     def generate_resource_cache(
         self,
-        resources=None,
+        resources: List[Resource] = None,
         underlined: bool = False,
         task_handle=taskhandle.NullTaskHandle(),
     ):
@@ -325,7 +351,6 @@ class AutoImport(object):
         If `resources` is a list of `rope.base.resource.File`, only
         those files are searched; otherwise all python modules in the
         project are cached.
-
         """
         if resources is None:
             resources = self.project.get_python_files()
@@ -339,18 +364,21 @@ class AutoImport(object):
 
     def generate_modules_cache(
         self,
-        modules=None,
+        modules: List[str] = None,
         task_handle=taskhandle.NullTaskHandle(),
     ):
         """Generate global name cache for external modules listed in `modules`.
         If no modules are provided, it will generate a cache for every module avalible.
-        This method searches in your sys.path and configured python folders"""
+        This method searches in your sys.path and configured python folders.
+        Do not use this for generating your own project's internal names, use generate_resource_cache for that instead."""
         job_set = task_handle.create_jobset(
             "Generating autoimport cache for modules",
             "all" if modules is None else len(modules),
         )
         packages: List[pathlib.Path] = []
         if modules is None:
+            # Get builtins first
+            self._add_names(_get_names_from_builtins(self.underlined))
             folders = self.project.get_python_path_folders()
             for folder in folders:
                 for package in pathlib.Path(folder.path).iterdir():
@@ -369,13 +397,20 @@ class AutoImport(object):
 
         else:
             for modname in modules:
-                package_path = self._find_package_path(modname)
-                print(package_path)
-                if package_path is None:
-                    continue
-                packages.append(package_path)
+                if modname in sys.builtin_module_names:
+                    names = _get_names_from_builtins(
+                        underlined=True, packages=[modname]
+                    )
+                    self._add_names(names)
+                else:
+                    package_path = self._find_package_path(modname)
+                    if package_path is None:
+                        continue
+                    packages.append(package_path)
         try:
-            packages.remove(self._project_name)
+            packages.remove(
+                self._project_name
+            )  # Don't want to generate the cache for the user's project
         except ValueError:
             pass
         with ProcessPoolExecutor() as exectuor:

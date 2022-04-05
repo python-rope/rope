@@ -150,7 +150,7 @@ class TestAutoImport:
 
     def test_handling_builtin_modules(self, importer):
         importer.update_module("sys")
-        assert "sys" == importer.get_modules("exit")
+        assert ["sys"] == importer.get_modules("exit")
 
 
 class TestAutoImportObserving:
