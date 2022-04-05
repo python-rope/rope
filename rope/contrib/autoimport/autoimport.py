@@ -165,13 +165,13 @@ class AutoImport:
         compiled_packages: List[str] = []
         if modules is None:
             packages, compiled_packages = self._get_avalible_packages()
-        else:
             try:
-                modules.remove(
-                    self._project_name
+                packages.remove(
+                    self._project_path
                 )  # Don't want to generate the cache for the user's project
             except ValueError:
                 pass
+        else:
             for modname in modules:
                 mod_tuple = self._find_package_path(modname)
                 if mod_tuple is None:
@@ -182,12 +182,6 @@ class AutoImport:
                 else:
                     assert package_path  # Should only return none for a builtin
                     packages.append(package_path)
-        try:
-            packages.remove(
-                self._project_path
-            )  # Don't want to generate the cache for the user's project
-        except ValueError:
-            pass
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(find_all_names_in_package, packages):
                 self._add_names(name_list)
@@ -338,7 +332,9 @@ class AutoImport:
     def _modname(self, resource: Resource):
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = get_modname_from_path(resource_path, package_path, add_package_name=False)
+        resource_modname: str = get_modname_from_path(
+            resource_path, package_path, add_package_name=False
+        )
         return resource_modname
 
     def _removed(self, resource):
