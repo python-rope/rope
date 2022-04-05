@@ -7,6 +7,7 @@ from ropetest import testutils
 @pytest.fixture
 def project():
     project = testutils.sample_project(extension_modules=["sys"])
+    project.set("python_path", [project.address])
     yield project
     testutils.remove_project(project)
 
@@ -59,8 +60,8 @@ class TestAutoImport:
 
     def test_update_module(self, importer, mod1, project_name):
         mod1.write("myvar = None")
-        importer.update_module(f"{project_name}.mod1")
-        assert [("myvar", f"{project_name}.mod1")] == importer.import_assist("myva")
+        importer.update_module("mod1")
+        assert [("myvar", "mod1")] == importer.import_assist("myva")
 
     def test_update_non_existent_module(self, importer):
         importer.update_module("does_not_exists_this")
@@ -119,18 +120,20 @@ class TestAutoImport:
         importer.clear_cache()
         assert [] == importer.get_modules("myvar")
 
-    def test_not_caching_underlined_names(self, importer, mod1):
+    def test_not_caching_underlined_names(self, importer, mod1, project_name):
         mod1.write("_myvar = None\n")
         importer.update_resource(mod1, underlined=False)
         assert [] == importer.get_modules("_myvar")
         importer.update_resource(mod1, underlined=True)
-        assert ["mod1"] == importer.get_modules("_myvar")
+        assert [f"{project_name}.mod1"] == importer.get_modules("_myvar")
 
-    def test_caching_underlined_names_passing_to_the_constructor(self, project, mod1):
+    def test_caching_underlined_names_passing_to_the_constructor(
+        self, project, mod1, project_name
+    ):
         importer = autoimport.AutoImport(project, False, True)
         mod1.write("_myvar = None\n")
         importer.update_resource(mod1)
-        assert ["mod1"] == importer.get_modules("_myvar")
+        assert [f"{project_name}.mod1"] == importer.get_modules("_myvar")
         importer.close()
 
     def test_name_locations(self, importer, mod1):

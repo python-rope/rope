@@ -263,7 +263,7 @@ class AutoImport(object):
         that starts with `starting`.
         """
         results = self.connection.execute(
-            "select name, module, source from names where name like (?)",
+            "select name, module, source from names WHERE name LIKE (?)",
             (starting + "%",),
         ).fetchall()
         for result in results:
@@ -374,7 +374,6 @@ class AutoImport(object):
         with ProcessPoolExecutor() as exectuor:
             for name_list in exectuor.map(_find_all_names_in_package, packages):
                 self._add_names(name_list)
-        self.connection.commit()
 
     def update_module(self, module: str):
         self.generate_modules_cache([module])
@@ -422,15 +421,13 @@ class AutoImport(object):
         if package_tuple is None:
             return None
         package_name = package_tuple[0]
-        print((resource_path, resource_modname, package_path.name, Source.PROJECT))
         names = _get_names_from_file(
             resource_path,
             resource_modname,
             package_name,
             Source.PROJECT,
-            underlined,
+            underlined=underlined,
         )
-        print(names)
         self._add_names(names)
 
     def _changed(self, resource):
@@ -440,7 +437,6 @@ class AutoImport(object):
     def _moved(self, resource: Resource, newresource: Resource):
         if not resource.is_folder():
             modname = self._modname(resource)
-            print(modname)
             self._del_if_exist(modname)
             self.update_resource(newresource)
 
