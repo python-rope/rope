@@ -368,6 +368,7 @@ class AutoImport(object):
         else:
             for modname in modules:
                 package_path = self._find_package_path(modname)
+                print(package_path)
                 if package_path is None:
                     continue
                 packages.append(package_path)
@@ -381,6 +382,27 @@ class AutoImport(object):
     def close(self):
         self.connection.commit()
         self.connection.close()
+
+    def get_name_locations(self, name):
+        """Return a list of ``(resource, lineno)`` tuples"""
+        result = []
+        names = self.connection.execute(
+            "select module from names where name like (?)", (name,)
+        ).fetchall()
+        for module in names:
+            try:
+                module_name = module[0].removeprefix(f"{self._project_name}.")
+                pymodule = self.project.get_module(module_name)
+                if name in pymodule:
+                    pyname = pymodule[name]
+                    module, lineno = pyname.get_definition_location()
+                    if module is not None:
+                        resource = module.get_module().get_resource()
+                        if resource is not None and lineno is not None:
+                            result.append((resource, lineno))
+            except exceptions.ModuleNotFoundError:
+                pass
+        return result
 
     def clear_cache(self):
         """Clear all entries in global-name cache
@@ -443,6 +465,14 @@ class AutoImport(object):
     def _del_if_exist(self, module_name):
         self.connection.execute("delete from names where module = ?", (module_name,))
         self.connection.commit()
+
+    @property
+    def _project_name(self):
+        package_path: pathlib.Path = pathlib.Path(self.project.address)
+        package_tuple = _get_package_name_from_path(package_path)
+        if package_tuple is None:
+            return None
+        return package_tuple[0]
 
     def _modname(self, resource: Resource):
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
