@@ -1,5 +1,6 @@
 # **Upcoming release**
-
+## New feature
+- #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
 ## Bug fixes
 
 - #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
