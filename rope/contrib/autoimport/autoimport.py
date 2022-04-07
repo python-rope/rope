@@ -157,6 +157,7 @@ class AutoImport:
         self,
         modules: List[str] = None,
         task_handle=taskhandle.NullTaskHandle(),
+        single_thread: bool = False,
     ):
         """
         Generate global name cache for external modules listed in `modules`.
@@ -187,12 +188,15 @@ class AutoImport:
                     packages.append(package_path)
                 to_add.append((package_name,))
         self._add_packages(to_add)
-        with ProcessPoolExecutor() as exectuor:
-            for name_list in exectuor.map(find_all_names_in_package, packages):
-                self._add_names(name_list)
-            for name_list in exectuor.map(get_names_from_compiled, compiled_packages):
-                self._add_names(name_list)
-
+        if single_thread:
+            for package in packages:
+                self._add_names(find_all_names_in_package(package))
+        else:
+            with ProcessPoolExecutor() as exectuor:
+                for name_list in exectuor.map(find_all_names_in_package, packages):
+                    self._add_names(name_list)
+        for compiled_package in compiled_packages:
+            self._add_names(get_names_from_compiled(compiled_package))
         self.connection.commit()
 
     def update_module(self, module: str):
