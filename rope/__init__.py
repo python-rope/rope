@@ -1,7 +1,7 @@
 """rope, a python refactoring library"""
 
 INFO = __doc__
-VERSION = "0.23.0"
+VERSION = "1.0.0"
 COPYRIGHT = """\
 Copyright (C) 2021-2021 Lie Ryan
 Copyright (C) 2019-2021 Matej Cepl
