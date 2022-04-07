@@ -41,13 +41,14 @@ def get_modname_from_path(
     package_name: str = package_path.name
     rel_path_parts = modpath.relative_to(package_path).parts
     modname = ""
-    for part in rel_path_parts[:-1]:
-        modname += part
-        modname += "."
-    if rel_path_parts[-1] == "__init__":
-        modname = modname[:-1]
-    else:
-        modname = modname + modpath.stem
+    if len(rel_path_parts) > 0:
+        for part in rel_path_parts[:-1]:
+            modname += part
+            modname += "."
+        if rel_path_parts[-1] == "__init__":
+            modname = modname[:-1]
+        else:
+            modname = modname + modpath.stem
     if add_package_name:
         modname = package_name if modname == "" else package_name + "." + modname
     else:

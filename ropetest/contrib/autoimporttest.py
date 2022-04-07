@@ -121,6 +121,25 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module("sys")
         self.assertTrue("sys" in self.importer.get_modules("exit"))
 
+    def test_search(self):
+        self.importer.update_module("typing")
+        self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
+
+    def test_generate_full_cache(self):
+        self.importer.generate_modules_cache()
+        self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
+        self.assertTrue(len(self.importer._dump_all()) > 0)
+        for table in self.importer._dump_all():
+            self.assertTrue(len(table) > 0)
+
+    def test_generate_full_cache_st(self):
+        """The single thread test takes much longer than the multithread test but is easier to debug"""
+        self.importer.generate_modules_cache(single_thread=True)
+        self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
+        self.assertTrue(len(self.importer._dump_all()) > 0)
+        for table in self.importer._dump_all():
+            self.assertTrue(len(table) > 0)
+
 
 class AutoImportObservingTest(unittest.TestCase):
     def setUp(self):
