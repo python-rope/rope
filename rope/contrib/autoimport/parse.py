@@ -11,8 +11,12 @@ from importlib import import_module
 from typing import List, Tuple
 
 from .defs import Name, PackageType, Source
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    get_package_source, submodules)
+from .utils import (
+    get_modname_from_path,
+    get_package_name_from_path,
+    get_package_source,
+    submodules,
+)
 
 
 def get_names(

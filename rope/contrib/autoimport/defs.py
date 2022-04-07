@@ -7,7 +7,7 @@ class Source(Enum):
     """Describes the source of the package, for sorting purposes."""
 
     PROJECT = 0  # Obviously any project packages come first
-    MANUAL = 1  # Placeholder since Autoimport classifies manually added modules 
+    MANUAL = 1  # Placeholder since Autoimport classifies manually added modules
     BUILTIN = 2
     STANDARD = 3  # We want to favor standard library items
     SITE_PACKAGE = 4

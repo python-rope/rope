@@ -13,11 +13,18 @@ from rope.base.resources import Resource
 from rope.refactor import importutils
 
 from .defs import Name, Package, PackageType, Source
-from .parse import (find_all_names_in_package, get_names_from_compiled,
-                    get_names_from_file)
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    get_package_source, sort_and_deduplicate,
-                    sort_and_deduplicate_tuple)
+from .parse import (
+    find_all_names_in_package,
+    get_names_from_compiled,
+    get_names_from_file,
+)
+from .utils import (
+    get_modname_from_path,
+    get_package_name_from_path,
+    get_package_source,
+    sort_and_deduplicate,
+    sort_and_deduplicate_tuple,
+)
 
 
 class AutoImport:
