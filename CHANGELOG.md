@@ -1,6 +1,15 @@
 # **Upcoming release**
 ## New feature
 - #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
+
+# Release 1.0.0
+
+Date: 2022-04-08
+
+## Syntax support
+
+- #400 Drop Python 2.7 support
+
 ## Bug fixes
 
 - #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
