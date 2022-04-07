@@ -28,7 +28,7 @@ def get_names(
     """
     if modpath.is_dir():
         names: List[Name]
-        if modpath / "__init__.py":
+        if (modpath / "__init__.py").exists():
             names = get_names_from_file(
                 modpath / "__init__.py",
                 modname,
@@ -165,6 +165,7 @@ def find_all_names_in_package(
 
 def get_names_from_compiled(
     package: str,
+    source: Source,
     underlined: bool = False,
 ) -> List[Name]:
     """
@@ -188,7 +189,7 @@ def get_names_from_compiled(
         return []
     if hasattr(module, "__all__"):
         for name in module.__all__:
-            results.append((str(name), package, package, Source.BUILTIN.value))
+            results.append((str(name), package, package, source.value))
     else:
         for name, value in inspect.getmembers(module):
             if underlined or not name.startswith("_"):
@@ -197,5 +198,5 @@ def get_names_from_compiled(
                     or inspect.isfunction(value)
                     or inspect.isbuiltin(value)
                 ):
-                    results.append((str(name), package, package, Source.BUILTIN.value))
+                    results.append((str(name), package, package, source.value))
     return results

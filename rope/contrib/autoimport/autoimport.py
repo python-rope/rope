@@ -4,7 +4,7 @@ import re
 import sqlite3
 import sys
 from concurrent.futures import ProcessPoolExecutor
-from itertools import chain
+from itertools import chain, repeat
 from typing import List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
@@ -16,7 +16,8 @@ from .defs import Name, Package, PackageType, Source
 from .parse import (find_all_names_in_package, get_names_from_compiled,
                     get_names_from_file)
 from .utils import (get_modname_from_path, get_package_name_from_path,
-                    sort_and_deduplicate, sort_and_deduplicate_tuple)
+                    get_package_source, sort_and_deduplicate,
+                    sort_and_deduplicate_tuple)
 
 
 class AutoImport:
@@ -158,6 +159,7 @@ class AutoImport:
         modules: List[str] = None,
         task_handle=taskhandle.NullTaskHandle(),
         single_thread: bool = False,
+        underlined: bool = False,
     ):
         """
         Generate global name cache for external modules listed in `modules`.
@@ -168,10 +170,14 @@ class AutoImport:
         use generate_resource_cache for that instead.
         """
         packages: List[pathlib.Path] = []
-        compiled_packages: List[str] = []
+        compiled_packages: List[Tuple[str, Source]] = []
         to_add: List[Package] = []
+        if self.underlined:
+            underlined = True
         if modules is None:
-            packages, compiled_packages, to_add = self._get_avalible_packages()
+            packages, compiled_packages, to_add = self._get_avalible_packages(
+                underlined
+            )
         else:
             existing = self._get_existing()
             for modname in modules:
@@ -179,10 +185,19 @@ class AutoImport:
                 if mod_tuple is None:
                     continue
                 package_path, package_name, package_type = mod_tuple
+                if package_name.startswith("_") and not underlined:
+                    continue
                 if package_name in existing:
                     continue
                 if package_type in (PackageType.COMPILED, PackageType.BUILTIN):
-                    compiled_packages.append(package_name)
+                    if package_type is PackageType.COMPILED:
+                        assert (
+                            package_path is not None
+                        )  # It should have been found, and isn't a builtin
+                        source = get_package_source(package_path, self.project)
+                    else:
+                        source = Source.BUILTIN
+                    compiled_packages.append((package_name, source))
                 else:
                     assert package_path  # Should only return none for a builtin
                     packages.append(package_path)
@@ -190,13 +205,20 @@ class AutoImport:
         self._add_packages(to_add)
         if single_thread:
             for package in packages:
-                self._add_names(find_all_names_in_package(package))
+                self._add_names(
+                    find_all_names_in_package(package, underlined=underlined)
+                )
         else:
+            underlined_list = repeat(underlined, len(packages))
             with ProcessPoolExecutor() as exectuor:
-                for name_list in exectuor.map(find_all_names_in_package, packages):
+                for name_list in exectuor.map(
+                    find_all_names_in_package, packages, underlined_list
+                ):
                     self._add_names(name_list)
-        for compiled_package in compiled_packages:
-            self._add_names(get_names_from_compiled(compiled_package))
+        for compiled_package, source in compiled_packages:
+            self._add_names(
+                get_names_from_compiled(compiled_package, source, underlined)
+            )
         self.connection.commit()
 
     def update_module(self, module: str):
@@ -305,13 +327,15 @@ class AutoImport:
 
     def _get_avalible_packages(
         self, underlined: bool = False
-    ) -> Tuple[List[pathlib.Path], List[str], List[Package]]:
+    ) -> Tuple[List[pathlib.Path], List[Tuple[str, Source]], List[Package]]:
         packages: List[pathlib.Path] = []
         package_names: List[
             Package
         ] = []  # List of packages to add to the package table
         # Get builtins first
-        compiled_packages: List[str] = list(sys.builtin_module_names)
+        compiled_packages: List[Tuple[str, Source]] = [
+            (module, Source.BUILTIN) for module in sys.builtin_module_names
+        ]
         folders = self.project.get_python_path_folders()
         existing = self._get_existing()
         underlined = underlined if underlined else self.underlined
@@ -326,7 +350,9 @@ class AutoImport:
                 if package_name.startswith("_") and not underlined:
                     continue
                 if package_type == PackageType.COMPILED:
-                    compiled_packages.append(package_name)
+                    compiled_packages.append(
+                        (package_name, get_package_source(package, self.project))
+                    )
                 else:
                     packages.append(package)
                 package_names.append((package_name,))
