@@ -47,7 +47,7 @@ def get_names(
             names.extend(
                 get_names_from_file(
                     file,
-                    modname + f".{file.name.removesuffix('.py')}",
+                    modname + f".{file.stem}",
                     package_name,
                     package_source,
                     underlined=underlined,

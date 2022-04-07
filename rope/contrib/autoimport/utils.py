@@ -26,7 +26,7 @@ def get_package_name_from_path(
             name = package_name.split(".")[0]
             return (name, PackageType.COMPILED)
         if package_name.endswith(".py"):
-            stripped_name = package_name.removesuffix(".py")
+            stripped_name = package_path.stem
             return (stripped_name, PackageType.SINGLE_FILE)
         return None
     if package_name.endswith((".egg-info", ".dist-info")):
@@ -39,15 +39,17 @@ def get_modname_from_path(
 ) -> str:
     """Get module name from a path in respect to package."""
     package_name: str = package_path.name
-    modname = (
-        modpath.relative_to(package_path)
-        .as_posix()
-        .removesuffix("/__init__.py")
-        .removesuffix(".py")
-        .replace("/", ".")
-    )
+    rel_path_parts = modpath.relative_to(package_path).parts
+    modname = ""
+    for part in rel_path_parts[:-1]:
+        modname += part
+        modname += "."
+    if rel_path_parts[-1] == "__init__":
+        modname = modname[:-1]
+    else:
+        modname = modname + modpath.stem
     if add_package_name:
-        modname = package_name if modname == "." else package_name + "." + modname
+        modname = package_name if modname == "" else package_name + "." + modname
     else:
         assert modname != "."
     return modname

@@ -241,12 +241,14 @@ class AutoImport:
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
-        names = self.connection.execute(
+        modules = self.connection.execute(
             "select module from names where name like (?)", (name,)
         ).fetchall()
-        for module in names:
+        for module in modules:
             try:
-                module_name = module[0].removeprefix(f"{self._project_name}.")
+                module_name = module[0]
+                if module_name.startswith(f"{self._project_name}."):
+                    module_name = ".".join(module_name.split("."))
                 pymodule = self.project.get_module(module_name)
                 if name in pymodule:
                     pyname = pymodule[name]
