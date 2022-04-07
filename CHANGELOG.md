@@ -1,5 +1,17 @@
 # **Upcoming release**
 
+## XXX
+
+- XXX
+
+# Release 1.0.0
+
+Date: 2022-04-15
+
+## Syntax support
+
+- #400 Drop Python 2.7 support
+
 ## Bug fixes
 
 - #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
