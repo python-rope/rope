@@ -7,7 +7,7 @@ class Source(Enum):
     """Describes the source of the package, for sorting purposes."""
 
     PROJECT = 0  # Obviously any project packages come first
-    MANUAL = 1  # Any packages manually added are probably important to the user
+    MANUAL = 1  # Placeholder since Autoimport classifies manually added modules 
     BUILTIN = 2
     STANDARD = 3  # We want to favor standard library items
     SITE_PACKAGE = 4
@@ -16,6 +16,7 @@ class Source(Enum):
 
 Name = Tuple[str, str, str, int]
 Package = Tuple[str]
+
 
 class PackageType(Enum):
     """Describes the type of package, to determine how to get the names from it."""
