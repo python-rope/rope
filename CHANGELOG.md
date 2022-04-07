@@ -6,7 +6,7 @@
 
 # Release 1.0.0
 
-Date: 2022-04-15
+Date: 2022-04-08
 
 ## Syntax support
 
