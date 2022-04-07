@@ -6,6 +6,18 @@
  rope -- the world's most advanced open source Python refactoring library
 =========================================================================
 
+|Build status badge| |Latest version badge| |Download count badge| 
+
+.. |Build status badge| image:: https://secure.travis-ci.org/python-rope/rope.svg
+   :alt: Build Status
+
+.. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
+   :target: https://badge.fury.io/py/rope
+   :alt: Latest version
+   
+.. |Download count badge| image:: https://img.shields.io/pypi/dm/rope.svg
+   :alt: Download count
+
 
 Overview
 ========
@@ -86,5 +98,5 @@ Have a look at `COPYING`_ for more information.
 .. _`docs/library.rst`: docs/library.html
 .. _`COPYING`: COPYING
 
-.. image:: https://secure.travis-ci.org/python-rope/rope.svg
-   :alt: Build Status
+   
+   
