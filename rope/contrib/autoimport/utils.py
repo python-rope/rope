@@ -38,7 +38,7 @@ def get_modname_from_path(
     modpath: pathlib.Path, package_path: pathlib.Path, add_package_name: bool = True
 ) -> str:
     """Get module name from a path in respect to package."""
-    package_name: str = package_path.name
+    package_name: str = package_path.stem
     rel_path_parts = modpath.relative_to(package_path).parts
     modname = ""
     if len(rel_path_parts) > 0:
