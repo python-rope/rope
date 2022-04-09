@@ -89,23 +89,29 @@ class AutoImport:
             results
         )  # Remove duplicates from multiple occurences of the same item
 
-    def search(self, name) -> List[str]:
+    def search(self, name: str, exact_match: bool = False) -> List[str]:
         """Search both modules and names for an import string."""
+        if not exact_match:
+            name = name + "%"  # Makes the query a starts_with query
         results: List[Tuple[str, int]] = []
-        for module, source in self.connection.execute(
-            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
+        for import_name, module, source in self.connection.execute(
+            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
         ):
-            results.append((f"from {module} import {name}", source))
+            results.append((f"from {module} import {import_name}", source))
         for module, source in self.connection.execute(
             "Select module, source FROM names where module LIKE (?)", ("%." + name,)
         ):
-            results.append(
-                (f"from {module.removesuffix(f'.{name}')} import {name}", source)
-            )
+            parts = module.split(".")
+            import_name = parts[-1]
+            remaining = parts[0]
+            for part in parts[1:-1]:
+                remaining += "."
+                remaining += part
+            results.append((f"from {remaining} import {import_name}", source))
         for module, source in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results.append((f"import {name}", source))
+            results.append((f"import {module}", source))
         return sort_and_deduplicate(results)
 
     def get_modules(self, name) -> List[str]:
@@ -330,7 +336,9 @@ class AutoImport:
 
     def _get_python_folders(self) -> List[pathlib.Path]:
         folders = self.project.get_python_path_folders()
-        folder_paths = [pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"]
+        folder_paths = [
+            pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"
+        ]
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _get_avalible_packages(

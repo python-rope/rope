@@ -121,9 +121,30 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module("sys")
         self.assertTrue("sys" in self.importer.get_modules("exit"))
 
+    def test_search_submodule(self):
+        self.importer.update_module("os")
+        self.assertTrue(
+            "from os import path" in self.importer.search("path", exact_match=True)
+        )
+        self.assertTrue("from os import path" in self.importer.search("pa"))
+        self.assertTrue("from os import path" in self.importer.search("path"))
+
+    def test_search_module(self):
+        self.importer.update_module("os")
+        self.assertTrue("import os" in self.importer.search("os", exact_match=True))
+        self.assertTrue("import os" in self.importer.search("os"))
+        self.assertTrue("import os" in self.importer.search("o"))
+
     def test_search(self):
         self.importer.update_module("typing")
-        self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
+        import_statement = "from typing import Dict"
+        self.assertTrue(
+            import_statement in self.importer.search("Dict", exact_match=True)
+        )
+        self.assertTrue(import_statement in self.importer.search("Dict"))
+        self.assertTrue(import_statement in self.importer.search("Dic"))
+        self.assertTrue(import_statement in self.importer.search("Di"))
+        self.assertTrue(import_statement in self.importer.search("D"))
 
     def test_generate_full_cache(self):
         self.importer.generate_modules_cache()
