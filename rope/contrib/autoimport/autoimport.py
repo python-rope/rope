@@ -3,6 +3,7 @@ import pathlib
 import re
 import sqlite3
 import sys
+from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import chain, repeat
 from typing import List, Optional, Tuple
@@ -13,18 +14,11 @@ from rope.base.resources import Resource
 from rope.refactor import importutils
 
 from .defs import Name, Package, PackageType, Source
-from .parse import (
-    find_all_names_in_package,
-    get_names_from_compiled,
-    get_names_from_file,
-)
-from .utils import (
-    get_modname_from_path,
-    get_package_name_from_path,
-    get_package_source,
-    sort_and_deduplicate,
-    sort_and_deduplicate_tuple,
-)
+from .parse import (find_all_names_in_package, get_names_from_compiled,
+                    get_names_from_file)
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    get_package_source, sort_and_deduplicate,
+                    sort_and_deduplicate_tuple)
 
 
 class AutoImport:
@@ -334,6 +328,11 @@ class AutoImport:
         if commit:
             self.connection.commit()
 
+    def _get_python_folders(self) -> List[pathlib.Path]:
+        folders = self.project.get_python_path_folders()
+        folder_paths = [pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"]
+        return list(OrderedDict.fromkeys(folder_paths))
+
     def _get_avalible_packages(
         self, underlined: bool = False
     ) -> Tuple[List[pathlib.Path], List[Tuple[str, Source]], List[Package]]:
@@ -345,11 +344,10 @@ class AutoImport:
         compiled_packages: List[Tuple[str, Source]] = [
             (module, Source.BUILTIN) for module in sys.builtin_module_names
         ]
-        folders = self.project.get_python_path_folders()
         existing = self._get_existing()
         underlined = underlined if underlined else self.underlined
-        for folder in folders:
-            for package in pathlib.Path(folder.path).iterdir():
+        for folder in self._get_python_folders():
+            for package in folder.iterdir():
                 package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue
@@ -431,8 +429,8 @@ class AutoImport:
     ) -> Optional[Tuple[Optional[pathlib.Path], str, PackageType]]:
         if target_name in sys.builtin_module_names:
             return (None, target_name, PackageType.BUILTIN)
-        for folder in self.project.get_python_path_folders():
-            for package in pathlib.Path(folder.path).iterdir():
+        for folder in self._get_python_folders():
+            for package in folder.iterdir():
                 package_tuple = get_package_name_from_path(package)
                 if package_tuple is None:
                     continue

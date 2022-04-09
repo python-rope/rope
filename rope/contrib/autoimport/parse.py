@@ -11,12 +11,8 @@ from importlib import import_module
 from typing import List, Tuple
 
 from .defs import Name, PackageType, Source
-from .utils import (
-    get_modname_from_path,
-    get_package_name_from_path,
-    get_package_source,
-    submodules,
-)
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    get_package_source, submodules)
 
 
 def get_names(
@@ -54,9 +50,11 @@ def get_names(
                 )
             )
         return names
-    return get_names_from_file(
-        modpath, modname, package_name, package_source, underlined=underlined
-    )
+    if modpath.suffix == ".py":
+        return get_names_from_file(
+            modpath, modname, package_name, package_source, underlined=underlined
+        )
+    return []
 
 
 def parse_all(node: ast.Assign, modname: str, package: str, package_source: Source):
