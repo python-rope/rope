@@ -28,12 +28,6 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.assertEqual([("myvar", "mod1")], self.importer.import_assist("myva"))
 
-    # def test_update_module(self):
-    #     update module only works on external modules.
-    #     self.mod1.write("myvar = None")
-    #     self.importer.update_module("rope")
-    #     self.assertEqual([("myvar", "mod1")], self.importer.import_assist("myva"))
-
     def test_update_non_existent_module(self):
         self.importer.update_module("does_not_exists_this")
         self.assertEqual([], self.importer.import_assist("myva"))
@@ -123,21 +117,25 @@ class AutoImportTest(unittest.TestCase):
 
     def test_search_submodule(self):
         self.importer.update_module("os")
+        import_statement = ("from os import path", "path")
         self.assertTrue(
-            "from os import path" in self.importer.search("path", exact_match=True)
+            import_statement in self.importer.search("path", exact_match=True)
         )
-        self.assertTrue("from os import path" in self.importer.search("pa"))
-        self.assertTrue("from os import path" in self.importer.search("path"))
+        self.assertTrue(import_statement in self.importer.search("pa"))
+        self.assertTrue(import_statement in self.importer.search("path"))
 
     def test_search_module(self):
         self.importer.update_module("os")
-        self.assertTrue("import os" in self.importer.search("os", exact_match=True))
-        self.assertTrue("import os" in self.importer.search("os"))
-        self.assertTrue("import os" in self.importer.search("o"))
+        import_statement = ("import os", "os")
+        self.assertTrue(
+            import_statement in self.importer.search("os", exact_match=True)
+        )
+        self.assertTrue(import_statement in self.importer.search("os"))
+        self.assertTrue(import_statement in self.importer.search("o"))
 
     def test_search(self):
         self.importer.update_module("typing")
-        import_statement = "from typing import Dict"
+        import_statement = ("from typing import Dict", "Dict")
         self.assertTrue(
             import_statement in self.importer.search("Dict", exact_match=True)
         )
@@ -148,7 +146,9 @@ class AutoImportTest(unittest.TestCase):
 
     def test_generate_full_cache(self):
         self.importer.generate_modules_cache()
-        self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
+        self.assertTrue(
+            ("from typing import Dict", "Dict") in self.importer.search("Dict")
+        )
         self.assertTrue(len(self.importer._dump_all()) > 0)
         for table in self.importer._dump_all():
             self.assertTrue(len(table) > 0)
@@ -188,3 +188,5 @@ class AutoImportObservingTest(unittest.TestCase):
         self.mod1.write("myvar = None\n")
         self.mod1.remove()
         self.assertEqual([], self.importer.get_modules("myvar"))
+
+

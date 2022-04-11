@@ -11,8 +11,12 @@ from importlib import import_module
 from typing import List, Tuple
 
 from .defs import Name, PackageType, Source
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    get_package_source, submodules)
+from .utils import (
+    get_modname_from_path,
+    get_package_name_from_path,
+    get_package_source,
+    submodules,
+)
 
 
 def get_names(
@@ -181,7 +185,10 @@ def get_names_from_compiled(
     underlined : bool
         include underlined names
     """
-    if package == "builtins" or (package.startswith("_") and not underlined):
+    # builtins is banned because you never have to import it
+    # python_crun is banned because it crashes python
+    banned = ["builtins", "python_crun"]
+    if package in banned or (package.startswith("_") and not underlined):
         return []  # Builtins is redundant since you don't have to import it.
     results: List[Name] = []
     try:

@@ -1,4 +1,5 @@
 """AutoImport module for rope."""
+import logging
 import pathlib
 import re
 import sqlite3
@@ -11,14 +12,22 @@ from typing import List, Optional, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
+from rope.contrib.autoimport.defs import Name, Package, PackageType, Source
+from rope.contrib.autoimport.parse import (
+    find_all_names_in_package,
+    get_names_from_compiled,
+    get_names_from_file,
+)
+from rope.contrib.autoimport.utils import (
+    get_modname_from_path,
+    get_package_name_from_path,
+    get_package_source,
+    sort_and_deduplicate,
+    sort_and_deduplicate_tuple,
+)
 from rope.refactor import importutils
 
-from .defs import Name, Package, PackageType, Source
-from .parse import (find_all_names_in_package, get_names_from_compiled,
-                    get_names_from_file)
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    get_package_source, sort_and_deduplicate,
-                    sort_and_deduplicate_tuple)
+logger = logging.getLogger(__name__)
 
 
 class AutoImport:
@@ -49,7 +58,11 @@ class AutoImport:
         """
         self.project = project
         self.underlined = underlined
-        db_path = ":memory:" if memory else f"{project.ropefolder.path}/autoimport.db"
+        db_path: str
+        if memory or project.ropefolder is None:
+            db_path = ":memory:"
+        else:
+            db_path = f"{project.ropefolder.path}/autoimport.db"
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
         self._check_all()
@@ -89,15 +102,19 @@ class AutoImport:
             results
         )  # Remove duplicates from multiple occurences of the same item
 
-    def search(self, name: str, exact_match: bool = False) -> List[str]:
-        """Search both modules and names for an import string."""
+    def search(self, name: str, exact_match: bool = False) -> List[Tuple[str, str]]:
+        """
+        Search both modules and names for an import string.
+
+        Returns list of import statement ,modname pairs
+        """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        results: List[Tuple[str, int]] = []
+        results: List[Tuple[str, str, int]] = []
         for import_name, module, source in self.connection.execute(
             "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
         ):
-            results.append((f"from {module} import {import_name}", source))
+            results.append((f"from {module} import {import_name}", import_name, source))
         for module, source in self.connection.execute(
             "Select module, source FROM names where module LIKE (?)", ("%." + name,)
         ):
@@ -107,12 +124,14 @@ class AutoImport:
             for part in parts[1:-1]:
                 remaining += "."
                 remaining += part
-            results.append((f"from {remaining} import {import_name}", source))
+            results.append(
+                (f"from {remaining} import {import_name}", import_name, source)
+            )
         for module, source in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results.append((f"import {module}", source))
-        return sort_and_deduplicate(results)
+            results.append((f"import {module}", module, source))
+        return sort_and_deduplicate_tuple(results)
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
@@ -223,9 +242,14 @@ class AutoImport:
                 ):
                     self._add_names(name_list)
         for compiled_package, source in compiled_packages:
-            self._add_names(
-                get_names_from_compiled(compiled_package, source, underlined)
-            )
+            try:
+                self._add_names(
+                    get_names_from_compiled(compiled_package, source, underlined)
+                )
+            except Exception as e:
+                logger.error(
+                    f"{compiled_package} could not be imported for autoimport analysis"
+                )
         self.connection.commit()
 
     def update_module(self, module: str):

@@ -24,3 +24,6 @@ def test_find_all_typing_names(typing_path):
 def test_find_sys():
     names = parse.get_names_from_compiled("sys", Source.BUILTIN)
     assert "exit" in chain(*names)
+def test_find_underlined():
+    names = parse.get_names_from_compiled("os", Source.BUILTIN, underlined=True)
+    assert "_exit" in chain(*names)
