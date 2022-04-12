@@ -61,7 +61,7 @@ class AutoImport:
 
     def _setup_db(self):
         packages_table = "(pacakge TEXT)"
-        names_table = "(name TEXT, module TEXT, package TEXT, source INTEGER)"
+        names_table = "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
         self.connection.execute(f"create table if not exists names{names_table}")
         self.connection.execute(f"create table if not exists packages{packages_table}")
         self.connection.commit()
