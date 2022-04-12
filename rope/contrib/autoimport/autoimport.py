@@ -133,6 +133,42 @@ class AutoImport:
             results.append((f"import {module}", module, source))
         return sort_and_deduplicate_tuple(results)
 
+    def lsp_search(
+        self, name: str, exact_match: bool = False
+    ) -> Tuple[List[Tuple[str, str, int]], List[Tuple[str, str, int]]]:
+        """
+        Search both modules and names for an import string.
+
+        Returns the name, import statement, source, split into normal names and modules.
+        """
+        if not exact_match:
+            name = name + "%"  # Makes the query a starts_with query
+        results_name: List[Tuple[str, str, int]] = []
+        results_module: List[Tuple[str, str, int]] = []
+        for import_name, module, source in self.connection.execute(
+            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
+        ):
+            results_name.append(
+                (f"from {module} import {import_name}", import_name, source)
+            )
+        for module, source in self.connection.execute(
+            "Select module, source FROM names where module LIKE (?)", ("%." + name,)
+        ):
+            parts = module.split(".")
+            import_name = parts[-1]
+            remaining = parts[0]
+            for part in parts[1:-1]:
+                remaining += "."
+                remaining += part
+            results_module.append(
+                (f"from {remaining} import {import_name}", import_name, source)
+            )
+        for module, source in self.connection.execute(
+            "Select module, source from names where module LIKE (?)", (name,)
+        ):
+            results_module.append((f"import {module}", module, source))
+        return results_name, results_module
+
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
         results = self.connection.execute(
