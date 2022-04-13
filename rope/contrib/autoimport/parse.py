@@ -8,15 +8,11 @@ import ast
 import inspect
 import pathlib
 from importlib import import_module
-from typing import List, Tuple
+from typing import Generator, List, Optional, Tuple
 
-from .defs import Name, PackageType, Source
-from .utils import (
-    get_modname_from_path,
-    get_package_name_from_path,
-    get_package_source,
-    submodules,
-)
+from .defs import Name, NameType, PackageType, Source
+from .utils import (get_modname_from_path, get_package_name_from_path,
+                    get_package_source, submodules)
 
 
 def get_names(
@@ -25,7 +21,7 @@ def get_names(
     package_name: str,
     package_source: Source,
     underlined: bool = False,
-) -> List[Name]:
+) -> Generator[Name, None, None]:
     """Get all names in the `modname` module, located at modpath.
 
     `modname` is the name of a module.
@@ -58,25 +54,46 @@ def get_names(
         return get_names_from_file(
             modpath, modname, package_name, package_source, underlined=underlined
         )
-    return []
 
 
-def parse_all(node: ast.Assign, modname: str, package: str, package_source: Source):
+def parse_all(
+    node: ast.Assign, modname: str, package: str, package_source: Source
+) -> Generator[Name, None, None]:
     """Parse the node which contains the value __all__ and return its contents."""
     # I assume that the __all__ value isn't assigned via tuple
-    all_results: List[Name] = []
     assert isinstance(node.value, ast.List)
     for item in node.value.elts:
         assert isinstance(item, ast.Constant)
-        all_results.append(
-            (
-                str(item.value),
-                modname,
-                package,
-                package_source.value,
-            )
-        )
-    return all_results
+        name_type: NameType = NameType.Keyword
+        # TODO somehow determine the actual value of this since every member of all is a string
+        yield Name(str(item.value), modname, package, package_source, name_type)
+
+
+def get_type_ast(node: ast.AST) -> NameType:
+    """Get the lsp type of a node."""
+    if isinstance(node, ast.ClassDef):
+        return NameType.Class
+    if isinstance(node, ast.FunctionDef):
+        return NameType.Function
+    if isinstance(node, ast.Assign):
+        return NameType.Variable
+    return NameType.Text  # default value
+
+
+def find_all(root_node: ast.AST) -> Optional[List[str]]:
+    """Find the contents of __all__."""
+    for node in ast.iter_child_nodes(root_node):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                try:
+                    assert isinstance(target, ast.Name)
+                    if target.id == "__all__":
+                        assert isinstance(node.value, ast.List)
+                        return node.value.elts
+                except (AttributeError, AssertionError):
+                    # TODO handle tuple assignment
+                    pass
+    return None
 
 
 def get_names_from_file(
@@ -86,7 +103,7 @@ def get_names_from_file(
     package_source: Source,
     only_all: bool = False,
     underlined: bool = False,
-) -> List[Name]:
+) -> Generator[Name, None, None]:
     """
     Get all the names from a given file using ast.
 
@@ -100,28 +117,33 @@ def get_names_from_file(
             root_node = ast.parse(file.read())
         except SyntaxError as error:
             print(error)
-            return []
-    results: List[Name] = []
+            return
+    all = find_all(root_node)
     for node in ast.iter_child_nodes(root_node):
-        node_names: List[str] = []
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
                     assert isinstance(target, ast.Name)
-                    if target.id == "__all__":
-                        return parse_all(node, modname, package, package_source)
-                    node_names.append(target.id)
+                    if underlined or not target.id.startswith("_"):
+                        yield Name(
+                            target.id,
+                            modname,
+                            package,
+                            package_source,
+                            get_type_ast(node),
+                        )
                 except (AttributeError, AssertionError):
                     # TODO handle tuple assignment
                     pass
         elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-            node_names = [node.name]
-        for node_name in node_names:
-            if underlined or not node_name.startswith("_"):
-                results.append((node_name, modname, package, package_source.value))
-    if only_all:
-        return []
-    return results
+            if underlined or not node.name.startswith("_"):
+                yield Name(
+                    node.name,
+                    modname,
+                    package,
+                    package_source,
+                    get_type_ast(node),
+                )
 
 
 def find_all_names_in_package(
@@ -169,11 +191,19 @@ def find_all_names_in_package(
     return result
 
 
+def get_type_object(object) -> NameType:
+    if inspect.isclass(object):
+        return NameType.Class
+    if inspect.ismethod(object):
+        return NameType.Function
+    return NameType.Constant
+
+
 def get_names_from_compiled(
     package: str,
     source: Source,
     underlined: bool = False,
-) -> List[Name]:
+) -> Generator[Name, None, None]:
     """
     Get the names from a compiled module.
 
@@ -189,16 +219,12 @@ def get_names_from_compiled(
     # python_crun is banned because it crashes python
     banned = ["builtins", "python_crun"]
     if package in banned or (package.startswith("_") and not underlined):
-        return []  # Builtins is redundant since you don't have to import it.
-    results: List[Name] = []
+        return  # Builtins is redundant since you don't have to import it.
     try:
         module = import_module(str(package))
     except ImportError:
         # print(f"couldn't import {package}")
-        return []
-    if hasattr(module, "__all__"):
-        for name in module.__all__:
-            results.append((str(name), package, package, source.value))
+        return
     else:
         for name, value in inspect.getmembers(module):
             if underlined or not name.startswith("_"):
@@ -207,5 +233,5 @@ def get_names_from_compiled(
                     or inspect.isfunction(value)
                     or inspect.isbuiltin(value)
                 ):
-                    results.append((str(name), package, package, source.value))
-    return results
+                    yield Name(str(name), package, package, source, get_type_object(name))
+                    

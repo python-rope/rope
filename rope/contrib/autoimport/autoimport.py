@@ -7,24 +7,20 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import chain, repeat
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Iterable
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport.defs import Name, Package, PackageType, Source
-from rope.contrib.autoimport.parse import (
-    find_all_names_in_package,
-    get_names_from_compiled,
-    get_names_from_file,
-)
-from rope.contrib.autoimport.utils import (
-    get_modname_from_path,
-    get_package_name_from_path,
-    get_package_source,
-    sort_and_deduplicate,
-    sort_and_deduplicate_tuple,
-)
+from rope.contrib.autoimport.parse import (find_all_names_in_package,
+                                           get_names_from_compiled,
+                                           get_names_from_file)
+from rope.contrib.autoimport.utils import (get_modname_from_path,
+                                           get_package_name_from_path,
+                                           get_package_source,
+                                           sort_and_deduplicate,
+                                           sort_and_deduplicate_tuple)
 from rope.refactor import importutils
 
 logger = logging.getLogger(__name__)
@@ -74,7 +70,9 @@ class AutoImport:
 
     def _setup_db(self):
         packages_table = "(pacakge TEXT)"
-        names_table = "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
+        names_table = (
+            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
+        )
         self.connection.execute(f"create table if not exists names{names_table}")
         self.connection.execute(f"create table if not exists packages{packages_table}")
         self.connection.commit()
@@ -135,7 +133,7 @@ class AutoImport:
 
     def lsp_search(
         self, name: str, exact_match: bool = False
-    ) -> Tuple[List[Tuple[str, str, int]], List[Tuple[str, str, int]]]:
+    ) -> Tuple[List[Tuple[str, str, int, int]], List[Tuple[str, str, int, int]]]:
         """
         Search both modules and names for an import string.
 
@@ -143,16 +141,17 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        results_name: List[Tuple[str, str, int]] = []
-        results_module: List[Tuple[str, str, int]] = []
-        for import_name, module, source in self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
+        results_name: List[Tuple[str, str, int, int]] = []
+        results_module: List[Tuple[str, str, int, int]] = []
+        for import_name, module, source, type in self.connection.execute(
+            "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
         ):
             results_name.append(
-                (f"from {module} import {import_name}", import_name, source)
+                (f"from {module} import {import_name}", import_name, source, type)
             )
-        for module, source in self.connection.execute(
-            "Select module, source FROM names where module LIKE (?)", ("%." + name,)
+        for module, source, type in self.connection.execute(
+            "Select module, source, type FROM names where module LIKE (?)",
+            ("%." + name,),
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -161,12 +160,12 @@ class AutoImport:
                 remaining += "."
                 remaining += part
             results_module.append(
-                (f"from {remaining} import {import_name}", import_name, source)
+                (f"from {remaining} import {import_name}", import_name, source, type)
             )
-        for module, source in self.connection.execute(
+        for module, source, type in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results_module.append((f"import {module}", module, source))
+            results_module.append((f"import {module}", module, source, type))
         return results_name, results_module
 
     def get_modules(self, name) -> List[str]:
@@ -468,9 +467,9 @@ class AutoImport:
             modname = self._modname(resource)
             self._del_if_exist(modname)
 
-    def _add_names(self, names: List[Name]):
+    def _add_names(self, names: Iterable[Name]):
         self.connection.executemany(
-            "insert into names(name,module,package,source) values (?,?,?,?)",
+            "insert into names(name,module,package,source) values (?,?,?,?,?)",
             names,
         )
 
