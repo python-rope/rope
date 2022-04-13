@@ -116,13 +116,13 @@ class AutoImportTest(unittest.TestCase):
         self.assertTrue("sys" in self.importer.get_modules("exit"))
 
     def test_search_submodule(self):
-        self.importer.update_module("os")
-        import_statement = ("from os import path", "path")
+        self.importer.update_module("build")
+        import_statement = ("from build import env", "env")
         self.assertTrue(
-            import_statement in self.importer.search("path", exact_match=True)
+            import_statement in self.importer.search("env", exact_match=True)
         )
-        self.assertTrue(import_statement in self.importer.search("pa"))
-        self.assertTrue(import_statement in self.importer.search("path"))
+        self.assertTrue(import_statement in self.importer.search("en"))
+        self.assertTrue(import_statement in self.importer.search("env"))
 
     def test_search_module(self):
         self.importer.update_module("os")
@@ -145,7 +145,9 @@ class AutoImportTest(unittest.TestCase):
         self.assertTrue(import_statement in self.importer.search("D"))
 
     def test_generate_full_cache(self):
-        self.importer.generate_modules_cache()
+        """The single thread test takes much longer than the multithread test but is easier to debug"""
+        single_thread = False
+        self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertTrue(
             ("from typing import Dict", "Dict") in self.importer.search("Dict")
         )
@@ -153,13 +155,6 @@ class AutoImportTest(unittest.TestCase):
         for table in self.importer._dump_all():
             self.assertTrue(len(table) > 0)
 
-    # def test_generate_full_cache_st(self):
-    #     """The single thread test takes much longer than the multithread test but is easier to debug"""
-    #     self.importer.generate_modules_cache(single_thread=True)
-    #     self.assertTrue("from typing import Dict" in self.importer.search("Dict"))
-    #     self.assertTrue(len(self.importer._dump_all()) > 0)
-    #     for table in self.importer._dump_all():
-    #         self.assertTrue(len(table) > 0)
 
 
 class AutoImportObservingTest(unittest.TestCase):
@@ -188,5 +183,3 @@ class AutoImportObservingTest(unittest.TestCase):
         self.mod1.write("myvar = None\n")
         self.mod1.remove()
         self.assertEqual([], self.importer.get_modules("myvar"))
-
-

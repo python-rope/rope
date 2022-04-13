@@ -2,7 +2,7 @@
 import pathlib
 import sys
 from collections import OrderedDict
-from typing import Generator, List, Optional, Set, Tuple
+from typing import Generator, List, Optional, Tuple
 
 from rope.base.project import Project
 
@@ -93,12 +93,6 @@ def sort_and_deduplicate_tuple(
     for result in results:
         results_sorted.append(result[:-1])
     return list(OrderedDict.fromkeys(results_sorted))
-
-
-
-
-def get_files_list(*args) -> List[ModuleInfo]:
-    return list(get_files(*args))
 
 
 def get_files(

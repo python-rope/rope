@@ -18,7 +18,7 @@ class Source(Enum):
 
 
 class ModuleInfo(NamedTuple):
-    """Descriptor of information to get names from a file."""
+    """Descriptor of information to get names from a module."""
 
     filepath: Optional[pathlib.Path]
     modname: str
@@ -36,6 +36,8 @@ class ModuleFile(ModuleInfo):
 
 
 class ModuleCompiled(ModuleInfo):
+    """Descriptor of information to get names using imports."""
+
     filepath = None
     modname: str
     underlined: bool
@@ -52,7 +54,7 @@ class PackageType(Enum):
 
 
 class NameType(Enum):
-    """Describes the type of Name for lsp completions. Taken from python lsp server"""
+    """Describes the type of Name for lsp completions. Taken from python lsp server."""
 
     Text = 1
     Method = 2
@@ -82,6 +84,8 @@ class NameType(Enum):
 
 
 class Package(NamedTuple):
+    """Attributes of a package."""
+
     name: str
     source: Source
     path: Optional[pathlib.Path]
@@ -89,7 +93,7 @@ class Package(NamedTuple):
 
 
 class Name(NamedTuple):
-    """A Name to be added to the database"""
+    """A Name to be added to the database."""
 
     name: str
     modname: str
@@ -99,7 +103,7 @@ class Name(NamedTuple):
 
 
 class PartialName(NamedTuple):
-    """Partial information of a Name"""
+    """Partial information of a Name."""
 
     name: str
     name_type: NameType

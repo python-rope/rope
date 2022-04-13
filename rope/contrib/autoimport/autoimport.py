@@ -6,7 +6,7 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
-from typing import Iterable, List, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -21,7 +21,10 @@ from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
 from rope.refactor import importutils
 
 
-def get_future_names(packages: List[Package], underlined: bool):
+def get_future_names(
+    packages: List[Package], underlined: bool
+) -> Generator[Future[Iterable[Name]], None, None]:
+    """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
         for package in packages:
             for module in get_files(package, underlined):
@@ -31,6 +34,7 @@ def get_future_names(packages: List[Package], underlined: bool):
 def filter_packages(
     packages: Iterable[Package], underlined: bool, existing: List[str]
 ) -> Iterable[Package]:
+    """Filter list of packages to parse."""
     if underlined:
 
         def filter_package(package: Package) -> bool:
@@ -161,13 +165,13 @@ class AutoImport:
             name = name + "%"  # Makes the query a starts_with query
         results_name: List[Tuple[str, str, int, int]] = []
         results_module: List[Tuple[str, str, int, int]] = []
-        for import_name, module, source, type in self.connection.execute(
+        for import_name, module, source, name_type in self.connection.execute(
             "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
         ):
             results_name.append(
-                (f"from {module} import {import_name}", import_name, source, type)
+                (f"from {module} import {import_name}", import_name, source, name_type)
             )
-        for module, source, type in self.connection.execute(
+        for module, source, name_type in self.connection.execute(
             "Select module, source, type FROM names where module LIKE (?)",
             ("%." + name,),
         ):
@@ -178,12 +182,17 @@ class AutoImport:
                 remaining += "."
                 remaining += part
             results_module.append(
-                (f"from {remaining} import {import_name}", import_name, source, type)
+                (
+                    f"from {remaining} import {import_name}",
+                    import_name,
+                    source,
+                    name_type,
+                )
             )
-        for module, source, type in self.connection.execute(
+        for module, source, name_type in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results_module.append((f"import {module}", module, source, type))
+            results_module.append((f"import {module}", module, source, name_type))
         return results_name, results_module
 
     def get_modules(self, name) -> List[str]:
@@ -236,7 +245,6 @@ class AutoImport:
     def generate_modules_cache(
         self,
         modules_to_find: List[str] = None,
-        task_handle=taskhandle.NullTaskHandle(),
         single_thread: bool = False,
         underlined: bool = False,
     ):
@@ -260,16 +268,14 @@ class AutoImport:
                 if package is None:
                     continue
                 packages.append(package)
-        packages = list(filter_packages(packages,underlined, existing))
+        packages = list(filter_packages(packages, underlined, existing))
         self._add_packages(packages)
         if single_thread:
             for package in packages:
-                if package.type in (PackageType.BUILTIN, PackageType.COMPILED):
-                    for module in get_files(package, underlined):
-                        for name in get_names(module, package):
-                            self._add_name(name)
+                for module in get_files(package, underlined):
+                    for name in get_names(module, package):
+                        self._add_name(name)
         else:
-
             for future_name in as_completed(get_future_names(packages, underlined)):
                 self._add_names(future_name.result())
 
@@ -391,7 +397,6 @@ class AutoImport:
                 package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
-                package_name, source, _, package_type = package_tuple
                 packages.append(package_tuple)
         return packages
 

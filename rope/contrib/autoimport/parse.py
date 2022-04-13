@@ -17,19 +17,6 @@ from .defs import (ModuleCompiled, ModuleFile, ModuleInfo, Name, NameType,
 logger = logging.getLogger(__name__)
 
 
-def parse_all(
-    node: ast.Assign, modname: str, package: str, package_source: Source
-) -> Generator[Name, None, None]:
-    """Parse the node which contains the value __all__ and return its contents."""
-    # I assume that the __all__ value isn't assigned via tuple
-    assert isinstance(node.value, ast.List)
-    for item in node.value.elts:
-        assert isinstance(item, ast.Constant)
-        name_type: NameType = NameType.Keyword
-        # TODO somehow determine the actual value of this since every member of all is a string
-        yield Name(str(item.value), modname, package, package_source, name_type)
-
-
 def get_type_ast(node: ast.AST) -> NameType:
     """Get the lsp type of a node."""
     if isinstance(node, ast.ClassDef):
@@ -45,9 +32,7 @@ def get_names_from_file(
     module: pathlib.Path,
     underlined: bool = False,
 ) -> Generator[PartialName, None, None]:
-    """
-    Get all the names from a given file using ast.
-    """
+    """Get all the names from a given file using ast."""
     with open(module, mode="rb") as file:
         try:
             root_node = ast.parse(file.read())
@@ -75,10 +60,11 @@ def get_names_from_file(
                 )
 
 
-def get_type_object(object) -> NameType:
-    if inspect.isclass(object):
+def get_type_object(imported_object) -> NameType:
+    """Determine the type of an object."""
+    if inspect.isclass(imported_object):
         return NameType.Class
-    if inspect.isfunction(object) or inspect.isbuiltin(object):
+    if inspect.isfunction(imported_object) or inspect.isbuiltin(imported_object):
         return NameType.Function
     return NameType.Constant
 
@@ -89,7 +75,7 @@ def get_names(module: ModuleInfo, package: Package) -> List[Name]:
         return list(
             get_names_from_compiled(package.name, package.source, module.underlined)
         )
-    elif isinstance(module, ModuleFile):
+    if isinstance(module, ModuleFile):
         return [
             combine(package, module, partial_name)
             for partial_name in get_names_from_file(module.filepath, module.underlined)
@@ -137,5 +123,5 @@ def get_names_from_compiled(
 
 
 def combine(package: Package, module: ModuleFile, name: PartialName) -> Name:
-    """Combine the information from a package, module, and partial name to form a full name."""
+    """Combine information to form a full name."""
     return Name(name.name, module.modname, package.name, package.source, name.name_type)
