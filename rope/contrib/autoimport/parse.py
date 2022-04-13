@@ -194,7 +194,7 @@ def find_all_names_in_package(
 def get_type_object(object) -> NameType:
     if inspect.isclass(object):
         return NameType.Class
-    if inspect.ismethod(object):
+    if inspect.isfunction(object) or inspect.isbuiltin(object):
         return NameType.Function
     return NameType.Constant
 
@@ -233,5 +233,6 @@ def get_names_from_compiled(
                     or inspect.isfunction(value)
                     or inspect.isbuiltin(value)
                 ):
-                    yield Name(str(name), package, package, source, get_type_object(name))
-                    
+                    yield Name(
+                        str(name), package, package, source, get_type_object(value)
+                    )

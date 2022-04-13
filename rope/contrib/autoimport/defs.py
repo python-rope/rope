@@ -1,7 +1,7 @@
 """Definitions of types for the Autoimport program."""
 import pathlib
 from enum import Enum
-from typing import NamedTuple, Tuple
+from typing import NamedTuple
 
 
 class Source(Enum):
@@ -15,7 +15,9 @@ class Source(Enum):
     UNKNOWN = 5
 
 
-Package = Tuple[str]
+class Package(NamedTuple):
+    name: str
+    # modified_time
 
 
 class NameFile(NamedTuple):
@@ -24,6 +26,7 @@ class NameFile(NamedTuple):
     filepath: pathlib.Path
     modname: str
     underlined: bool
+
 
 class PackageType(Enum):
     """Describes the type of package, to determine how to get the names from it."""
