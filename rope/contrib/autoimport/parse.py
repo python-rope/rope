@@ -11,8 +11,16 @@ import pathlib
 from importlib import import_module
 from typing import Generator, List
 
-from .defs import (ModuleCompiled, ModuleFile, ModuleInfo, Name, NameType,
-                   Package, PartialName, Source)
+from .defs import (
+    ModuleCompiled,
+    ModuleFile,
+    ModuleInfo,
+    Name,
+    NameType,
+    Package,
+    PartialName,
+    Source,
+)
 
 logger = logging.getLogger(__name__)
 

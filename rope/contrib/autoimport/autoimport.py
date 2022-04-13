@@ -11,13 +11,15 @@ from typing import Generator, Iterable, List, Optional, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import (ModuleFile, Name, Package,
-                                          PackageType, Source)
+from rope.contrib.autoimport.defs import ModuleFile, Name, Package, PackageType, Source
 from rope.contrib.autoimport.parse import get_names
-from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
-                                           get_package_tuple,
-                                           sort_and_deduplicate,
-                                           sort_and_deduplicate_tuple)
+from rope.contrib.autoimport.utils import (
+    get_files,
+    get_modname_from_path,
+    get_package_tuple,
+    sort_and_deduplicate,
+    sort_and_deduplicate_tuple,
+)
 from rope.refactor import importutils
 
 
