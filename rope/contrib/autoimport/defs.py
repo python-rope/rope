@@ -14,9 +14,6 @@ class Source(Enum):
     SITE_PACKAGE = 4
     UNKNOWN = 5
 
-
-class Package(NamedTuple):
-    name: str
     # modified_time
 
 
@@ -26,6 +23,7 @@ class NameFile(NamedTuple):
     filepath: pathlib.Path
     modname: str
     underlined: bool
+    process_imports: bool = False
 
 
 class PackageType(Enum):
@@ -67,9 +65,25 @@ class NameType(Enum):
     TypeParameter = 25
 
 
+class Package(NamedTuple):
+    name: str
+    source: Source
+    path: pathlib.Path
+    type: PackageType
+
+
 class Name(NamedTuple):
+    """A Name to be added to the database"""
+
     name: str
     modname: str
     package: str
     source: Source
+    name_type: NameType
+
+
+class PartialName(NamedTuple):
+    """Partial information of a Name"""
+
+    name: str
     name_type: NameType

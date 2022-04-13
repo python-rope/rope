@@ -2,7 +2,7 @@
 import pathlib
 
 from rope.contrib.autoimport import utils
-from rope.contrib.autoimport.defs import PackageType, Source
+from rope.contrib.autoimport.defs import Package, PackageType, Source
 
 
 def test_get_package_source(mod1_path, project):
@@ -40,19 +40,20 @@ def test_get_modname_folder(build_path, build_env_path):
     assert utils.get_modname_from_path(build_env_path, build_path) == "build.env"
 
 
-def test_get_package_name_sample(project_path):
-    package_name, package_type = utils.get_package_name_from_path(project_path)
-    assert package_name == "sample_project"
-    assert package_type == PackageType.STANDARD
+def test_get_package_tuple_sample(project_path):
+    assert Package(
+        "sample_project", Source.UNKNOWN, project_path, PackageType.STANDARD
+    ) == utils.get_package_tuple(project_path)
 
 
-def test_get_package_name_typing(typing_path):
-    package_name, package_type = utils.get_package_name_from_path(typing_path)
-    assert package_name == "typing"
-    assert package_type == PackageType.SINGLE_FILE
+def test_get_package_tuple_typing(typing_path):
+
+    assert Package(
+        "typing", Source.STANDARD, typing_path, PackageType.SINGLE_FILE
+    ) == utils.get_package_tuple(typing_path)
 
 
-def test_get_package_name_compiled(zlib_path):
-    package_name, package_type = utils.get_package_name_from_path(zlib_path)
-    assert package_name == "zlib"
-    assert package_type == PackageType.COMPILED
+def test_get_package_tuple_compiled(zlib_path):
+    assert Package(
+        "zlib", Source.STANDARD, zlib_path, PackageType.COMPILED
+    ) == utils.get_package_tuple(zlib_path)

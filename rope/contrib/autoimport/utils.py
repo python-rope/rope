@@ -2,16 +2,16 @@
 import pathlib
 import sys
 from collections import OrderedDict
-from typing import List, Optional, Set, Tuple
+from typing import Generator, List, Optional, Set, Tuple
 
 from rope.base.project import Project
 
-from .defs import PackageType, Source
+from .defs import NameFile, Package, PackageType, Source
 
 
-def get_package_name_from_path(
-    package_path: pathlib.Path,
-) -> Optional[Tuple[str, PackageType]]:
+def get_package_tuple(
+    package_path: pathlib.Path, project: Optional[Project] = None
+) -> Optional[Package]:
     """
     Get package name and type from a path.
 
@@ -19,19 +19,35 @@ def get_package_name_from_path(
     Returns None if not a viable package.
     """
     package_name = package_path.name
+    package_source = get_package_source(package_path, project)
     if package_name.startswith(".") or package_name == "__pycache__":
         return None
     if package_path.is_file():
         if package_name.endswith(".so"):
             name = package_name.split(".")[0]
-            return (name, PackageType.COMPILED)
+            return Package(name, package_source, package_path, PackageType.COMPILED)
         if package_name.endswith(".py"):
             stripped_name = package_path.stem
-            return (stripped_name, PackageType.SINGLE_FILE)
+            return Package(
+                stripped_name, package_source, package_path, PackageType.SINGLE_FILE
+            )
         return None
     if package_name.endswith((".egg-info", ".dist-info")):
         return None
-    return (package_name, PackageType.STANDARD)
+    return Package(package_name, package_source, package_path, PackageType.STANDARD)
+
+
+def get_package_source(
+    package: pathlib.Path, project: Optional[Project] = None
+) -> Source:
+    """Detect the source of a given package. Rudimentary implementation."""
+    if project is not None and package.as_posix().__contains__(project.address):
+        return Source.PROJECT
+    if package.as_posix().__contains__("site-packages"):
+        return Source.SITE_PACKAGE
+    if package.as_posix().startswith(sys.prefix):
+        return Source.STANDARD
+    return Source.UNKNOWN
 
 
 def get_modname_from_path(
@@ -54,19 +70,6 @@ def get_modname_from_path(
     else:
         assert modname != "."
     return modname
-
-
-def get_package_source(
-    package: pathlib.Path, project: Optional[Project] = None
-) -> Source:
-    """Detect the source of a given package. Rudimentary implementation."""
-    if project is not None and package.as_posix().__contains__(project.address):
-        return Source.PROJECT
-    if package.as_posix().__contains__("site-packages"):
-        return Source.SITE_PACKAGE
-    if package.as_posix().startswith(sys.prefix):
-        return Source.STANDARD
-    return Source.UNKNOWN
 
 
 def sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
@@ -99,3 +102,28 @@ def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
         for child in mod.iterdir():
             result |= submodules(child)
     return result
+
+
+def get_files(
+    package: Package, underlined: bool = False
+) -> Generator[NameFile, None, None]:
+    """Find all files to parse in a given path using __init__.py."""
+    if package.type == PackageType.SINGLE_FILE:
+        assert package.path.suffix == ".py"
+        yield NameFile(package.path, package.path.stem, underlined)
+    for folder in submodules(package.path):
+        for file in folder.iterdir():
+            if file.suffix == ".py":
+                if file.name == "__init__.py":
+                    yield NameFile(
+                        file,
+                        get_modname_from_path(folder, package.path),
+                        underlined,
+                        process_imports = True,
+                    )
+                else:
+                    yield NameFile(
+                        file,
+                        get_modname_from_path(file, package.path),
+                        underlined,
+                    )

@@ -13,11 +13,10 @@ from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport.defs import Name, Package, PackageType, Source
-from rope.contrib.autoimport.parse import (find_all_names_in_package,
+from rope.contrib.autoimport.parse import (
                                            get_names_from_compiled,
                                            get_names_from_file)
 from rope.contrib.autoimport.utils import (get_modname_from_path,
-                                           get_package_name_from_path,
                                            get_package_source,
                                            sort_and_deduplicate,
                                            sort_and_deduplicate_tuple)

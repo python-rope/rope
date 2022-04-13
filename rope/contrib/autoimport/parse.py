@@ -8,52 +8,49 @@ import ast
 import inspect
 import pathlib
 from importlib import import_module
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, List, Optional
 
-from .defs import Name, NameType, PackageType, Source
-from .utils import (get_modname_from_path, get_package_name_from_path,
-                    get_package_source, submodules)
+from .defs import Name, NameType, PartialName, Source
 
-
-def get_names(
-    modpath: pathlib.Path,
-    modname: str,
-    package_name: str,
-    package_source: Source,
-    underlined: bool = False,
-) -> Generator[Name, None, None]:
-    """Get all names in the `modname` module, located at modpath.
-
-    `modname` is the name of a module.
-    """
-    if modpath.is_dir():
-        names: List[Name]
-        if (modpath / "__init__.py").exists():
-            names = get_names_from_file(
-                modpath / "__init__.py",
-                modname,
-                package_name,
-                package_source,
-                only_all=True,
-            )
-            if len(names) > 0:
-                return names
-        names = []
-        for file in modpath.glob("*.py"):
-            names.extend(
-                get_names_from_file(
-                    file,
-                    modname + f".{file.stem}",
-                    package_name,
-                    package_source,
-                    underlined=underlined,
-                )
-            )
-        return names
-    if modpath.suffix == ".py":
-        return get_names_from_file(
-            modpath, modname, package_name, package_source, underlined=underlined
-        )
+# def get_names(
+#     modpath: pathlib.Path,
+#     modname: str,
+#     package_name: str,
+#     package_source: Source,
+#     underlined: bool = False,
+# ) -> Generator[Name, None, None]:
+#     """Get all names in the `modname` module, located at modpath.
+#
+#     `modname` is the name of a module.
+#     """
+#     if modpath.is_dir():
+#         names: List[Name]
+#         if (modpath / "__init__.py").exists():
+#             names = get_names_from_file(
+#                 modpath / "__init__.py",
+#                 modname,
+#                 package_name,
+#                 package_source,
+#                 only_all=True,
+#             )
+#             if len(names) > 0:
+#                 return names
+#         names = []
+#         for file in modpath.glob("*.py"):
+#             names.extend(
+#                 get_names_from_file(
+#                     file,
+#                     modname + f".{file.stem}",
+#                     package_name,
+#                     package_source,
+#                     underlined=underlined,
+#                 )
+#             )
+#         return names
+#     if modpath.suffix == ".py":
+#         return get_names_from_file(
+#             modpath, modname, package_name, package_source, underlined=underlined
+#         )
 
 
 def parse_all(
@@ -89,6 +86,7 @@ def find_all(root_node: ast.AST) -> Optional[List[str]]:
                     assert isinstance(target, ast.Name)
                     if target.id == "__all__":
                         assert isinstance(node.value, ast.List)
+                        assert node.value.elts is not None
                         return node.value.elts
                 except (AttributeError, AssertionError):
                     # TODO handle tuple assignment
@@ -98,19 +96,10 @@ def find_all(root_node: ast.AST) -> Optional[List[str]]:
 
 def get_names_from_file(
     module: pathlib.Path,
-    modname: str,
-    package: str,
-    package_source: Source,
-    only_all: bool = False,
     underlined: bool = False,
-) -> Generator[Name, None, None]:
+) -> Generator[PartialName, None, None]:
     """
     Get all the names from a given file using ast.
-
-    Parameters
-    __________
-    only_all: bool
-        only use __all__ to determine the module's contents
     """
     with open(module, mode="rb") as file:
         try:
@@ -118,18 +107,14 @@ def get_names_from_file(
         except SyntaxError as error:
             print(error)
             return
-    all = find_all(root_node)
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
                     assert isinstance(target, ast.Name)
                     if underlined or not target.id.startswith("_"):
-                        yield Name(
+                        yield PartialName(
                             target.id,
-                            modname,
-                            package,
-                            package_source,
                             get_type_ast(node),
                         )
                 except (AttributeError, AssertionError):
@@ -137,58 +122,10 @@ def get_names_from_file(
                     pass
         elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
             if underlined or not node.name.startswith("_"):
-                yield Name(
+                yield PartialName(
                     node.name,
-                    modname,
-                    package,
-                    package_source,
                     get_type_ast(node),
                 )
-
-
-def find_all_names_in_package(
-    package_path: pathlib.Path,
-    recursive=True,
-    package_source: Source = None,
-    underlined: bool = False,
-) -> List[Name]:
-    """
-    Find all names in a package.
-
-    Parameters
-    ----------
-    package_path : pathlib.Path
-        path to the package
-    recursive : bool
-        scan submodules in addition to the root directory
-    underlined : bool
-        include underlined directories
-    """
-    package_tuple = get_package_name_from_path(package_path)
-    if package_tuple is None:
-        return []
-    package_name, package_type = package_tuple
-    if package_source is None:
-        package_source = get_package_source(package_path)
-    modules: List[Tuple[pathlib.Path, str]] = []
-    if package_type is PackageType.SINGLE_FILE:
-        modules.append((package_path, package_name))
-    elif package_type is PackageType.COMPILED:
-        return []
-    elif recursive:
-        for sub in submodules(package_path):
-            modname = get_modname_from_path(sub, package_path)
-            if underlined or modname.__contains__("_"):
-                continue  # Exclude private items
-            modules.append((sub, modname))
-    else:
-        modules.append((package_path, package_name))
-    result: List[Name] = []
-    for module in modules:
-        result.extend(
-            get_names(module[0], module[1], package_name, package_source, underlined)
-        )
-    return result
 
 
 def get_type_object(object) -> NameType:
