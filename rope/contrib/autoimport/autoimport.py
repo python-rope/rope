@@ -192,7 +192,7 @@ class AutoImport:
                 )
             )
         for module, source, name_type in self.connection.execute(
-            "Select module, source from names where module LIKE (?)", (name,)
+            "Select module, source, type from names where module LIKE (?)", (name,)
         ):
             results_module.append((f"import {module}", module, source, name_type))
         return results_name, results_module

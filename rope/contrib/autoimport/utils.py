@@ -94,6 +94,15 @@ def sort_and_deduplicate_tuple(
     return list(OrderedDict.fromkeys(results_sorted))
 
 
+def should_parse(path: pathlib.Path, underlined: bool) -> bool:
+    if underlined:
+        return True
+    for part in path.parts:
+        if part.startswith("_"):
+            return False
+    return True
+
+
 def get_files(
     package: Package, underlined: bool = False
 ) -> Generator[ModuleInfo, None, None]:
@@ -114,7 +123,7 @@ def get_files(
                     underlined,
                     process_imports=True,
                 )
-            else:
+            elif should_parse(file, underlined):
                 yield ModuleFile(
                     file,
                     get_modname_from_path(file, package.path),
