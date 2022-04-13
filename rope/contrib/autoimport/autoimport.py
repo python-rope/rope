@@ -1,28 +1,47 @@
 """AutoImport module for rope."""
-import logging
 import pathlib
 import re
 import sqlite3
 import sys
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor
-from itertools import chain, repeat
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+from itertools import chain
 from typing import Iterable, List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import Name, Package, PackageType, Source
-from rope.contrib.autoimport.parse import (combine, get_names_from_compiled,
-                                           get_names_from_file)
+from rope.contrib.autoimport.defs import (ModuleFile, Name, Package,
+                                          PackageType, Source)
+from rope.contrib.autoimport.parse import get_names
 from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
-                                           get_package_source,
                                            get_package_tuple,
                                            sort_and_deduplicate,
                                            sort_and_deduplicate_tuple)
 from rope.refactor import importutils
 
-logger = logging.getLogger(__name__)
+
+def get_future_names(packages: List[Package], underlined: bool):
+    with ProcessPoolExecutor() as executor:
+        for package in packages:
+            for module in get_files(package, underlined):
+                yield executor.submit(get_names, module, package)
+
+
+def filter_packages(
+    packages: Iterable[Package], underlined: bool, existing: List[str]
+) -> Iterable[Package]:
+    if underlined:
+
+        def filter_package(package: Package) -> bool:
+            return package.name not in existing
+
+    else:
+
+        def filter_package(package: Package) -> bool:
+            return package.name not in existing and not package.name.startswith("_")
+
+    return filter(filter_package, packages)
 
 
 class AutoImport:
@@ -216,7 +235,7 @@ class AutoImport:
 
     def generate_modules_cache(
         self,
-        modules: List[str] = None,
+        modules_to_find: List[str] = None,
         task_handle=taskhandle.NullTaskHandle(),
         single_thread: bool = False,
         underlined: bool = False,
@@ -230,66 +249,30 @@ class AutoImport:
         use generate_resource_cache for that instead.
         """
         packages: List[Package] = []
-        compiled_packages: List[Tuple[str, Source]] = []
         if self.underlined:
             underlined = True
-        if modules is None:
-            packages, compiled_packages = self._get_avalible_packages(underlined)
+        existing = self._get_existing()
+        if modules_to_find is None:
+            packages = self._get_avalible_packages()
         else:
-            existing = self._get_existing()
-            for modname in modules:
-                mod_tuple = self._find_package_path(modname)
-                if mod_tuple is None:
+            for modname in modules_to_find:
+                package = self._find_package_path(modname)
+                if package is None:
                     continue
-                package_path, package_name, package_type = mod_tuple
-                if package_name.startswith("_") and not underlined:
-                    continue
-                if package_name in existing:
-                    continue
-                if package_type in (PackageType.COMPILED, PackageType.BUILTIN):
-                    if package_type is PackageType.COMPILED:
-                        assert (
-                            package_path is not None
-                        )  # It should have been found, and isn't a builtin
-                        source = get_package_source(package_path, self.project)
-                    else:
-                        source = Source.BUILTIN
-                    compiled_packages.append((package_name, source))
-                else:
-                    assert package_path  # Should only return none for a builtin
-                    packages.append(package_path)
-                to_add.append((package_name,))
-        self._add_packages(to_add)
+                packages.append(package)
+        packages = list(filter_packages(packages,underlined, existing))
+        self._add_packages(packages)
         if single_thread:
             for package in packages:
-                for module in get_files(package, underlined):
-                    for name in get_names_from_file(package.path, underlined):
-                        self._add_name(combine(package, module, name))
-
+                if package.type in (PackageType.BUILTIN, PackageType.COMPILED):
+                    for module in get_files(package, underlined):
+                        for name in get_names(module, package):
+                            self._add_name(name)
         else:
-            underlined_list = repeat(underlined, len(packages))
-            with ProcessPoolExecutor() as executor:
-                for package, modules in zip(
-                    packages, executor.map(get_files, packages, underlined_list)
-                ):
-                    modules = list(modules)
-                    underlined_list = repeat(underlined, len(modules))
-                    for names, module in zip(
-                        executor.map(get_names_from_file, modules, underlined_list),
-                        modules,
-                    ):
-                        for name in names:
-                            self._add_name(combine(package, module, name))
 
-        for compiled_package, source in compiled_packages:
-            try:
-                self._add_names(
-                    get_names_from_compiled(compiled_package, source, underlined)
-                )
-            except Exception as e:
-                logger.error(
-                    f"{compiled_package} could not be imported for autoimport analysis"
-                )
+            for future_name in as_completed(get_future_names(packages, underlined)):
+                self._add_names(future_name.result())
+
         self.connection.commit()
 
     def update_module(self, module: str):
@@ -358,33 +341,21 @@ class AutoImport:
         self, resource: Resource, underlined: bool = False, commit: bool = True
     ):
         """Update the cache for global names in `resource`."""
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
-        package_path: pathlib.Path = self._project_path
         underlined = underlined if underlined else self.underlined
+        package = get_package_tuple(self._project_path, self.project)
+        if package is None or package.path is None:
+            return
+        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
         resource_modname: str = get_modname_from_path(
-            resource_path, package_path, add_package_name=False
+            resource_path, package.path, add_package_name=False
         )
-        package_tuple = get_package_tuple(package_path)
-        if package_tuple is None:
-            return
-        package_name = package_tuple[0]
+        module = ModuleFile(resource_path, resource_modname, underlined)
         self._del_if_exist(module_name=resource_modname, commit=False)
-        for partial in get_names_from_file(
-            resource_path,
-            underlined=underlined,
-        ):
-            self._add_name(
-                Name(
-                    partial.name,
-                    resource_modname,
-                    package_name,
-                    Source.PROJECT,
-                    partial.name_type,
-                )
-            )
+        for name in get_names(module, package):
+            self._add_name(name)
         if commit:
             self.connection.commit()
 
@@ -410,33 +381,19 @@ class AutoImport:
         ]
         return list(OrderedDict.fromkeys(folder_paths))
 
-    def _get_avalible_packages(
-        self, underlined: bool = False
-    ) -> Tuple[List[Package], List[Tuple[str, Source]]]:
-        packages: List[Package] = []
-        # Get builtins first
-        compiled_packages: List[Tuple[str, Source]] = [
-            (module, Source.BUILTIN) for module in sys.builtin_module_names
+    def _get_avalible_packages(self) -> List[Package]:
+        packages: List[Package] = [
+            Package(module, Source.BUILTIN, None, PackageType.BUILTIN)
+            for module in sys.builtin_module_names
         ]
-        existing = self._get_existing()
-        underlined = underlined if underlined else self.underlined
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package)
+                package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
                 package_name, source, _, package_type = package_tuple
-                if package_name in existing:
-                    continue
-                if package_name.startswith("_") and not underlined:
-                    continue
-                if package_type == PackageType.COMPILED:
-                    compiled_packages.append(
-                        (package_name, get_package_source(package, self.project))
-                    )
-                else:
-                    packages.append(package_tuple)
-        return packages, compiled_packages
+                packages.append(package_tuple)
+        return packages
 
     def _add_packages(self, packages: List[Package]):
         for package in packages:
@@ -474,11 +431,12 @@ class AutoImport:
             modname = self._modname(resource)
             self._del_if_exist(modname)
 
+    def _add_future_names(self, names: Future[List[Name]]):
+        self._add_names(names.result())
+
     def _add_names(self, names: Iterable[Name]):
-        self.connection.executemany(
-            "insert into names(name,module,package,source) values (?,?,?,?,?)",
-            names,
-        )
+        for name in names:
+            self._add_name(name)
 
     def _add_name(self, name: Name):
         self.connection.execute(
@@ -510,17 +468,16 @@ class AutoImport:
         """Check all modules and removes bad ones."""
         pass
 
-    def _find_package_path(
-        self, target_name: str
-    ) -> Optional[Tuple[Optional[pathlib.Path], str, PackageType]]:
+    def _find_package_path(self, target_name: str) -> Optional[Package]:
         if target_name in sys.builtin_module_names:
-            return (None, target_name, PackageType.BUILTIN)
+            return Package(target_name, Source.BUILTIN, None, PackageType.BUILTIN)
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package)
+                package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
-                name, _, _, package_type = package_tuple
+                name, source, package_path, package_type = package_tuple
                 if name == target_name:
-                    return (package, name, package_type)
+                    return package_tuple
+
         return None

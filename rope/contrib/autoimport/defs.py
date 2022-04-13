@@ -1,7 +1,7 @@
 """Definitions of types for the Autoimport program."""
 import pathlib
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 
 class Source(Enum):
@@ -17,10 +17,26 @@ class Source(Enum):
     # modified_time
 
 
-class NameFile(NamedTuple):
+class ModuleInfo(NamedTuple):
+    """Descriptor of information to get names from a file."""
+
+    filepath: Optional[pathlib.Path]
+    modname: str
+    underlined: bool
+    process_imports: bool = False
+
+
+class ModuleFile(ModuleInfo):
     """Descriptor of information to get names from a file using ast."""
 
     filepath: pathlib.Path
+    modname: str
+    underlined: bool
+    process_imports: bool = False
+
+
+class ModuleCompiled(ModuleInfo):
+    filepath = None
     modname: str
     underlined: bool
     process_imports: bool = False
@@ -68,7 +84,7 @@ class NameType(Enum):
 class Package(NamedTuple):
     name: str
     source: Source
-    path: pathlib.Path
+    path: Optional[pathlib.Path]
     type: PackageType
 
 

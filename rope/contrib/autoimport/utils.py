@@ -6,7 +6,8 @@ from typing import Generator, List, Optional, Set, Tuple
 
 from rope.base.project import Project
 
-from .defs import NameFile, Package, PackageType, Source
+from .defs import (ModuleCompiled, ModuleFile, ModuleInfo, Package,
+                   PackageType, Source)
 
 
 def get_package_tuple(
@@ -94,36 +95,35 @@ def sort_and_deduplicate_tuple(
     return list(OrderedDict.fromkeys(results_sorted))
 
 
-def submodules(mod: pathlib.Path) -> Set[pathlib.Path]:
-    """Find submodules in a given path using __init__.py."""
-    result = set()
-    if mod.is_dir() and (mod / "__init__.py").exists():
-        result.add(mod)
-        for child in mod.iterdir():
-            result |= submodules(child)
-    return result
+
+
+def get_files_list(*args) -> List[ModuleInfo]:
+    return list(get_files(*args))
 
 
 def get_files(
     package: Package, underlined: bool = False
-) -> Generator[NameFile, None, None]:
+) -> Generator[ModuleInfo, None, None]:
     """Find all files to parse in a given path using __init__.py."""
-    if package.type == PackageType.SINGLE_FILE:
+    if package.type in (PackageType.COMPILED, PackageType.BUILTIN):
+        yield ModuleCompiled(None, package.name, underlined, process_imports=True)
+    elif package.type == PackageType.SINGLE_FILE:
+        assert package.path
         assert package.path.suffix == ".py"
-        yield NameFile(package.path, package.path.stem, underlined)
-    for folder in submodules(package.path):
-        for file in folder.iterdir():
-            if file.suffix == ".py":
-                if file.name == "__init__.py":
-                    yield NameFile(
-                        file,
-                        get_modname_from_path(folder, package.path),
-                        underlined,
-                        process_imports = True,
-                    )
-                else:
-                    yield NameFile(
-                        file,
-                        get_modname_from_path(file, package.path),
-                        underlined,
-                    )
+        yield ModuleFile(package.path, package.path.stem, underlined)
+    else:
+        assert package.path
+        for file in package.path.glob("*.py"):
+            if file.name == "__init__.py":
+                yield ModuleFile(
+                    file,
+                    get_modname_from_path(file.parent, package.path),
+                    underlined,
+                    process_imports=True,
+                )
+            else:
+                yield ModuleFile(
+                    file,
+                    get_modname_from_path(file, package.path),
+                    underlined,
+                )
