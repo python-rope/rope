@@ -7,17 +7,17 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import chain, repeat
-from typing import List, Optional, Tuple, Iterable
+from typing import Iterable, List, Optional, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport.defs import Name, Package, PackageType, Source
-from rope.contrib.autoimport.parse import (
-                                           get_names_from_compiled,
+from rope.contrib.autoimport.parse import (combine, get_names_from_compiled,
                                            get_names_from_file)
-from rope.contrib.autoimport.utils import (get_modname_from_path,
+from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
                                            get_package_source,
+                                           get_package_tuple,
                                            sort_and_deduplicate,
                                            sort_and_deduplicate_tuple)
 from rope.refactor import importutils
@@ -229,15 +229,12 @@ class AutoImport:
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        packages: List[pathlib.Path] = []
+        packages: List[Package] = []
         compiled_packages: List[Tuple[str, Source]] = []
-        to_add: List[Package] = []
         if self.underlined:
             underlined = True
         if modules is None:
-            packages, compiled_packages, to_add = self._get_avalible_packages(
-                underlined
-            )
+            packages, compiled_packages = self._get_avalible_packages(underlined)
         else:
             existing = self._get_existing()
             for modname in modules:
@@ -265,16 +262,25 @@ class AutoImport:
         self._add_packages(to_add)
         if single_thread:
             for package in packages:
-                self._add_names(
-                    find_all_names_in_package(package, underlined=underlined)
-                )
+                for module in get_files(package, underlined):
+                    for name in get_names_from_file(package.path, underlined):
+                        self._add_name(combine(package, module, name))
+
         else:
             underlined_list = repeat(underlined, len(packages))
-            with ProcessPoolExecutor() as exectuor:
-                for name_list in exectuor.map(
-                    find_all_names_in_package, packages, underlined_list
+            with ProcessPoolExecutor() as executor:
+                for package, modules in zip(
+                    packages, executor.map(get_files, packages, underlined_list)
                 ):
-                    self._add_names(name_list)
+                    modules = list(modules)
+                    underlined_list = repeat(underlined, len(modules))
+                    for names, module in zip(
+                        executor.map(get_names_from_file, modules, underlined_list),
+                        modules,
+                    ):
+                        for name in names:
+                            self._add_name(combine(package, module, name))
+
         for compiled_package, source in compiled_packages:
             try:
                 self._add_names(
@@ -361,19 +367,24 @@ class AutoImport:
         resource_modname: str = get_modname_from_path(
             resource_path, package_path, add_package_name=False
         )
-        package_tuple = get_package_name_from_path(package_path)
+        package_tuple = get_package_tuple(package_path)
         if package_tuple is None:
             return
         package_name = package_tuple[0]
         self._del_if_exist(module_name=resource_modname, commit=False)
-        names = get_names_from_file(
+        for partial in get_names_from_file(
             resource_path,
-            resource_modname,
-            package_name,
-            Source.PROJECT,
             underlined=underlined,
-        )
-        self._add_names(names)
+        ):
+            self._add_name(
+                Name(
+                    partial.name,
+                    resource_modname,
+                    package_name,
+                    Source.PROJECT,
+                    partial.name_type,
+                )
+            )
         if commit:
             self.connection.commit()
 
@@ -401,11 +412,8 @@ class AutoImport:
 
     def _get_avalible_packages(
         self, underlined: bool = False
-    ) -> Tuple[List[pathlib.Path], List[Tuple[str, Source]], List[Package]]:
-        packages: List[pathlib.Path] = []
-        package_names: List[
-            Package
-        ] = []  # List of packages to add to the package table
+    ) -> Tuple[List[Package], List[Tuple[str, Source]]]:
+        packages: List[Package] = []
         # Get builtins first
         compiled_packages: List[Tuple[str, Source]] = [
             (module, Source.BUILTIN) for module in sys.builtin_module_names
@@ -414,10 +422,10 @@ class AutoImport:
         underlined = underlined if underlined else self.underlined
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_name_from_path(package)
+                package_tuple = get_package_tuple(package)
                 if package_tuple is None:
                     continue
-                package_name, package_type = package_tuple
+                package_name, source, _, package_type = package_tuple
                 if package_name in existing:
                     continue
                 if package_name.startswith("_") and not underlined:
@@ -427,12 +435,12 @@ class AutoImport:
                         (package_name, get_package_source(package, self.project))
                     )
                 else:
-                    packages.append(package)
-                package_names.append((package_name,))
-        return packages, compiled_packages, package_names
+                    packages.append(package_tuple)
+        return packages, compiled_packages
 
     def _add_packages(self, packages: List[Package]):
-        self.connection.executemany("INSERT into packages values(?)", packages)
+        for package in packages:
+            self.connection.execute("INSERT into packages values(?)", (package.name,))
 
     def _get_existing(self) -> List[str]:
         existing: List[str] = list(
@@ -444,7 +452,7 @@ class AutoImport:
     @property
     def _project_name(self):
         package_path: pathlib.Path = pathlib.Path(self.project.address)
-        package_tuple = get_package_name_from_path(package_path)
+        package_tuple = get_package_tuple(package_path)
         if package_tuple is None:
             return None
         return package_tuple[0]
@@ -472,6 +480,18 @@ class AutoImport:
             names,
         )
 
+    def _add_name(self, name: Name):
+        self.connection.execute(
+            "insert into names values (?,?,?,?,?)",
+            (
+                name.name,
+                name.modname,
+                name.package,
+                name.source.value,
+                name.name_type.value,
+            ),
+        )
+
     def _check_import(self, module: pathlib.Path) -> bool:
         """
         Check the ability to import an external package, removes it if not avalible.
@@ -497,10 +517,10 @@ class AutoImport:
             return (None, target_name, PackageType.BUILTIN)
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_name_from_path(package)
+                package_tuple = get_package_tuple(package)
                 if package_tuple is None:
                     continue
-                name, package_type = package_tuple
+                name, _, _, package_type = package_tuple
                 if name == target_name:
                     return (package, name, package_type)
         return None

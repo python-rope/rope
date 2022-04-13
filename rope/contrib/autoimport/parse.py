@@ -10,7 +10,7 @@ import pathlib
 from importlib import import_module
 from typing import Generator, List, Optional
 
-from .defs import Name, NameType, PartialName, Source
+from .defs import Name, NameFile, NameType, Package, PartialName, Source
 
 # def get_names(
 #     modpath: pathlib.Path,
@@ -173,3 +173,8 @@ def get_names_from_compiled(
                     yield Name(
                         str(name), package, package, source, get_type_object(value)
                     )
+
+
+def combine(package: Package, module: NameFile, name: PartialName) -> Name:
+    """Combine the information from a package, module, and partial name to form a full name."""
+    return Name(name.name, module.modname, package.name, package.source, name.name_type)
