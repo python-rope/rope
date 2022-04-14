@@ -108,7 +108,8 @@ def get_files(
 ) -> Generator[ModuleInfo, None, None]:
     """Find all files to parse in a given path using __init__.py."""
     if package.type in (PackageType.COMPILED, PackageType.BUILTIN):
-        yield ModuleCompiled(None, package.name, underlined, process_imports=True)
+        if package.source in (Source.PROJECT, Source.STANDARD, Source.BUILTIN):
+            yield ModuleCompiled(None, package.name, underlined, process_imports=True)
     elif package.type == PackageType.SINGLE_FILE:
         assert package.path
         assert package.path.suffix == ".py"

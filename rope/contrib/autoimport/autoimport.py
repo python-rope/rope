@@ -93,7 +93,7 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        packages_table = "(pacakge TEXT)"
+        packages_table = "(package TEXT)"
         names_table = (
             "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
         )
@@ -220,7 +220,7 @@ class AutoImport:
         package_results = self.connection.execute("select * from packages").fetchall()
         return name_results, package_results
 
-    def generate_resource_cache(
+    def generate_cache(
         self,
         resources: List[Resource] = None,
         underlined: bool = False,
@@ -246,7 +246,8 @@ class AutoImport:
 
     def generate_modules_cache(
         self,
-        modules_to_find: List[str] = None,
+        modules: List[str] = None,
+        task_handle=None,
         single_thread: bool = False,
         underlined: bool = False,
     ):
@@ -262,10 +263,10 @@ class AutoImport:
         if self.underlined:
             underlined = True
         existing = self._get_existing()
-        if modules_to_find is None:
-            packages = self._get_avalible_packages()
+        if modules is None:
+            packages = self._get_available_packages()
         else:
-            for modname in modules_to_find:
+            for modname in modules:
                 package = self._find_package_path(modname)
                 if package is None:
                     continue
@@ -389,7 +390,7 @@ class AutoImport:
         ]
         return list(OrderedDict.fromkeys(folder_paths))
 
-    def _get_avalible_packages(self) -> List[Package]:
+    def _get_available_packages(self) -> List[Package]:
         packages: List[Package] = [
             Package(module, Source.BUILTIN, None, PackageType.BUILTIN)
             for module in sys.builtin_module_names

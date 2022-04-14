@@ -112,6 +112,8 @@ def get_names_from_compiled(
     banned = ["builtins", "python_crun"]
     if package in banned or (package.startswith("_") and not underlined):
         return  # Builtins is redundant since you don't have to import it.
+    if source not in (Source.BUILTIN, Source.STANDARD, Source.PROJECT):
+        return
     try:
         module = import_module(str(package))
     except ImportError:
