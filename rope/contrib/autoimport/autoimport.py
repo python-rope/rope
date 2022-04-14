@@ -29,7 +29,8 @@ def get_future_names(
         for package in packages:
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
-                job_set.count += 1
+                if not isinstance(job_set, taskhandle.NullJobSet):
+                    job_set.count += 1
                 yield executor.submit(get_names, module, package)
 
 
