@@ -41,9 +41,9 @@ def get_package_source(
     package: pathlib.Path, project: Optional[Project] = None
 ) -> Source:
     """Detect the source of a given package. Rudimentary implementation."""
-    if project is not None and package.as_posix().__contains__(project.address):
+    if project is not None and project.address in str(package):
         return Source.PROJECT
-    if package.as_posix().__contains__("site-packages"):
+    if "site-packages" in package.parts:
         return Source.SITE_PACKAGE
     if package.as_posix().startswith(sys.prefix):
         return Source.STANDARD
@@ -74,10 +74,8 @@ def get_modname_from_path(
 
 def sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
     """Sort and deduplicate a list of name, source entries."""
-    if len(results) == 0:
-        return []
-    results.sort(key=lambda y: y[-1])
-    results_sorted = list(zip(*results))[0]
+    results = sorted(results, key=lambda y: y[-1])
+    results_sorted = [name for name, source in results]
     return list(OrderedDict.fromkeys(results_sorted))
 
 
@@ -85,12 +83,8 @@ def sort_and_deduplicate_tuple(
     results: List[Tuple[str, str, int]]
 ) -> List[Tuple[str, str]]:
     """Sort and deduplicate a list of name, module, source entries."""
-    if len(results) == 0:
-        return []
-    results.sort(key=lambda y: y[-1])
-    results_sorted = []
-    for result in results:
-        results_sorted.append(result[:-1])
+    results = sorted(results, key=lambda y: y[-1])
+    results_sorted = [result[:-1] for result in results]
     return list(OrderedDict.fromkeys(results_sorted))
 
 
@@ -108,7 +102,7 @@ def get_files(
 ) -> Generator[ModuleInfo, None, None]:
     """Find all files to parse in a given path using __init__.py."""
     if package.type in (PackageType.COMPILED, PackageType.BUILTIN):
-        if package.source in (Source.PROJECT, Source.STANDARD, Source.BUILTIN):
+        if package.source in (Source.STANDARD, Source.BUILTIN):
             yield ModuleCompiled(None, package.name, underlined, process_imports=True)
     elif package.type == PackageType.SINGLE_FILE:
         assert package.path

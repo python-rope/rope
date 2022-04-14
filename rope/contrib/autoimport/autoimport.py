@@ -11,25 +11,24 @@ from typing import Generator, Iterable, List, Optional, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import ModuleFile, Name, Package, PackageType, Source
+from rope.contrib.autoimport.defs import (ModuleFile, Name, Package,
+                                          PackageType, Source)
 from rope.contrib.autoimport.parse import get_names
-from rope.contrib.autoimport.utils import (
-    get_files,
-    get_modname_from_path,
-    get_package_tuple,
-    sort_and_deduplicate,
-    sort_and_deduplicate_tuple,
-)
+from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
+                                           get_package_tuple,
+                                           sort_and_deduplicate,
+                                           sort_and_deduplicate_tuple)
 from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool
+    packages: List[Package], underlined: bool, job_set: taskhandle.JobSet
 ) -> Generator[Future[Iterable[Name]], None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
         for package in packages:
             for module in get_files(package, underlined):
+                job_set.started_job(module.modname)
                 yield executor.submit(get_names, module, package)
 
 
@@ -247,7 +246,7 @@ class AutoImport:
     def generate_modules_cache(
         self,
         modules: List[str] = None,
-        task_handle=None,
+        task_handle=taskhandle.NullTaskHandle(),
         single_thread: bool = False,
         underlined: bool = False,
     ):
@@ -273,14 +272,20 @@ class AutoImport:
                 packages.append(package)
         packages = list(filter_packages(packages, underlined, existing))
         self._add_packages(packages)
+        job_set = task_handle.create_jobset("Generating autoimport cache")
         if single_thread:
             for package in packages:
                 for module in get_files(package, underlined):
+                    job_set.started_job(module.modname)
                     for name in get_names(module, package):
                         self._add_name(name)
+                        job_set.finished_job()
         else:
-            for future_name in as_completed(get_future_names(packages, underlined)):
+            for future_name in as_completed(
+                get_future_names(packages, underlined, job_set)
+            ):
                 self._add_names(future_name.result())
+                job_set.finished_job()
 
         self.connection.commit()
 

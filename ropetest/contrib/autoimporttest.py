@@ -125,9 +125,7 @@ class AutoImportTest(unittest.TestCase):
     def test_search_module(self):
         self.importer.update_module("os")
         import_statement = ("import os", "os")
-        self.assertIn(
-            import_statement , self.importer.search("os", exact_match=True)
-        )
+        self.assertIn(import_statement, self.importer.search("os", exact_match=True))
         self.assertIn(import_statement, self.importer.search("os"))
         self.assertIn(import_statement, self.importer.search("o"))
 

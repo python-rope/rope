@@ -41,12 +41,12 @@ def get_names_from_file(
     underlined: bool = False,
 ) -> Generator[PartialName, None, None]:
     """Get all the names from a given file using ast."""
-    with open(module, mode="rb") as file:
-        try:
-            root_node = ast.parse(file.read())
-        except SyntaxError as error:
-            print(error)
-            return
+
+    try:
+        root_node = ast.parse(module.read_bytes())
+    except SyntaxError as error:
+        print(error)
+        return
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
             for target in node.targets:
@@ -112,7 +112,7 @@ def get_names_from_compiled(
     banned = ["builtins", "python_crun"]
     if package in banned or (package.startswith("_") and not underlined):
         return  # Builtins is redundant since you don't have to import it.
-    if source not in (Source.BUILTIN, Source.STANDARD, Source.PROJECT):
+    if source not in (Source.BUILTIN, Source.STANDARD):
         return
     try:
         module = import_module(str(package))
