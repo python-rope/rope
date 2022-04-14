@@ -23,7 +23,7 @@ class ModuleInfo(NamedTuple):
     filepath: Optional[pathlib.Path]
     modname: str
     underlined: bool
-    process_imports: bool = False
+    process_imports: bool
 
 
 class ModuleFile(ModuleInfo):
@@ -32,7 +32,7 @@ class ModuleFile(ModuleInfo):
     filepath: pathlib.Path
     modname: str
     underlined: bool
-    process_imports: bool = False
+    process_imports: bool
 
 
 class ModuleCompiled(ModuleInfo):
@@ -41,7 +41,7 @@ class ModuleCompiled(ModuleInfo):
     filepath = None
     modname: str
     underlined: bool
-    process_imports: bool = False
+    process_imports: bool
 
 
 class PackageType(Enum):
