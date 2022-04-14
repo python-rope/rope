@@ -29,6 +29,7 @@ def get_future_names(
         for package in packages:
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
+                job_set.count += 1
                 yield executor.submit(get_names, module, package)
 
 
@@ -272,7 +273,7 @@ class AutoImport:
                 packages.append(package)
         packages = list(filter_packages(packages, underlined, existing))
         self._add_packages(packages)
-        job_set = task_handle.create_jobset("Generating autoimport cache")
+        job_set = task_handle.create_jobset("Generating autoimport cache", 0)
         if single_thread:
             for package in packages:
                 for module in get_files(package, underlined):
