@@ -11,7 +11,14 @@ from typing import Generator, Iterable, List, Optional, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import ModuleFile, Name, Package, PackageType, Source
+from rope.contrib.autoimport.defs import (
+    ModuleFile,
+    Name,
+    NameType,
+    Package,
+    PackageType,
+    Source,
+)
 from rope.contrib.autoimport.parse import get_names
 from rope.contrib.autoimport.utils import (
     get_files,
@@ -136,48 +143,43 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         results: List[Tuple[str, str, int]] = []
-        for import_name, module, source in self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
+        for statement, import_name, source, type in self.search_name(name, exact_match):
+            results.append((statement, import_name, source))
+        for statement, import_name, source, type in self.search_module(
+            name, exact_match
         ):
-            results.append((f"from {module} import {import_name}", import_name, source))
-        for module, source in self.connection.execute(
-            "Select module, source FROM names where module LIKE (?)", ("%." + name,)
-        ):
-            parts = module.split(".")
-            import_name = parts[-1]
-            remaining = parts[0]
-            for part in parts[1:-1]:
-                remaining += "."
-                remaining += part
-            results.append(
-                (f"from {remaining} import {import_name}", import_name, source)
-            )
-        for module, source in self.connection.execute(
-            "Select module, source from names where module LIKE (?)", (name,)
-        ):
-            results.append((f"import {module}", module, source))
+            results.append((statement, import_name, source))
         return sort_and_deduplicate_tuple(results)
 
-    def lsp_search(
+    def search_name(
         self, name: str, exact_match: bool = False
-    ) -> Tuple[List[Tuple[str, str, int, int]], List[Tuple[str, str, int, int]]]:
+    ) -> Generator[Tuple[str, str, int, int], None, None]:
         """
-        Search both modules and names for an import string.
+        Search both names for avalible imports.
 
-        Returns the name, import statement, source, split into normal names and modules.
+        Returns the import statement, import name, source, and type.
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        results_name: List[Tuple[str, str, int, int]] = []
-        results_module: List[Tuple[str, str, int, int]] = []
         for import_name, module, source, name_type in self.connection.execute(
             "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
         ):
-            results_name.append(
+            yield (
                 (f"from {module} import {import_name}", import_name, source, name_type)
             )
-        for module, source, name_type in self.connection.execute(
-            "Select module, source, type FROM names where module LIKE (?)",
+
+    def search_module(
+        self, name: str, exact_match: bool = False
+    ) -> Generator[Tuple[str, str, int, int], None, None]:
+        """
+        Search both modules for avalible imports.
+
+        Returns the import statement, import name, source, and type.
+        """
+        if not exact_match:
+            name = name + "%"  # Makes the query a starts_with query
+        for module, source in self.connection.execute(
+            "Select module, source FROM names where module LIKE (?)",
             ("%." + name,),
         ):
             parts = module.split(".")
@@ -186,19 +188,18 @@ class AutoImport:
             for part in parts[1:-1]:
                 remaining += "."
                 remaining += part
-            results_module.append(
+            yield (
                 (
                     f"from {remaining} import {import_name}",
                     import_name,
                     source,
-                    name_type,
+                    NameType.Module.value,
                 )
             )
-        for module, source, name_type in self.connection.execute(
-            "Select module, source, type from names where module LIKE (?)", (name,)
+        for module, source in self.connection.execute(
+            "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results_module.append((f"import {module}", module, source, name_type))
-        return results_name, results_module
+            yield ((f"import {module}", module, source, NameType.Module.value))
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
