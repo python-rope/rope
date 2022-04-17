@@ -199,6 +199,8 @@ class AutoImport:
         for module, source in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
+            if '.' in module:
+                continue
             yield ((f"import {module}", module, source, NameType.Module.value))
 
     def get_modules(self, name) -> List[str]:
