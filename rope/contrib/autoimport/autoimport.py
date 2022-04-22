@@ -6,7 +6,7 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
-from typing import Generator, Iterable, List, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -17,9 +17,10 @@ from rope.contrib.autoimport.defs import (
     NameType,
     Package,
     PackageType,
+    SearchResult,
     Source,
 )
-from rope.contrib.autoimport.parse import get_names
+from rope.contrib.autoimport.parse import get_names, get_names_from_file
 from rope.contrib.autoimport.utils import (
     get_files,
     get_modname_from_path,
@@ -114,6 +115,7 @@ class AutoImport:
     def import_assist(self, starting: str):
         """
         Find modules that have a global name that starts with `starting`.
+        For a more complete list including modules, use the search or search_full methods.
 
         Parameters
         __________
@@ -137,23 +139,59 @@ class AutoImport:
     def search(self, name: str, exact_match: bool = False) -> List[Tuple[str, str]]:
         """
         Search both modules and names for an import string.
+        This is a simple wrapper around search_full with basic sorting based on Source.
 
-        Returns list of import statement ,modname pairs
+        Returns a sorted list of import statement, modname pairs
         """
-        if not exact_match:
-            name = name + "%"  # Makes the query a starts_with query
-        results: List[Tuple[str, str, int]] = []
-        for statement, import_name, source, type in self.search_name(name, exact_match):
-            results.append((statement, import_name, source))
-        for statement, import_name, source, type in self.search_module(
-            name, exact_match
-        ):
-            results.append((statement, import_name, source))
+        results: List[Tuple[str, str, int]] = [
+            (statement, import_name, source)
+            for statement, import_name, source, type in self.search_full(
+                name, exact_match
+            )
+        ]
         return sort_and_deduplicate_tuple(results)
 
-    def search_name(
+    def search_full(
+        self,
+        name: str,
+        exact_match: bool = False,
+        resource: Optional[Resource] = None,
+        ignored_names: Set[str] = set(),
+    ) -> Generator[SearchResult, None, None]:
+        """
+        Search both modules and names for an import string.
+
+        Parameters
+        __________
+        name: str
+            Name to search for
+        exact_match: bool
+            If using exact_match, only search for that name.
+            Otherwise, search for any name starting with that name.
+        resource_name : Optional[Resource]
+            Will ignore any names from this resource.
+            Since it uses Ast, and reads from the saved file,
+            its reccomennded to get the names from the client
+        ignored_names : Set[str]
+            Will ignore any names in this set
+
+        Return
+        __________
+        Unsorted Generator of SearchResults. Each is guaranteed to be unique.
+        """
+        if resource:
+            resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+            for exisiting_name, type in get_names_from_file(resource_path, True, True):
+                ignored_names.add(exisiting_name)
+        results = set(self._search_name(name, exact_match))
+        results = results.union(self._search_module(name, exact_match))
+        for result in results:
+            if result.name not in ignored_names:
+                yield result
+
+    def _search_name(
         self, name: str, exact_match: bool = False
-    ) -> Generator[Tuple[str, str, int, int], None, None]:
+    ) -> Generator[SearchResult, None, None]:
         """
         Search both names for avalible imports.
 
@@ -165,12 +203,17 @@ class AutoImport:
             "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
         ):
             yield (
-                (f"from {module} import {import_name}", import_name, source, name_type)
+                SearchResult(
+                    f"from {module} import {import_name}",
+                    import_name,
+                    source,
+                    name_type,
+                )
             )
 
-    def search_module(
+    def _search_module(
         self, name: str, exact_match: bool = False
-    ) -> Generator[Tuple[str, str, int, int], None, None]:
+    ) -> Generator[SearchResult, None, None]:
         """
         Search both modules for avalible imports.
 
@@ -189,7 +232,7 @@ class AutoImport:
                 remaining += "."
                 remaining += part
             yield (
-                (
+                SearchResult(
                     f"from {remaining} import {import_name}",
                     import_name,
                     source,
@@ -199,9 +242,11 @@ class AutoImport:
         for module, source in self.connection.execute(
             "Select module, source from names where module LIKE (?)", (name,)
         ):
-            if '.' in module:
+            if "." in module:
                 continue
-            yield ((f"import {module}", module, source, NameType.Module.value))
+            yield SearchResult(
+                f"import {module}", module, source, NameType.Module.value
+            )
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""

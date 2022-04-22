@@ -107,3 +107,12 @@ class PartialName(NamedTuple):
 
     name: str
     name_type: NameType
+
+
+class SearchResult(NamedTuple):
+    """Search Result."""
+
+    import_statement: str
+    name: str
+    source: int
+    itemkind: int
