@@ -96,7 +96,6 @@ class AutoImport:
             db_path = f"{project.ropefolder.path}/autoimport.db"
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
-        self._check_all()
         if observe:
             observer = resourceobserver.ResourceObserver(
                 changed=self._changed, moved=self._moved, removed=self._removed
@@ -110,12 +109,16 @@ class AutoImport:
         )
         self.connection.execute(f"create table if not exists names{names_table}")
         self.connection.execute(f"create table if not exists packages{packages_table}")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS name on names(name)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS module on names(module)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS package on names(package)")
         self.connection.commit()
 
     def import_assist(self, starting: str):
         """
         Find modules that have a global name that starts with `starting`.
-        For a more complete list including modules, use the search or search_full methods.
+
+        For a more complete list, use the search or search_full methods.
 
         Parameters
         __________
@@ -129,9 +132,6 @@ class AutoImport:
             "select name, module, source from names WHERE name LIKE (?)",
             (starting + "%",),
         ).fetchall()
-        for result in results:
-            if not self._check_import(result[1]):
-                del results[result]
         return sort_and_deduplicate_tuple(
             results
         )  # Remove duplicates from multiple occurences of the same item
@@ -139,6 +139,7 @@ class AutoImport:
     def search(self, name: str, exact_match: bool = False) -> List[Tuple[str, str]]:
         """
         Search both modules and names for an import string.
+
         This is a simple wrapper around search_full with basic sorting based on Source.
 
         Returns a sorted list of import statement, modname pairs
@@ -253,20 +254,15 @@ class AutoImport:
         results = self.connection.execute(
             "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
         ).fetchall()
-        for result in results:
-            if not self._check_import(result[0]):
-                del results[result]
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        self._check_all()
         results = self.connection.execute("select name from names").fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        self._check_all()
         name_results = self.connection.execute("select * from names").fetchall()
         package_results = self.connection.execute("select * from packages").fetchall()
         return name_results, package_results
@@ -519,24 +515,6 @@ class AutoImport:
                 name.name_type.value,
             ),
         )
-
-    def _check_import(self, module: pathlib.Path) -> bool:
-        """
-        Check the ability to import an external package, removes it if not avalible.
-
-        Parameters
-        ----------
-        module: pathlib.path
-            The module to check
-        Returns
-        ----------
-        """
-        # Not Implemented Yet, silently will fail
-        return True
-
-    def _check_all(self):
-        """Check all modules and removes bad ones."""
-        pass
 
     def _find_package_path(self, target_name: str) -> Optional[Package]:
         if target_name in sys.builtin_module_names:
