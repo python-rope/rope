@@ -34,9 +34,6 @@ def typing_path():
 
     yield pathlib.Path(typing.__file__)
 
-
-
-
 @pytest.fixture
 def build_env_path():
     from build import env

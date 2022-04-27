@@ -20,7 +20,7 @@ from rope.contrib.autoimport.defs import (
     SearchResult,
     Source,
 )
-from rope.contrib.autoimport.parse import get_names, get_names_from_file
+from rope.contrib.autoimport.parse import get_names
 from rope.contrib.autoimport.utils import (
     get_files,
     get_modname_from_path,
@@ -32,7 +32,9 @@ from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.JobSet
+    packages: List[Package],
+    underlined: bool,
+    job_set: taskhandle.JobSet,
 ) -> Generator[Future[Iterable[Name]], None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
@@ -163,7 +165,6 @@ class AutoImport:
         self,
         name: str,
         exact_match: bool = False,
-        resource: Optional[Resource] = None,
         ignored_names: Set[str] = set(),
     ) -> Generator[SearchResult, None, None]:
         """
@@ -176,10 +177,6 @@ class AutoImport:
         exact_match: bool
             If using exact_match, only search for that name.
             Otherwise, search for any name starting with that name.
-        resource_name : Optional[Resource]
-            Will ignore any names from this resource.
-            Since it uses Ast, and reads from the saved file,
-            its reccomennded to get the names from the client
         ignored_names : Set[str]
             Will ignore any names in this set
 
@@ -187,10 +184,6 @@ class AutoImport:
         __________
         Unsorted Generator of SearchResults. Each is guaranteed to be unique.
         """
-        if resource:
-            resource_path: pathlib.Path = pathlib.Path(resource.real_path)
-            for exisiting_name, type in get_names_from_file(resource_path, True, True):
-                ignored_names.add(exisiting_name)
         results = set(self._search_name(name, exact_match))
         results = results.union(self._search_module(name, exact_match))
         for result in results:
@@ -333,6 +326,8 @@ class AutoImport:
                     continue
                 packages.append(package)
         packages = list(filter_packages(packages, underlined, existing))
+        if len(packages) == 0:
+            return
         self._add_packages(packages)
         job_set = task_handle.create_jobset("Generating autoimport cache", 0)
         if single_thread:

@@ -138,6 +138,17 @@ class AutoImportTest(unittest.TestCase):
         self.assertIn(import_statement, self.importer.search("Di"))
         self.assertIn(import_statement, self.importer.search("D"))
 
+    def test_typing_all(self):
+        import typing
+
+        self.importer._del_if_exist("typing")
+        self.importer.generate_modules_cache(["typing"], single_thread=True)
+        for item in typing.__all__:
+            self.assertIn(
+                (f"from typing import {item}", item),
+                self.importer.search(item, exact_match=True),
+            )
+
     def test_generate_full_cache(self):
         """The single thread test takes much longer than the multithread test but is easier to debug"""
         single_thread = False

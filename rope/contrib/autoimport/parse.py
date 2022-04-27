@@ -37,7 +37,10 @@ def get_type_ast(node: ast.AST) -> NameType:
 
 
 def get_names_from_file(
-    module: pathlib.Path, underlined: bool = False, process_imports: bool = False
+    module: pathlib.Path,
+    package_name: str = "",
+    underlined: bool = False,
+    process_imports: bool = False,
 ) -> Generator[PartialName, None, None]:
     """Get all the names from a given file using ast."""
     try:
@@ -64,7 +67,12 @@ def get_names_from_file(
                     node.name,
                     get_type_ast(node),
                 )
-        elif process_imports and isinstance(node, (ast.Import, ast.ImportFrom)):
+        elif process_imports and isinstance(node, ast.ImportFrom):
+            # When we process imports, we want to include names in it's own package.
+            if node.level == 0:
+                continue
+            if not node.module or package_name is node.module.split(".")[0]:
+                continue
             for name in node.names:
                 if isinstance(name, ast.alias):
                     if name.asname:
@@ -96,7 +104,10 @@ def get_names(module: ModuleInfo, package: Package) -> List[Name]:
         return [
             combine(package, module, partial_name)
             for partial_name in get_names_from_file(
-                module.filepath, module.underlined, module.process_imports
+                module.filepath,
+                package.name,
+                underlined=module.underlined,
+                process_imports=module.process_imports,
             )
         ]
     return []
