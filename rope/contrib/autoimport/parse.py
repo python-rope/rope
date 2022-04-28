@@ -33,15 +33,16 @@ def get_type_ast(node: ast.AST) -> NameType:
         return NameType.Function
     if isinstance(node, ast.Assign):
         return NameType.Variable
-    return NameType.Text  # default value
+    return NameType.Variable  # default value
 
 
 def get_names_from_file(
     module: pathlib.Path,
+    package_name: str = "",
     underlined: bool = False,
+    process_imports: bool = False,
 ) -> Generator[PartialName, None, None]:
     """Get all the names from a given file using ast."""
-
     try:
         root_node = ast.parse(module.read_bytes())
     except SyntaxError as error:
@@ -66,6 +67,22 @@ def get_names_from_file(
                     node.name,
                     get_type_ast(node),
                 )
+        elif process_imports and isinstance(node, ast.ImportFrom):
+            # When we process imports, we want to include names in it's own package.
+            if node.level == 0:
+                continue
+            if not node.module or package_name is node.module.split(".")[0]:
+                continue
+            for name in node.names:
+                if isinstance(name, ast.alias):
+                    if name.asname:
+                        real_name = name.asname
+                    else:
+                        real_name = name.name
+                else:
+                    real_name = name
+                if underlined or not real_name.startswith("_"):
+                    yield PartialName(real_name, get_type_ast(node))
 
 
 def get_type_object(imported_object) -> NameType:
@@ -74,7 +91,7 @@ def get_type_object(imported_object) -> NameType:
         return NameType.Class
     if inspect.isfunction(imported_object) or inspect.isbuiltin(imported_object):
         return NameType.Function
-    return NameType.Constant
+    return NameType.Variable
 
 
 def get_names(module: ModuleInfo, package: Package) -> List[Name]:
@@ -86,7 +103,12 @@ def get_names(module: ModuleInfo, package: Package) -> List[Name]:
     if isinstance(module, ModuleFile):
         return [
             combine(package, module, partial_name)
-            for partial_name in get_names_from_file(module.filepath, module.underlined)
+            for partial_name in get_names_from_file(
+                module.filepath,
+                package.name,
+                underlined=module.underlined,
+                process_imports=module.process_imports,
+            )
         ]
     return []
 

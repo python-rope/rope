@@ -6,12 +6,20 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
-from typing import Generator, Iterable, List, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import ModuleFile, Name, Package, PackageType, Source
+from rope.contrib.autoimport.defs import (
+    ModuleFile,
+    Name,
+    NameType,
+    Package,
+    PackageType,
+    SearchResult,
+    Source,
+)
 from rope.contrib.autoimport.parse import get_names
 from rope.contrib.autoimport.utils import (
     get_files,
@@ -63,9 +71,10 @@ class AutoImport:
 
     connection: sqlite3.Connection
     underlined: bool
-    project: Project
+    rope_project: Project
+    project: Package
 
-    def __init__(self, project, observe=True, underlined=False, memory=True):
+    def __init__(self, project: Project, observe=True, underlined=False, memory=True):
         """Construct an AutoImport object.
 
         Parameters
@@ -79,7 +88,13 @@ class AutoImport:
         memory : bool
             if true, don't persist to disk
         """
-        self.project = project
+        self.rope_project = project
+        project_package = get_package_tuple(
+            pathlib.Path(project.root.real_path), project
+        )
+        assert project_package is not None
+        assert project_package.path is not None
+        self.project = project_package
         self.underlined = underlined
         db_path: str
         if memory or project.ropefolder is None:
@@ -88,7 +103,6 @@ class AutoImport:
             db_path = f"{project.ropefolder.path}/autoimport.db"
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
-        self._check_all()
         if observe:
             observer = resourceobserver.ResourceObserver(
                 changed=self._changed, moved=self._moved, removed=self._removed
@@ -102,11 +116,16 @@ class AutoImport:
         )
         self.connection.execute(f"create table if not exists names{names_table}")
         self.connection.execute(f"create table if not exists packages{packages_table}")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS name on names(name)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS module on names(module)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS package on names(package)")
         self.connection.commit()
 
     def import_assist(self, starting: str):
         """
         Find modules that have a global name that starts with `starting`.
+
+        For a more complete list, use the search or search_full methods.
 
         Parameters
         __________
@@ -120,9 +139,6 @@ class AutoImport:
             "select name, module, source from names WHERE name LIKE (?)",
             (starting + "%",),
         ).fetchall()
-        for result in results:
-            if not self._check_import(result[1]):
-                del results[result]
         return sort_and_deduplicate_tuple(
             results
         )  # Remove duplicates from multiple occurences of the same item
@@ -131,53 +147,81 @@ class AutoImport:
         """
         Search both modules and names for an import string.
 
-        Returns list of import statement ,modname pairs
+        This is a simple wrapper around search_full with basic sorting based on Source.
+
+        Returns a sorted list of import statement, modname pairs
         """
-        if not exact_match:
-            name = name + "%"  # Makes the query a starts_with query
-        results: List[Tuple[str, str, int]] = []
-        for import_name, module, source in self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)", (name,)
-        ):
-            results.append((f"from {module} import {import_name}", import_name, source))
-        for module, source in self.connection.execute(
-            "Select module, source FROM names where module LIKE (?)", ("%." + name,)
-        ):
-            parts = module.split(".")
-            import_name = parts[-1]
-            remaining = parts[0]
-            for part in parts[1:-1]:
-                remaining += "."
-                remaining += part
-            results.append(
-                (f"from {remaining} import {import_name}", import_name, source)
+        results: List[Tuple[str, str, int]] = [
+            (statement, import_name, source)
+            for statement, import_name, source, type in self.search_full(
+                name, exact_match
             )
-        for module, source in self.connection.execute(
-            "Select module, source from names where module LIKE (?)", (name,)
-        ):
-            results.append((f"import {module}", module, source))
+        ]
         return sort_and_deduplicate_tuple(results)
 
-    def lsp_search(
-        self, name: str, exact_match: bool = False
-    ) -> Tuple[List[Tuple[str, str, int, int]], List[Tuple[str, str, int, int]]]:
+    def search_full(
+        self,
+        name: str,
+        exact_match: bool = False,
+        ignored_names: Set[str] = set(),
+    ) -> Generator[SearchResult, None, None]:
         """
         Search both modules and names for an import string.
 
-        Returns the name, import statement, source, split into normal names and modules.
+        Parameters
+        __________
+        name: str
+            Name to search for
+        exact_match: bool
+            If using exact_match, only search for that name.
+            Otherwise, search for any name starting with that name.
+        ignored_names : Set[str]
+            Will ignore any names in this set
+
+        Return
+        __________
+        Unsorted Generator of SearchResults. Each is guaranteed to be unique.
+        """
+        results = set(self._search_name(name, exact_match))
+        results = results.union(self._search_module(name, exact_match))
+        for result in results:
+            if result.name not in ignored_names:
+                yield result
+
+    def _search_name(
+        self, name: str, exact_match: bool = False
+    ) -> Generator[SearchResult, None, None]:
+        """
+        Search both names for avalible imports.
+
+        Returns the import statement, import name, source, and type.
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        results_name: List[Tuple[str, str, int, int]] = []
-        results_module: List[Tuple[str, str, int, int]] = []
         for import_name, module, source, name_type in self.connection.execute(
             "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
         ):
-            results_name.append(
-                (f"from {module} import {import_name}", import_name, source, name_type)
+            yield (
+                SearchResult(
+                    f"from {module} import {import_name}",
+                    import_name,
+                    source,
+                    name_type,
+                )
             )
-        for module, source, name_type in self.connection.execute(
-            "Select module, source, type FROM names where module LIKE (?)",
+
+    def _search_module(
+        self, name: str, exact_match: bool = False
+    ) -> Generator[SearchResult, None, None]:
+        """
+        Search both modules for avalible imports.
+
+        Returns the import statement, import name, source, and type.
+        """
+        if not exact_match:
+            name = name + "%"  # Makes the query a starts_with query
+        for module, source in self.connection.execute(
+            "Select module, source FROM names where module LIKE (?)",
             ("%." + name,),
         ):
             parts = module.split(".")
@@ -186,39 +230,37 @@ class AutoImport:
             for part in parts[1:-1]:
                 remaining += "."
                 remaining += part
-            results_module.append(
-                (
+            yield (
+                SearchResult(
                     f"from {remaining} import {import_name}",
                     import_name,
                     source,
-                    name_type,
+                    NameType.Module.value,
                 )
             )
-        for module, source, name_type in self.connection.execute(
-            "Select module, source, type from names where module LIKE (?)", (name,)
+        for module, source in self.connection.execute(
+            "Select module, source from names where module LIKE (?)", (name,)
         ):
-            results_module.append((f"import {module}", module, source, name_type))
-        return results_name, results_module
+            if "." in module:
+                continue
+            yield SearchResult(
+                f"import {module}", module, source, NameType.Module.value
+            )
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
         results = self.connection.execute(
             "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
         ).fetchall()
-        for result in results:
-            if not self._check_import(result[0]):
-                del results[result]
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        self._check_all()
         results = self.connection.execute("select name from names").fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        self._check_all()
         name_results = self.connection.execute("select * from names").fetchall()
         package_results = self.connection.execute("select * from packages").fetchall()
         return name_results, package_results
@@ -236,14 +278,21 @@ class AutoImport:
         project are cached.
         """
         if resources is None:
-            resources = self.project.get_python_files()
+            resources = self.rope_project.get_python_files()
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
-        # Should be very fast, so doesn't need multithreaded computation
-        for file in resources:
-            job_set.started_job(f"Working on {file.path}")
-            self.update_resource(file, underlined, commit=False)
+        self.connection.execute(
+            "delete from names where package = ?", (self.project.name,)
+        )
+        futures = []
+        with ProcessPoolExecutor() as executor:
+            for file in resources:
+                job_set.started_job(f"Working on {file.path}")
+                module = self._resource_to_module(file, underlined)
+                futures.append(executor.submit(get_names, module, self.project))
+        for future in as_completed(futures):
+            self._add_names(future.result())
             job_set.finished_job()
         self.connection.commit()
 
@@ -275,6 +324,8 @@ class AutoImport:
                     continue
                 packages.append(package)
         packages = list(filter_packages(packages, underlined, existing))
+        if len(packages) == 0:
+            return
         self._add_packages(packages)
         job_set = task_handle.create_jobset("Generating autoimport cache", 0)
         if single_thread:
@@ -312,9 +363,9 @@ class AutoImport:
         for module in modules:
             try:
                 module_name = module[0]
-                if module_name.startswith(f"{self._project_name}."):
+                if module_name.startswith(f"{self.project.name}."):
                     module_name = ".".join(module_name.split("."))
-                pymodule = self.project.get_module(module_name)
+                pymodule = self.rope_project.get_module(module_name)
                 if name in pymodule:
                     pyname = pymodule[name]
                     module, lineno = pyname.get_definition_location()
@@ -343,12 +394,12 @@ class AutoImport:
         if match is not None:
             code = code[: match.start()]
         try:
-            pymodule = libutils.get_string_module(self.project, code)
+            pymodule = libutils.get_string_module(self.rope_project, code)
         except exceptions.ModuleSyntaxError:
             return 1
         testmodname = "__rope_testmodule_rope"
         importinfo = importutils.NormalImport(((testmodname, None),))
-        module_imports = importutils.get_module_imports(self.project, pymodule)
+        module_imports = importutils.get_module_imports(self.rope_project, pymodule)
         module_imports.add_import(importinfo)
         code = module_imports.get_changed_source()
         offset = code.index(testmodname)
@@ -360,19 +411,9 @@ class AutoImport:
     ):
         """Update the cache for global names in `resource`."""
         underlined = underlined if underlined else self.underlined
-        package = get_package_tuple(self._project_path, self.project)
-        if package is None or package.path is None:
-            return
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
-        # The project doesn't need its name added to the path,
-        # since the standard python file layout accounts for that
-        # so we set add_package_name to False
-        resource_modname: str = get_modname_from_path(
-            resource_path, package.path, add_package_name=False
-        )
-        module = ModuleFile(resource_path, resource_modname, underlined)
-        self._del_if_exist(module_name=resource_modname, commit=False)
-        for name in get_names(module, package):
+        module = self._resource_to_module(resource, underlined)
+        self._del_if_exist(module_name=module.modname, commit=False)
+        for name in get_names(module, self.project):
             self._add_name(name)
         if commit:
             self.connection.commit()
@@ -383,7 +424,7 @@ class AutoImport:
 
     def _moved(self, resource: Resource, newresource: Resource):
         if not resource.is_folder():
-            modname = self._modname(resource)
+            modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
             self.update_resource(newresource)
 
@@ -393,7 +434,7 @@ class AutoImport:
             self.connection.commit()
 
     def _get_python_folders(self) -> List[pathlib.Path]:
-        folders = self.project.get_python_path_folders()
+        folders = self.rope_project.get_python_path_folders()
         folder_paths = [
             pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"
         ]
@@ -406,7 +447,7 @@ class AutoImport:
         ]
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package, self.project)
+                package_tuple = get_package_tuple(package, self.rope_project)
                 if package_tuple is None:
                     continue
                 packages.append(package_tuple)
@@ -420,32 +461,12 @@ class AutoImport:
         existing: List[str] = list(
             chain(*self.connection.execute("select * from packages").fetchall())
         )
-        existing.append(self._project_name)
+        existing.append(self.project.name)
         return existing
-
-    @property
-    def _project_name(self):
-        package_path: pathlib.Path = pathlib.Path(self.project.address)
-        package_tuple = get_package_tuple(package_path)
-        if package_tuple is None:
-            return None
-        return package_tuple[0]
-
-    @property
-    def _project_path(self):
-        return pathlib.Path(self.project.address)
-
-    def _modname(self, resource: Resource):
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
-        package_path: pathlib.Path = pathlib.Path(self.project.address)
-        resource_modname: str = get_modname_from_path(
-            resource_path, package_path, add_package_name=False
-        )
-        return resource_modname
 
     def _removed(self, resource):
         if not resource.is_folder():
-            modname = self._modname(resource)
+            modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
 
     def _add_future_names(self, names: Future):
@@ -467,30 +488,12 @@ class AutoImport:
             ),
         )
 
-    def _check_import(self, module: pathlib.Path) -> bool:
-        """
-        Check the ability to import an external package, removes it if not avalible.
-
-        Parameters
-        ----------
-        module: pathlib.path
-            The module to check
-        Returns
-        ----------
-        """
-        # Not Implemented Yet, silently will fail
-        return True
-
-    def _check_all(self):
-        """Check all modules and removes bad ones."""
-        pass
-
     def _find_package_path(self, target_name: str) -> Optional[Package]:
         if target_name in sys.builtin_module_names:
             return Package(target_name, Source.BUILTIN, None, PackageType.BUILTIN)
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package, self.project)
+                package_tuple = get_package_tuple(package, self.rope_project)
                 if package_tuple is None:
                     continue
                 name, source, package_path, package_type = package_tuple
@@ -498,3 +501,22 @@ class AutoImport:
                     return package_tuple
 
         return None
+
+    def _resource_to_module(
+        self, resource: Resource, underlined: bool = False
+    ) -> ModuleFile:
+        assert self.project.path
+        underlined = underlined if underlined else self.underlined
+        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+        # The project doesn't need its name added to the path,
+        # since the standard python file layout accounts for that
+        # so we set add_package_name to False
+        resource_modname: str = get_modname_from_path(
+            resource_path, self.project.path, add_package_name=False
+        )
+        return ModuleFile(
+            resource_path,
+            resource_modname,
+            underlined,
+            resource_path.name == "__init__.py",
+        )
