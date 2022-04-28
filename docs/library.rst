@@ -843,6 +843,10 @@ uses sqlite3 database (rope.contrib.autoimport.sqlite.AutoImport). New and
 existing integrations should migrate to the sqlite3 storage as the pickle-based
 autoimport will be removed in the future.
 
+
+`rope.contrib.autoimport.sqlite`
+--------------------------------
+
 By default, the sqlite3-based only stores autoimport cache in an in-memory
 sqlite3 database, you can make it write the import cache to persistent storage
 by passing memory=False to AutoImport constructor.
@@ -862,6 +866,11 @@ AutoImport can search for a name from both modules and statements you can import
   autoimport.generate_modules_cache()  # Generates a cache of external modules
   print(autoimport.search("Dict"))
   autoimport.close()
+  project.close()
+
+It provides two new search methods: 
+ -  search_full() - returns a list of mostly unsorted tuples. This has itemkind and source information.
+ -  search() - simpler wrapper around search_full with a basic sorting algorithm
 
 
 Cross-Project Refactorings
