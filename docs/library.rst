@@ -839,7 +839,7 @@ global name that starts with the given prefix.
 There are currently two implementations of autoimport in rope, a deprecated
 implementation that uses pickle-based storage
 (rope.contrib.autoimport.pickle.AutoImport) and a new, experimental one that
-uses sqlite3 database (rope.contrib.autoimport.sqlite3.AutoImport). New and
+uses sqlite3 database (rope.contrib.autoimport.sqlite.AutoImport). New and
 existing integrations should migrate to the sqlite3 storage as the pickle-based
 autoimport will be removed in the future.
 

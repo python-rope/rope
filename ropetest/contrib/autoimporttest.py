@@ -3,7 +3,7 @@ try:
 except ImportError:
     import unittest
 
-from rope.contrib import autoimport
+from rope.contrib.autoimport import sqlite as autoimport
 from ropetest import testutils
 
 
