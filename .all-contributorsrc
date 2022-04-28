@@ -490,6 +490,16 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "bageljrkhanofemus",
+      "name": "Bagel Jr",
+      "avatar_url": "https://avatars.githubusercontent.com/u/57874654?v=4",
+      "profile": "https://github.com/bageljrkhanofemus",
+      "contributions": [
+        "test",
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
