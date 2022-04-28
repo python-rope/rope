@@ -1,8 +1,6 @@
 # **Upcoming release**
-
-## XXX
-
-- XXX
+## New feature
+- #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
 
 # Release 1.0.0
 

@@ -1,3 +1,15 @@
+"""
+IMPORTANT: This is a deprecated implementation of autoimport using pickle-based
+storage.
+
+This pickle-based autoimport is provided only for backwards compatibility
+purpose and will be removed and the sqlite backend will be the new default
+implementation in the future.
+
+If you are still using this module, you should migrate to the new and improved
+sqlite-based storage backend (rope.contrib.autoimport.sqlite.AutoImport).
+"""
+
 import re
 
 from rope.base import builtins

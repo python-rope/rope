@@ -836,6 +836,34 @@ returns the list of modules with the given global name.
 global name that starts with the given prefix.
 
 
+There are currently two implementations of autoimport in rope, a deprecated
+implementation that uses pickle-based storage
+(rope.contrib.autoimport.pickle.AutoImport) and a new, experimental one that
+uses sqlite3 database (rope.contrib.autoimport.sqlite.AutoImport). New and
+existing integrations should migrate to the sqlite3 storage as the pickle-based
+autoimport will be removed in the future.
+
+By default, the sqlite3-based only stores autoimport cache in an in-memory
+sqlite3 database, you can make it write the import cache to persistent storage
+by passing memory=False to AutoImport constructor.
+
+It must be closed when done with the ```AutoImport.close()``` method.
+
+AutoImport can search for a name from both modules and statements you can import from them.
+
+.. code-block:: python
+
+  from rope.base.project import Project
+  from rope.contrib.autoimport import AutoImport
+
+  project = Project("/path/to/project")
+  autoimport = AutoImport(project, memory=False)
+  autoimport.generate_resource_cache()  # Generates a cache of the local modules, from the project you're working on
+  autoimport.generate_modules_cache()  # Generates a cache of external modules
+  print(autoimport.search("Dict"))
+  autoimport.close()
+
+
 Cross-Project Refactorings
 --------------------------
 
