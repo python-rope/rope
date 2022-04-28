@@ -835,7 +835,18 @@ returns the list of modules with the given global name.
 ``AutoImport.import_assist()`` tries to find the modules that have a
 global name that starts with the given prefix.
 
-It uses an sqllite3 database, which can be made persistent by passing memory as false to the constructor.
+
+There are currently two implementations of autoimport in rope, a deprecated
+implementation that uses pickle-based storage
+(rope.contrib.autoimport.pickle.AutoImport) and a new, experimental one that
+uses sqlite3 database (rope.contrib.autoimport.sqlite3.AutoImport). New and
+existing integrations should migrate to the sqlite3 storage as the pickle-based
+autoimport will be removed in the future.
+
+By default, the sqlite3-based only stores autoimport cache in an in-memory
+sqlite3 database, you can make it write the import cache to persistent storage
+by passing memory=False to AutoImport constructor.
+
 It must be closed when done with the ```AutoImport.close()``` method.
 
 AutoImport can search for a name from both modules and statements you can import from them.
