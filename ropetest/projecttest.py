@@ -1105,6 +1105,21 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue(self.project.get_file("loaded").exists())
         myfile = self.project.get_file("myfile.txt")
         self.assertTrue(self.project.is_ignored(myfile))
+    def test_loading_pyproject(self):
+        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        config = self.project.get_file("pyproject.toml")
+        if not config.exists():
+            config.create()
+        config.write(
+            dedent("""\
+                [tool.rope]
+                ignored_resources=["pyproject.py"]
+            """)
+        )
+        self.project.close()
+        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        myfile = self.project.get_file("pyproject.py")
+        self.assertTrue(self.project.is_ignored(myfile))
 
     def test_ignoring_syntax_errors(self):
         self.project = testutils.sample_project(

@@ -74,7 +74,8 @@ setup(
             "build",
             "pytest",
             "pytest-timeout",
-        ]
+        ],
     },
+    requires=["pytoolconfig", "pydantic"],
     python_requires=">=3",
 )

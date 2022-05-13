@@ -5,8 +5,8 @@ import warnings
 
 import rope.base.fscommands
 import rope.base.resourceobserver as resourceobserver
-import rope.base.utils.pycompat as pycompat
-from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
+from rope.base import exceptions, history, prefs, pycore, taskhandle, utils
+from rope.base.config import get_config
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.resources import File, Folder, _ResourceMatcher
 
@@ -255,33 +255,20 @@ class Project(_Project):
         folder.create()
 
     def _init_prefs(self, prefs):
-        run_globals = {}
-        if self.ropefolder is not None:
-            config = self.get_file(self.ropefolder.path + "/config.py")
-            run_globals.update(
-                {
-                    "__name__": "__main__",
-                    "__builtins__": __builtins__,
-                    "__file__": config.real_path,
-                }
-            )
-            if config.exists():
-                config = self.ropefolder.get_child("config.py")
-                pycompat.execfile(config.real_path, run_globals)
-            else:
-                exec(self._default_config(), run_globals)
-            if "set_prefs" in run_globals:
-                run_globals["set_prefs"](self.prefs)
+        config = get_config(self.root, self.ropefolder).parse()
+        for key, value in config.dict().items():
+            self.prefs[key] = value
         for key, value in prefs.items():
             self.prefs[key] = value
         self._init_other_parts()
         self._init_ropefolder()
-        if "project_opened" in run_globals:
-            run_globals["project_opened"](self)
+        if config.project_opened:
+            config.project_opened(self)
 
     def _default_config(self):
-        import rope.base.default_config
         import inspect
+
+        import rope.base.default_config
 
         return inspect.getsource(rope.base.default_config)
 
