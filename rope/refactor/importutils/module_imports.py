@@ -279,16 +279,13 @@ class ModuleImports(object):
             ):
                 return nodes[lineno].lineno
             first_line = get_first_decorator_or_function_start_line(nodes[lineno])
-            lineno = self.pymodule.logical_lines.logical_line_in(first_line)[
-                0
-            ]
+            lineno = self.pymodule.logical_lines.logical_line_in(first_line)[0]
         else:
             lineno = self.pymodule.lines.length()
 
         return lineno - _count_blank_lines(
             self.pymodule.lines.get_line, lineno - 1, 1, -1
         )
-
 
     def _get_import_name(self, import_stmt):
         import_info = import_stmt.import_info
