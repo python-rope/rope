@@ -2,6 +2,10 @@
 ## New feature
 - #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
 
+## Bug fixes
+
+- #461 Fix bug while extracting method with list comprehension in class method (@dryobates)
+
 # Release 1.0.0
 
 Date: 2022-04-08
