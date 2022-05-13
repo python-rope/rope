@@ -2,6 +2,11 @@
 ## New feature
 - #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
 
+## Bug fixes
+
+- #419 Fix bug while moving decorated function (@dryobates)
+- #439 Fix bug while moving decorated class (@dryobates)
+
 # Release 1.0.0
 
 Date: 2022-04-08
