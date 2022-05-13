@@ -2,6 +2,10 @@
 ## New feature
 - #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
 
+## Bug fixes
+
+- #440 Fix bug while inlining function with type hints in signature (@dryobates)
+
 # Release 1.0.0
 
 Date: 2022-04-08
