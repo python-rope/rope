@@ -532,13 +532,16 @@ class _RealFinder(object):
                 while current != first and self.code[current] not in ",":
                     current = self._find_last_non_space_char(current - 1)
                 param_name = self.raw[current + 1 : primary_start + 1].strip()
-                keywords.append((param_name, primary))
+                keywords.append((self.__strip_type_hint(param_name), primary))
             else:
-                args.append(primary)
+                args.append(self.__strip_type_hint(primary))
             current = self._find_last_non_space_char(current - 1)
         args.reverse()
         keywords.reverse()
         return args, keywords
+
+    def __strip_type_hint(self, name):
+        return name.split(":", 1)[0]
 
     def is_assigned_in_a_tuple_assignment(self, offset):
         start = self._get_line_start(offset)
