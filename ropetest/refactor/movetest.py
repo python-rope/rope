@@ -1257,3 +1257,50 @@ class MoveRefactoringTest(unittest.TestCase):
         self.project.do(mover.get_changes(self.mod1))
         expected = "%s\n%s" % (code1, code2)
         self.assertEqual(expected, self.mod1.read())
+
+    def test_moving_decorated_function(self):
+        self.mod1.write(
+            dedent("""\
+                def hello(func):
+                    return func
+                @hello
+                def foo():
+                    pass
+            """)
+        )
+        self._move(self.mod1, self.mod1.read().index("foo") + 1, self.mod2)
+        self.assertEqual("def hello(func):\n    return func\n", self.mod1.read())
+        self.assertEqual(
+            dedent("""\
+                from mod1 import hello
+                
+
+                @hello
+                def foo():
+                    pass
+            """),
+            self.mod2.read(),
+        )
+
+    def test_moving_decorated_class(self):
+        self.mod1.write(
+            dedent("""\
+                from dataclasses import dataclass
+                @dataclass
+                class AClass:
+                    pass
+            """)
+        )
+        self._move(self.mod1, self.mod1.read().index("AClass") + 1, self.mod2)
+        self.assertEqual("", self.mod1.read())
+        self.assertEqual(
+            dedent("""\
+                from dataclasses import dataclass
+                
+
+                @dataclass
+                class AClass:
+                    pass
+            """),
+            self.mod2.read(),
+        )
