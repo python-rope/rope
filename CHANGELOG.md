@@ -6,6 +6,8 @@
 
 - #419 Fix bug while moving decorated function (@dryobates)
 - #439 Fix bug while moving decorated class (@dryobates)
+- #461 Fix bug while extracting method with list comprehension in class method (@dryobates)
+- #440 Fix bug while inlining function with type hints in signature (@dryobates)
 
 # Release 1.0.0
 
