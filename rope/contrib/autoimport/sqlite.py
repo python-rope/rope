@@ -71,8 +71,8 @@ class AutoImport:
 
     connection: sqlite3.Connection
     underlined: bool
-    rope_project: Project
-    project: Package
+    project: Project
+    project_package: Package
 
     def __init__(self, project: Project, observe=True, underlined=False, memory=True):
         """Construct an AutoImport object.
@@ -88,13 +88,13 @@ class AutoImport:
         memory : bool
             if true, don't persist to disk
         """
-        self.rope_project = project
+        self.project = project
         project_package = get_package_tuple(
             pathlib.Path(project.root.real_path), project
         )
         assert project_package is not None
         assert project_package.path is not None
-        self.project = project_package
+        self.project_package = project_package
         self.underlined = underlined
         db_path: str
         if memory or project.ropefolder is None:
@@ -278,19 +278,19 @@ class AutoImport:
         project are cached.
         """
         if resources is None:
-            resources = self.rope_project.get_python_files()
+            resources = self.project.get_python_files()
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
         self.connection.execute(
-            "delete from names where package = ?", (self.project.name,)
+            "delete from names where package = ?", (self.project_package.name,)
         )
         futures = []
         with ProcessPoolExecutor() as executor:
             for file in resources:
                 job_set.started_job(f"Working on {file.path}")
                 module = self._resource_to_module(file, underlined)
-                futures.append(executor.submit(get_names, module, self.project))
+                futures.append(executor.submit(get_names, module, self.project_package))
         for future in as_completed(futures):
             self._add_names(future.result())
             job_set.finished_job()
@@ -363,9 +363,9 @@ class AutoImport:
         for module in modules:
             try:
                 module_name = module[0]
-                if module_name.startswith(f"{self.project.name}."):
+                if module_name.startswith(f"{self.project_package.name}."):
                     module_name = ".".join(module_name.split("."))
-                pymodule = self.rope_project.get_module(module_name)
+                pymodule = self.project.get_module(module_name)
                 if name in pymodule:
                     pyname = pymodule[name]
                     module, lineno = pyname.get_definition_location()
@@ -394,12 +394,12 @@ class AutoImport:
         if match is not None:
             code = code[: match.start()]
         try:
-            pymodule = libutils.get_string_module(self.rope_project, code)
+            pymodule = libutils.get_string_module(self.project, code)
         except exceptions.ModuleSyntaxError:
             return 1
         testmodname = "__rope_testmodule_rope"
         importinfo = importutils.NormalImport(((testmodname, None),))
-        module_imports = importutils.get_module_imports(self.rope_project, pymodule)
+        module_imports = importutils.get_module_imports(self.project, pymodule)
         module_imports.add_import(importinfo)
         code = module_imports.get_changed_source()
         offset = code.index(testmodname)
@@ -413,7 +413,7 @@ class AutoImport:
         underlined = underlined if underlined else self.underlined
         module = self._resource_to_module(resource, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
-        for name in get_names(module, self.project):
+        for name in get_names(module, self.project_package):
             self._add_name(name)
         if commit:
             self.connection.commit()
@@ -434,7 +434,7 @@ class AutoImport:
             self.connection.commit()
 
     def _get_python_folders(self) -> List[pathlib.Path]:
-        folders = self.rope_project.get_python_path_folders()
+        folders = self.project.get_python_path_folders()
         folder_paths = [
             pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"
         ]
@@ -447,7 +447,7 @@ class AutoImport:
         ]
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package, self.rope_project)
+                package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
                 packages.append(package_tuple)
@@ -461,7 +461,7 @@ class AutoImport:
         existing: List[str] = list(
             chain(*self.connection.execute("select * from packages").fetchall())
         )
-        existing.append(self.project.name)
+        existing.append(self.project_package.name)
         return existing
 
     def _removed(self, resource):
@@ -493,7 +493,7 @@ class AutoImport:
             return Package(target_name, Source.BUILTIN, None, PackageType.BUILTIN)
         for folder in self._get_python_folders():
             for package in folder.iterdir():
-                package_tuple = get_package_tuple(package, self.rope_project)
+                package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
                 name, source, package_path, package_type = package_tuple
@@ -505,14 +505,14 @@ class AutoImport:
     def _resource_to_module(
         self, resource: Resource, underlined: bool = False
     ) -> ModuleFile:
-        assert self.project.path
+        assert self.project_package.path
         underlined = underlined if underlined else self.underlined
         resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
         resource_modname: str = get_modname_from_path(
-            resource_path, self.project.path, add_package_name=False
+            resource_path, self.project_package.path, add_package_name=False
         )
         return ModuleFile(
             resource_path,
