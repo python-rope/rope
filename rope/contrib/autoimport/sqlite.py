@@ -100,7 +100,7 @@ class AutoImport:
         if memory or project.ropefolder is None:
             db_path = ":memory:"
         else:
-            db_path = f"{project.ropefolder.path}/autoimport.db"
+            db_path = str(pathlib.Path(project.ropefolder.real_path) / "autoimport.db")
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
         if observe:
