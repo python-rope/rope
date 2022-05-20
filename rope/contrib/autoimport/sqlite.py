@@ -192,7 +192,7 @@ class AutoImport:
         self, name: str, exact_match: bool = False
     ) -> Generator[SearchResult, None, None]:
         """
-        Search both names for avalible imports.
+        Search both names for available imports.
 
         Returns the import statement, import name, source, and type.
         """
@@ -214,7 +214,7 @@ class AutoImport:
         self, name: str, exact_match: bool = False
     ) -> Generator[SearchResult, None, None]:
         """
-        Search both modules for avalible imports.
+        Search both modules for available imports.
 
         Returns the import statement, import name, source, and type.
         """
@@ -306,7 +306,7 @@ class AutoImport:
         """
         Generate global name cache for external modules listed in `modules`.
 
-        If no modules are provided, it will generate a cache for every module avalible.
+        If no modules are provided, it will generate a cache for every module available.
         This method searches in your sys.path and configured python folders.
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
