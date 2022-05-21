@@ -22,7 +22,7 @@ classifiers = [
     'Topic :: Software Development',
 ]
 dynamic = ['version']
-dependencies = ['pytoolconfig', "pydantic"]
+dependencies = ['pytoolconfig > 1.0.0']
 
 [[project.authors]]
 name = 'Ali Gholami Rudi'
@@ -39,6 +39,7 @@ dev = [
     'pytest>=7.0.1',
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
+    'pytoolconfig[doc]'
 ]
 [tool.setuptools]
 packages = [
