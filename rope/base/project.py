@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import warnings
+from dataclasses import asdict
 
 import rope.base.fscommands
 import rope.base.resourceobserver as resourceobserver
@@ -256,7 +257,7 @@ class Project(_Project):
 
     def _init_prefs(self, prefs):
         config = get_config(self.root, self.ropefolder).parse()
-        for key, value in config.dict().items():
+        for key, value in asdict(config).items():
             self.prefs[key] = value
         for key, value in prefs.items():
             self.prefs[key] = value
