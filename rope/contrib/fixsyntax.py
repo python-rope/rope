@@ -7,7 +7,7 @@ from rope.base import worder
 from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder
 
 
-class FixSyntax(object):
+class FixSyntax:
     def __init__(self, project, code, resource, maxfixes=1):
         self.project = project
         self.code = code
@@ -33,14 +33,14 @@ class FixSyntax(object):
                 )
             except exceptions.ModuleSyntaxError as e:
                 if msg is None:
-                    msg = "%s:%s %s" % (e.filename, e.lineno, e.message_)
+                    msg = "{}:{} {}".format(e.filename, e.lineno, e.message_)
                 if tries < self.maxfixes:
                     tries += 1
                     self.commenter.comment(e.lineno)
                     code = "\n".join(self.commenter.lines)
                 else:
                     raise exceptions.ModuleSyntaxError(
-                        e.filename, e.lineno, "Failed to fix error: {0}".format(msg)
+                        e.filename, e.lineno, f"Failed to fix error: {msg}"
                     )
 
     @property
@@ -73,7 +73,7 @@ class FixSyntax(object):
         return result
 
 
-class _Commenter(object):
+class _Commenter:
     def __init__(self, code):
         self.code = code
         self.lines = self.code.split("\n")

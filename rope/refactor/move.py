@@ -50,7 +50,7 @@ def create_move(project, resource, offset=None):
     )
 
 
-class MoveMethod(object):
+class MoveMethod:
     """For moving methods
 
     It makes a new method in the destination class and changes
@@ -132,7 +132,7 @@ class MoveMethod(object):
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
         indents = self._get_scope_indents(self.pyfunction)
-        body = "return self.%s.%s(%s)\n" % (
+        body = "return self.{}.{}({})\n".format(
             dest_attr,
             new_name,
             self._get_passed_arguments_string(),
@@ -176,7 +176,7 @@ class MoveMethod(object):
         return resource, start, end, body
 
     def get_new_method(self, name):
-        return "%s\n%s" % (
+        return "{}\n{}".format(
             self._get_new_header(name),
             sourceutils.fix_indentation(
                 self._get_body(), sourceutils.get_indent(self.project)
@@ -225,7 +225,7 @@ class MoveMethod(object):
         return self._get_body("__old_self") != self._get_unchanged_body()
 
 
-class MoveGlobal(object):
+class MoveGlobal:
     """For moving global function and classes"""
 
     def __init__(self, project, resource, offset):
@@ -460,7 +460,7 @@ class MoveGlobal(object):
             return pymodule, True
 
 
-class MoveModule(object):
+class MoveModule:
     """For moving modules and packages"""
 
     def __init__(self, project, resource):
@@ -639,7 +639,7 @@ class MoveModule(object):
         return changed
 
 
-class _ChangeMoveOccurrencesHandle(object):
+class _ChangeMoveOccurrencesHandle:
     def __init__(self, new_name):
         self.new_name = new_name
         self.occurred = False
@@ -653,7 +653,7 @@ class _ChangeMoveOccurrencesHandle(object):
         self.occurred = True
 
 
-class _MoveTools(object):
+class _MoveTools:
     def __init__(self, project, source, pyname, old_name):
         self.project = project
         self.source = source
@@ -665,7 +665,7 @@ class _MoveTools(object):
         old_source = pymodule.source_code
         module_with_imports = self.import_tools.module_imports(pymodule)
 
-        class CanSelect(object):
+        class CanSelect:
             changed = False
             old_name = self.old_name
             old_pyname = self.old_pyname
@@ -787,7 +787,7 @@ def moving_code_with_imports(project, resource, source):
     return moving, imports
 
 
-class ModuleSkipRenamerHandle(object):
+class ModuleSkipRenamerHandle:
     def occurred_outside_skip(self, change_collector, occurrence):
         pass
 
@@ -795,7 +795,7 @@ class ModuleSkipRenamerHandle(object):
         pass
 
 
-class ModuleSkipRenamer(object):
+class ModuleSkipRenamer:
     """Rename occurrences in a module
 
     This class can be used when you want to treat a region in a file

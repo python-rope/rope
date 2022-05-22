@@ -12,7 +12,7 @@ def get_name_at(resource, offset):
     return word_finder.get_word_at(offset)
 
 
-class Worder(object):
+class Worder:
     """A class for finding boundaries of words and expressions
 
     Note that in these methods, offset should be the index of the
@@ -131,7 +131,7 @@ class Worder(object):
         return self.code_finder.find_function_offset(offset)
 
 
-class _RealFinder(object):
+class _RealFinder:
     def __init__(self, code, raw):
         self.code = code
         self.raw = raw

@@ -79,7 +79,7 @@ def cached(size):
     return decorator
 
 
-class _Cached(object):
+class _Cached:
     def __init__(self, func, count):
         self.func = func
         self.cache = []

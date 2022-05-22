@@ -7,7 +7,7 @@ import rope.base.fscommands
 from rope.base import taskhandle, exceptions, utils
 
 
-class Change(object):
+class Change:
     """The base class for changes
 
     Rope refactorings return `Change` objects.  They can be previewed,
@@ -103,7 +103,7 @@ class ChangeSet(Change):
             else:
                 string_date = date.strftime("%d %b, %Y")
             string_time = date.strftime("%H:%M:%S")
-            string_time = "%s %s " % (string_date, string_time)
+            string_time = "{} {} ".format(string_date, string_time)
             return self.description + " - " + string_time
         return self.description
 
@@ -211,7 +211,7 @@ class MoveResource(Change):
         return "Move <%s>" % self.resource.path
 
     def get_description(self):
-        return "rename from %s\nrename to %s" % (
+        return "rename from {}\nrename to {}".format(
             self.resource.path,
             self.new_resource.path,
         )
@@ -263,7 +263,7 @@ class CreateFolder(CreateResource):
 
     def __init__(self, parent, name):
         resource = parent.project.get_folder(self._get_child_path(parent, name))
-        super(CreateFolder, self).__init__(resource)
+        super().__init__(resource)
 
 
 class CreateFile(CreateResource):
@@ -274,7 +274,7 @@ class CreateFile(CreateResource):
 
     def __init__(self, parent, name):
         resource = parent.project.get_file(self._get_child_path(parent, name))
-        super(CreateFile, self).__init__(resource)
+        super().__init__(resource)
 
 
 class RemoveResource(Change):
@@ -318,7 +318,7 @@ def create_job_set(task_handle, change):
     return task_handle.create_jobset(str(change), count_changes(change))
 
 
-class _ResourceOperations(object):
+class _ResourceOperations:
     def __init__(self, project):
         self.project = project
         self.fscommands = project.fscommands
@@ -374,7 +374,7 @@ class _ResourceOperations(object):
                 fscommands.create_file(resource_path)
             else:
                 fscommands.create_folder(resource_path)
-        except IOError as e:
+        except OSError as e:
             raise exceptions.RopeError(e)
 
 
@@ -388,7 +388,7 @@ def _get_destination_for_move(resource, destination):
     return destination
 
 
-class ChangeToData(object):
+class ChangeToData:
     def convertChangeSet(self, change):
         description = change.description
         changes = []
@@ -416,7 +416,7 @@ class ChangeToData(object):
         return (change_type.__name__, method(change))
 
 
-class DataToChange(object):
+class DataToChange:
     def __init__(self, project):
         self.project = project
 

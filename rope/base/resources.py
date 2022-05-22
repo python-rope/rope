@@ -36,7 +36,7 @@ from rope.base import fscommands
 from pathlib import Path
 
 
-class Resource(object):
+class Resource:
     """Represents files and folders in a project"""
 
     def __init__(self, project, path):
@@ -47,7 +47,7 @@ class Resource(object):
         """Move resource to `new_location`"""
         self._perform_change(
             change.MoveResource(self, new_location),
-            "Moving <%s> to <%s>" % (self.path, new_location),
+            "Moving <{}> to <{}>".format(self.path, new_location),
         )
 
     def remove(self):
@@ -112,7 +112,7 @@ class File(Resource):
 
     def __init__(self, project, name):
         self.newlines = None
-        super(File, self).__init__(project, name)
+        super().__init__(project, name)
 
     def read(self):
         data = self.read_bytes()
@@ -137,7 +137,7 @@ class File(Resource):
         try:
             if contents == self.read():
                 return
-        except IOError:
+        except OSError:
             pass
         self._perform_change(
             change.ChangeContents(self, contents), "Writing file <%s>" % self.path
@@ -154,7 +154,7 @@ class Folder(Resource):
     """Represents a folder"""
 
     def __init__(self, project, name):
-        super(Folder, self).__init__(project, name)
+        super().__init__(project, name)
 
     def is_folder(self):
         return True
@@ -222,7 +222,7 @@ class Folder(Resource):
         self.parent.create_folder(self.name)
 
 
-class _ResourceMatcher(object):
+class _ResourceMatcher:
     def __init__(self):
         self.patterns = []
         self._compiled_patterns = []

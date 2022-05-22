@@ -1,7 +1,7 @@
 import os
 
 
-class ResourceObserver(object):
+class ResourceObserver:
     """Provides the interface for observing resources
 
     `ResourceObserver` can be registered using `Project.
@@ -57,7 +57,7 @@ class ResourceObserver(object):
             self._validate(resource)
 
 
-class FilteredResourceObserver(object):
+class FilteredResourceObserver:
     """A useful decorator for `ResourceObserver`
 
     Most resource observers have a list of resources and are
@@ -246,7 +246,7 @@ class FilteredResourceObserver(object):
         return resource.project.get_resource(new_main.path + diff)
 
 
-class ChangeIndicator(object):
+class ChangeIndicator:
     def get_indicator(self, resource):
         """Return the modification time and size of a `Resource`."""
         path = resource.real_path
@@ -260,7 +260,7 @@ class ChangeIndicator(object):
         return (os.path.getmtime(path), os.path.getsize(path))
 
 
-class _Changes(object):
+class _Changes:
     def __init__(self):
         self.changes = set()
         self.creations = set()

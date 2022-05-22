@@ -6,7 +6,7 @@ from rope.base.oi.type_hinting import utils
 from rope.base import utils as base_utils
 
 
-class SymbolBase(object):
+class SymbolBase:
 
     name = None  # node/token type name
 
@@ -27,13 +27,13 @@ class SymbolBase(object):
 
     def __repr__(self):
         if self.name == "(name)":
-            return "(%s %s)" % (self.name[1:-1], self.value)
+            return "({} {})".format(self.name[1:-1], self.value)
         out = [repr(self.name), self.first, self.second, self.third]
         out = [str(i) for i in out if i]
         return "(" + " ".join(out) + ")"
 
 
-class SymbolTable(object):
+class SymbolTable:
     def multi(func):
         def _inner(self, names, *a, **kw):
             for name in names.split():
@@ -126,7 +126,7 @@ class SymbolTable(object):
 symbol_table = SymbolTable()
 
 
-class Lexer(object):
+class Lexer:
 
     _token_pattern = re.compile(
         r"""
@@ -157,7 +157,7 @@ class Lexer(object):
                 s.value = value
             else:
                 raise SyntaxError(
-                    "Unknown operator ({0}). Possible operators are {1!r}".format(
+                    "Unknown operator ({}). Possible operators are {!r}".format(
                         value, list(self.symbol_table)
                     )
                 )
@@ -178,7 +178,7 @@ class Lexer(object):
         yield "(end)", "(end)"
 
 
-class Parser(object):
+class Parser:
 
     token = None
     next = None
@@ -205,7 +205,7 @@ class Parser(object):
     def advance(self, name=None):
         if name and self.token.name != name:
             raise SyntaxError(
-                "Expected {0!r} but found {1!r}".format(name, self.token.name)
+                f"Expected {name!r} but found {self.token.name!r}"
             )
         self.token = self.next()
 
@@ -322,7 +322,7 @@ def evaluate(self, pyobject):
     raise NotImplementedError
 
 
-class Compiler(object):
+class Compiler:
 
     parser_factory = Parser
     lexer_factory = Lexer
@@ -343,7 +343,7 @@ class Compiler(object):
 compile = Compiler()
 
 
-class Evaluator(object):
+class Evaluator:
 
     compile = compile
 

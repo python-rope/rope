@@ -8,7 +8,7 @@ file.
 from rope.base import resources, libutils
 
 
-class MultiProjectRefactoring(object):
+class MultiProjectRefactoring:
     def __init__(self, refactoring, projects, addpath=True):
         """Create a multiproject proxy for the main refactoring
 
@@ -26,7 +26,7 @@ class MultiProjectRefactoring(object):
         )
 
 
-class _MultiRefactoring(object):
+class _MultiRefactoring:
     def __init__(self, refactoring, other_projects, addpath, project, *args, **kwds):
         self.refactoring = refactoring
         self.projects = [project] + other_projects
@@ -51,10 +51,10 @@ class _MultiRefactoring(object):
 
     def _resources_for_args(self, project, args, kwds):
         newargs = [self._change_project_resource(project, arg) for arg in args]
-        newkwds = dict(
-            (name, self._change_project_resource(project, value))
+        newkwds = {
+            name: self._change_project_resource(project, value)
             for name, value in kwds.items()
-        )
+        }
         return newargs, newkwds
 
     def _change_project_resource(self, project, obj):

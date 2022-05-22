@@ -17,7 +17,7 @@ except ImportError:
     import pickle
 
 
-class _Project(object):
+class _Project:
     def __init__(self, fscommands):
         self.observers = []
         self.fscommands = fscommands
@@ -213,7 +213,7 @@ class Project(_Project):
             raise exceptions.RopeError("Project root exists and" " is not a directory")
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
-        super(Project, self).__init__(fscommands)
+        super().__init__(fscommands)
         self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
         self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
@@ -300,7 +300,7 @@ class Project(_Project):
     def validate(self, folder=None):
         if folder is None:
             folder = self.root
-        super(Project, self).validate(folder)
+        super().validate(folder)
 
     root = property(lambda self: self.get_resource(""))
     address = property(lambda self: self._address)
@@ -314,7 +314,7 @@ class NoProject(_Project):
 
     def __init__(self):
         fscommands = rope.base.fscommands.FileSystemCommands()
-        super(NoProject, self).__init__(fscommands)
+        super().__init__(fscommands)
 
     def _get_resource_path(self, name):
         real_name = name.replace("/", os.path.sep)
@@ -322,7 +322,7 @@ class NoProject(_Project):
 
     def get_resource(self, name):
         universal_name = _realpath(name).replace(os.path.sep, "/")
-        return super(NoProject, self).get_resource(universal_name)
+        return super().get_resource(universal_name)
 
     def get_files(self):
         return []
@@ -339,7 +339,7 @@ def get_no_project():
     return NoProject._no_project
 
 
-class _FileListCacher(object):
+class _FileListCacher:
     def __init__(self, project):
         self.project = project
         self.files = None
@@ -369,7 +369,7 @@ class _FileListCacher(object):
         self.files = None
 
 
-class _DataFiles(object):
+class _DataFiles:
     def __init__(self, project):
         self.project = project
         self.hooks = []

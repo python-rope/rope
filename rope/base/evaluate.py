@@ -48,7 +48,7 @@ def eval_str2(holding_scope, name):
     return eval_node2(holding_scope, node)
 
 
-class ScopeNameFinder(object):
+class ScopeNameFinder:
     def __init__(self, pymodule):
         self.module_scope = pymodule.get_scope()
         self.lines = pymodule.lines
@@ -145,7 +145,7 @@ class ScopeNameFinder(object):
         )
 
 
-class StatementEvaluator(object):
+class StatementEvaluator:
     def __init__(self, scope):
         self.scope = scope
         self.result = None

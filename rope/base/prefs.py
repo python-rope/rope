@@ -1,4 +1,4 @@
-class Prefs(object):
+class Prefs:
     def __init__(self):
         self.prefs = {}
         self.callbacks = {}

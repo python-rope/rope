@@ -23,7 +23,7 @@ from rope.base import taskhandle
 from rope.refactor import importutils
 
 
-class AutoImport(object):
+class AutoImport:
     """A class for finding the module that provides a name
 
     This class maintains a cache of global names in python modules.
@@ -228,11 +228,11 @@ class AutoImport(object):
 def submodules(mod):
     if isinstance(mod, resources.File):
         if mod.name.endswith(".py") and mod.name != "__init__.py":
-            return set([mod])
+            return {mod}
         return set()
     if not mod.has_child("__init__.py"):
         return set()
-    result = set([mod])
+    result = {mod}
     for child in mod.get_children():
         result |= submodules(child)
     return result

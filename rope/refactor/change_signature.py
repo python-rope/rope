@@ -11,7 +11,7 @@ from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, functionutils
 
 
-class ChangeSignature(object):
+class ChangeSignature:
     def __init__(self, project, resource, offset):
         self.project = project
         self.resource = resource
@@ -169,7 +169,7 @@ class ChangeSignature(object):
         )
 
 
-class _FunctionChangers(object):
+class _FunctionChangers:
     def __init__(self, pyfunction, definition_info, changers=None):
         self.pyfunction = pyfunction
         self.definition_info = definition_info
@@ -203,7 +203,7 @@ class _FunctionChangers(object):
         return mapping.to_call_info(self.changed_definition_infos[-1]).to_string()
 
 
-class _ArgumentChanger(object):
+class _ArgumentChanger:
     def change_definition_info(self, definition_info):
         pass
 
@@ -319,7 +319,7 @@ class ArgumentReorderer(_ArgumentChanger):
         definition_info.args_with_defaults = new_args
 
 
-class _ChangeCallsInModule(object):
+class _ChangeCallsInModule:
     def __init__(self, project, occurrence_finder, resource, call_changer):
         self.project = project
         self.occurrence_finder = occurrence_finder
@@ -366,7 +366,7 @@ class _ChangeCallsInModule(object):
         return self.pymodule.lines
 
 
-class _MultipleFinders(object):
+class _MultipleFinders:
     def __init__(self, finders):
         self.finders = finders
 
