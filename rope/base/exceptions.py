@@ -57,6 +57,4 @@ class ModuleDecodeError(RopeError):
     def __init__(self, filename, message):
         self.filename = filename
         self.message_ = message
-        super().__init__(
-            "Cannot decode file <{}>: {}".format(filename, message)
-        )
+        super().__init__("Cannot decode file <{}>: {}".format(filename, message))

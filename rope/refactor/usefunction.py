@@ -90,7 +90,9 @@ class UseFunction:
             if self._is_expression():
                 replacement = "${%s}" % self._rope_returned
             else:
-                replacement = "{} = ${{{}}}".format(self._rope_result, self._rope_returned)
+                replacement = "{} = ${{{}}}".format(
+                    self._rope_result, self._rope_returned
+                )
             body = restructure.replace(
                 body, "return ${%s}" % self._rope_returned, replacement
             )

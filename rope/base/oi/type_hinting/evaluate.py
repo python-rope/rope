@@ -204,9 +204,7 @@ class Parser:
 
     def advance(self, name=None):
         if name and self.token.name != name:
-            raise SyntaxError(
-                f"Expected {name!r} but found {self.token.name!r}"
-            )
+            raise SyntaxError(f"Expected {name!r} but found {self.token.name!r}")
         self.token = self.next()
 
 
