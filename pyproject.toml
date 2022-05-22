@@ -2,7 +2,7 @@
 name = 'rope'
 description = 'a python refactoring library...'
 readme = 'README.rst'
-requires-python = '>=3.6'
+requires-python = '>=3.7'
 classifiers = [
     'Development Status :: 4 - Beta',
     'Operating System :: OS Independent',
