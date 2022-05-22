@@ -22,7 +22,7 @@ classifiers = [
     'Topic :: Software Development',
 ]
 dynamic = ['version']
-dependencies = ['pytoolconfig > 1.0.0']
+dependencies = ['pytoolconfig >= 1.0.0']
 
 [[project.authors]]
 name = 'Ali Gholami Rudi'
