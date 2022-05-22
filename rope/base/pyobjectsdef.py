@@ -507,7 +507,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         return self._With(node)
 
     def _excepthandler(self, node):
-        node_name_type = str if pycompat.PY3 else ast.Name
+        node_name_type = str
         if node.name is not None and isinstance(node.name, node_name_type):
             type_node = node.type
             if isinstance(node.type, ast.Tuple) and type_node.elts:

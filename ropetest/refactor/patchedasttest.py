@@ -66,22 +66,18 @@ class PatchedASTTest(unittest.TestCase):
         source = "a = -10\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("-10")
-        end = start + 3
+        start = source.index("-10") + 1
+        end = start + 2
         # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
-        if pycompat.PY3:
-            start += 1
         checker.check_region("Num", start, end)
 
     def test_scientific_integer_literals_and_region(self):
         source = "a = -1.0e-3\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("-1.0e-3")
-        end = start + 7
+        start = source.index("-1.0e-3") + 1
+        end = start + 6
         # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
-        if pycompat.PY3:
-            start += 1
         checker.check_region("Num", start, end)
 
     def test_hex_integer_literals_and_region(self):
@@ -103,11 +99,9 @@ class PatchedASTTest(unittest.TestCase):
         source = "a = -0125e1\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("-0125e1")
-        end = start + 7
+        start = source.index("-0125e1") + 1
+        end = start + 6
         # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
-        if pycompat.PY3:
-            start += 1
         checker.check_region("Num", start, end)
 
     def test_integer_literals_and_sorted_children(self):
@@ -1188,11 +1182,8 @@ class PatchedASTTest(unittest.TestCase):
         """)
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = "Try" if pycompat.PY3 else "TryFinally"
-        if pycompat.PY3:
-            expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "finally", "", ":", "\n    ", "Pass"]
-        else:
-            expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "finally", "", ":", "\n    ", "Pass"]
+        node_to_test = "Try"
+        expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
     @testutils.only_for_versions_lower("3")
@@ -1223,12 +1214,12 @@ class PatchedASTTest(unittest.TestCase):
         """)
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = "Try" if pycompat.PY3 else "TryExcept"
+        node_to_test = "Try"
         checker.check_children(
             node_to_test,
             ["try", "", ":", "\n    ", "Pass", "\n", ("excepthandler", "ExceptHandler")],
         )
-        expected_child = "e" if pycompat.PY3 else "Name"
+        expected_child = "e" 
         checker.check_children(
             ("excepthandler", "ExceptHandler"),
             ["except", " ", "Name", " ", "as", " ", expected_child, "", ":", "\n    ", "Pass"],
@@ -1246,11 +1237,8 @@ class PatchedASTTest(unittest.TestCase):
         """)
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = "Try" if pycompat.PY3 else "TryFinally"
-        if pycompat.PY3:
-            expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "ExceptHandler", "\n", "finally", "", ":", "\n    ", "Pass"]
-        else:
-            expected_children = ["TryExcept", "\n", "finally", "", ":", "\n    ", "Pass"]
+        node_to_test = "Try"
+        expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "ExceptHandler", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
     def test_ignoring_comments(self):
