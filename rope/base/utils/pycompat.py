@@ -34,6 +34,7 @@ except NameError:  # PY3
     def get_ast_with_items(node):
         return node.items
 
+
 else:  # PY2
 
     string_types = (basestring,)

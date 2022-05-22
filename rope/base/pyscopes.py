@@ -169,9 +169,7 @@ class GlobalScope(Scope):
 
 class ComprehensionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super().__init__(
-            pycore, pyobject, pyobject.parent.get_scope()
-        )
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.defineds = None
@@ -205,9 +203,7 @@ class ComprehensionScope(Scope):
 
 class FunctionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super().__init__(
-            pycore, pyobject, pyobject.parent.get_scope()
-        )
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.is_generator = None
@@ -363,9 +359,7 @@ class TemporaryScope(Scope):
     """
 
     def __init__(self, pycore, parent_scope, names):
-        super().__init__(
-            pycore, parent_scope.pyobject, parent_scope
-        )
+        super().__init__(pycore, parent_scope.pyobject, parent_scope)
         self.names = names
 
     def get_names(self):
