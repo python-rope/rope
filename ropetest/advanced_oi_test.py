@@ -244,21 +244,12 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_keys_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        if pycompat.PY3:
-            code = dedent("""\
+        code = dedent("""\
                 class C(object):
                     pass
                 def a_func(arg):
                     return eval("arg")
                 a_var = list(a_func({C(): 1}))[0]
-            """)
-        else:
-            code = dedent("""\
-                class C(object):
-                    pass
-                def a_func(arg):
-                    return eval("arg")
-                a_var = a_func({C(): 1}).keys()[0]
             """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()

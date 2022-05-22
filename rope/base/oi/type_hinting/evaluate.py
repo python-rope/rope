@@ -188,10 +188,7 @@ class Parser:
 
     def parse(self, program):
         generator = self.lexer.tokenize(program)
-        try:
-            self.next = generator.__next__  # PY3
-        except AttributeError:
-            self.next = generator.next
+        self.next = generator.__next__  # PY3
         self.token = self.next()
         return self.expression()
 

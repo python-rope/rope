@@ -280,7 +280,7 @@ def _find_coding(text):
     if isinstance(text, pycompat.str):
         text = text.encode("utf-8")
     coding = b"coding"
-    to_chr = chr if pycompat.PY3 else lambda x: x
+    to_chr = chr
     try:
         start = text.index(coding) + len(coding)
         if text[start] not in b"=:":
