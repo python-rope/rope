@@ -70,11 +70,17 @@ setup(
     license="LGPL-3.0-or-later",
     classifiers=classifiers,
     extras_require={
+        "doc": [
+            "pytoolconfig[doc]",
+            "sphinx>=4.5.0",
+            "sphinx-autodoc-typehints>=1.18.1",
+            "sphinx-rtd-theme>=1.0.0",
+        ],
         "dev": [
             "build",
             "pytest",
             "pytest-timeout",
-        ]
+        ],
     },
     python_requires=">=3.7",
 )

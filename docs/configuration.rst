@@ -1,0 +1,49 @@
+Configuration
+=============
+Rope supports the following configuration formats
+
+1. pyproject.toml
+2. config.py 
+
+pyproject.toml 
+--------------
+Will be used if [tool.rope] is configured.
+
+.. code-block:: toml 
+   
+    [tool.rope]
+    compress_objectdb = true
+
+config.py 
+---------
+You can also configure rope via a config.py in the ropefolder directory.  
+
+.. code-block:: python3
+    
+    def set_prefs(prefs):
+        prefs["ignored_resources"] = [
+            "*.pyc",
+            "*~",
+            ".ropeproject",
+            ".hg",
+            ".svn",
+            "_svn",
+            ".git",
+            ".tox",
+            ".venv",
+            "venv",
+        ]
+
+Additionally, you can run an executable function at startup of rope. 
+
+.. code-block:: python3 
+   
+    def project_opened(project):
+        """This function is called after opening the project"""
+        # Do whatever you like here!
+ 
+
+Options
+-------
+.. autopytoolconfigtable:: rope.base.config.RopePrefs
+
