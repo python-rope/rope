@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 *.*~
-docs/build/
+docs/_build/
 build/
 .ctags
 tags

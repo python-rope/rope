@@ -1,3 +1,6 @@
+Release Process
+===============
+
 1. Ensure tickets assigned to Milestones are up to date 
 2. Update CHANGELOG.md
 3. Increment version number in ``rope/__init__.py``

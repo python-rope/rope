@@ -35,11 +35,16 @@ text = 'LGPL-3.0-or-later'
 Source = 'https://github.com/python-rope/rope'
 
 [project.optional-dependencies]
+doc = [
+    'pytoolconfig[doc]',
+    "sphinx>=4.5.0",
+    "sphinx-autodoc-typehints>=1.18.1",
+    "sphinx-rtd-theme>=1.0.0",
+]
 dev = [
     'pytest>=7.0.1',
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
-    'pytoolconfig[doc]'
 ]
 [tool.setuptools]
 packages = [
