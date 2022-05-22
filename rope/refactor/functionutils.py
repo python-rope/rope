@@ -4,7 +4,7 @@ from rope.base.builtins import Lambda
 from rope.base import worder
 
 
-class DefinitionInfo(object):
+class DefinitionInfo:
     def __init__(
         self, function_name, is_method, args_with_defaults, args_arg, keywords_arg
     ):
@@ -15,13 +15,13 @@ class DefinitionInfo(object):
         self.keywords_arg = keywords_arg
 
     def to_string(self):
-        return "%s(%s)" % (self.function_name, self.arguments_to_string())
+        return "{}({})".format(self.function_name, self.arguments_to_string())
 
     def arguments_to_string(self, from_index=0):
         params = []
         for arg, default in self.args_with_defaults:
             if default is not None:
-                params.append("%s=%s" % (arg, default))
+                params.append("{}={}".format(arg, default))
             else:
                 params.append(arg)
         if self.args_arg is not None:
@@ -68,7 +68,7 @@ class DefinitionInfo(object):
         return DefinitionInfo._read(pyfunction, call)
 
 
-class CallInfo(object):
+class CallInfo:
     def __init__(
         self,
         function_name,
@@ -98,12 +98,12 @@ class CallInfo(object):
         if self.args[start:]:
             params.extend(self.args[start:])
         if self.keywords:
-            params.extend(["%s=%s" % (name, value) for name, value in self.keywords])
+            params.extend(["{}={}".format(name, value) for name, value in self.keywords])
         if self.args_arg is not None:
             params.append("*" + self.args_arg)
         if self.keywords_arg:
             params.append("**" + self.keywords_arg)
-        return "%s(%s)" % (function, ", ".join(params))
+        return "{}({})".format(function, ", ".join(params))
 
     @staticmethod
     def read(primary, pyname, definition_info, code):
@@ -163,7 +163,7 @@ class CallInfo(object):
         return False
 
 
-class ArgumentMapping(object):
+class ArgumentMapping:
     def __init__(self, definition_info, call_info):
         self.call_info = call_info
         self.param_dict = {}
@@ -210,7 +210,7 @@ class ArgumentMapping(object):
         )
 
 
-class _FunctionParser(object):
+class _FunctionParser:
     def __init__(self, call, implicit_arg, is_lambda=False):
         self.call = call
         self.implicit_arg = implicit_arg

@@ -34,7 +34,7 @@ from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefun
 #
 # There are a few more helper functions and classes used by above
 # classes.
-class _ExtractRefactoring(object):
+class _ExtractRefactoring:
 
     kind_prefixes = {}
 
@@ -81,7 +81,7 @@ class _ExtractRefactoring(object):
         )
         info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet("Extract %s <%s>" % (info.kind, extracted_name))
+        changes = ChangeSet("Extract {} <{}>".format(info.kind, extracted_name))
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
@@ -99,7 +99,7 @@ class _ExtractRefactoring(object):
 
     @classmethod
     def _get_kind(cls, kind):
-        raise NotImplementedError("You have to sublass {}".format(cls))
+        raise NotImplementedError(f"You have to sublass {cls}")
 
 
 class ExtractMethod(_ExtractRefactoring):
@@ -116,7 +116,7 @@ class ExtractVariable(_ExtractRefactoring):
     def __init__(self, *args, **kwds):
         kwds = dict(kwds)
         kwds["variable"] = True
-        super(ExtractVariable, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
     kind = "variable"
 
@@ -124,7 +124,7 @@ class ExtractVariable(_ExtractRefactoring):
         return cls.kind
 
 
-class _ExtractInfo(object):
+class _ExtractInfo:
     """Holds information about the extract to be performed"""
 
     def __init__(
@@ -252,7 +252,7 @@ class _ExtractInfo(object):
         return self._returning_named_expr
 
 
-class _ExtractCollector(object):
+class _ExtractCollector:
     """Collects information needed for performing the extract"""
 
     def __init__(self, info):
@@ -265,7 +265,7 @@ class _ExtractCollector(object):
         self.definition_location = None
 
 
-class _ExtractPerformer(object):
+class _ExtractPerformer:
     def __init__(self, info):
         self.info = info
         _ExceptionalConditionChecker()(self.info)
@@ -376,7 +376,7 @@ class _ExtractPerformer(object):
         collector.checks = parts.get_checks()
 
 
-class _DefinitionLocationFinder(object):
+class _DefinitionLocationFinder:
     def __init__(self, info, matched_lines):
         self.info = info
         self.matched_lines = matched_lines
@@ -420,7 +420,7 @@ class _DefinitionLocationFinder(object):
         return self.info.scope.get_end() + 1
 
 
-class _ExceptionalConditionChecker(object):
+class _ExceptionalConditionChecker:
     def __call__(self, info):
         self.base_conditions(info)
         if info.one_line:
@@ -501,7 +501,7 @@ class _ExceptionalConditionChecker(object):
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(object):
+class _ExtractMethodParts:
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -746,7 +746,7 @@ class _ExtractMethodParts(object):
         return visitor.globals_
 
 
-class _ExtractVariableParts(object):
+class _ExtractVariableParts:
     def __init__(self, info):
         self.info = info
 
@@ -765,7 +765,7 @@ class _ExtractVariableParts(object):
         return {}
 
 
-class _FunctionInformationCollector(object):
+class _FunctionInformationCollector:
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -947,7 +947,7 @@ def _get_argnames(arguments):
     return result
 
 
-class _VariableReadsAndWritesFinder(object):
+class _VariableReadsAndWritesFinder:
     def __init__(self):
         self.written = set()
         self.read = set()
@@ -987,7 +987,7 @@ class _VariableReadsAndWritesFinder(object):
         return visitor.read
 
 
-class _BaseErrorFinder(object):
+class _BaseErrorFinder:
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
@@ -1055,7 +1055,7 @@ class _AsyncStatementFinder(_BaseErrorFinder):
         pass
 
 
-class _GlobalFinder(object):
+class _GlobalFinder:
     def __init__(self):
         self.globals_ = OrderedSet()
 

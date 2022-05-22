@@ -2,7 +2,7 @@ from rope.base.fscommands import _decode_data
 from rope.base import ast, exceptions, utils
 
 
-class PyObject(object):
+class PyObject:
     def __init__(self, type_):
         if type_ is None:
             type_ = self
@@ -56,7 +56,7 @@ class PyObject(object):
         if type(self) == PyObject and self != self.type:
             return hash(self.type) + 1
         else:
-            return super(PyObject, self).__hash__()
+            return super().__hash__()
 
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
@@ -118,7 +118,7 @@ def get_unknown():
 
 class AbstractClass(PyObject):
     def __init__(self):
-        super(AbstractClass, self).__init__(get_base_type("Type"))
+        super().__init__(get_base_type("Type"))
 
     def get_name(self):
         pass
@@ -132,7 +132,7 @@ class AbstractClass(PyObject):
 
 class AbstractFunction(PyObject):
     def __init__(self):
-        super(AbstractFunction, self).__init__(get_base_type("Function"))
+        super().__init__(get_base_type("Function"))
 
     def get_name(self):
         pass
@@ -149,7 +149,7 @@ class AbstractFunction(PyObject):
 
 class AbstractModule(PyObject):
     def __init__(self, doc=None):
-        super(AbstractModule, self).__init__(get_base_type("Module"))
+        super().__init__(get_base_type("Module"))
 
     def get_doc(self):
         pass
@@ -158,7 +158,7 @@ class AbstractModule(PyObject):
         pass
 
 
-class PyDefinedObject(object):
+class PyDefinedObject:
     """Python defined names that rope can access their sources"""
 
     def __init__(self, pycore, ast_node, parent):
@@ -255,7 +255,7 @@ class PyClass(PyDefinedObject, AbstractClass):
     """Only a placeholder"""
 
 
-class _ConcludedData(object):
+class _ConcludedData:
     def __init__(self):
         self.data_ = None
 

@@ -116,7 +116,7 @@ def resolve_type(type_name, pyobject):
     return ret_type
 
 
-class ParametrizeType(object):
+class ParametrizeType:
 
     _supported_mapping = {
         "builtins.list": "rope.base.builtins.get_list",
@@ -154,7 +154,7 @@ class ParametrizeType(object):
         return pyobject
 
     def _get_type_factory(self, pyobject):
-        type_str = "{0}.{1}".format(
+        type_str = "{}.{}".format(
             pyobject.get_module().get_name(),
             pyobject.get_name(),
         )

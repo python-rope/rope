@@ -1,4 +1,4 @@
-class ImportStatement(object):
+class ImportStatement:
     """Represent an import in a module
 
     `readonly` attribute controls whether this import can be changed
@@ -61,7 +61,7 @@ class ImportStatement(object):
         return visitor.dispatch(self)
 
 
-class ImportInfo(object):
+class ImportInfo:
     def get_imported_primaries(self, context):
         pass
 
@@ -197,7 +197,7 @@ class EmptyImport(ImportInfo):
         return []
 
 
-class ImportContext(object):
+class ImportContext:
     def __init__(self, project, folder):
         self.project = project
         self.folder = folder

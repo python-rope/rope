@@ -4,7 +4,7 @@ import token
 import tokenize
 
 
-class ChangeCollector(object):
+class ChangeCollector:
     def __init__(self, text):
         self.text = text
         self.changes = []
@@ -32,7 +32,7 @@ class ChangeCollector(object):
             return result
 
 
-class SourceLinesAdapter(object):
+class SourceLinesAdapter:
     """Adapts source to Lines interface
 
     Note: The creation of this class is expensive.
@@ -71,7 +71,7 @@ class SourceLinesAdapter(object):
         return self.starts[lineno] - 1
 
 
-class ArrayLinesAdapter(object):
+class ArrayLinesAdapter:
     def __init__(self, lines):
         self.lines = lines
 
@@ -82,7 +82,7 @@ class ArrayLinesAdapter(object):
         return len(self.lines)
 
 
-class LinesToReadline(object):
+class LinesToReadline:
     def __init__(self, lines, start):
         self.lines = lines
         self.current = start
@@ -97,7 +97,7 @@ class LinesToReadline(object):
         return self.readline()
 
 
-class _CustomGenerator(object):
+class _CustomGenerator:
     def __init__(self, lines):
         self.lines = lines
         self.in_string = ""
@@ -162,7 +162,7 @@ def custom_generator(lines):
     return _CustomGenerator(lines)()
 
 
-class LogicalLineFinder(object):
+class LogicalLineFinder:
     def __init__(self, lines):
         self.lines = lines
 
@@ -245,7 +245,7 @@ def tokenizer_generator(lines):
     return LogicalLineFinder(lines).generate_regions()
 
 
-class CachingLogicalLineFinder(object):
+class CachingLogicalLineFinder:
     def __init__(self, lines, generate=custom_generator):
         self.lines = lines
         self._generate = generate

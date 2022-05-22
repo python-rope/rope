@@ -38,7 +38,7 @@ except ImportError:
     compare_digest = _compat_compare_digest
 
 
-class PythonFileRunner(object):
+class PythonFileRunner:
     """A class for running python project files"""
 
     def __init__(
@@ -140,7 +140,7 @@ class PythonFileRunner(object):
         self.observers.append(observer)
 
 
-class _MessageReceiver(object):
+class _MessageReceiver:
     def receive_data(self):
         pass
 
@@ -158,7 +158,7 @@ class _SocketReceiver(_MessageReceiver):
             try:
                 self.server_socket.bind(("localhost", self.data_port))
                 break
-            except socket.error:
+            except OSError:
                 self.data_port += 1
         self.server_socket.listen(1)
 

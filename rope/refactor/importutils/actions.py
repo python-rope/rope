@@ -4,7 +4,7 @@ from rope.refactor import occurrences
 from rope.refactor.importutils import importinfo
 
 
-class ImportInfoVisitor(object):
+class ImportInfoVisitor:
     def dispatch(self, import_):
         try:
             method_name = "visit" + import_.import_info.__class__.__name__

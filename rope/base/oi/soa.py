@@ -37,7 +37,7 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
             rope.base.ast.walk(child, visitor)
 
 
-class SOAVisitor(object):
+class SOAVisitor:
     def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
@@ -141,7 +141,7 @@ class SOAVisitor(object):
 
 class _SOAAssignVisitor(astutils._NodeNameCollector):
     def __init__(self):
-        super(_SOAAssignVisitor, self).__init__()
+        super().__init__()
         self.nodes = []
 
     def _added(self, node, levels):

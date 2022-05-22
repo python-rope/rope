@@ -20,7 +20,7 @@ from rope.contrib import changestack
 from rope.refactor import rename
 
 
-class FixModuleNames(object):
+class FixModuleNames:
     def __init__(self, project):
         self.project = project
 

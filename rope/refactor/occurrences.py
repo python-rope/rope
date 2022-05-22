@@ -47,7 +47,7 @@ from rope.base import utils
 from rope.base import worder
 
 
-class Finder(object):
+class Finder:
     """For finding occurrences of a name
 
     The constructor takes a `filters` argument.  It should be a list
@@ -104,7 +104,7 @@ def create_finder(
     considered.
 
     """
-    pynames_ = set([pyname])
+    pynames_ = {pyname}
     filters = []
     if only_calls:
         filters.append(CallsFilter())
@@ -127,7 +127,7 @@ def create_finder(
     return Finder(project, name, filters=filters, docs=docs)
 
 
-class Occurrence(object):
+class Occurrence:
     def __init__(self, tools, offset):
         self.tools = tools
         self.offset = offset
@@ -214,7 +214,7 @@ def unsure_pyname(pyname, unbound=True):
         return True
 
 
-class PyNameFilter(object):
+class PyNameFilter:
     """For finding occurrences of a name."""
 
     def __init__(self, pyname):
@@ -225,7 +225,7 @@ class PyNameFilter(object):
             return True
 
 
-class InHierarchyFilter(object):
+class InHierarchyFilter:
     """Finds the occurrence if the name is in the class's hierarchy."""
 
     def __init__(self, pyname, implementations_only=False):
@@ -256,17 +256,17 @@ class InHierarchyFilter(object):
 
     def _get_root_classes(self, pyclass, name):
         if self.impl_only and pyclass == self.pyclass:
-            return set([pyclass])
+            return {pyclass}
         result = set()
         for superclass in pyclass.get_superclasses():
             if name in superclass:
                 result.update(self._get_root_classes(superclass, name))
         if not result:
-            return set([pyclass])
+            return {pyclass}
         return result
 
 
-class UnsureFilter(object):
+class UnsureFilter:
     """Occurrences where we don't knoow what the name references."""
 
     def __init__(self, unsure):
@@ -277,7 +277,7 @@ class UnsureFilter(object):
             return True
 
 
-class NoImportsFilter(object):
+class NoImportsFilter:
     """Don't include import statements as occurrences."""
 
     def __call__(self, occurrence):
@@ -285,7 +285,7 @@ class NoImportsFilter(object):
             return False
 
 
-class CallsFilter(object):
+class CallsFilter:
     """Filter out non-call occurrences."""
 
     def __call__(self, occurrence):
@@ -293,7 +293,7 @@ class CallsFilter(object):
             return False
 
 
-class NoKeywordsFilter(object):
+class NoKeywordsFilter:
     """Filter out keyword parameters."""
 
     def __call__(self, occurrence):
@@ -301,7 +301,7 @@ class NoKeywordsFilter(object):
             return False
 
 
-class _TextualFinder(object):
+class _TextualFinder:
     def __init__(self, name, docs=False):
         self.name = name
         self.docs = docs
@@ -321,8 +321,7 @@ class _TextualFinder(object):
             searcher = self._normal_search
         else:
             searcher = self._re_search
-        for matched in searcher(source):
-            yield matched
+        yield from searcher(source)
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
@@ -386,7 +385,7 @@ class _TextualFinder(object):
         return "(?P<%s>" % name + "|".join(list_) + ")"
 
 
-class _OccurrenceToolsCreator(object):
+class _OccurrenceToolsCreator:
     def __init__(self, project, resource=None, pymodule=None, docs=False):
         self.project = project
         self.__resource = resource

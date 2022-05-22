@@ -16,7 +16,7 @@ def __rope_start_everything():
     import hashlib
     import hmac
 
-    class _MessageSender(object):
+    class _MessageSender:
         def send_data(self, data):
             pass
 
@@ -61,7 +61,7 @@ def __rope_start_everything():
 
         return newfunc
 
-    class _FunctionCallDataSender(object):
+    class _FunctionCallDataSender:
         def __init__(self, send_info, project_root):
             self.project_root = project_root
             if send_info[0].isdigit():

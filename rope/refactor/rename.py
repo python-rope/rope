@@ -14,7 +14,7 @@ from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences
 
 
-class Rename(object):
+class Rename:
     """A class for performing rename refactoring
 
     It can rename everything: classes, functions, modules, packages,
@@ -105,7 +105,7 @@ class Rename(object):
             resources = [self.resource]
         if resources is None:
             resources = self.project.get_python_files()
-        changes = ChangeSet("Renaming <%s> to <%s>" % (self.old_name, new_name))
+        changes = ChangeSet("Renaming <{}> to <{}>".format(self.old_name, new_name))
         finder = occurrences.create_finder(
             self.project,
             self.old_name,
@@ -161,7 +161,7 @@ class Rename(object):
         changes.add_change(MoveResource(resource, new_location))
 
 
-class ChangeOccurrences(object):
+class ChangeOccurrences:
     """A class for changing the occurrences of a name in a scope
 
     This class replaces the occurrences of a name.  Note that it only
@@ -192,7 +192,7 @@ class ChangeOccurrences(object):
 
     def get_changes(self, new_name, only_calls=False, reads=True, writes=True):
         changes = ChangeSet(
-            "Changing <%s> occurrences to <%s>" % (self.old_name, new_name)
+            "Changing <{}> occurrences to <{}>".format(self.old_name, new_name)
         )
         scope_start, scope_end = self._get_scope_offset()
         finder = occurrences.create_finder(

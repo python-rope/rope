@@ -18,7 +18,7 @@ from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage
 
 
-class PyCore(object):
+class PyCore:
     def __init__(self, project):
         self.project = project
         self._init_resource_observer()
@@ -239,7 +239,7 @@ class PyCore(object):
         return result
 
 
-class _ModuleCache(object):
+class _ModuleCache:
     def __init__(self, pycore):
         self.pycore = pycore
         self.module_map = {}
@@ -273,7 +273,7 @@ class _ModuleCache(object):
         return "PyCore caches %d PyModules\n" % len(self.module_map)
 
 
-class _ExtensionCache(object):
+class _ExtensionCache:
     def __init__(self, pycore):
         self.pycore = pycore
         self.extensions = {}
@@ -310,7 +310,7 @@ def perform_soa_on_changed_scopes(project, resource, old_contents):
             pass
 
 
-class _TextChangeDetector(object):
+class _TextChangeDetector:
     def __init__(self, old, new):
         self.old = old
         self.new = new

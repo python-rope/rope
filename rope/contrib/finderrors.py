@@ -37,7 +37,7 @@ def find_errors(project, resource):
     return finder.errors
 
 
-class _BadAccessFinder(object):
+class _BadAccessFinder:
     def __init__(self, pymodule):
         self.pymodule = pymodule
         self.scope = pymodule.get_scope()
@@ -81,10 +81,10 @@ class _BadAccessFinder(object):
                 return True
 
 
-class Error(object):
+class Error:
     def __init__(self, lineno, error):
         self.lineno = lineno
         self.error = error
 
     def __str__(self):
-        return "%s: %s" % (self.lineno, self.error)
+        return "{}: {}".format(self.lineno, self.error)

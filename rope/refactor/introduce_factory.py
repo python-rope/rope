@@ -6,7 +6,7 @@ from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import rename, occurrences, sourceutils, importutils
 
 
-class IntroduceFactory(object):
+class IntroduceFactory:
     def __init__(self, project, resource, offset):
         self.project = project
         self.offset = offset
@@ -110,14 +110,14 @@ class IntroduceFactory(object):
                 raise rope.base.exceptions.RefactoringError(
                     "Cannot make global factory method for nested classes."
                 )
-            return "\ndef %s(*args, **kwds):\n%sreturn %s(*args, **kwds)\n" % (
+            return "\ndef {}(*args, **kwds):\n{}return {}(*args, **kwds)\n".format(
                 factory_name,
                 unit_indents,
                 self.old_name,
             )
         unindented_factory = (
             "@staticmethod\ndef %s(*args, **kwds):\n" % factory_name
-            + "%sreturn %s(*args, **kwds)\n" % (unit_indents, self.old_name)
+            + "{}return {}(*args, **kwds)\n".format(unit_indents, self.old_name)
         )
         indents = self._get_scope_indents(lines, class_scope) + sourceutils.get_indent(
             self.project
