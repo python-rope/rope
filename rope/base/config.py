@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
-from pytoolconfig import PyToolConfig, field
+from packaging.requirements import Requirement
+from pytoolconfig import PyToolConfig, UniversalKey, field
 from pytoolconfig.sources import Source
 
 from rope.base.resources import Folder
@@ -122,6 +123,14 @@ the search type-hinting in a class hierarchy, etc.
     )
     project_opened: Optional[Callable] = field(
         None, description="""This function is called after opening the project"""
+    )
+    py_version: Optional[Tuple[int, int]] = field(
+        default=None,
+        description="Minimum python version to target",
+        universal_config=UniversalKey.min_py_version,
+    )
+    dependencies: Optional[List[Requirement]] = field(
+        default=None, universal_config=UniversalKey.dependencies
     )
 
 
