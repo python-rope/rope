@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, fields
 from typing import Callable, Dict, List, Optional, Tuple
 
 from packaging.requirements import Requirement
@@ -132,6 +132,50 @@ the search type-hinting in a class hierarchy, etc.
     dependencies: Optional[List[Requirement]] = field(
         default=None, universal_config=UniversalKey.dependencies
     )
+    callbacks: Dict[str, Callable] = field(init=False)
+
+    def __post_init__(self):
+        self.callbacks = {}
+
+    def set(self, key: str, value):
+        """Set the value of `key` preference to `value`."""
+        if key in self.callbacks:
+            self.callbacks[key](value)
+        else:
+            setattr(self, key, value)
+
+    def add(self, key: str, value):
+        """Add an entry to a list preference
+
+        Add `value` to the list of entries for the `key` preference.
+
+        """
+        if key in self.callbacks:
+            self.callbacks[key](value)
+        if key not in fields(self):
+            return
+        if getattr(self, key) is None:
+            setattr(self, key, [])
+        getattr(self, key).append(value)
+
+    def get(self, key: str, default=None):
+        """Get the value of the key preference"""
+        return getattr(self, key, default)
+
+    def add_callback(self, key, callback):
+        """Add `key` preference with `callback` function
+
+        Whenever `key` is set the callback is called with the
+        given `value` as parameter.
+
+        """
+        self.callbacks[key] = callback
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __getitem__(self, key):
+        return self.get(key)
 
 
 class _RopeConfigSource(Source):

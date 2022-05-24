@@ -2,13 +2,12 @@ import os
 import shutil
 import sys
 import warnings
-from dataclasses import asdict
 
 import rope.base.fscommands
 import rope.base.resourceobserver as resourceobserver
-from rope.base import exceptions, history, prefs, pycore, taskhandle, utils
-from rope.base.config import get_config
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
+from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
@@ -18,10 +17,12 @@ except ImportError:
 
 
 class _Project:
+    prefs: Prefs
+
     def __init__(self, fscommands):
         self.observers = []
         self.fscommands = fscommands
-        self.prefs = prefs.Prefs()
+        self.prefs = Prefs()
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
 
@@ -216,10 +217,9 @@ class Project(_Project):
         super().__init__(fscommands)
         self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
-        self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
-        if ropefolder is not None:
-            self.prefs["ignored_resources"] = [ropefolder]
         self._init_prefs(prefs)
+        if ropefolder is not None:
+            self.prefs.add("ignored_resources", ropefolder)
         self._init_source_folders()
 
     @utils.deprecated("Delete once deprecated functions are gone")
@@ -257,10 +257,11 @@ class Project(_Project):
 
     def _init_prefs(self, prefs):
         config = get_config(self.root, self.ropefolder).parse()
-        for key, value in asdict(config).items():
-            self.prefs[key] = value
+        self.prefs = config
+        self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
+        self.ignored.set_patterns(self.prefs.ignored_resources)
         for key, value in prefs.items():
-            self.prefs[key] = value
+            self.prefs.set(key, value)
         self._init_other_parts()
         self._init_ropefolder()
         if config.project_opened:
