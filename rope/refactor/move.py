@@ -16,6 +16,9 @@ from rope.base import (
 )
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
+from rope.refactor.importutils.module_imports import (
+    get_first_decorator_or_function_start_line,
+)
 
 
 def create_move(project, resource, offset=None):
@@ -435,9 +438,11 @@ class MoveGlobal:
             start = lines.get_line_start(lineno)
             end_line = logical_lines.logical_line_in(lineno)[1]
         else:
-            scope = self.old_pyname.get_object().get_scope()
-            start = lines.get_line_start(scope.get_start())
-            end_line = scope.get_end()
+            node = self.old_pyname.get_object().ast_node
+            start = lines.get_line_start(
+                get_first_decorator_or_function_start_line(node)
+            )
+            end_line = self.old_pyname.get_object().get_scope().get_end()
 
         # Include comment lines before the definition
         start_line = lines.get_line_number(start)

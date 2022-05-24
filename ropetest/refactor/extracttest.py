@@ -1942,6 +1942,26 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_method_with_list_comprehension_in_class_method(self):
+        code = dedent("""\
+            class SomeClass:
+                def method(self):
+                    result = [i for i in range(1)]
+                    print(1)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "baz", similar=True)
+        expected = dedent("""\
+            class SomeClass:
+                def method(self):
+                    result = [i for i in range(1)]
+                    self.baz()
+
+                def baz(self):
+                    print(1)
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_method_with_list_comprehension_and_iter(self):
         code = dedent("""\
             def foo():

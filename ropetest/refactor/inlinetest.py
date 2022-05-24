@@ -1373,3 +1373,167 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.rindex("var"))
 
         self.assertEqual(expected, refactored)
+
+    def test_parameters_with_the_same_name_as_passed_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(var: int):
+                    print(var)
+                var = 1
+                a_func(var)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var = 1
+                print(var)
+            """),
+            self.mod.read(),
+        )
+
+    def test_parameters_with_the_same_name_as_passed_as_kwargs_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(var: int):
+                    print(var)
+                var = 1
+                a_func(var=var)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var = 1
+                print(var)
+            """),
+            self.mod.read(),
+        )
+
+    def test_simple_parameters_renaming_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param: int):
+                    print(param)
+                var = 1
+                a_func(var)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var = 1
+                print(var)
+            """),
+            self.mod.read(),
+        )
+
+    def test_simple_parameters_renaming_for_multiple_params_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param1, param2: int):
+                    p = param1 + param2
+                var1 = 1
+                var2 = 1
+                a_func(var1, var2)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var1 = 1
+                var2 = 1
+                p = var1 + var2
+            """),
+            self.mod.read(),
+        )
+
+    def test_parameters_renaming_for_passed_constants_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param: int):
+                    print(param)
+                a_func(1)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual("print(1)\n", self.mod.read())
+
+    def test_parameters_renaming_for_passed_statements_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param: int):
+                    print(param)
+                a_func((1 + 2) / 3)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                print((1 + 2) / 3)
+            """),
+            self.mod.read(),
+        )
+
+    def test_simple_parameters_renaming_for_multiple_params_using_keywords_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param1, param2: int):
+                    p = param1 + param2
+                var1 = 1
+                var2 = 1
+                a_func(param2=var1, param1=var2)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var1 = 1
+                var2 = 1
+                p = var2 + var1
+            """),
+            self.mod.read(),
+        )
+
+    def test_simple_params_renaming_for_multi_params_using_mixed_keywords_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param1, param2: int):
+                    p = param1 + param2
+                var1 = 1
+                var2 = 1
+                a_func(var2, param2=var1)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual(
+            dedent("""\
+                var1 = 1
+                var2 = 1
+                p = var2 + var1
+            """),
+            self.mod.read(),
+        )
+
+    def test_simple_putting_in_default_arguments_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param: Optional[int] = None):
+                    print(param)
+                a_func()
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual("print(None)\n", self.mod.read())
+
+    def test_overriding_default_arguments_with_type_hints(self):
+        self.mod.write(
+            dedent("""\
+                def a_func(param1=1, param2: int = 2):
+                    print(param1, param2)
+                a_func(param2=3)
+            """)
+        )
+        self._inline2(self.mod, self.mod.read().index("a_func") + 1)
+        self.assertEqual("print(1, 3)\n", self.mod.read())
+

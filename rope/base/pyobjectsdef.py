@@ -133,6 +133,9 @@ class PyComprehension(pyobjects.PyComprehension):
             self.pycore, self, _ComprehensionVisitor
         )
 
+    def get_kind(self):
+        return "Comprehension"
+
 
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
