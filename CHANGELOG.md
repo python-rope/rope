@@ -1,6 +1,12 @@
 # **Upcoming release**
 
 
+# Release 1.1.1
+
+## Bug fixes
+
+- #476 Fix rope.contrib.autoimport package missing from release (@bageljrkhanofemus)
+
 # Release 1.1.0
 
 Date: 2022-05-25
