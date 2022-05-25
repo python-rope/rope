@@ -1,6 +1,13 @@
 # **Upcoming release**
+
+
+# Release 1.1.0
+
+Date: 2022-05-25
+
 ## New feature
-- #464 Improve autoimport code to use a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements.
+
+- #464 Add new autoimport implementation that uses a sqllite3 database, cache all available modules quickly, search for names and produce import statements, sort import statements. (@bageljrkhanofemus)
 
 ## Bug fixes
 
@@ -8,6 +15,10 @@
 - #439 Fix bug while moving decorated class (@dryobates)
 - #461 Fix bug while extracting method with list comprehension in class method (@dryobates)
 - #440 Fix bug while inlining function with type hints in signature (@dryobates)
+
+## Deprecation
+
+- The pickle-based autoimport implementation is still the default, but will be deprecated sometime in the future.
 
 # Release 1.0.0
 
