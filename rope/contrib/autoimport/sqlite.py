@@ -11,23 +11,13 @@ from typing import Generator, Iterable, List, Optional, Set, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
-from rope.contrib.autoimport.defs import (
-    ModuleFile,
-    Name,
-    NameType,
-    Package,
-    PackageType,
-    SearchResult,
-    Source,
-)
+from rope.contrib.autoimport.defs import (ModuleFile, Name, NameType, Package,
+                                          PackageType, SearchResult, Source)
 from rope.contrib.autoimport.parse import get_names
-from rope.contrib.autoimport.utils import (
-    get_files,
-    get_modname_from_path,
-    get_package_tuple,
-    sort_and_deduplicate,
-    sort_and_deduplicate_tuple,
-)
+from rope.contrib.autoimport.utils import (get_files, get_modname_from_path,
+                                           get_package_tuple,
+                                           sort_and_deduplicate,
+                                           sort_and_deduplicate_tuple)
 from rope.refactor import importutils
 
 
@@ -434,10 +424,16 @@ class AutoImport:
             self.connection.commit()
 
     def _get_python_folders(self) -> List[pathlib.Path]:
-        folders = self.project.get_python_path_folders()
-        folder_paths = [
-            pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"
-        ]
+        def filter_folders(folder: pathlib.Path) -> bool:
+            return (
+                folder.as_posix() != "/usr/bin"
+                and not folder.is_file()
+                and folder.exists()
+            )
+
+        folders = reversed(self.project.get_python_path_folders())
+        folder_paths = map(lambda folder: pathlib.Path(folder.real_path), folders)
+        folder_paths = filter(filter_folders, folder_paths)
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _get_available_packages(self) -> List[Package]:
