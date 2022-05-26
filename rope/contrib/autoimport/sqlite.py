@@ -441,7 +441,7 @@ class AutoImport:
                 and folder.exists()
             )
 
-        folders = reversed(self.project.get_python_path_folders())
+        folders = self.project.get_python_path_folders()
         folder_paths = map(lambda folder: pathlib.Path(folder.real_path), folders)
         folder_paths = filter(filter_folders, folder_paths)
         return list(OrderedDict.fromkeys(folder_paths))
