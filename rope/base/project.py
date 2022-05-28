@@ -246,9 +246,6 @@ class Project(_Project):
         if self.ropefolder is not None:
             if not self.ropefolder.exists():
                 self._create_recursively(self.ropefolder)
-            if not self.ropefolder.has_child("config.py"):
-                config = self.ropefolder.create_file("config.py")
-                config.write(self._default_config())
 
     def _create_recursively(self, folder):
         if folder.parent != self.root and not folder.parent.exists():
@@ -266,13 +263,6 @@ class Project(_Project):
         self._init_ropefolder()
         if config.project_opened:
             config.project_opened(self)
-
-    def _default_config(self):
-        import inspect
-
-        import rope.base.default_config
-
-        return inspect.getsource(rope.base.default_config)
 
     def _init_other_parts(self):
         # Forcing the creation of `self.pycore` to register observers
