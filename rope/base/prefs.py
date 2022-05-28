@@ -1,3 +1,4 @@
+"""Rope preferences."""
 from dataclasses import asdict, dataclass, fields
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -11,6 +12,8 @@ from rope.base.utils import pycompat
 
 @dataclass
 class Prefs:
+    """Class to store rope preferences."""
+
     ignored_resources: List[str] = field(
         default_factory=[
             "*.pyc",
@@ -24,11 +27,11 @@ class Prefs:
             ".venv",
             "venv",
         ].copy,
-        description="""    
+        description="""
 Specify which files and folders to ignore in the project.
 Changes to ignored resources are not added to the history and
 VCSs.  Also they are not returned in `Project.get_files()`.
-Note that ``?`` and ``*`` match all characters but slashes. 
+Note that ``?`` and ``*`` match all characters but slashes.
 '*.pyc': matches 'test.pyc' and 'pkg/test.pyc'
 'mod*.pyc': matches 'test/mod1.pyc' but not 'mod/1.pyc'
 '.svn': matches 'pkg/.svn' and all of its children
@@ -75,7 +78,8 @@ separating folders regardless of the platform rope is running on.
     preform_doa: bool = field(
         default=True,
         description="""
-If `False` when running modules or unit tests 'dynamic object analysis' is turned off. This makes them much faster.
+If `False` when running modules or unit tests 'dynamic object analysis' is turned off.
+This makes them much faster.
 """,
     )
     validate_objectdb: bool = field(
@@ -100,7 +104,9 @@ unit-tests use 4 spaces it is more reliable, too.
 
     extension_modules: List[str] = field(
         default_factory=list,
-        description="Builtin and c-extension modules that are allowed to be imported and inspected by rope.",
+        description="""
+Builtin and c-extension modules that are allowed to be imported and inspected by rope.
+        """,
     )
 
     import_dynload_stdmods: bool = field(
@@ -165,7 +171,10 @@ the search type-hinting in a class hierarchy, etc.
 """,
     )
     project_opened: Optional[Callable] = field(
-        None, description="""This function is called after opening the project. Set in config.py"""
+        None,
+        description="""
+This function is called after opening the project. 
+Can only be set in config.py.""",
     )
     py_version: Optional[Tuple[int, int]] = field(
         default=None,
@@ -175,7 +184,12 @@ the search type-hinting in a class hierarchy, etc.
     dependencies: Optional[List[Requirement]] = field(
         default=None, universal_config=UniversalKey.dependencies
     )
-    callbacks: Dict[str, Callable] = field(default_factory=lambda: {})
+    callbacks: Dict[str, Callable[[Any], None]] = field(
+        default_factory=lambda: {},
+        description="""
+Callbacks run when configuration values are changed. 
+Can only be set in config.py.""",
+    )
 
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""

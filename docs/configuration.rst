@@ -16,7 +16,8 @@ Will be used if [tool.rope] is configured.
 
 config.py 
 ---------
-You can also configure rope via a config.py in the ropefolder directory.  
+You can also configure rope via a config.py in the ropefolder directory.   
+It will be used if ``[tool.rope]`` is not present in ``pyproject.toml`` or ``pyproject.toml`` isn't present and config.py is present.
 
 .. code-block:: python3
     
@@ -45,5 +46,5 @@ Additionally, you can run an executable function at startup of rope.
 
 Options
 -------
-.. autopytoolconfigtable:: rope.base.config.RopePrefs
+.. autopytoolconfigtable:: rope.base.prefs.Prefs
 
