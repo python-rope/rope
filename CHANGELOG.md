@@ -1,5 +1,6 @@
 # **Upcoming release**
-
+## New feature 
+- #473 Pyproject.toml support (@bageljrkhanofemus)
 
 # Release 1.1.1
 
