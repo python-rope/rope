@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, fields
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from packaging.requirements import Requirement
@@ -36,11 +36,39 @@ Note that ``?`` and ``*`` match all characters but slashes.
 'build//*.o': matches 'build/lib.o' and 'build/sub/lib.o'
 """,
     )
+    python_files: List[str] = field(
+        default_factory=lambda: ["*.py"],
+        description="""
+Specifies which files should be considered python files.  It is
+useful when you have scripts inside your project.  Only files
+ending with ``.py`` are considered to be python files by
+default.
+    """,
+    )
+    source_folders: List[str] = field(
+        description="""
+Custom source folders:  By default rope searches the project
+for finding source folders (folders that should be searched
+for finding modules).  You can add paths to that list.  Note
+that rope guesses project source folders correctly most of the
+time; use this if you have any problems.
+The folders should be relative to project root and use '/' for
+separating folders regardless of the platform rope is running on.
+'src/my_source_folder' for instance.
+    """,
+        default_factory=lambda: [],
+    )
+    python_path: List[str] = field(
+        default_factory=lambda: [],
+        description="You can extend python path for looking up modules.",
+    )
     save_objectdb: bool = field(
         default=False, description="Should rope save object information or not."
     )
     compress_objectdb: bool = False
-    automatic_soa: bool = True
+    automatic_soa: bool = field(
+        True, "If `True`, rope analyzes each module when it is being saved."
+    )
     soa_followed_calls: int = field(
         default=0, description="The depth of calls to follow in static object analysis"
     )
@@ -79,7 +107,14 @@ unit-tests use 4 spaces it is more reliable, too.
         default=True,
         description="Add all standard c-extensions to extension_modules list.",
     )
-    ignore_syntax_errors: bool = field(default=False)
+    ignore_syntax_errors: bool = field(
+        default=False,
+        description="""
+If `True` modules with syntax errors are considered to be empty.
+The default value is `False`; When `False` syntax errors raise
+`rope.base.exceptions.ModuleSyntaxError` exception.
+    """,
+    )
 
     ignore_bad_imports: bool = field(
         default=False,
@@ -92,14 +127,22 @@ unit-tests use 4 spaces it is more reliable, too.
 If `True`, rope will insert new module imports as `from <package> import <module>`by default.""",
     )
 
-    # If `True`, rope will transform a comma list of imports into
-    # multiple separate import statements when organizing
-    # imports.
-    split_imports: bool = field(default=False)
+    split_imports: bool = field(
+        default=False,
+        description="""
+If `True`, rope will transform a comma list of imports into
+multiple separate import statements when organizing
+imports.
+    """,
+    )
 
-    # If `True`, rope will remove all top-level import statements and
-    # reinsert them at the top of the module when making changes.
-    pull_imports_to_top: bool = field(default=True)
+    pull_imports_to_top: bool = field(
+        default=True,
+        description="""
+If `True`, rope will remove all top-level import statements and
+reinsert them at the top of the module when making changes.
+    """,
+    )
 
     sort_imports_alphabetically: bool = field(
         default=False,
@@ -122,7 +165,7 @@ the search type-hinting in a class hierarchy, etc.
 """,
     )
     project_opened: Optional[Callable] = field(
-        None, description="""This function is called after opening the project"""
+        None, description="""This function is called after opening the project. Set in config.py"""
     )
     py_version: Optional[Tuple[int, int]] = field(
         default=None,
@@ -131,9 +174,6 @@ the search type-hinting in a class hierarchy, etc.
     )
     dependencies: Optional[List[Requirement]] = field(
         default=None, universal_config=UniversalKey.dependencies
-    )
-    python_path: List[str] = field(
-        default_factory=lambda: [], description="Additional python paths to search."
     )
     callbacks: Dict[str, Callable] = field(default_factory=lambda: {})
 
@@ -201,14 +241,14 @@ class _RopeConfigSource(Source):
         return True
 
     def parse(self) -> Optional[Dict]:
-        prefs: Dict[str, Any] = {}
+        prefs = Prefs()
         if not self._read():
             return None
         if "set_prefs" in self.run_globals:
             self.run_globals["set_prefs"](prefs)
         if "project_opened" in self.run_globals:
             prefs["project_opened"] = self.run_globals["project_opened"]
-        return prefs
+        return asdict(prefs)
 
 
 def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
