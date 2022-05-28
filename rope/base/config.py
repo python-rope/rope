@@ -1,4 +1,5 @@
-from dataclasses import asdict, dataclass, fields
+import sys
+from dataclasses import dataclass, fields
 from typing import Callable, Dict, List, Optional, Tuple
 
 from packaging.requirements import Requirement
@@ -24,11 +25,11 @@ class RopePrefs:
             ".venv",
             "venv",
         ].copy,
-        description="""    
+        description="""
 Specify which files and folders to ignore in the project.
 Changes to ignored resources are not added to the history and
 VCSs.  Also they are not returned in `Project.get_files()`.
-Note that ``?`` and ``*`` match all characters but slashes. 
+Note that ``?`` and ``*`` match all characters but slashes.
 '*.pyc': matches 'test.pyc' and 'pkg/test.pyc'
 'mod*.pyc': matches 'test/mod1.pyc' but not 'mod/1.pyc'
 '.svn': matches 'pkg/.svn' and all of its children
@@ -44,7 +45,7 @@ Note that ``?`` and ``*`` match all characters but slashes.
     soa_followed_calls: int = field(
         default=0, description="The depth of calls to follow in static object analysis"
     )
-    preform_doa: bool = field(
+    perform_doa: bool = field(
         default=True,
         description="""
 If `False` when running modules or unit tests 'dynamic object analysis' is turned off. This makes them much faster.
@@ -125,17 +126,14 @@ the search type-hinting in a class hierarchy, etc.
         None, description="""This function is called after opening the project"""
     )
     py_version: Optional[Tuple[int, int]] = field(
-        default=None,
+        default=(sys.version_info.major, sys.version_info.minor),
         description="Minimum python version to target",
         universal_config=UniversalKey.min_py_version,
     )
     dependencies: Optional[List[Requirement]] = field(
         default=None, universal_config=UniversalKey.dependencies
     )
-    callbacks: Dict[str, Callable] = field(init=False)
-
-    def __post_init__(self):
-        self.callbacks = {}
+    callbacks: Dict[str, Callable] = field(init=False, default_factory=lambda: {})
 
     def set(self, key: str, value):
         """Set the value of `key` preference to `value`."""
