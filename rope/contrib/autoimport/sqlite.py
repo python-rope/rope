@@ -436,9 +436,8 @@ class AutoImport:
     def _get_python_folders(self) -> List[pathlib.Path]:
         def filter_folders(folder: pathlib.Path) -> bool:
             return (
-                folder.as_posix() != "/usr/bin"
-                and not folder.is_file()
-                and folder.exists()
+                folder.is_dir()
+                and folder.as_posix() != "/usr/bin"
             )
 
         folders = self.project.get_python_path_folders()
