@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 
@@ -7,10 +5,6 @@ from rope.base import exceptions
 
 
 class BaseJobSet(ABC):
-    @abstractmethod
-    def __init__(self, handle: BaseTaskHandle, name: str, count: int):
-        pass
-
     @abstractmethod
     def started_job(self, name: Optional[str]) -> None:
         pass
@@ -36,7 +30,7 @@ class BaseJobSet(ABC):
         pass
 
     @abstractmethod
-    def increment(self) -> int:
+    def increment(self) -> None:
         """
         Increment the number of tasks to complete.
 
@@ -46,10 +40,6 @@ class BaseJobSet(ABC):
 
 
 class BaseTaskHandle(ABC):
-    @abstractmethod
-    def __init__(self, name: str = "Task", interrupts: bool = True):
-        pass
-
     @abstractmethod
     def stop(self) -> None:
         pass
