@@ -434,10 +434,12 @@ class AutoImport:
             self.connection.commit()
 
     def _get_python_folders(self) -> List[pathlib.Path]:
+        def filter_folders(folder: pathlib.Path) -> bool:
+            return folder.is_dir() and folder.as_posix() != "/usr/bin"
+
         folders = self.project.get_python_path_folders()
-        folder_paths = [
-            pathlib.Path(folder.path) for folder in folders if folder.path != "/usr/bin"
-        ]
+        folder_paths = map(lambda folder: pathlib.Path(folder.real_path), folders)
+        folder_paths = filter(filter_folders, folder_paths)
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _get_available_packages(self) -> List[Package]:
