@@ -37,11 +37,15 @@ class ModuleImports:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
             return result
+        
+        assignments = getattr(all_star_list, "assignments", None)
+        if assignments is None:
+            return result
 
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
-        for assignment in all_star_list.assignments:
+        for assignment in assignments:
             if isinstance(assignment.ast_node, ast.List):
                 stack = list(assignment.ast_node.elts)
                 while stack:
