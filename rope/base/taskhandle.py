@@ -6,7 +6,7 @@ from rope.base import exceptions
 
 class BaseJobSet(ABC):
     @abstractmethod
-    def started_job(self, name: Optional[str]) -> None:
+    def started_job(self, name: str) -> None:
         pass
 
     @abstractmethod
