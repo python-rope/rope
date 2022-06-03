@@ -17,7 +17,6 @@ class BaseJobSet(ABC):
     def check_status(self) -> None:
         pass
 
-    @abstractmethod
     @utils.deprecated('Just use JobSet.job_name attribute/property instead')
     def get_active_job_name(self) -> str:
         pass
@@ -26,7 +25,6 @@ class BaseJobSet(ABC):
     def get_percent_done(self) -> Optional[float]:
         pass
 
-    @abstractmethod
     @utils.deprecated('Just use JobSet.name attribute/property instead')
     def get_name(self) -> str:
         pass
