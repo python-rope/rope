@@ -11,6 +11,7 @@ from typing import Generator, Iterable, List, Optional, Set, Tuple
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
+from rope.base.utils import deprecated
 from rope.contrib.autoimport.defs import (
     ModuleFile,
     Name,
@@ -121,6 +122,7 @@ class AutoImport:
         self.connection.execute("CREATE INDEX IF NOT EXISTS package on names(package)")
         self.connection.commit()
 
+    @deprecated("Use search or search_full")
     def import_assist(self, starting: str):
         """
         Find modules that have a global name that starts with `starting`.
@@ -247,6 +249,7 @@ class AutoImport:
                 f"import {module}", module, source, NameType.Module.value
             )
 
+    @deprecated("Use search or search_full")
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
         results = self.connection.execute(
@@ -254,6 +257,7 @@ class AutoImport:
         ).fetchall()
         return sort_and_deduplicate(results)
 
+    @deprecated("Use search or search_full")
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
         results = self.connection.execute("select name from names").fetchall()
