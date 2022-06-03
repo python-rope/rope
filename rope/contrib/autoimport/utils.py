@@ -6,7 +6,8 @@ from typing import Generator, List, Optional, Tuple
 
 from rope.base.project import Project
 
-from .defs import ModuleCompiled, ModuleFile, ModuleInfo, Package, PackageType, Source
+from .defs import (ModuleCompiled, ModuleFile, ModuleInfo, Package,
+                   PackageType, Source)
 
 
 def get_package_tuple(
@@ -19,34 +20,42 @@ def get_package_tuple(
     Returns None if not a viable package.
     """
     package_name = package_path.name
-    package_source = get_package_source(package_path, project)
+    package_type: PackageType
     if package_name.startswith(".") or package_name == "__pycache__":
-        return None
-    if package_path.is_file():
-        if package_name.endswith(".so"):
-            name = package_name.split(".")[0]
-            return Package(name, package_source, package_path, PackageType.COMPILED)
-        if package_name.endswith(".py"):
-            stripped_name = package_path.stem
-            return Package(
-                stripped_name, package_source, package_path, PackageType.SINGLE_FILE
-            )
         return None
     if package_name.endswith((".egg-info", ".dist-info")):
         return None
-    return Package(package_name, package_source, package_path, PackageType.STANDARD)
+    if package_path.is_file():
+        if package_name.endswith(".so"):
+            package_name = package_name.split(".")[0]
+            package_type = PackageType.COMPILED
+        elif package_name.endswith(".py"):
+            package_name = package_path.stem
+            package_type = PackageType.SINGLE_FILE
+        else:
+            return None
+    else:
+        package_type = PackageType.STANDARD
+    package_source: Source = get_package_source(package_path, project, package_name)
+    return Package(package_name, package_source, package_path, package_type)
 
 
 def get_package_source(
-    package: pathlib.Path, project: Optional[Project] = None
+    package: pathlib.Path, project: Optional[Project], name: str
 ) -> Source:
     """Detect the source of a given package. Rudimentary implementation."""
+    if name in sys.builtin_module_names:
+        return Source.BUILTIN
     if project is not None and project.address in str(package):
         return Source.PROJECT
     if "site-packages" in package.parts:
         return Source.SITE_PACKAGE
-    if package.as_posix().startswith(sys.prefix):
-        return Source.STANDARD
+    if sys.version_info < (3, 10, 0):
+        if str(package).startswith(sys.prefix):
+            return Source.STANDARD
+    else:
+        if name in sys.stdlib_module_names:
+            return Source.STANDARD
     return Source.UNKNOWN
 
 
