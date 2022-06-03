@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 
-from rope.base import exceptions
+from rope.base import utils, exceptions
 
 
 class BaseJobSet(ABC):
@@ -18,6 +18,7 @@ class BaseJobSet(ABC):
         pass
 
     @abstractmethod
+    @utils.deprecated('Just use JobSet.job_name attribute/property instead')
     def get_active_job_name(self) -> str:
         pass
 
@@ -26,6 +27,7 @@ class BaseJobSet(ABC):
         pass
 
     @abstractmethod
+    @utils.deprecated('Just use JobSet.name attribute/property instead')
     def get_name(self) -> str:
         pass
 
@@ -143,6 +145,7 @@ class JobSet(BaseJobSet):
         if self.handle.is_stopped():
             raise exceptions.InterruptedTaskError()
 
+    @utils.deprecated('Just use JobSet.job_name attribute/property instead')
     def get_active_job_name(self):
         return self.job_name
 
@@ -151,6 +154,7 @@ class JobSet(BaseJobSet):
             percent = self.done * 100 // self.count
             return min(percent, 100)
 
+    @utils.deprecated('Just use JobSet.name attribute/property instead')
     def get_name(self):
         return self.name
 
@@ -195,12 +199,14 @@ class NullJobSet(BaseJobSet):
     def check_status(self):
         pass
 
+    @utils.deprecated('Just use JobSet.job_name attribute/property instead')
     def get_active_job_name(self):
         pass
 
     def get_percent_done(self):
         pass
 
+    @utils.deprecated('Just use JobSet.name attribute/property instead')
     def get_name(self):
         pass
 
