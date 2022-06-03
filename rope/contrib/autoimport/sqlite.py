@@ -6,6 +6,7 @@ import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
+from pathlib import Path
 from typing import Generator, Iterable, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
@@ -14,6 +15,7 @@ from rope.base.resources import Resource
 from rope.base.utils import deprecated
 from rope.contrib.autoimport.defs import (
     ModuleFile,
+    ModuleInfo,
     Name,
     NameType,
     Package,
@@ -32,17 +34,16 @@ from rope.contrib.autoimport.utils import (
 from rope.refactor import importutils
 
 
-def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.JobSet
+def _get_future_names(
+    to_index: List[Tuple[ModuleInfo, Package]],
+    underlined: bool,
+    job_set: taskhandle.JobSet,
 ) -> Generator[Future, None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
-        for package in packages:
-            for module in get_files(package, underlined):
-                job_set.started_job(module.modname)
-                if not isinstance(job_set, taskhandle.NullJobSet):
-                    job_set.count += 1
-                yield executor.submit(get_names, module, package)
+        for module, package in to_index:
+            job_set.started_job(module.modname)
+            yield executor.submit(get_names, module, package)
 
 
 def filter_packages(
@@ -281,24 +282,13 @@ class AutoImport:
         those files are searched; otherwise all python modules in the
         project are cached.
         """
+
         if resources is None:
             resources = self.rope_project.get_python_files()
-        job_set = task_handle.create_jobset(
-            "Generating autoimport cache", len(resources)
+        files = [Path(resource.real_path) for resource in resources]
+        self._generate_cache(
+            files=files, task_handle=task_handle, underlined=underlined
         )
-        self.connection.execute(
-            "delete from names where package = ?", (self.project.name,)
-        )
-        futures = []
-        with ProcessPoolExecutor() as executor:
-            for file in resources:
-                job_set.started_job(f"Working on {file.path}")
-                module = self._resource_to_module(file, underlined)
-                futures.append(executor.submit(get_names, module, self.project))
-        for future in as_completed(futures):
-            self._add_names(future.result())
-            job_set.finished_job()
-        self.connection.commit()
 
     def generate_modules_cache(
         self,
@@ -315,33 +305,68 @@ class AutoImport:
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        packages: List[Package] = []
+        self._generate_cache(
+            package_names=modules,
+            task_handle=task_handle,
+            single_thread=single_thread,
+            underlined=underlined,
+        )
+
+    # TODO: Update to use Task Handle ABC class
+    def _generate_cache(
+        self,
+        package_names: Optional[List[str]] = None,
+        files: Optional[List[Path]] = None,
+        underlined: bool = False,
+        task_handle=None,
+        single_thread: bool = False,
+        remove_extras: bool = False,
+    ):
+        """
+        This will work under 3 modes:
+        1. packages or files are specified. Autoimport will only index these.
+        2. PEP 621 is configured. Only these dependencies are indexed.
+        3. Index only standard library modules.
+        """
         if self.underlined:
             underlined = True
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
+        packages: List[Package] = []
         existing = self._get_existing()
-        if modules is None:
-            packages = self._get_available_packages()
+        to_index: List[Tuple[ModuleInfo, Package]] = []
+        if files is not None:
+            assert package_names is None  # Cannot have both package_names and files.
+            for file in files:
+                to_index.append((self._path_to_module(file, underlined), self.project))
         else:
-            for modname in modules:
-                package = self._find_package_path(modname)
-                if package is None:
-                    continue
-                packages.append(package)
-        packages = list(filter_packages(packages, underlined, existing))
-        if len(packages) == 0:
-            return
-        self._add_packages(packages)
-        job_set = task_handle.create_jobset("Generating autoimport cache", 0)
-        if single_thread:
+            if package_names is None:
+                packages = self._get_available_packages()
+            else:
+                for modname in package_names:
+                    package = self._find_package_path(modname)
+                    if package is None:
+                        continue
+                    packages.append(package)
+            packages = list(filter_packages(packages, underlined, existing))
             for package in packages:
                 for module in get_files(package, underlined):
-                    job_set.started_job(module.modname)
-                    for name in get_names(module, package):
-                        self._add_name(name)
-                        job_set.finished_job()
+                    to_index.append((module, package))
+            self._add_packages(packages)
+        if len(to_index) == 0:
+            return
+        job_set = task_handle.create_jobset(
+            "Generating autoimport cache", len(to_index)
+        )
+        if single_thread:
+            for module, package in to_index:
+                job_set.started_job(module.modname)
+                for name in get_names(module, package):
+                    self._add_name(name)
+                    job_set.finished_job()
         else:
             for future_name in as_completed(
-                get_future_names(packages, underlined, job_set)
+                _get_future_names(to_index, underlined, job_set)
             ):
                 self._add_names(future_name.result())
                 job_set.finished_job()
@@ -410,17 +435,13 @@ class AutoImport:
         lineno = code.count("\n", 0, offset) + 1
         return lineno
 
-    def update_resource(
-        self, resource: Resource, underlined: bool = False, commit: bool = True
-    ):
+    def update_resource(self, resource: Resource, underlined: bool = False):
         """Update the cache for global names in `resource`."""
         underlined = underlined if underlined else self.underlined
-        module = self._resource_to_module(resource, underlined)
+        path = Path(resource.real_path)
+        module = self._path_to_module(path, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
-        for name in get_names(module, self.project):
-            self._add_name(name)
-        if commit:
-            self.connection.commit()
+        self._generate_cache(files=[path], underlined=underlined)
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -428,9 +449,11 @@ class AutoImport:
 
     def _moved(self, resource: Resource, newresource: Resource):
         if not resource.is_folder():
-            modname = self._resource_to_module(resource).modname
+            path = Path(resource.real_path)
+            modname = self._path_to_module(path).modname
             self._del_if_exist(modname)
-            self.update_resource(newresource)
+            new_path = Path(newresource.real_path)
+            self._generate_cache(files=[new_path])
 
     def _del_if_exist(self, module_name, commit: bool = True):
         self.connection.execute("delete from names where module = ?", (module_name,))
@@ -470,7 +493,8 @@ class AutoImport:
 
     def _removed(self, resource):
         if not resource.is_folder():
-            modname = self._resource_to_module(resource).modname
+            path = Path(resource.real_path)
+            modname = self._path_to_module(path).modname
             self._del_if_exist(modname)
 
     def _add_future_names(self, names: Future):
@@ -506,21 +530,18 @@ class AutoImport:
 
         return None
 
-    def _resource_to_module(
-        self, resource: Resource, underlined: bool = False
-    ) -> ModuleFile:
+    def _path_to_module(self, path: Path, underlined: bool = False) -> ModuleFile:
         assert self.project.path
         underlined = underlined if underlined else self.underlined
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
         resource_modname: str = get_modname_from_path(
-            resource_path, self.project.path, add_package_name=False
+            path, self.project.path, add_package_name=False
         )
         return ModuleFile(
-            resource_path,
+            path,
             resource_modname,
             underlined,
-            resource_path.name == "__init__.py",
+            path.name == "__init__.py",
         )
