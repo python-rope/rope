@@ -1900,6 +1900,20 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_indirect_all_star_import(self):
+        self.mod1.write("some_name = 1")
+        self.mod2.write("__all__ = ['some_name']")
+
+        code = expected = dedent("""\
+            from mod1 import *
+
+            from mod2 import __all__
+        """)
+        self.mod3.write(code)
+
+        pymod = self.project.get_pymodule(self.mod3)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_customized_import_organization(self):
         self.mod.write(
             dedent("""\

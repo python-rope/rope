@@ -37,7 +37,7 @@ class ModuleImports:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
             return result
-        
+
         assignments = getattr(all_star_list, "assignments", None)
         if assignments is None:
             return result
@@ -67,6 +67,7 @@ class ModuleImports:
         can_select = _OneTimeSelector(
             self._get_unbound_names(self.pymodule)
             | self._get_all_star_list(self.pymodule)
+            | {"__all__"}
         )
         visitor = actions.RemovingVisitor(
             self.project, self._current_folder(), can_select
