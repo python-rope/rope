@@ -1,6 +1,10 @@
 # **Upcoming release**
 
 
+# Improvement
+
+- #479 Add ABC and type hints for TaskHandle and JobSet (@bageljrkhanofemus)
+
 # Release 1.1.1
 
 ## Bug fixes

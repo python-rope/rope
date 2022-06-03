@@ -1,7 +1,75 @@
+from abc import ABC, abstractmethod
+from typing import Optional, Sequence
+
 from rope.base import exceptions
 
 
-class TaskHandle:
+class BaseJobSet(ABC):
+    @abstractmethod
+    def started_job(self, name: str) -> None:
+        pass
+
+    @abstractmethod
+    def finished_job(self) -> None:
+        pass
+
+    @abstractmethod
+    def check_status(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_active_job_name(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_percent_done(self) -> Optional[float]:
+        pass
+
+    @abstractmethod
+    def get_name(self) -> str:
+        pass
+
+    @abstractmethod
+    def increment(self) -> None:
+        """
+        Increment the number of tasks to complete.
+
+        This is used if the number is not known ahead of time.
+        """
+        pass
+
+
+class BaseTaskHandle(ABC):
+    @abstractmethod
+    def stop(self) -> None:
+        pass
+
+    @abstractmethod
+    def current_jobset(self) -> Optional[BaseJobSet]:
+        pass
+
+    @abstractmethod
+    def add_observer(self) -> None:
+        pass
+
+    @abstractmethod
+    def is_stopped(self) -> bool:
+        pass
+
+    @abstractmethod
+    def get_jobsets(self) -> Sequence[BaseJobSet]:
+        pass
+
+    def create_jobset(
+        self, name: str = "JobSet", count: Optional[int] = None
+    ) -> BaseJobSet:
+        pass
+
+    def _inform_observers(self) -> None:
+        pass
+
+
+class TaskHandle(BaseTaskHandle):
     def __init__(self, name="Task", interrupts=True):
         """Construct a TaskHandle
 
@@ -52,7 +120,7 @@ class TaskHandle:
             observer()
 
 
-class JobSet:
+class JobSet(BaseJobSet):
     def __init__(self, handle, name, count):
         self.handle = handle
         self.name = name
@@ -86,8 +154,11 @@ class JobSet:
     def get_name(self):
         return self.name
 
+    def increment(self):
+        self.count += 1
 
-class NullTaskHandle:
+
+class NullTaskHandle(BaseTaskHandle):
     def __init__(self):
         pass
 
@@ -106,8 +177,15 @@ class NullTaskHandle:
     def add_observer(self, observer):
         pass
 
+    def current_jobset(self) -> None:
+        """Return the current `JobSet`"""
+        return None
 
-class NullJobSet:
+
+class NullJobSet(BaseJobSet):
+    def __init__(self, *args):
+        pass
+
     def started_job(self, name):
         pass
 
@@ -124,4 +202,7 @@ class NullJobSet:
         pass
 
     def get_name(self):
+        pass
+
+    def increment(self):
         pass

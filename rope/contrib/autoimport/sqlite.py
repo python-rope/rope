@@ -32,15 +32,14 @@ from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.JobSet
+    packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
 ) -> Generator[Future, None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
         for package in packages:
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
-                if not isinstance(job_set, taskhandle.NullJobSet):
-                    job_set.count += 1
+                job_set.increment()
                 yield executor.submit(get_names, module, package)
 
 
@@ -269,7 +268,7 @@ class AutoImport:
         self,
         resources: List[Resource] = None,
         underlined: bool = False,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
     ):
         """Generate global name cache for project files.
 
@@ -299,7 +298,7 @@ class AutoImport:
     def generate_modules_cache(
         self,
         modules: List[str] = None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
         single_thread: bool = False,
         underlined: bool = False,
     ):
