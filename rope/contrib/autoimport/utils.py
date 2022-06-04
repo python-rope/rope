@@ -6,8 +6,7 @@ from typing import Generator, List, Optional, Tuple
 
 from rope.base.project import Project
 
-from .defs import (ModuleCompiled, ModuleFile, ModuleInfo, Package,
-                   PackageType, Source)
+from .defs import ModuleCompiled, ModuleFile, ModuleInfo, Package, PackageType, Source
 
 
 def get_package_tuple(
