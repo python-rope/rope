@@ -1,9 +1,11 @@
 """Tests for autoimport utility functions, written in pytest"""
 
+from pytest import skip
+
 from rope.contrib.autoimport import utils
 from rope.contrib.autoimport.defs import Package, PackageType, Source
 
-
+from sys import platform
 def test_get_package_source(mod1_path, project):
     assert utils.get_package_source(mod1_path, project, "") == Source.PROJECT
 
@@ -53,6 +55,8 @@ def test_get_package_tuple_typing(typing_path):
 
 
 def test_get_package_tuple_compiled(zlib_path):
+    if platform == "windows":
+        skip()
     assert Package(
         "zlib", Source.STANDARD, zlib_path, PackageType.COMPILED
     ) == utils.get_package_tuple(zlib_path)
