@@ -74,7 +74,7 @@ def create_inline(project, resource, offset):
         raise rope.base.exceptions.RefactoringError(message)
 
 
-class _Inliner(object):
+class _Inliner:
     def __init__(self, project, resource, offset):
         self.project = project
         self.pyname = _get_pyname(project, resource, offset)
@@ -93,7 +93,7 @@ class _Inliner(object):
 
 class InlineMethod(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineMethod, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
@@ -238,7 +238,7 @@ class InlineMethod(_Inliner):
 
 class InlineVariable(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineVariable, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
         self._check_exceptional_conditions()
@@ -327,7 +327,7 @@ class InlineVariable(_Inliner):
 
 class InlineParameter(_Inliner):
     def __init__(self, *args, **kwds):
-        super(InlineParameter, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         resource, offset = self._function_location()
         index = self.pyname.index
         self.changers = [change_signature.ArgumentDefaultInliner(index)]
@@ -366,7 +366,7 @@ def _join_lines(lines):
     return joined
 
 
-class _DefinitionGenerator(object):
+class _DefinitionGenerator:
     unique_prefix = unique_prefix()
 
     def __init__(self, project, pyfunction, body=None):
@@ -518,7 +518,7 @@ class _DefinitionGenerator(object):
         return cls._return_pattern
 
 
-class _InlineFunctionCallsForModuleHandle(object):
+class _InlineFunctionCallsForModuleHandle:
     def __init__(self, project, resource, definition_generator, aim_offset=None):
         """Inlines occurrences
 

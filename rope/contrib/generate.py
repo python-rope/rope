@@ -39,7 +39,7 @@ def create_package(project, name, sourcefolder=None):
     return made_packages
 
 
-class _Generate(object):
+class _Generate:
     def __init__(self, project, resource, offset, goal_resource=None):
         self.project = project
         self.resource = resource
@@ -63,7 +63,7 @@ class _Generate(object):
 
     def get_changes(self):
         changes = change.ChangeSet(
-            "Generate %s <%s>" % (self._get_element_kind(), self.name)
+            "Generate {} <{}>".format(self._get_element_kind(), self.name)
         )
         indents = self.info.get_scope_indents()
         blanks = self.info.get_blank_lines()
@@ -109,7 +109,7 @@ class GenerateFunction(_Generate):
         ):
             args.append("self")
         args.extend(self.info.get_passed_args())
-        definition = "%sdef %s(%s):\n    pass\n" % (
+        definition = "{}def {}({}):\n    pass\n".format(
             decorator,
             self.name,
             ", ".join(args),
@@ -140,7 +140,7 @@ class GenerateModule(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet("Generate Module <%s>" % self.name)
-        new_resource = self.project.get_file("%s/%s.py" % (package.path, self.name))
+        new_resource = self.project.get_file("{}/{}.py".format(package.path, self.name))
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 "Module <%s> already exists" % new_resource.path
@@ -160,7 +160,7 @@ class GeneratePackage(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet("Generate Package <%s>" % self.name)
-        new_resource = self.project.get_folder("%s/%s" % (package.path, self.name))
+        new_resource = self.project.get_folder("{}/{}".format(package.path, self.name))
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 "Package <%s> already exists" % new_resource.path
@@ -198,7 +198,7 @@ def _add_relative_import_to_module(project, resource, imported, name):
     return change.ChangeContents(resource, module_imports.get_changed_source())
 
 
-class _GenerationInfo(object):
+class _GenerationInfo:
     def __init__(self, pycore, resource, offset, goal_resource=None):
         self.pycore = pycore
         self.resource = resource

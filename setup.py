@@ -64,6 +64,7 @@ setup(
         "rope.base.oi.type_hinting.resolvers",
         "rope.base.utils",
         "rope.contrib",
+        "rope.contrib.autoimport",
         "rope.refactor",
         "rope.refactor.importutils",
     ],

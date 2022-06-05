@@ -52,7 +52,7 @@ def ast_suite_tree(node):
     return Suite(node.body, lineno)
 
 
-class Suite(object):
+class Suite:
     def __init__(self, child_nodes, lineno, parent=None, ignored=False):
         self.parent = parent
         self.lineno = lineno
@@ -99,7 +99,7 @@ class Suite(object):
         return self.parent._get_level() + 1
 
 
-class _SuiteWalker(object):
+class _SuiteWalker:
     def __init__(self, suite):
         self.suite = suite
         self.suites = []

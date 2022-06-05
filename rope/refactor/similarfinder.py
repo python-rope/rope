@@ -13,7 +13,7 @@ class BadNameInCheckError(exceptions.RefactoringError):
     pass
 
 
-class SimilarFinder(object):
+class SimilarFinder:
     """`SimilarFinder` can be used to find similar pieces of code
 
     See the notes in the `rope.refactor.restructure` module for more
@@ -66,7 +66,7 @@ class SimilarFinder(object):
         return self.wildcards[kind].matches(suspect, arg)
 
 
-class RawSimilarFinder(object):
+class RawSimilarFinder:
     """A class for finding similar expressions and statements"""
 
     def __init__(self, source, node=None, does_match=None):
@@ -138,7 +138,7 @@ class RawSimilarFinder(object):
         return template.substitute(mapping)
 
 
-class _ASTMatcher(object):
+class _ASTMatcher:
     def __init__(self, body, pattern, does_match):
         """Searches the given pattern in the body AST.
 
@@ -233,7 +233,7 @@ class _ASTMatcher(object):
             return self._match_nodes(mapping[name], node2, {})
 
 
-class Match(object):
+class Match:
     def __init__(self, mapping):
         self.mapping = mapping
 
@@ -247,7 +247,7 @@ class Match(object):
 
 class ExpressionMatch(Match):
     def __init__(self, ast, mapping):
-        super(ExpressionMatch, self).__init__(mapping)
+        super().__init__(mapping)
         self.ast = ast
 
     def get_region(self):
@@ -256,14 +256,14 @@ class ExpressionMatch(Match):
 
 class StatementMatch(Match):
     def __init__(self, ast_list, mapping):
-        super(StatementMatch, self).__init__(mapping)
+        super().__init__(mapping)
         self.ast_list = ast_list
 
     def get_region(self):
         return self.ast_list[0].region[0], self.ast_list[-1].region[1]
 
 
-class CodeTemplate(object):
+class CodeTemplate:
     def __init__(self, template):
         self.template = template
         self._find_names()
@@ -307,7 +307,7 @@ class CodeTemplate(object):
         return cls._match_pattern
 
 
-class _RopeVariable(object):
+class _RopeVariable:
     """Transform and identify rope inserted wildcards"""
 
     _normal_prefix = "__rope__variable_normal_"

@@ -26,7 +26,7 @@ class NumPyDocstringParamParser(docstrings.IParamParser):
                     p_type = m.group(1)
 
                 if p_type.startswith("{"):
-                    types = set(type(x).__name__ for x in literal_eval(p_type))
+                    types = {type(x).__name__ for x in literal_eval(p_type)}
                     return list(types)
                 else:
                     return [p_type]

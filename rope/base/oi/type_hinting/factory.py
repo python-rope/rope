@@ -59,7 +59,7 @@ class TypeHintingFactory(interfaces.ITypeHintingFactory):
 default_type_hinting_factory = TypeHintingFactory()
 
 
-class TypeHintingFactoryAccessor(object):
+class TypeHintingFactoryAccessor:
     def __call__(self, project):
         """
         :type project: rope.base.project.Project

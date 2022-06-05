@@ -9,7 +9,7 @@ from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
 
-class EncapsulateField(object):
+class EncapsulateField:
     def __init__(self, project, resource, offset):
         self.project = project
         self.name = worder.get_name_at(resource, offset)
@@ -105,8 +105,8 @@ class EncapsulateField(object):
                 class_scope.get_start()
             )
         indents = sourceutils.get_indent(self.project) * " "
-        getter = "def %s(self):\n%sreturn self.%s" % (getter, indents, self.name)
-        setter = "def %s(self, value):\n%sself.%s = value" % (
+        getter = "def {}(self):\n{}return self.{}".format(getter, indents, self.name)
+        setter = "def {}(self, value):\n{}self.{} = value".format(
             setter,
             indents,
             self.name,
@@ -115,7 +115,7 @@ class EncapsulateField(object):
         return new_source
 
 
-class GetterSetterRenameInModule(object):
+class GetterSetterRenameInModule:
     def __init__(self, project, name, pyname, getter, setter):
         self.project = project
         self.name = name
@@ -132,7 +132,7 @@ class GetterSetterRenameInModule(object):
         return change_finder.get_changed_module()
 
 
-class _FindChangesForModule(object):
+class _FindChangesForModule:
     def __init__(self, finder, resource, pymodule, skip_start, skip_end):
         self.project = finder.project
         self.finder = finder.finder

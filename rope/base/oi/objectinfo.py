@@ -4,7 +4,7 @@ from rope.base import exceptions, resourceobserver
 from rope.base.oi import objectdb, memorydb, transform
 
 
-class ObjectInfoManager(object):
+class ObjectInfoManager:
     """Stores object information
 
     It uses an instance of `objectdb.ObjectDB` for storing
@@ -96,7 +96,7 @@ class ObjectInfoManager(object):
     def _args_to_textual(self, pyfunction, args):
         parameters = list(pyfunction.get_param_names(special_args=False))
         arguments = args.get_arguments(parameters)[: len(parameters)]
-        textual_args = tuple([self.to_textual(arg) for arg in arguments])
+        textual_args = tuple(self.to_textual(arg) for arg in arguments)
         return textual_args
 
     def get_parameter_objects(self, pyobject):
@@ -138,14 +138,14 @@ class ObjectInfoManager(object):
             return self.to_textual(pyobject)
 
         function = doi_to_normal(data[0])
-        args = tuple([doi_to_normal(textual) for textual in data[1]])
+        args = tuple(doi_to_normal(textual) for textual in data[1])
         returned = doi_to_normal(data[2])
         if function[0] == "defined" and len(function) == 3:
             self._save_data(function, args, returned)
 
     def function_called(self, pyfunction, params, returned=None):
         function_text = self.to_textual(pyfunction)
-        params_text = tuple([self.to_textual(param) for param in params])
+        params_text = tuple(self.to_textual(param) for param in params)
         returned_text = ("unknown",)
         if returned is not None:
             returned_text = self.to_textual(returned)
@@ -187,7 +187,7 @@ class ObjectInfoManager(object):
         return str(self.objectdb)
 
 
-class TextualValidation(object):
+class TextualValidation:
     def __init__(self, to_pyobject):
         self.to_pyobject = to_pyobject
 
@@ -213,7 +213,7 @@ class TextualValidation(object):
         return self.to_pyobject(textual) is not None
 
 
-class _FileListObserver(object):
+class _FileListObserver:
     def __init__(self, object_info):
         self.object_info = object_info
         self.observer = self.object_info.observer

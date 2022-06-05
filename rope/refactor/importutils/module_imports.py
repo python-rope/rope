@@ -6,7 +6,7 @@ from rope.refactor.importutils import actions
 from rope.refactor.importutils import importinfo
 
 
-class ModuleImports(object):
+class ModuleImports:
     def __init__(self, project, pymodule, import_filter=None):
         self.project = project
         self.pymodule = pymodule
@@ -290,7 +290,7 @@ class ModuleImports(object):
     def _get_import_name(self, import_stmt):
         import_info = import_stmt.import_info
         if hasattr(import_info, "module_name"):
-            return "%s.%s" % (
+            return "{}.{}".format(
                 import_info.module_name,
                 import_info.names_and_aliases[0][0],
             )
@@ -355,7 +355,7 @@ def _count_blank_lines(get_line, start, end, step=1):
     return count
 
 
-class _OneTimeSelector(object):
+class _OneTimeSelector:
     def __init__(self, names):
         self.names = names
         self.selected_names = set()
@@ -379,7 +379,7 @@ class _OneTimeSelector(object):
         return False
 
 
-class _UnboundNameFinder(object):
+class _UnboundNameFinder:
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -431,7 +431,7 @@ class _UnboundNameFinder(object):
 
 class _GlobalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pymodule, wanted_pyobject):
-        super(_GlobalUnboundNameFinder, self).__init__(pymodule)
+        super().__init__(pymodule)
         self.unbound = set()
         self.names = set()
         for name, pyname in pymodule._get_structural_attributes().items():
@@ -459,7 +459,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
 
 class _LocalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pyobject, parent):
-        super(_LocalUnboundNameFinder, self).__init__(pyobject)
+        super().__init__(pyobject)
         self.parent = parent
 
     def _get_root(self):
@@ -479,7 +479,7 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
         self.parent.add_unbound(name)
 
 
-class _GlobalImportFinder(object):
+class _GlobalImportFinder:
     def __init__(self, pymodule):
         self.current_folder = None
         if pymodule.get_resource():

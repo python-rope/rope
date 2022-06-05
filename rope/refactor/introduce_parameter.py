@@ -3,7 +3,7 @@ from rope.base import exceptions, evaluate, worder, codeanalyze
 from rope.refactor import functionutils, sourceutils, occurrences
 
 
-class IntroduceParameter(object):
+class IntroduceParameter:
     """Introduce parameter refactoring
 
     This refactoring adds a new parameter to a function and replaces

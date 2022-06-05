@@ -69,7 +69,7 @@ class MismatchedTokenError(exceptions.RopeError):
     pass
 
 
-class _PatchingASTWalker(object):
+class _PatchingASTWalker:
     def __init__(self, source, children=False):
         self.source = _Source(source)
         self.children = children
@@ -956,7 +956,7 @@ class _PatchingASTWalker(object):
         self._handle(node, [node.value])
 
 
-class _Source(object):
+class _Source:
     def __init__(self, source):
         self.source = source
         self.offset = 0
@@ -971,7 +971,7 @@ class _Source(object):
                     self._skip_comment()
         except (ValueError, TypeError) as e:
             raise MismatchedTokenError(
-                "Token <%s> at %s cannot be matched" % (token, self._get_location())
+                "Token <{}> at {} cannot be matched".format(token, self._get_location())
             )
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
@@ -985,8 +985,8 @@ class _Source(object):
         if _Source._string_pattern is None:
             string_pattern = codeanalyze.get_string_pattern()
             formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:%s)|(?:%s)" % (string_pattern, formatted_string_pattern)
-            pattern = r"(%s)((\s|\\\n|#[^\n]*\n)*(%s))*" % (original, original)
+            original = r"(?:{})|(?:{})".format(string_pattern, formatted_string_pattern)
+            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(original, original)
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)

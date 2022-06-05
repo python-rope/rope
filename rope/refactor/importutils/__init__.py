@@ -13,7 +13,7 @@ from rope.refactor.importutils.importinfo import NormalImport, FromImport
 import rope.base.codeanalyze
 
 
-class ImportOrganizer(object):
+class ImportOrganizer:
     """Perform some import-related commands
 
     Each method returns a `rope.base.change.Change` object.
@@ -70,7 +70,7 @@ class ImportOrganizer(object):
         return import_filter
 
 
-class ImportTools(object):
+class ImportTools:
     def __init__(self, project):
         self.project = project
 

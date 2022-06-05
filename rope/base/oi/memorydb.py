@@ -22,8 +22,7 @@ class MemoryDB(objectdb.FileDict):
         return self._files.keys()
 
     def __iter__(self):
-        for f in self._files:
-            yield f
+        yield from self._files
 
     def __len__(self):
         return len(self._files)
@@ -85,8 +84,7 @@ class FileInfo(objectdb.FileInfo):
         del self.scopes[key]
 
     def __iter__(self):
-        for s in self.scopes:
-            yield s
+        yield from self.scopes
 
     def __len__(self):
         return len(self.scopes)

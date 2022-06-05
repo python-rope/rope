@@ -6,7 +6,7 @@ import rope.base.builtins
 from rope.base import exceptions
 
 
-class PyObjectToTextual(object):
+class PyObjectToTextual:
     """For transforming `PyObject` to textual form
 
     This can be used for storing `PyObjects` in files.  Use
@@ -107,7 +107,7 @@ class PyObjectToTextual(object):
             return resource.real_path
 
 
-class TextualToPyObject(object):
+class TextualToPyObject:
     """For transforming textual form to `PyObject`"""
 
     def __init__(self, project, allow_in_project_absolutes=False):
@@ -289,4 +289,4 @@ class DOITextualToPyObject(TextualToPyObject):
         relpath = rope.base.libutils.path_relative_to_project_root(self.project, path)
         if relpath is not None:
             path = relpath
-        return super(DOITextualToPyObject, self).path_to_resource(path)
+        return super().path_to_resource(path)

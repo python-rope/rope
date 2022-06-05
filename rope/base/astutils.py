@@ -18,7 +18,7 @@ def get_name_levels(node):
     return visitor.names
 
 
-class _NodeNameCollector(object):
+class _NodeNameCollector:
     def __init__(self, levels=None):
         self.names = []
         self.levels = levels

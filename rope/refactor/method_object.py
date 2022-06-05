@@ -5,7 +5,7 @@ from rope.base import pyobjects, exceptions, change, evaluate, codeanalyze
 from rope.refactor import sourceutils, occurrences, rename
 
 
-class MethodObject(object):
+class MethodObject:
     def __init__(self, project, resource, offset):
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
@@ -23,7 +23,7 @@ class MethodObject(object):
         body = sourceutils.fix_indentation(
             self._get_body(), sourceutils.get_indent(self.project) * 2
         )
-        return "class %s(object):\n\n%s%sdef __call__(self):\n%s" % (
+        return "class {}(object):\n\n{}{}def __call__(self):\n{}".format(
             name,
             self._get_init(),
             " " * sourceutils.get_indent(self.project),
@@ -43,7 +43,7 @@ class MethodObject(object):
         indents = sourceutils.get_indents(
             self.pymodule.lines, self.pyfunction.get_scope().get_start()
         ) + sourceutils.get_indent(self.project)
-        new_contents = " " * indents + "return %s(%s)()\n" % (
+        new_contents = " " * indents + "return {}({})()\n".format(
             classname,
             ", ".join(self._get_parameter_names()),
         )
@@ -88,9 +88,9 @@ class MethodObject(object):
             if arg == "self":
                 new_name = "host"
             header += ", %s" % new_name
-            body += indents * 2 + "self.%s = %s\n" % (arg, new_name)
+            body += indents * 2 + "self.{} = {}\n".format(arg, new_name)
         header += "):"
-        return "%s\n%s\n" % (header, body)
+        return "{}\n{}\n".format(header, body)
 
     def _get_parameter_names(self):
         return self.pyfunction.get_param_names()

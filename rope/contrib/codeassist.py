@@ -207,7 +207,7 @@ def get_canonical_path(project, resource, offset):
     return names
 
 
-class CompletionProposal(object):
+class CompletionProposal:
     """A completion proposal
 
     The `scope` instance variable shows where proposed name came from
@@ -238,7 +238,7 @@ class CompletionProposal(object):
         self.scope = self._get_scope(scope)
 
     def __str__(self):
-        return "%s (%s, %s)" % (self.name, self.scope, self.type)
+        return "{} ({}, {})".format(self.name, self.scope, self.type)
 
     def __repr__(self):
         return str(self)
@@ -326,7 +326,7 @@ class NamedParamProposal(CompletionProposal):
     def __init__(self, name, function):
         self.argname = name
         name = "%s=" % name
-        super(NamedParamProposal, self).__init__(name, "parameter_keyword")
+        super().__init__(name, "parameter_keyword")
         self._function = function
 
     def get_default(self):
@@ -376,7 +376,7 @@ def default_templates():
     return {}
 
 
-class _PythonCodeAssist(object):
+class _PythonCodeAssist:
     def __init__(
         self, project, source_code, offset, resource=None, maxfixes=1, later_locals=True
     ):
@@ -534,7 +534,7 @@ class _PythonCodeAssist(object):
         return {}
 
 
-class _ProposalSorter(object):
+class _ProposalSorter:
     """Sort a list of code assist proposals"""
 
     def __init__(self, code_assist_proposals, scopepref=None, typepref=None):
@@ -552,7 +552,7 @@ class _ProposalSorter(object):
         self.scopepref = scopepref
         if typepref is None:
             typepref = ["class", "function", "instance", "module", None]
-        self.typerank = dict((type, index) for index, type in enumerate(typepref))
+        self.typerank = {type: index for index, type in enumerate(typepref)}
 
     def get_sorted_proposal_list(self):
         """Return a list of `CodeAssistProposal`"""
@@ -587,7 +587,7 @@ class _ProposalSorter(object):
         #                                      proposal2.name)
 
 
-class PyDocExtractor(object):
+class PyDocExtractor:
     def get_doc(self, pyobject):
         if isinstance(pyobject, pyobjects.AbstractFunction):
             return self._get_function_docstring(pyobject)
@@ -616,7 +616,9 @@ class PyDocExtractor(object):
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
         supers = [super.get_name() for super in pyclass.get_superclasses()]
-        doc = "class %s(%s):\n\n" % (pyclass.get_name(), ", ".join(supers)) + contents
+        doc = (
+            "class {}({}):\n\n".format(pyclass.get_name(), ", ".join(supers)) + contents
+        )
 
         if "__init__" in pyclass:
             init = pyclass["__init__"].get_object()
@@ -660,7 +662,7 @@ class PyDocExtractor(object):
             info = functionutils.DefinitionInfo.read(pyfunction)
             return location + info.to_string()
         else:
-            return "%s(%s)" % (
+            return "{}({})".format(
                 location + pyfunction.get_name(),
                 ", ".join(pyfunction.get_param_names()),
             )
@@ -711,7 +713,7 @@ class PyDocExtractor(object):
         while trimmed and not trimmed[0]:
             trimmed.pop(0)
         # Return a single string:
-        return "\n".join((" " * indents + line for line in trimmed))
+        return "\n".join(" " * indents + line for line in trimmed)
 
 
 # Deprecated classes
@@ -722,11 +724,11 @@ class TemplateProposal(CodeAssistProposal):
         warnings.warn(
             "TemplateProposal is deprecated.", DeprecationWarning, stacklevel=2
         )
-        super(TemplateProposal, self).__init__(name, "template")
+        super().__init__(name, "template")
         self.template = template
 
 
-class Template(object):
+class Template:
     def __init__(self, template):
         self.template = template
         warnings.warn("Template is deprecated.", DeprecationWarning, stacklevel=2)

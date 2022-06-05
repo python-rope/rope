@@ -3,7 +3,7 @@ from rope.base import libutils
 from rope.refactor import restructure, sourceutils, similarfinder
 
 
-class UseFunction(object):
+class UseFunction:
     """Try to use a function wherever possible"""
 
     def __init__(self, project, resource, offset):
@@ -90,7 +90,9 @@ class UseFunction(object):
             if self._is_expression():
                 replacement = "${%s}" % self._rope_returned
             else:
-                replacement = "%s = ${%s}" % (self._rope_result, self._rope_returned)
+                replacement = "{} = ${{{}}}".format(
+                    self._rope_result, self._rope_returned
+                )
             body = restructure.replace(
                 body, "return ${%s}" % self._rope_returned, replacement
             )
@@ -105,9 +107,9 @@ class UseFunction(object):
         function_name = self.pyfunction.get_name()
         if import_:
             function_name = self._module_name() + "." + function_name
-        goal = "%s(%s)" % (function_name, ", ".join(("${%s}" % p) for p in params))
+        goal = "{}({})".format(function_name, ", ".join(("${%s}" % p) for p in params))
         if self._does_return() and not self._is_expression():
-            goal = "${%s} = %s" % (self._rope_result, goal)
+            goal = "${{{}}} = {}".format(self._rope_result, goal)
         return goal
 
     def _does_return(self):
@@ -165,7 +167,7 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder(object):
+class _ReturnOrYieldFinder:
     def __init__(self):
         self.returns = 0
         self.named_expression = 0
