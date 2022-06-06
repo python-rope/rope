@@ -5,8 +5,8 @@ from rope.base import utils, exceptions
 
 
 class BaseJobSet(ABC):
-    name: str
-    job_name: str
+    name: str = ""
+    job_name: str = ""
 
     @abstractmethod
     def started_job(self, name: str) -> None:
