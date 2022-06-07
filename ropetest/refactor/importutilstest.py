@@ -1963,6 +1963,21 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod1)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_undefined_variable_with_imported_name(self):
+        self.mod1.write("")
+        self.mod2.write("from pkg1.mod1 import undefined_variable")
+
+        code = expected = dedent("""\
+            from pkg2.mod2 import undefined_variable
+
+
+            __all__ = undefined_variable
+        """)
+        self.mod3.write(code)
+
+        pymod = self.project.get_pymodule(self.mod3)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_organizing_indirect_all_star_import(self):
         self.mod1.write("some_name = 1")
         self.mod2.write(dedent("""\

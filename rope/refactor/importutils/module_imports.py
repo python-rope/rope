@@ -34,9 +34,12 @@ class ModuleImports:
             name: Union[pynamesdef.AssignedName, pynames.ImportedName]
         ) -> List:
             while isinstance(name, pynames.ImportedName):
-                name = name.imported_module.get_object().get_attribute(
-                    name.imported_name,
-                )
+                try:
+                    name = name.imported_module.get_object().get_attribute(
+                        name.imported_name,
+                    )
+                except exceptions.AttributeNotFoundError:
+                    return []
             assert isinstance(name, pynamesdef.AssignedName)
             return name.assignments
 
