@@ -1886,6 +1886,18 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_starjoin(self):
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+
+            foo = ['name_two']
+            __all__ = ['name_one', *foo]
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     @testutils.time_limit(60)
     def test_organizing_imports_all_star_no_infinite_loop(self):
         code = expected = dedent("""\

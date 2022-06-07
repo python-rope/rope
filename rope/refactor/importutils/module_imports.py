@@ -45,7 +45,8 @@ class ModuleImports:
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
-        for assignment in assignments:
+        while assignments:
+            assignment = assignments.pop()
             if isinstance(assignment.ast_node, ast.List):
                 stack = list(assignment.ast_node.elts)
                 while stack:
@@ -65,6 +66,12 @@ class ModuleImports:
                     elif isinstance(el, ast.IfExp):
                         stack.append(el.body)
                         stack.append(el.orelse)
+                    elif isinstance(el, ast.Starred):
+                        try:
+                            name = pymodule.get_attribute(el.value.id)
+                        except exceptions.AttributeNotFoundError:
+                            continue
+                        assignments.extend([node for node in name.assignments])
         return result
 
     def remove_unused_imports(self):
