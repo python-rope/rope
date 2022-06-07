@@ -84,9 +84,10 @@ class ModuleImports:
                     name = pymodule.get_attribute(assignment.id)
                 except exceptions.AttributeNotFoundError:
                     continue
-                assignments.extend(
-                    assignment.ast_node for assignment in _resolve_name(name)
-                )
+                else:
+                    assignments.extend(
+                        assignment.ast_node for assignment in _resolve_name(name)
+                    )
             elif isinstance(assignment, ast.BinOp):
                 assignments.append(assignment.left)
                 assignments.append(assignment.right)
