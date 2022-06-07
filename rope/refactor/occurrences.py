@@ -327,7 +327,7 @@ class _TextualFinder:
         for match in self.pattern.finditer(source):
             if match.groupdict()["occurrence"]:
                 yield match.start("occurrence")
-            elif utils.pycompat.PY36 and match.groupdict()["fstring"]:
+            elif match.groupdict()["fstring"]:
                 f_string = match.groupdict()["fstring"]
                 for occurrence_node in self._search_in_f_string(f_string):
                     yield match.start("fstring") + occurrence_node.col_offset

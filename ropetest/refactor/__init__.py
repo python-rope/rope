@@ -1122,7 +1122,14 @@ class TaskHandleTest(unittest.TestCase):
     def test_getting_job_name(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset(name="test job set", count=1)
+        # recommended name/job_name attribute
+        self.assertEqual("test job set", jobs.name)
+        self.assertEqual(None, jobs.job_name)
+        # deprecated getters
         self.assertEqual("test job set", jobs.get_name())
         self.assertEqual(None, jobs.get_active_job_name())
         jobs.started_job("job1")
+        # recommended name/job_name attribute
+        self.assertEqual("test job set", jobs.get_name())
+        # deprecated getters
         self.assertEqual("job1", jobs.get_active_job_name())

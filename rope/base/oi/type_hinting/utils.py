@@ -128,18 +128,6 @@ class ParametrizeType:
         "collections.abc.Iterable": "rope.base.builtins.get_iterator",  # Python3.3
         "collections.abc.Iterator": "rope.base.builtins.get_iterator",  # Python3.3
     }
-    if pycompat.PY2:
-        _supported_mapping = dict(
-            (
-                (
-                    k.replace("builtins.", "__builtin__.").replace(
-                        "_collections_abc.", "_abcoll."
-                    ),
-                    v,
-                )
-                for k, v in _supported_mapping.items()
-            )
-        )
 
     def __call__(self, pyobject, *args, **kwargs):
         """
