@@ -1873,6 +1873,33 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_assigned_name_alias(self):
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+
+            foo = ['name_one', 'name_two']
+            __all__ = foo
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_imported_name_alias(self):
+        self.mod1.write("foo = ['name_one', 'name_two']")
+        self.mod2.write("from pkg1.mod1 import foo")
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+            from pkg2.mod2 import foo
+
+
+            __all__ = foo
+        """)
+        self.mod3.write(code)
+        pymod = self.project.get_pymodule(self.mod3)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_organizing_imports_all_star_tolerates_non_list_of_str_2(self):
         code = expected = dedent("""\
             from package import name_one, name_two
@@ -1881,6 +1908,30 @@ class ImportUtilsTest(unittest.TestCase):
             foo = 'name_two'
             __all__ = [foo, 3, 'name_one']
             __all__ = [it for it in mylist]
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_plusjoin(self):
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+
+            foo = ['name_two']
+            __all__ = ['name_one'] + foo
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_starjoin(self):
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+
+            foo = ['name_two']
+            __all__ = ['name_one', *foo]
         """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
@@ -1898,6 +1949,66 @@ class ImportUtilsTest(unittest.TestCase):
         """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_all_star_resolve_imported_name(self):
+        self.mod1.write("foo = 'name_one'")
+
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+            from pkg1.mod1 import foo
+
+
+            __all__ = [foo, 'name_two']
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_undefined_variable(self):
+        code = expected = dedent("""\
+            from foo import some_name
+
+
+            __all__ = ['some_name', undefined_variable]
+        """)
+        self.mod1.write(code)
+
+        pymod = self.project.get_pymodule(self.mod1)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_imports_undefined_variable_with_imported_name(self):
+        self.mod1.write("")
+        self.mod2.write("from pkg1.mod1 import undefined_variable")
+
+        code = expected = dedent("""\
+            from pkg2.mod2 import undefined_variable
+
+
+            __all__ = undefined_variable
+        """)
+        self.mod3.write(code)
+
+        pymod = self.project.get_pymodule(self.mod3)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
+    def test_organizing_indirect_all_star_import(self):
+        self.mod1.write("some_name = 1")
+        self.mod2.write(
+            dedent("""\
+                __all__ = ['some_name', *imported_all]
+            """)
+        )
+
+        code = expected = dedent("""\
+            from mod1 import some_name
+
+            from mod2 import __all__
+        """)
+        self.mod3.write(code)
+
+        pymod = self.project.get_pymodule(self.mod3)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
     def test_customized_import_organization(self):
