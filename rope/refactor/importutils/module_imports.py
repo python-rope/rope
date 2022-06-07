@@ -42,13 +42,14 @@ class ModuleImports:
         if assignments is None:
             return result
 
+        assignments = [ass.ast_node for ass in assignments]
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
         while assignments:
             assignment = assignments.pop()
-            if isinstance(assignment.ast_node, ast.List):
-                stack = list(assignment.ast_node.elts)
+            if isinstance(assignment, ast.List):
+                stack = list(assignment.elts)
                 while stack:
                     el = stack.pop()
                     if isinstance(el, ast.Str):
@@ -67,17 +68,18 @@ class ModuleImports:
                         stack.append(el.body)
                         stack.append(el.orelse)
                     elif isinstance(el, ast.Starred):
-                        try:
-                            name = pymodule.get_attribute(el.value.id)
-                        except exceptions.AttributeNotFoundError:
-                            continue
-                        assignments.extend([node for node in name.assignments])
-            elif isinstance(assignment.ast_node, ast.Name):
+                        assignments.append(el.value)
+            elif isinstance(assignment, ast.Name):
                 try:
-                    name = pymodule.get_attribute(assignment.ast_node.id)
+                    name = pymodule.get_attribute(assignment.id)
                 except exceptions.AttributeNotFoundError:
                     continue
-                assignments.extend([node for node in name.assignments])
+                if isinstance(name, pynames.ImportedName):
+                    name = name.imported_module.get_object().get_attribute(
+                        name.imported_name,
+                    )
+
+                assignments.extend([node.ast_node for node in name.assignments])
         return result
 
     def remove_unused_imports(self):
