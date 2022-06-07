@@ -80,6 +80,9 @@ class ModuleImports:
                     )
 
                 assignments.extend([node.ast_node for node in name.assignments])
+            elif isinstance(assignment, ast.BinOp):
+                assignments.append(assignment.left)
+                assignments.append(assignment.right)
         return result
 
     def remove_unused_imports(self):
