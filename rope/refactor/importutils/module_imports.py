@@ -1,9 +1,7 @@
-from rope.base import ast
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import utils
-from rope.refactor.importutils import actions
-from rope.refactor.importutils import importinfo
+from typing import Union, List
+
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.refactor.importutils import actions, importinfo
 
 
 class ModuleImports:
@@ -32,17 +30,26 @@ class ModuleImports:
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
+        def _resolve_name(
+            name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+        ) -> List:
+            if isinstance(name, pynames.ImportedName):
+                name = name.imported_module.get_object().get_attribute(
+                    name.imported_name,
+                )
+                assert isinstance(name, pynamesdef.AssignedName)
+            return name.assignments
+
         result = set()
         try:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
             return result
 
-        assignments = getattr(all_star_list, "assignments", None)
-        if assignments is None:
-            return result
+        assignments = [
+            assignment.ast_node for assignment in _resolve_name(all_star_list)
+        ]
 
-        assignments = [ass.ast_node for ass in assignments]
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
@@ -74,12 +81,9 @@ class ModuleImports:
                     name = pymodule.get_attribute(assignment.id)
                 except exceptions.AttributeNotFoundError:
                     continue
-                if isinstance(name, pynames.ImportedName):
-                    name = name.imported_module.get_object().get_attribute(
-                        name.imported_name,
-                    )
-
-                assignments.extend([node.ast_node for node in name.assignments])
+                assignments.extend(
+                    assignment.ast_node for assignment in _resolve_name(name)
+                )
             elif isinstance(assignment, ast.BinOp):
                 assignments.append(assignment.left)
                 assignments.append(assignment.right)

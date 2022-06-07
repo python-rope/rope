@@ -1873,7 +1873,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
-    def test_organizing_imports_all_star_alias(self):
+    def test_organizing_imports_all_star_assigned_name_alias(self):
         code = expected = dedent("""\
             from package import name_one, name_two
 
@@ -1964,10 +1964,12 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_organizing_indirect_all_star_import(self):
         self.mod1.write("some_name = 1")
-        self.mod2.write("__all__ = ['some_name']")
+        self.mod2.write(dedent("""\
+            __all__ = ['some_name', *imported_all]
+        """))
 
         code = expected = dedent("""\
-            from mod1 import *
+            from mod1 import some_name
 
             from mod2 import __all__
         """)
