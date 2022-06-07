@@ -2,7 +2,6 @@ import ast
 import builtins
 
 
-str = str
 string_types = (str,)
 
 ast_arg_type = ast.arg

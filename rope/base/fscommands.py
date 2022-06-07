@@ -277,7 +277,7 @@ def read_str_coding(source):
 
 
 def _find_coding(text):
-    if isinstance(text, pycompat.str):
+    if isinstance(text, str):
         text = text.encode("utf-8")
     coding = b"coding"
     to_chr = chr
