@@ -1900,6 +1900,18 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_undefined_variable(self):
+        code = expected = dedent("""\
+            from foo import some_name
+
+
+            __all__ = ['some_name', undefined_variable]
+        """)
+        self.mod1.write(code)
+
+        pymod = self.project.get_pymodule(self.mod1)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_organizing_indirect_all_star_import(self):
         self.mod1.write("some_name = 1")
         self.mod2.write("__all__ = ['some_name']")

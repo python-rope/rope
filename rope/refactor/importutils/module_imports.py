@@ -53,11 +53,15 @@ class ModuleImports:
                     if isinstance(el, ast.Str):
                         result.add(el.s)
                     elif isinstance(el, ast.Name):
-                        name = pymodule.get_attribute(el.id)
-                        if isinstance(name, pynames.AssignedName):
-                            for av in name.assignments:
-                                if isinstance(av.ast_node, ast.Str):
-                                    result.add(av.ast_node.s)
+                        try:
+                            name = pymodule.get_attribute(el.id)
+                        except exceptions.AttributeNotFoundError:
+                            continue
+                        else:
+                            if isinstance(name, pynames.AssignedName):
+                                for av in name.assignments:
+                                    if isinstance(av.ast_node, ast.Str):
+                                        result.add(av.ast_node.s)
                     elif isinstance(el, ast.IfExp):
                         stack.append(el.body)
                         stack.append(el.orelse)
