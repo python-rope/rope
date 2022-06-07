@@ -1,8 +1,6 @@
 import ast
 import builtins
 
-# from rope.base import ast
-
 
 str = str
 string_types = (str,)
