@@ -33,11 +33,11 @@ class ModuleImports:
         def _resolve_name(
             name: Union[pynamesdef.AssignedName, pynames.ImportedName]
         ) -> List:
-            if isinstance(name, pynames.ImportedName):
+            while isinstance(name, pynames.ImportedName):
                 name = name.imported_module.get_object().get_attribute(
                     name.imported_name,
                 )
-                assert isinstance(name, pynamesdef.AssignedName)
+            assert isinstance(name, pynamesdef.AssignedName)
             return name.assignments
 
         result = set()
