@@ -72,6 +72,12 @@ class ModuleImports:
                         except exceptions.AttributeNotFoundError:
                             continue
                         assignments.extend([node for node in name.assignments])
+            elif isinstance(assignment.ast_node, ast.Name):
+                try:
+                    name = pymodule.get_attribute(assignment.ast_node.id)
+                except exceptions.AttributeNotFoundError:
+                    continue
+                assignments.extend([node for node in name.assignments])
         return result
 
     def remove_unused_imports(self):

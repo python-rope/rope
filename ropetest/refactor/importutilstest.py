@@ -1873,6 +1873,18 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_alias(self):
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+
+            foo = ['name_one', 'name_two']
+            __all__ = foo
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_organizing_imports_all_star_tolerates_non_list_of_str_2(self):
         code = expected = dedent("""\
             from package import name_one, name_two
