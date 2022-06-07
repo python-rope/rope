@@ -1951,6 +1951,21 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_all_star_resolve_imported_name(self):
+        self.mod1.write("foo = 'name_one'")
+
+        code = expected = dedent("""\
+            from package import name_one, name_two
+
+            from pkg1.mod1 import foo
+
+
+            __all__ = [foo, 'name_two']
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(expected, self.import_tools.organize_imports(pymod))
+
     def test_organizing_imports_undefined_variable(self):
         code = expected = dedent("""\
             from foo import some_name
@@ -1980,9 +1995,11 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_organizing_indirect_all_star_import(self):
         self.mod1.write("some_name = 1")
-        self.mod2.write(dedent("""\
-            __all__ = ['some_name', *imported_all]
-        """))
+        self.mod2.write(
+            dedent("""\
+                __all__ = ['some_name', *imported_all]
+            """)
+        )
 
         code = expected = dedent("""\
             from mod1 import some_name

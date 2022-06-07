@@ -62,23 +62,23 @@ class ModuleImports:
                 stack = list(assignment.elts)
                 while stack:
                     el = stack.pop()
-                    if isinstance(el, ast.Str):
-                        result.add(el.s)
-                    elif isinstance(el, ast.Name):
-                        try:
-                            name = pymodule.get_attribute(el.id)
-                        except exceptions.AttributeNotFoundError:
-                            continue
-                        else:
-                            if isinstance(name, pynames.AssignedName):
-                                for av in name.assignments:
-                                    if isinstance(av.ast_node, ast.Str):
-                                        result.add(av.ast_node.s)
-                    elif isinstance(el, ast.IfExp):
+                    if isinstance(el, ast.IfExp):
                         stack.append(el.body)
                         stack.append(el.orelse)
                     elif isinstance(el, ast.Starred):
                         assignments.append(el.value)
+                    else:
+                        if isinstance(el, ast.Str):
+                            result.add(el.s)
+                        elif isinstance(el, ast.Name):
+                            try:
+                                name = pymodule.get_attribute(el.id)
+                            except exceptions.AttributeNotFoundError:
+                                continue
+                            else:
+                                for av in _resolve_name(name):
+                                    if isinstance(av.ast_node, ast.Str):
+                                        result.add(av.ast_node.s)
             elif isinstance(assignment, ast.Name):
                 try:
                     name = pymodule.get_attribute(assignment.id)
