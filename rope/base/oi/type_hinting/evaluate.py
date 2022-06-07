@@ -188,7 +188,7 @@ class Parser:
 
     def parse(self, program):
         generator = self.lexer.tokenize(program)
-        self.next = generator.__next__  # PY3
+        self.next = generator.__next__
         self.token = self.next()
         return self.expression()
 
@@ -351,11 +351,7 @@ class Evaluator:
         :type program: str or rope.base.oi.type_hinting.evaluate.SymbolBase
         :rtype: rope.base.pyobjects.PyDefinedObject | rope.base.pyobjects.PyObject or None
         """
-        ast = (
-            self.compile(program)
-            if isinstance(program, pycompat.string_types)
-            else program
-        )
+        ast = self.compile(program) if isinstance(program, str) else program
         return ast.evaluate(pyobject)
 
 

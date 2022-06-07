@@ -145,7 +145,7 @@ def __rope_start_everything():
                 return ("unknown",)
 
         def _get_persisted_builtin(self, object_):
-            if isinstance(object_, pycompat.string_types):
+            if isinstance(object_, str):
                 return ("builtin", "str")
             if isinstance(object_, list):
                 holding = None
@@ -194,7 +194,7 @@ def __rope_start_everything():
                 return self._get_persisted_code(object_.__func__.__code__)
             if isinstance(object_, types.ModuleType):
                 return self._get_persisted_module(object_)
-            if isinstance(object_, pycompat.string_types + (list, dict, tuple, set)):
+            if isinstance(object_, (str, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, type):
                 return self._get_persisted_class(object_)

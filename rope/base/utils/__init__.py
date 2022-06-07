@@ -99,9 +99,7 @@ class _Cached:
 
 def resolve(str_or_obj):
     """Returns object from string"""
-    from rope.base.utils.pycompat import string_types
-
-    if not isinstance(str_or_obj, string_types):
+    if not isinstance(str_or_obj, str):
         return str_or_obj
     if "." not in str_or_obj:
         str_or_obj += "."

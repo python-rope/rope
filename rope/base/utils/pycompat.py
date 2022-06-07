@@ -1,11 +1,6 @@
 import ast
 import builtins
 
-# from rope.base import ast
-
-
-str = str
-string_types = (str,)
 
 ast_arg_type = ast.arg
 
@@ -17,9 +12,7 @@ def execfile(fn, global_vars=None, local_vars=None):
 
 
 def get_ast_arg_arg(node):
-    if isinstance(
-        node, string_types
-    ):  # TODO: G21: Understand the Algorithm (Where it's used?)
+    if isinstance(node, str):  # TODO: G21: Understand the Algorithm (Where it's used?)
         return node
     return node.arg
 
