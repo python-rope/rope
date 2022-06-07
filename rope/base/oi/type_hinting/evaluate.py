@@ -188,7 +188,7 @@ class Parser:
 
     def parse(self, program):
         generator = self.lexer.tokenize(program)
-        self.next = generator.__next__  # PY3
+        self.next = generator.__next__
         self.token = self.next()
         return self.expression()
 
