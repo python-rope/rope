@@ -4,6 +4,7 @@
 # Improvement
 
 - #479 Add ABC and type hints for TaskHandle and JobSet (@bageljrkhanofemus)
+- #486 Drop Python 2 support (@bageljrkhanofemus, @lieryan)
 
 # Release 1.1.1
 
