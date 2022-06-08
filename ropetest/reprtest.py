@@ -1,8 +1,9 @@
+import pathlib
 import tempfile
 
 import pytest
 
-from rope.base import libutils, resources, pyobjectsdef, pynames
+from rope.base import libutils, resources, pyobjectsdef
 from rope.base.project import Project
 from ropetest import testutils
 
@@ -27,6 +28,7 @@ def mod1(project):
 
 def test_repr_project():
     with tempfile.TemporaryDirectory() as folder:
+        folder = pathlib.Path(folder).resolve()
         obj = testutils.sample_project(folder)
         assert isinstance(obj, Project)
         assert repr(obj) == f'<rope.base.project.Project "{folder}">'
