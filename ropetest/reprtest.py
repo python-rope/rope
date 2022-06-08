@@ -2,7 +2,7 @@ import tempfile
 
 import pytest
 
-from rope.base import resources, pyobjectsdef
+from rope.base import libutils, resources, pyobjectsdef
 from rope.base.project import Project
 from ropetest import testutils
 
@@ -50,7 +50,19 @@ def test_repr_pyobjectsdef_pymodule(project, mod1):
     assert repr(obj) == '<rope.base.pyobjectsdef.PyModule "pkg1.mod1">'
 
 
+def test_repr_pyobjectsdef_pymodule_without_associated_resource(project):
+    obj = pyobjectsdef.PyModule(project.pycore, "a = 1")
+    assert isinstance(obj, pyobjectsdef.PyModule)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyModule "">'
+
+
 def test_repr_pyobjectsdef_pypackage(project, mod1):
     obj = project.get_module("pkg1")
     assert isinstance(obj, pyobjectsdef.PyPackage)
     assert repr(obj) == '<rope.base.pyobjectsdef.PyPackage "pkg1">'
+
+
+def test_repr_pyobjectsdef_pypackage_without_associated_resource(project, mod1):
+    obj = pyobjectsdef.PyPackage(project.pycore)
+    assert isinstance(obj, pyobjectsdef.PyPackage)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyPackage "">'
