@@ -56,6 +56,7 @@ class ModuleImports:
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
+
         while assignments:
             assignment = assignments.pop()
             if isinstance(assignment, ast.List):
