@@ -181,7 +181,7 @@ class PyDefinedObject:
 
     @property
     def absolute_name(self):
-        obj_name = self.get_name() if hasattr(self, "get_name") else ""
+        obj_name = self.get_name()
         return self.get_module().get_name() + ("::" + obj_name if obj_name else "")
 
     visitor_class = None
