@@ -172,16 +172,17 @@ class PyDefinedObject:
         self.defineds = None
 
     def __repr__(self):
-        return '<%s.%s "%s">' % (
+        return '<%s.%s "%s" at %s>' % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.absolute_name,
+            hex(id(self)),
         )
 
     @property
     def absolute_name(self):
         obj_name = self.get_name() if hasattr(self, "get_name") else ""
-        return self.get_module().get_name() + ('::' + obj_name if obj_name else "")
+        return self.get_module().get_name() + ("::" + obj_name if obj_name else "")
 
     visitor_class = None
 
