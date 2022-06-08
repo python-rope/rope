@@ -238,7 +238,7 @@ class PyModule(pyobjects.PyModule):
         return rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
 
     def get_name(self):
-        return rope.base.libutils.modname(self.get_resource())
+        return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
 class PyPackage(pyobjects.PyPackage):
@@ -297,6 +297,9 @@ class PyPackage(pyobjects.PyPackage):
         if init_dot_py:
             return self.pycore.project.get_pymodule(init_dot_py)
         return self
+
+    def get_name(self):
+        return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
 class _AnnAssignVisitor:

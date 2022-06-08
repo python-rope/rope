@@ -221,6 +221,13 @@ class Project(_Project):
         self._init_prefs(prefs)
         self._init_source_folders()
 
+    def __repr__(self):
+        return '<{}.{} "{}">'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.address,
+        )
+
     @utils.deprecated("Delete once deprecated functions are gone")
     def _init_source_folders(self):
         for path in self.prefs.get("source_folders", []):
