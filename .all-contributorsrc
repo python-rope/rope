@@ -500,6 +500,16 @@
         "test",
         "code"
       ]
+    },
+    {
+      "login": "thomkeh",
+      "name": "Thomas MK",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7741417?v=4",
+      "profile": "https://github.com/thomkeh",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
