@@ -43,7 +43,7 @@ class Resource:
         self._path = path
 
     def __repr__(self):
-        return '<%s.%s "%s" at %s>' % (
+        return '<{}.{} "{}" at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.path,
