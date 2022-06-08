@@ -2,7 +2,7 @@ import tempfile
 
 import pytest
 
-from rope.base import libutils, resources, pyobjectsdef
+from rope.base import libutils, resources, pyobjectsdef, pynames
 from rope.base.project import Project
 from ropetest import testutils
 
@@ -66,3 +66,55 @@ def test_repr_pyobjectsdef_pypackage_without_associated_resource(project, mod1):
     obj = pyobjectsdef.PyPackage(project.pycore)
     assert isinstance(obj, pyobjectsdef.PyPackage)
     assert repr(obj) == '<rope.base.pyobjectsdef.PyPackage "">'
+
+
+def test_repr_pyobjectsdef_pyfunction(project, mod1):
+    code = """def func(arg): pass"""
+    mod = libutils.get_string_module(project, code, mod1)
+    obj = mod.get_attribute("func").pyobject
+    assert isinstance(obj, pyobjectsdef.PyFunction)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyFunction "pkg1.mod1.func">'
+
+
+def test_repr_pyobjectsdef_pyfunction_without_associated_resource(project):
+    code = """def func(arg): pass"""
+    mod = libutils.get_string_module(project, code)
+    obj = mod.get_attribute("func").pyobject
+    assert isinstance(obj, pyobjectsdef.PyFunction)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyFunction ".func">'
+
+
+def test_repr_pyobjectsdef_pyclass(project, mod1):
+    code = """class MyClass: pass"""
+    mod = libutils.get_string_module(project, code, mod1)
+    obj = mod.get_attribute("MyClass").pyobject
+    assert isinstance(obj, pyobjectsdef.PyClass)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyClass "pkg1.mod1.MyClass">'
+
+
+def test_repr_pyobjectsdef_pyclass_without_associated_resource(project):
+    code = """class MyClass: pass"""
+    mod = libutils.get_string_module(project, code)
+    obj = mod.get_attribute("MyClass").pyobject
+    assert isinstance(obj, pyobjectsdef.PyClass)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyClass ".MyClass">'
+
+
+def test_repr_pyobjectsdef_pycomprehension(project, mod1):
+    code = """[a for a in b]"""
+    mod = libutils.get_string_module(project, code, mod1)
+    mod._create_structural_attributes()
+    assert len(mod.defineds) == 1
+    obj = mod.defineds[0]
+    assert isinstance(obj, pyobjectsdef.PyComprehension)
+    assert repr(obj) == '<rope.base.pyobjectsdef.PyComprehension "pkg1.mod1.<comprehension>">'
+
+
+def test_repr_pyobjectsdef_pycomprehension_without_associated_resource(project):
+    code = """[a for a in b]"""
+    mod = libutils.get_string_module(project, code)
+    mod._create_structural_attributes()
+    assert len(mod.defineds) == 1
+    obj = mod.defineds[0]
+    assert isinstance(obj, pyobjectsdef.PyComprehension)
+    assert repr(obj) == f'<rope.base.pyobjectsdef.PyComprehension ".<comprehension>">'
