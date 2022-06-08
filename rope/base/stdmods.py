@@ -1,20 +1,13 @@
+import inspect
 import os
-import re
 import sys
 
 from rope.base import utils
-from rope.base.utils import pycompat
 
 
 def _stdlib_path():
-    if pycompat.PY2:
-        from distutils import sysconfig
 
-        return sysconfig.get_python_lib(standard_lib=True, plat_specific=True)
-    elif pycompat.PY3:
-        import inspect
-
-        return os.path.dirname(inspect.getsourcefile(inspect))
+    return os.path.dirname(inspect.getsourcefile(inspect))
 
 
 @utils.cached(1)
