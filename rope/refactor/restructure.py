@@ -6,7 +6,7 @@ from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 
 
-class Restructure(object):
+class Restructure:
     """A class to perform python restructurings
 
     A restructuring transforms pieces of code matching `pattern` to
@@ -137,7 +137,7 @@ class Restructure(object):
             )
             self.imports = imports
         changes = change.ChangeSet(
-            "Restructuring <%s> to <%s>" % (self.pattern, self.goal)
+            "Restructuring <{}> to <{}>".format(self.pattern, self.goal)
         )
         if resources is not None:
             files = [
@@ -206,7 +206,7 @@ class Restructure(object):
         pyname = None
         if attributes[0] in ("__builtin__", "__builtins__"):
 
-            class _BuiltinsStub(object):
+            class _BuiltinsStub:
                 def get_attribute(self, name):
                     return builtins.builtins[name]
 
@@ -235,7 +235,7 @@ def replace(code, pattern, goal):
     return result
 
 
-class _ChangeComputer(object):
+class _ChangeComputer:
     def __init__(self, code, ast, lines, goal, matches):
         self.source = code
         self.goal = goal

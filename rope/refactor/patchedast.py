@@ -2,6 +2,7 @@ import collections
 import numbers
 import re
 import warnings
+from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
 from rope.base.utils import pycompat
@@ -68,7 +69,7 @@ class MismatchedTokenError(exceptions.RopeError):
     pass
 
 
-class _PatchingASTWalker(object):
+class _PatchingASTWalker:
     def __init__(self, source, children=False):
         self.source = _Source(source)
         self.children = children
@@ -82,6 +83,7 @@ class _PatchingASTWalker(object):
     exec_close_paren_or_space = object()
     exec_in_or_comma = object()
     with_or_comma_context_manager = object()
+    empty_tuple = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -105,6 +107,7 @@ class _PatchingASTWalker(object):
                 RuntimeWarning,
             )
             return
+
         base_children = collections.deque(base_children)
         self.children_stack.append(base_children)
         children = collections.deque()
@@ -127,6 +130,8 @@ class _PatchingASTWalker(object):
                     )
                 elif child is self.Number:
                     region = self.source.consume_number()
+                elif child == self.empty_tuple:
+                    region = self.source.consume_empty_tuple()
                 elif child == "!=":
                     # INFO: This has been added to handle deprecated ``<>``
                     region = self.source.consume_not_equal()
@@ -244,6 +249,24 @@ class _PatchingASTWalker(object):
                 if isinstance(child, ast.stmt):
                     return child.col_offset + self.lines.get_line_start(child.lineno)
         return len(self.source.source)
+
+    def _join(self, iterable, separator):
+        iterable = iter(iterable)
+        try:
+            yield next(iterable)
+        except StopIteration:
+            return
+        for child in iterable:
+            yield separator
+            yield child
+
+    def _flatten_keywords(self, iterable):
+        iterable = ([attr, "=", pattern] for attr, pattern in iterable)
+        iterable = self._join(iterable, separator=[","])
+        return chain.from_iterable(iterable)
+
+    def _child_nodes(self, nodes, separator):
+        return list(self._join(nodes, separator=separator))
 
     _operators = {
         "And": "and",
@@ -723,30 +746,11 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Raise(self, node):
-        def get_python3_raise_children(node):
-            children = ["raise"]
-            if node.exc:
-                children.append(node.exc)
-            if node.cause:
-                children.append(node.cause)
-            return children
-
-        def get_python2_raise_children(node):
-            children = ["raise"]
-            if node.type:
-                children.append(node.type)
-            if node.inst:
-                children.append(",")
-                children.append(node.inst)
-            if node.tback:
-                children.append(",")
-                children.append(node.tback)
-            return children
-
-        if pycompat.PY2:
-            children = get_python2_raise_children(node)
-        else:
-            children = get_python3_raise_children(node)
+        children = ["raise"]
+        if node.exc:
+            children.append(node.exc)
+        if node.cause:
+            children.append(node.cause)
         self._handle(node, children)
 
     def _Return(self, node):
@@ -787,23 +791,18 @@ class _PatchingASTWalker(object):
         is_there_except_handler = False
         not_empty_body = True
         if len(node.finalbody) == 1:
-            if pycompat.PY2:
-                is_there_except_handler = isinstance(node.body[0], ast.TryExcept)
-                not_empty_body = not bool(len(node.body))
-            elif pycompat.PY3:
-                try:
-                    is_there_except_handler = isinstance(
-                        node.handlers[0], ast.ExceptHandler
-                    )
-                    not_empty_body = True
-                except IndexError:
-                    pass
+            try:
+                is_there_except_handler = isinstance(
+                    node.handlers[0], ast.ExceptHandler
+                )
+                not_empty_body = True
+            except IndexError:
+                pass
         children = []
         if not_empty_body or not is_there_except_handler:
             children.extend(["try", ":"])
         children.extend(node.body)
-        if pycompat.PY3:
-            children.extend(node.handlers)
+        children.extend(node.handlers)
         children.extend(["finally", ":"])
         children.extend(node.finalbody)
         self._handle(node, children)
@@ -843,7 +842,7 @@ class _PatchingASTWalker(object):
         if node.elts:
             self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
         else:
-            self._handle(node, ["(", ")"])
+            self._handle(node, [self.empty_tuple])
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
@@ -862,6 +861,10 @@ class _PatchingASTWalker(object):
             children.append(node.value)
         self._handle(node, children)
 
+    def _YieldFrom(self, node):
+        children = ["yield", "from", node.value]
+        self._handle(node, children)
+
     def _While(self, node):
         children = ["while", node.test, ":"]
         children.extend(node.body)
@@ -870,33 +873,63 @@ class _PatchingASTWalker(object):
             children.extend(node.orelse)
         self._handle(node, children)
 
-    def _With(self, node):
+    def _handle_with_node(self, node, is_async):
         children = []
 
+        if is_async:
+            children.extend(["async"])
         for item in pycompat.get_ast_with_items(node):
             children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
                 children.extend(["as", item.optional_vars])
-        if pycompat.PY2 and COMMA_IN_WITH_PATTERN.search(self.source.source):
-            children.append(node.body[0])
-        else:
-            children.append(":")
-            children.extend(node.body)
+        children.append(":")
+        children.extend(node.body)
         self._handle(node, children)
 
-    def _child_nodes(self, nodes, separator):
-        children = []
-        for index, child in enumerate(nodes):
-            children.append(child)
-            if index < len(nodes) - 1:
-                children.append(separator)
-        return children
+    def _With(self, node):
+        self._handle_with_node(node, is_async=False)
+
+    def _AsyncWith(self, node):
+        self._handle_with_node(node, is_async=True)
 
     def _Starred(self, node):
         self._handle(node, [node.value])
 
+    def _Match(self, node):
+        children = ["match", node.subject, ":"]
+        children.extend(node.cases)
+        self._handle(node, children)
 
-class _Source(object):
+    def _match_case(self, node):
+        children = ["case", node.pattern]
+        if node.guard:
+            children.extend(["if", node.guard])
+        children.append(":")
+        children.extend(node.body)
+        self._handle(node, children)
+
+    def _MatchAs(self, node):
+        if node.pattern:
+            children = [node.pattern, "as", node.name]
+        elif node.name is None:
+            children = ["_"]
+        else:
+            children = [node.name]
+        self._handle(node, children)
+
+    def _MatchClass(self, node):
+        children = []
+        children.extend([node.cls, "("])
+        children.extend(self._child_nodes(node.patterns, ","))
+        children.extend(self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)))
+        children.append(")")
+        self._handle(node, children)
+
+    def _MatchValue(self, node):
+        self._handle(node, [node.value])
+
+
+class _Source:
     def __init__(self, source):
         self.source = source
         self.offset = 0
@@ -911,7 +944,7 @@ class _Source(object):
                     self._skip_comment()
         except (ValueError, TypeError) as e:
             raise MismatchedTokenError(
-                "Token <%s> at %s cannot be matched" % (token, self._get_location())
+                "Token <{}> at {} cannot be matched".format(token, self._get_location())
             )
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
@@ -925,8 +958,8 @@ class _Source(object):
         if _Source._string_pattern is None:
             string_pattern = codeanalyze.get_string_pattern()
             formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:%s)|(?:%s)" % (string_pattern, formatted_string_pattern)
-            pattern = r"(%s)((\s|\\\n|#[^\n]*\n)*(%s))*" % (original, original)
+            original = r"(?:{})|(?:{})".format(string_pattern, formatted_string_pattern)
+            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(original, original)
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
@@ -936,6 +969,9 @@ class _Source(object):
             _Source._number_pattern = re.compile(self._get_number_pattern())
         repattern = _Source._number_pattern
         return self._consume_pattern(repattern)
+
+    def consume_empty_tuple(self):
+        return self._consume_pattern(re.compile(r"\(\s*\)"))
 
     def consume_not_equal(self):
         if _Source._not_equals_pattern is None:

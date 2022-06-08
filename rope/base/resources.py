@@ -28,13 +28,14 @@ from and writing to the resource, moving the resource, etc.
 
 import os
 import re
+import warnings
 
 from rope.base import change
 from rope.base import exceptions
 from rope.base import fscommands
 
 
-class Resource(object):
+class Resource:
     """Represents files and folders in a project"""
 
     def __init__(self, project, path):
@@ -52,7 +53,7 @@ class Resource(object):
         """Move resource to `new_location`"""
         self._perform_change(
             change.MoveResource(self, new_location),
-            "Moving <%s> to <%s>" % (self.path, new_location),
+            "Moving <{}> to <{}>".format(self.path, new_location),
         )
 
     def remove(self):
@@ -111,27 +112,33 @@ class File(Resource):
     """Represents a file"""
 
     def __init__(self, project, name):
-        super(File, self).__init__(project, name)
+        self.newlines = None
+        super().__init__(project, name)
 
     def read(self):
         data = self.read_bytes()
         try:
-            return fscommands.file_data_to_unicode(data)
+            content, self.newlines = fscommands.file_data_to_unicode(data)
+            return content
         except UnicodeDecodeError as e:
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):
-        handle = open(self.real_path, "rb")
-        try:
-            return handle.read()
-        finally:
-            handle.close()
+        if not hasattr(self.project.fscommands, "read"):
+            warnings.warn(
+                "FileSystemCommands should implement read() method",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            with open(self.real_path, "rb") as handle:
+                return handle.read()
+        return self.project.fscommands.read(self.real_path)
 
     def write(self, contents):
         try:
             if contents == self.read():
                 return
-        except IOError:
+        except OSError:
             pass
         self._perform_change(
             change.ChangeContents(self, contents), "Writing file <%s>" % self.path
@@ -148,7 +155,7 @@ class Folder(Resource):
     """Represents a folder"""
 
     def __init__(self, project, name):
-        super(Folder, self).__init__(project, name)
+        super().__init__(project, name)
 
     def is_folder(self):
         return True
@@ -216,7 +223,7 @@ class Folder(Resource):
         self.parent.create_folder(self.name)
 
 
-class _ResourceMatcher(object):
+class _ResourceMatcher:
     def __init__(self):
         self.patterns = []
         self._compiled_patterns = []

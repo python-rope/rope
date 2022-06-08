@@ -3,8 +3,8 @@ try:
 except ImportError:
     import unittest
 
+from rope.contrib.autoimport import sqlite as autoimport
 from ropetest import testutils
-from rope.contrib import autoimport
 
 
 class AutoImportTest(unittest.TestCase):
@@ -26,11 +26,6 @@ class AutoImportTest(unittest.TestCase):
     def test_update_resource(self):
         self.mod1.write("myvar = None\n")
         self.importer.update_resource(self.mod1)
-        self.assertEqual([("myvar", "mod1")], self.importer.import_assist("myva"))
-
-    def test_update_module(self):
-        self.mod1.write("myvar = None")
-        self.importer.update_module("mod1")
         self.assertEqual([("myvar", "mod1")], self.importer.import_assist("myva"))
 
     def test_update_non_existent_module(self):
@@ -118,11 +113,39 @@ class AutoImportTest(unittest.TestCase):
 
     def test_handling_builtin_modules(self):
         self.importer.update_module("sys")
-        self.assertTrue("sys" in self.importer.get_modules("exit"))
+        self.assertIn("sys", self.importer.get_modules("exit"))
 
-    def test_submodules(self):
-        self.assertEqual(set([self.mod1]), autoimport.submodules(self.mod1))
-        self.assertEqual(set([self.mod2, self.pkg]), autoimport.submodules(self.pkg))
+    def test_search_submodule(self):
+        self.importer.update_module("build")
+        import_statement = ("from build import env", "env")
+        self.assertIn(import_statement, self.importer.search("env", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("en"))
+        self.assertIn(import_statement, self.importer.search("env"))
+
+    def test_search_module(self):
+        self.importer.update_module("os")
+        import_statement = ("import os", "os")
+        self.assertIn(import_statement, self.importer.search("os", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("os"))
+        self.assertIn(import_statement, self.importer.search("o"))
+
+    def test_search(self):
+        self.importer.update_module("typing")
+        import_statement = ("from typing import Dict", "Dict")
+        self.assertIn(import_statement, self.importer.search("Dict", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("Dict"))
+        self.assertIn(import_statement, self.importer.search("Dic"))
+        self.assertIn(import_statement, self.importer.search("Di"))
+        self.assertIn(import_statement, self.importer.search("D"))
+
+    def test_generate_full_cache(self):
+        """The single thread test takes much longer than the multithread test but is easier to debug"""
+        single_thread = False
+        self.importer.generate_modules_cache(single_thread=single_thread)
+        self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
+        self.assertTrue(len(self.importer._dump_all()) > 0)
+        for table in self.importer._dump_all():
+            self.assertTrue(len(table) > 0)
 
 
 class AutoImportObservingTest(unittest.TestCase):

@@ -1,5 +1,6 @@
 import re
 from contextlib import contextmanager
+from itertools import chain
 
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
@@ -33,7 +34,7 @@ from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefun
 #
 # There are a few more helper functions and classes used by above
 # classes.
-class _ExtractRefactoring(object):
+class _ExtractRefactoring:
 
     kind_prefixes = {}
 
@@ -80,7 +81,7 @@ class _ExtractRefactoring(object):
         )
         info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet("Extract %s <%s>" % (info.kind, extracted_name))
+        changes = ChangeSet("Extract {} <{}>".format(info.kind, extracted_name))
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
@@ -98,7 +99,7 @@ class _ExtractRefactoring(object):
 
     @classmethod
     def _get_kind(cls, kind):
-        raise NotImplementedError("You have to sublass {}".format(cls))
+        raise NotImplementedError(f"You have to sublass {cls}")
 
 
 class ExtractMethod(_ExtractRefactoring):
@@ -115,7 +116,7 @@ class ExtractVariable(_ExtractRefactoring):
     def __init__(self, *args, **kwds):
         kwds = dict(kwds)
         kwds["variable"] = True
-        super(ExtractVariable, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
     kind = "variable"
 
@@ -123,7 +124,7 @@ class ExtractVariable(_ExtractRefactoring):
         return cls.kind
 
 
-class _ExtractInfo(object):
+class _ExtractInfo:
     """Holds information about the extract to be performed"""
 
     def __init__(
@@ -251,7 +252,7 @@ class _ExtractInfo(object):
         return self._returning_named_expr
 
 
-class _ExtractCollector(object):
+class _ExtractCollector:
     """Collects information needed for performing the extract"""
 
     def __init__(self, info):
@@ -264,7 +265,7 @@ class _ExtractCollector(object):
         self.definition_location = None
 
 
-class _ExtractPerformer(object):
+class _ExtractPerformer:
     def __init__(self, info):
         self.info = info
         _ExceptionalConditionChecker()(self.info)
@@ -375,7 +376,7 @@ class _ExtractPerformer(object):
         collector.checks = parts.get_checks()
 
 
-class _DefinitionLocationFinder(object):
+class _DefinitionLocationFinder:
     def __init__(self, info, matched_lines):
         self.info = info
         self.matched_lines = matched_lines
@@ -386,11 +387,14 @@ class _DefinitionLocationFinder(object):
     def find_lineno(self):
         if self.info.variable and not self.info.make_global:
             return self._get_before_line()
-        if self.info.make_global or self.info.global_:
+        if self.info.global_:
             toplevel = self._find_toplevel(self.info.scope)
             ast = self.info.pymodule.get_ast()
             newlines = sorted(self.matched_lines + [toplevel.get_end() + 1])
             return suites.find_visible(ast, newlines)
+        if self.info.make_global:
+            toplevel = self._find_toplevel(self.info.scope)
+            return toplevel.get_end() + 1
         return self._get_after_scope()
 
     def _find_toplevel(self, scope):
@@ -416,7 +420,7 @@ class _DefinitionLocationFinder(object):
         return self.info.scope.get_end() + 1
 
 
-class _ExceptionalConditionChecker(object):
+class _ExceptionalConditionChecker:
     def __call__(self, info):
         self.base_conditions(info)
         if info.one_line:
@@ -437,25 +441,23 @@ class _ExceptionalConditionChecker(object):
                 extracted = "(%s)" % extracted
             if _UnmatchedBreakOrContinueFinder.has_errors(extracted):
                 raise RefactoringError(
-                    "A break/continue without having a " "matching for/while loop."
+                    "A break/continue without having a matching for/while loop."
                 )
         except SyntaxError:
             raise RefactoringError(
-                "Extracted piece should " "contain complete statements."
+                "Extracted piece should contain complete statements."
             )
 
     def one_line_conditions(self, info):
         if self._is_region_on_a_word(info):
             raise RefactoringError("Should extract complete statements.")
         if info.variable and not info.one_line:
-            raise RefactoringError(
-                "Extract variable should not " "span multiple lines."
-            )
+            raise RefactoringError("Extract variable should not span multiple lines.")
         if usefunction._named_expr_count(
             info._parsed_extracted
         ) - usefunction._namedexpr_last(info._parsed_extracted):
             raise RefactoringError(
-                "Extracted piece cannot " "contain named expression (:= operator)."
+                "Extracted piece cannot contain named expression (:= operator)."
             )
 
     def multi_line_conditions(self, info):
@@ -464,10 +466,10 @@ class _ExceptionalConditionChecker(object):
         extracted = info.extracted
         if count > 1:
             raise RefactoringError(
-                "Extracted piece can have only one " "return statement."
+                "Extracted piece can have only one return statement."
             )
         if usefunction._yield_count(node):
-            raise RefactoringError("Extracted piece cannot " "have yield statements.")
+            raise RefactoringError("Extracted piece cannot have yield statements.")
         if not hasattr(
             ast, "PyCF_ALLOW_TOP_LEVEL_AWAIT"
         ) and _AsyncStatementFinder.has_errors(extracted):
@@ -480,7 +482,7 @@ class _ExceptionalConditionChecker(object):
             raise RefactoringError("Return should be the last statement.")
         if info.region != info.lines_region:
             raise RefactoringError(
-                "Extracted piece should " "contain complete statements."
+                "Extracted piece should contain complete statements."
             )
 
     def _is_region_on_a_word(self, info):
@@ -499,7 +501,7 @@ class _ExceptionalConditionChecker(object):
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(object):
+class _ExtractMethodParts:
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -611,7 +613,7 @@ class _ExtractMethodParts(object):
             self_name = self._get_self_name()
             if self_name is None:
                 raise RefactoringError(
-                    "Extracting a method from a function " "with no self argument."
+                    "Extracting a method from a function with no self argument."
                 )
             if self_name in args:
                 args.remove(self_name)
@@ -708,7 +710,7 @@ class _ExtractMethodParts(object):
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
-            return self._get_one_line_function_body()
+            return self._get_single_expression_function_body()
         return self._get_multiline_function_body(returns)
 
     def _get_multiline_function_body(self, returns):
@@ -718,11 +720,9 @@ class _ExtractMethodParts(object):
             unindented_body += "\nreturn %s" % self._get_comma_form(returns)
         return unindented_body
 
-    def _get_one_line_function_body(self):
-        if self.info.returning_named_expr:
-            body = "return " + "(" + _join_lines(self.info.extracted) + ")"
-        else:
-            body = "return " + _join_lines(self.info.extracted)
+    def _get_single_expression_function_body(self):
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        body = "return " + extracted
         return self._insert_globals(body)
 
     def _insert_globals(self, unindented_body):
@@ -746,12 +746,13 @@ class _ExtractMethodParts(object):
         return visitor.globals_
 
 
-class _ExtractVariableParts(object):
+class _ExtractVariableParts:
     def __init__(self, info):
         self.info = info
 
     def get_definition(self):
-        result = self.info.new_name + " = " + _join_lines(self.info.extracted) + "\n"
+        extracted = _get_single_expression_body(self.info.extracted, info=self.info)
+        result = self.info.new_name + " = " + extracted + "\n"
         return result
 
     def get_body_pattern(self):
@@ -764,7 +765,7 @@ class _ExtractVariableParts(object):
         return {}
 
 
-class _FunctionInformationCollector(object):
+class _FunctionInformationCollector:
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -830,6 +831,11 @@ class _FunctionInformationCollector(object):
         if not isinstance(node.ctx, ast.Store):
             self._read_variable(node.id, node.lineno)
 
+    def _MatchAs(self, node):
+        self._written_variable(node.name, node.lineno)
+        if node.pattern:
+            ast.walk(node.pattern, self)
+
     def _Assign(self, node):
         ast.walk(node.value, self)
         for child in node.targets:
@@ -837,8 +843,12 @@ class _FunctionInformationCollector(object):
 
     def _AugAssign(self, node):
         ast.walk(node.value, self)
-        self._read_variable(node.target.id, node.target.lineno)
-        self._written_variable(node.target.id, node.target.lineno)
+        if isinstance(node.target, ast.Subscript):
+            target_id = node.target.value.id
+        else:
+            target_id = node.target.id
+        self._read_variable(target_id, node.target.lineno)
+        self._written_variable(target_id, node.target.lineno)
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
@@ -863,10 +873,24 @@ class _FunctionInformationCollector(object):
         for child in ast.get_child_nodes(node):
             ast.walk(child, self)
 
-        comp_names = set([name.target.id for name in node.generators])
+        comp_names = list(
+            chain.from_iterable(
+                self._flatten_nested_tuple_of_names(generator.target)
+                for generator in node.generators
+            )
+        )
         self.read = self.read - comp_names | read
         self.written = self.written - comp_names | written
         self.maybe_written = self.maybe_written - comp_names | maybe_written
+
+    def _flatten_nested_tuple_of_names(self, node):
+        if isinstance(node, ast.Tuple):
+            for elt in node.elts:
+                yield self._flatten_nested_tuple_of_names(elt)
+        elif isinstance(node, ast.Name):
+            yield node.id
+        else:
+            assert False, "Unexpected node type in list comprehension target: %s" % node
 
     def _If(self, node):
         self._handle_conditional_node(node)
@@ -923,7 +947,7 @@ def _get_argnames(arguments):
     return result
 
 
-class _VariableReadsAndWritesFinder(object):
+class _VariableReadsAndWritesFinder:
     def __init__(self):
         self.written = set()
         self.read = set()
@@ -963,7 +987,7 @@ class _VariableReadsAndWritesFinder(object):
         return visitor.read
 
 
-class _BaseErrorFinder(object):
+class _BaseErrorFinder:
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
@@ -1031,7 +1055,7 @@ class _AsyncStatementFinder(_BaseErrorFinder):
         pass
 
 
-class _GlobalFinder(object):
+class _GlobalFinder:
     def __init__(self):
         self.globals_ = OrderedSet()
 
@@ -1068,3 +1092,17 @@ def _join_lines(code):
         else:
             lines.append(line.strip())
     return " ".join(lines)
+
+
+def _get_single_expression_body(extracted, info):
+    extracted = sourceutils.fix_indentation(extracted, 0)
+    already_parenthesized = (
+        extracted.lstrip()[0] in "({[" and extracted.rstrip()[-1] in ")}]"
+    )
+    large_multiline = extracted.count("\n") >= 2 and already_parenthesized
+    if not large_multiline:
+        extracted = _join_lines(extracted)
+    multiline_expression = "\n" in extracted
+    if info.returning_named_expr or (multiline_expression and not large_multiline):
+        extracted = "(" + extracted + ")"
+    return extracted

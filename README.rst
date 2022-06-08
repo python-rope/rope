@@ -6,6 +6,18 @@
  rope -- the world's most advanced open source Python refactoring library
 =========================================================================
 
+|Build status badge| |Latest version badge| |Download count badge| 
+
+.. |Build status badge| image:: https://secure.travis-ci.org/python-rope/rope.svg
+   :alt: Build Status
+
+.. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
+   :target: https://badge.fury.io/py/rope
+   :alt: Latest version
+   
+.. |Download count badge| image:: https://img.shields.io/pypi/dm/rope.svg
+   :alt: Download count
+
 
 Overview
 ========
@@ -16,17 +28,21 @@ Overview
 .. _`rope`: https://github.com/python-rope/rope
 
 
-Most Python syntax from Python 2.7 up to Python 3.9 is supported. Please file bugs and contribute
+Most Python syntax from Python 2.7 up to Python 3.10 is supported. Please file bugs and contribute
 patches if you encounter gaps.
+
+From version 1.0.0 onwards, rope will no longer support running on Python 2.
+If you need Python 2 support, then check out the `python2` branch or the 0.x.x
+releases.
 
 Getting Started
 ===============
 
 * `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
-* List of features: `<docs/rope.rst>`_
-* Overview of some of rope's features: `<docs/overview.rst>`_
-* Using as a library: `<docs/library.rst>`_
-* Contributing: `<docs/contributing.rst>`_
+* `List of features <docs/rope.rst>`_
+* `Overview of some of rope's features <docs/overview.rst>`_
+* `Using as a library <docs/library.rst>`_
+* `Contributing <docs/contributing.rst>`_
 
 To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
@@ -38,10 +54,11 @@ Why use Rope?
 =============
 
 - Rope aims to provide powerful and safe refactoring
-- Rope is light on dependency, depending only on Python itself, unlike pyright or pylance, there is no additional dependency to another language's runtime
-- Unlike pylance, Rope is open source
-- Unlike pyright and pylance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in an environment that you are already familiar with
-- Unlike jedi, Rope is focused on refactoring, Rope supports many advanced refactoring operations that Jedi does not support
+- Rope is light on dependency, Rope only depends on Python itself
+- Unlike PyRight or PyLance, Rope does not depend on Node.js
+- Unlike PyLance or PyCharm, Rope is open source.
+- Unlike PyRight and PyLance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in a language that you are already familiar with
+- In comparison to Jedi, Rope is focused on refactoring. While Jedi provides some basic refactoring capabilities, Rope supports many more advanced refactoring operations and options that Jedi does not.
 
 Bug Reports
 ===========
@@ -85,5 +102,5 @@ Have a look at `COPYING`_ for more information.
 .. _`docs/library.rst`: docs/library.html
 .. _`COPYING`: COPYING
 
-.. image:: https://secure.travis-ci.org/python-rope/rope.svg
-   :alt: Build Status
+   
+   

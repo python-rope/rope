@@ -106,7 +106,7 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
                 return Location(occurrence)
 
 
-class Location(object):
+class Location:
     def __init__(self, occurrence):
         self.resource = occurrence.resource
         self.region = occurrence.get_word_range()

@@ -3,6 +3,8 @@ import keyword
 
 import rope.base.simplify
 
+MINIMAL_LEN_FOR_AS = 5
+
 
 def get_name_at(resource, offset):
     source_code = resource.read()
@@ -10,11 +12,17 @@ def get_name_at(resource, offset):
     return word_finder.get_word_at(offset)
 
 
-class Worder(object):
+class Worder:
     """A class for finding boundaries of words and expressions
 
     Note that in these methods, offset should be the index of the
     character not the index of the character after it.
+
+    Some of the methods here doesn't exactly do what their name might lead you
+    to think they do, these probably should be fixed. Refer to
+    ropetest/codeanalyzetest.py for what these methods returns. Note that
+    codeanalyzetest.py documents the current behavior, rather than what they
+    should've been.
     """
 
     def __init__(self, code, handle_ignores=False):
@@ -123,7 +131,7 @@ class Worder(object):
         return self.code_finder.find_function_offset(offset)
 
 
-class _RealFinder(object):
+class _RealFinder:
     def __init__(self, code, raw):
         self.code = code
         self.raw = raw
@@ -370,12 +378,23 @@ class _RealFinder(object):
         ):
             return False
         try:
-            end = self._find_word_end(offset)
+            end = self._find_import_main_part_end(offset)
+            if not self._has_enough_len_for_as(end):
+                return False
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
             return self.code[as_start : as_end + 1] == "as"
         except ValueError:
             return False
+
+    def _has_enough_len_for_as(self, end):
+        return len(self.code) > end + MINIMAL_LEN_FOR_AS
+
+    def _find_import_main_part_end(self, offset):
+        end = self._find_word_end(offset)
+        while len(self.code) > end + 2 and self.code[end + 1] == ".":
+            end = self._find_word_end(end + 2)
+        return end
 
     def is_a_name_after_from_import(self, offset):
         try:
@@ -513,13 +532,16 @@ class _RealFinder(object):
                 while current != first and self.code[current] not in ",":
                     current = self._find_last_non_space_char(current - 1)
                 param_name = self.raw[current + 1 : primary_start + 1].strip()
-                keywords.append((param_name, primary))
+                keywords.append((self.__strip_type_hint(param_name), primary))
             else:
-                args.append(primary)
+                args.append(self.__strip_type_hint(primary))
             current = self._find_last_non_space_char(current - 1)
         args.reverse()
         keywords.reverse()
         return args, keywords
+
+    def __strip_type_hint(self, name):
+        return name.split(":", 1)[0]
 
     def is_assigned_in_a_tuple_assignment(self, offset):
         start = self._get_line_start(offset)

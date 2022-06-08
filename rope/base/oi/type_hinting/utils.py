@@ -116,7 +116,7 @@ def resolve_type(type_name, pyobject):
     return ret_type
 
 
-class ParametrizeType(object):
+class ParametrizeType:
 
     _supported_mapping = {
         "builtins.list": "rope.base.builtins.get_list",
@@ -128,18 +128,6 @@ class ParametrizeType(object):
         "collections.abc.Iterable": "rope.base.builtins.get_iterator",  # Python3.3
         "collections.abc.Iterator": "rope.base.builtins.get_iterator",  # Python3.3
     }
-    if pycompat.PY2:
-        _supported_mapping = dict(
-            (
-                (
-                    k.replace("builtins.", "__builtin__.").replace(
-                        "_collections_abc.", "_abcoll."
-                    ),
-                    v,
-                )
-                for k, v in _supported_mapping.items()
-            )
-        )
 
     def __call__(self, pyobject, *args, **kwargs):
         """
@@ -154,7 +142,7 @@ class ParametrizeType(object):
         return pyobject
 
     def _get_type_factory(self, pyobject):
-        type_str = "{0}.{1}".format(
+        type_str = "{}.{}".format(
             pyobject.get_module().get_name(),
             pyobject.get_name(),
         )

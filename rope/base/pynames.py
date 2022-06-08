@@ -2,7 +2,7 @@ import rope.base.pyobjects
 from rope.base import exceptions, utils
 
 
-class PyName(object):
+class PyName:
     """References to `PyObject` inside python programs"""
 
     def get_object(self):
@@ -43,7 +43,7 @@ class UnboundName(PyName):
         return (None, None)
 
 
-class AssignmentValue(object):
+class AssignmentValue:
     """An assigned expression"""
 
     def __init__(
@@ -174,7 +174,7 @@ def _circular_inference():
     raise rope.base.pyobjects.IsBeingInferredError("Circular Object Inference")
 
 
-class _Inferred(object):
+class _Inferred:
     def __init__(self, get_inferred, concluded=None):
         self.get_inferred = get_inferred
         self.concluded = concluded

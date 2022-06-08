@@ -9,8 +9,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
-
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -19,7 +19,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip pytest pytest-timeout
+        python -m pip install -e .[dev] 
     - name: Test with pytest
       run: |
         pytest -v

@@ -90,7 +90,7 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
                 return self._resolve(type_strs[0], pyclass)
 
 
-class IParamParser(object):
+class IParamParser:
     def __call__(self, docstring, param_name):
         """
         :type docstring: str
@@ -98,7 +98,7 @@ class IParamParser(object):
         """
 
 
-class IReturnParser(object):
+class IReturnParser:
     def __call__(self, docstring):
         """
         :type docstring: str
@@ -163,7 +163,7 @@ class DocstringReturnParser(IReturnParser):
         return []
 
 
-class RSTRoleStrip(object):
+class RSTRoleStrip:
 
     RST_ROLE_PATTERN = re.compile(r":[^`]+:`([^`]+)`")
 

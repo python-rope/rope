@@ -79,7 +79,7 @@ def cached(size):
     return decorator
 
 
-class _Cached(object):
+class _Cached:
     def __init__(self, func, count):
         self.func = func
         self.cache = []
@@ -99,9 +99,7 @@ class _Cached(object):
 
 def resolve(str_or_obj):
     """Returns object from string"""
-    from rope.base.utils.pycompat import string_types
-
-    if not isinstance(str_or_obj, string_types):
+    if not isinstance(str_or_obj, str):
         return str_or_obj
     if "." not in str_or_obj:
         str_or_obj += "."

@@ -41,7 +41,7 @@ Key bindings
 ============
 
 Rope is a library that is used in many IDE and Text Editors to perform
-refactoring on Python coe. This page documents the details of the refactoring
+refactoring on Python code. This page documents the details of the refactoring
 operations but you would need consult the documentation for your IDE/Text
 Editor client integration for the specific key bindings that are used by
 those IDE/Text Editors. 
@@ -776,7 +776,9 @@ examples.  After this example you might like to have a look at:
 
 Finally, restructurings can be improved in many ways (for instance
 adding new wildcards).  You might like to discuss your ideas in the
-mailing list.
+`Github Discussion`_.
+
+.. _`Github Discussion`: https://github.com/python-rope/rope/discussions
 
 
 Example 1

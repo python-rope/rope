@@ -2,7 +2,7 @@ from rope.base import ast, evaluate, builtins, pyobjects
 from rope.refactor import patchedast, occurrences
 
 
-class Wildcard(object):
+class Wildcard:
     def get_name(self):
         """Return the name of this wildcard"""
 
@@ -10,14 +10,14 @@ class Wildcard(object):
         """Return `True` if `suspect` matches this wildcard"""
 
 
-class Suspect(object):
+class Suspect:
     def __init__(self, pymodule, node, name):
         self.name = name
         self.pymodule = pymodule
         self.node = node
 
 
-class DefaultWildcard(object):
+class DefaultWildcard:
     """The default restructuring wildcard
 
     The argument passed to this wildcard is in the
@@ -85,7 +85,7 @@ def parse_arg(arg):
     return result
 
 
-class _CheckObject(object):
+class _CheckObject:
     def __init__(self, project, expected, kind="object", unsure=False):
         self.project = project
         self.kind = kind
@@ -154,7 +154,7 @@ class _CheckObject(object):
         pyname = None
         if attributes[0] in ("__builtin__", "__builtins__"):
 
-            class _BuiltinsStub(object):
+            class _BuiltinsStub:
                 def get_attribute(self, name):
                     return builtins.builtins[name]
 

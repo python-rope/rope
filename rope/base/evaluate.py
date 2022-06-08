@@ -48,7 +48,7 @@ def eval_str2(holding_scope, name):
     return eval_node2(holding_scope, node)
 
 
-class ScopeNameFinder(object):
+class ScopeNameFinder:
     def __init__(self, pymodule):
         self.module_scope = pymodule.get_scope()
         self.lines = pymodule.lines
@@ -84,7 +84,7 @@ class ScopeNameFinder(object):
 
     def get_primary_and_pyname_at(self, offset):
         lineno = self.lines.get_line_number(offset)
-        holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
+        holding_scope = self.module_scope.get_inner_scope_for_offset(offset)
         # function keyword parameter
         if self.worder.is_function_keyword_parameter(offset):
             keyword_name = self.worder.get_word_at(offset)
@@ -145,7 +145,7 @@ class ScopeNameFinder(object):
         )
 
 
-class StatementEvaluator(object):
+class StatementEvaluator:
     def __init__(self, scope):
         self.scope = scope
         self.result = None

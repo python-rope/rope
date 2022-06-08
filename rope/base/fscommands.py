@@ -37,7 +37,7 @@ def create_fscommands(root):
     return FileSystemCommands()
 
 
-class FileSystemCommands(object):
+class FileSystemCommands:
     def create_file(self, path):
         open(path, "w").close()
 
@@ -60,8 +60,12 @@ class FileSystemCommands(object):
         finally:
             file_.close()
 
+    def read(self, path):
+        with open(path, "rb") as handle:
+            return handle.read()
 
-class SubversionCommands(object):
+
+class SubversionCommands:
     def __init__(self, *args):
         self.normal_actions = FileSystemCommands()
         import pysvn
@@ -85,8 +89,11 @@ class SubversionCommands(object):
     def write(self, path, data):
         self.normal_actions.write(path, data)
 
+    def read(self, path):
+        return self.normal_actions.read(path)
 
-class MercurialCommands(object):
+
+class MercurialCommands:
     def __init__(self, root):
         self.hg = self._import_mercurial()
         self.normal_actions = FileSystemCommands()
@@ -133,8 +140,11 @@ class MercurialCommands(object):
     def write(self, path, data):
         self.normal_actions.write(path, data)
 
+    def read(self, path):
+        return self.normal_actions.read(path)
 
-class GITCommands(object):
+
+class GITCommands:
     def __init__(self, root):
         self.root = root
         self._do(["version"])
@@ -157,6 +167,9 @@ class GITCommands(object):
         # XXX: should we use ``git add``?
         self.normal_actions.write(path, data)
 
+    def read(self, path):
+        return self.normal_actions.read(path)
+
     def _do(self, args):
         _execute(["git"] + args, cwd=self.root)
 
@@ -166,7 +179,7 @@ class GITCommands(object):
         return self.root
 
 
-class DarcsCommands(object):
+class DarcsCommands:
     def __init__(self, root):
         self.root = root
         self.normal_actions = FileSystemCommands()
@@ -185,6 +198,9 @@ class DarcsCommands(object):
     def remove(self, path):
         self.normal_actions.remove(path)
 
+    def read(self, path):
+        return self.normal_actions.read(path)
+
     def write(self, path, data):
         self.normal_actions.write(path, data)
 
@@ -198,9 +214,11 @@ def _execute(args, cwd=None):
     return process.returncode
 
 
-def unicode_to_file_data(contents, encoding=None):
+def unicode_to_file_data(contents, encoding=None, newlines=None):
     if not isinstance(contents, unicode):
         return contents
+    if newlines and newlines != "\n":
+        contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
     if encoding is not None:
@@ -213,9 +231,14 @@ def unicode_to_file_data(contents, encoding=None):
 
 def file_data_to_unicode(data, encoding=None):
     result = _decode_data(data, encoding)
+    newline = "\n"
+    if "\r\n" in result:
+        result = result.replace("\r\n", "\n")
+        newline = "\r\n"
     if "\r" in result:
-        result = result.replace("\r\n", "\n").replace("\r", "\n")
-    return result
+        result = result.replace("\r", "\n")
+        newline = "\r"
+    return result, newline
 
 
 def _decode_data(data, encoding):
@@ -254,10 +277,10 @@ def read_str_coding(source):
 
 
 def _find_coding(text):
-    if isinstance(text, pycompat.str):
+    if isinstance(text, str):
         text = text.encode("utf-8")
     coding = b"coding"
-    to_chr = chr if pycompat.PY3 else lambda x: x
+    to_chr = chr
     try:
         start = text.index(coding) + len(coding)
         if text[start] not in b"=:":

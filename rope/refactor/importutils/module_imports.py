@@ -1,12 +1,10 @@
-from rope.base import ast
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import utils
-from rope.refactor.importutils import actions
-from rope.refactor.importutils import importinfo
+from typing import Union, List
+
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.refactor.importutils import actions, importinfo
 
 
-class ModuleImports(object):
+class ModuleImports:
     def __init__(self, project, pymodule, import_filter=None):
         self.project = project
         self.pymodule = pymodule
@@ -32,37 +30,75 @@ class ModuleImports(object):
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
+        def _resolve_name(
+            name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+        ) -> List:
+            while isinstance(name, pynames.ImportedName):
+                try:
+                    name = name.imported_module.get_object().get_attribute(
+                        name.imported_name,
+                    )
+                except exceptions.AttributeNotFoundError:
+                    return []
+            assert isinstance(name, pynamesdef.AssignedName)
+            return name.assignments
+
         result = set()
         try:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
             return result
 
+        assignments = [
+            assignment.ast_node for assignment in _resolve_name(all_star_list)
+        ]
+
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
-        for assignment in all_star_list.assignments:
-            if isinstance(assignment.ast_node, ast.List):
-                stack = list(assignment.ast_node.elts)
+
+        while assignments:
+            assignment = assignments.pop()
+            if isinstance(assignment, ast.List):
+                stack = list(assignment.elts)
                 while stack:
                     el = stack.pop()
-                    if isinstance(el, ast.Str):
-                        result.add(el.s)
-                    elif isinstance(el, ast.Name):
-                        name = pymodule.get_attribute(el.id)
-                        if isinstance(name, pynames.AssignedName):
-                            for av in name.assignments:
-                                if isinstance(av.ast_node, ast.Str):
-                                    result.add(av.ast_node.s)
-                    elif isinstance(el, ast.IfExp):
+                    if isinstance(el, ast.IfExp):
                         stack.append(el.body)
                         stack.append(el.orelse)
+                    elif isinstance(el, ast.Starred):
+                        assignments.append(el.value)
+                    else:
+                        if isinstance(el, ast.Str):
+                            result.add(el.s)
+                        elif isinstance(el, ast.Name):
+                            try:
+                                name = pymodule.get_attribute(el.id)
+                            except exceptions.AttributeNotFoundError:
+                                continue
+                            else:
+                                for av in _resolve_name(name):
+                                    if isinstance(av.ast_node, ast.Str):
+                                        result.add(av.ast_node.s)
+            elif isinstance(assignment, ast.Name):
+                try:
+                    name = pymodule.get_attribute(assignment.id)
+                except exceptions.AttributeNotFoundError:
+                    continue
+                else:
+                    assignments.extend(
+                        assignment.ast_node for assignment in _resolve_name(name)
+                    )
+            elif isinstance(assignment, ast.BinOp):
+                assignments.append(assignment.left)
+                assignments.append(assignment.right)
         return result
 
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(
             self._get_unbound_names(self.pymodule)
             | self._get_all_star_list(self.pymodule)
+            | {"__all__"}
         )
         visitor = actions.RemovingVisitor(
             self.project, self._current_folder(), can_select
@@ -278,9 +314,8 @@ class ModuleImports(object):
                 nodes[lineno], ast.ImportFrom
             ):
                 return nodes[lineno].lineno
-            lineno = self.pymodule.logical_lines.logical_line_in(nodes[lineno].lineno)[
-                0
-            ]
+            first_line = get_first_decorator_or_function_start_line(nodes[lineno])
+            lineno = self.pymodule.logical_lines.logical_line_in(first_line)[0]
         else:
             lineno = self.pymodule.lines.length()
 
@@ -291,7 +326,7 @@ class ModuleImports(object):
     def _get_import_name(self, import_stmt):
         import_info = import_stmt.import_info
         if hasattr(import_info, "module_name"):
-            return "%s.%s" % (
+            return "{}.{}".format(
                 import_info.module_name,
                 import_info.names_and_aliases[0][0],
             )
@@ -340,6 +375,12 @@ class ModuleImports(object):
             import_stmt.accept(visitor)
 
 
+def get_first_decorator_or_function_start_line(node):
+    decorators = getattr(node, "decorator_list", [])
+    first_line = min([decorator.lineno for decorator in decorators] + [node.lineno])
+    return first_line
+
+
 def _count_blank_lines(get_line, start, end, step=1):
     count = 0
     for idx in range(start, end, step):
@@ -350,7 +391,7 @@ def _count_blank_lines(get_line, start, end, step=1):
     return count
 
 
-class _OneTimeSelector(object):
+class _OneTimeSelector:
     def __init__(self, names):
         self.names = names
         self.selected_names = set()
@@ -374,7 +415,7 @@ class _OneTimeSelector(object):
         return False
 
 
-class _UnboundNameFinder(object):
+class _UnboundNameFinder:
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -426,7 +467,7 @@ class _UnboundNameFinder(object):
 
 class _GlobalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pymodule, wanted_pyobject):
-        super(_GlobalUnboundNameFinder, self).__init__(pymodule)
+        super().__init__(pymodule)
         self.unbound = set()
         self.names = set()
         for name, pyname in pymodule._get_structural_attributes().items():
@@ -454,7 +495,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
 
 class _LocalUnboundNameFinder(_UnboundNameFinder):
     def __init__(self, pyobject, parent):
-        super(_LocalUnboundNameFinder, self).__init__(pyobject)
+        super().__init__(pyobject)
         self.parent = parent
 
     def _get_root(self):
@@ -474,7 +515,7 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
         self.parent.add_unbound(name)
 
 
-class _GlobalImportFinder(object):
+class _GlobalImportFinder:
     def __init__(self, pymodule):
         self.current_folder = None
         if pymodule.get_resource():

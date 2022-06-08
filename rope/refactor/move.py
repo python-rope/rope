@@ -16,6 +16,9 @@ from rope.base import (
 )
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
+from rope.refactor.importutils.module_imports import (
+    get_first_decorator_or_function_start_line,
+)
 
 
 def create_move(project, resource, offset=None):
@@ -50,7 +53,7 @@ def create_move(project, resource, offset=None):
     )
 
 
-class MoveMethod(object):
+class MoveMethod:
     """For moving methods
 
     It makes a new method in the destination class and changes
@@ -132,7 +135,7 @@ class MoveMethod(object):
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
         indents = self._get_scope_indents(self.pyfunction)
-        body = "return self.%s.%s(%s)\n" % (
+        body = "return self.{}.{}({})\n".format(
             dest_attr,
             new_name,
             self._get_passed_arguments_string(),
@@ -176,7 +179,7 @@ class MoveMethod(object):
         return resource, start, end, body
 
     def get_new_method(self, name):
-        return "%s\n%s" % (
+        return "{}\n{}".format(
             self._get_new_header(name),
             sourceutils.fix_indentation(
                 self._get_body(), sourceutils.get_indent(self.project)
@@ -225,7 +228,7 @@ class MoveMethod(object):
         return self._get_body("__old_self") != self._get_unchanged_body()
 
 
-class MoveGlobal(object):
+class MoveGlobal:
     """For moving global function and classes"""
 
     def __init__(self, project, resource, offset):
@@ -234,7 +237,7 @@ class MoveGlobal(object):
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         if self.old_pyname is None:
             raise exceptions.RefactoringError(
-                "Move refactoring should be performed on a " "class/function/variable."
+                "Move refactoring should be performed on a class/function/variable."
             )
         if self._is_variable(self.old_pyname):
             self.old_name = worder.get_name_at(resource, offset)
@@ -435,9 +438,11 @@ class MoveGlobal(object):
             start = lines.get_line_start(lineno)
             end_line = logical_lines.logical_line_in(lineno)[1]
         else:
-            scope = self.old_pyname.get_object().get_scope()
-            start = lines.get_line_start(scope.get_start())
-            end_line = scope.get_end()
+            node = self.old_pyname.get_object().ast_node
+            start = lines.get_line_start(
+                get_first_decorator_or_function_start_line(node)
+            )
+            end_line = self.old_pyname.get_object().get_scope().get_end()
 
         # Include comment lines before the definition
         start_line = lines.get_line_number(start)
@@ -460,7 +465,7 @@ class MoveGlobal(object):
             return pymodule, True
 
 
-class MoveModule(object):
+class MoveModule:
     """For moving modules and packages"""
 
     def __init__(self, project, resource):
@@ -639,7 +644,7 @@ class MoveModule(object):
         return changed
 
 
-class _ChangeMoveOccurrencesHandle(object):
+class _ChangeMoveOccurrencesHandle:
     def __init__(self, new_name):
         self.new_name = new_name
         self.occurred = False
@@ -653,7 +658,7 @@ class _ChangeMoveOccurrencesHandle(object):
         self.occurred = True
 
 
-class _MoveTools(object):
+class _MoveTools:
     def __init__(self, project, source, pyname, old_name):
         self.project = project
         self.source = source
@@ -665,7 +670,7 @@ class _MoveTools(object):
         old_source = pymodule.source_code
         module_with_imports = self.import_tools.module_imports(pymodule)
 
-        class CanSelect(object):
+        class CanSelect:
             changed = False
             old_name = self.old_name
             old_pyname = self.old_pyname
@@ -787,7 +792,7 @@ def moving_code_with_imports(project, resource, source):
     return moving, imports
 
 
-class ModuleSkipRenamerHandle(object):
+class ModuleSkipRenamerHandle:
     def occurred_outside_skip(self, change_collector, occurrence):
         pass
 
@@ -795,7 +800,7 @@ class ModuleSkipRenamerHandle(object):
         pass
 
 
-class ModuleSkipRenamer(object):
+class ModuleSkipRenamer:
     """Rename occurrences in a module
 
     This class can be used when you want to treat a region in a file

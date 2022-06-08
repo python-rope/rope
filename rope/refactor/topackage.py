@@ -2,7 +2,7 @@ import rope.refactor.importutils
 from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
 
 
-class ModuleToPackage(object):
+class ModuleToPackage:
     def __init__(self, project, resource):
         self.project = project
         self.resource = resource

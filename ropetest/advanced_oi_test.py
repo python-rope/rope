@@ -1,5 +1,6 @@
-from rope.base.builtins import Str
+from textwrap import dedent
 
+from rope.base.builtins import Str
 try:
     import unittest2 as unittest
 except ImportError:
@@ -23,7 +24,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_simple_dti(self):
         mod = testutils.create_module(self.project, "mod")
-        code = 'def a_func(arg):\n    return eval("arg")\n' "a_var = a_func(a_func)\n"
+        code = dedent("""\
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(a_func)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -32,10 +37,12 @@ class DynamicOITest(unittest.TestCase):
     def test_module_dti(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        code = (
-            'import mod1\ndef a_func(arg):\n    return eval("arg")\n'
-            "a_var = a_func(mod1)\n"
-        )
+        code = dedent("""\
+            import mod1
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(mod1)
+        """)
         mod2.write(code)
         self.pycore.run_module(mod2).wait_process()
         pymod2 = self.project.get_pymodule(mod2)
@@ -44,12 +51,17 @@ class DynamicOITest(unittest.TestCase):
     def test_class_from_another_module_dti(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        code1 = "class AClass(object):\n    pass\n"
-        code2 = (
-            "from mod1 import AClass\n"
-            '\ndef a_func(arg):\n    return eval("arg")\n'
-            "a_var = a_func(AClass)\n"
-        )
+        code1 = dedent("""\
+            class AClass(object):
+                pass
+        """)
+        code2 = dedent("""\
+            from mod1 import AClass
+
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(AClass)
+        """)
         mod1.write(code1)
         mod2.write(code2)
         self.pycore.run_module(mod2).wait_process()
@@ -59,11 +71,14 @@ class DynamicOITest(unittest.TestCase):
 
     def test_class_dti(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class AClass(object):\n    pass\n"
-            '\ndef a_func(arg):\n    return eval("arg")\n'
-            "a_var = a_func(AClass)\n"
-        )
+        code = dedent("""\
+            class AClass(object):
+                pass
+
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(AClass)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -71,11 +86,14 @@ class DynamicOITest(unittest.TestCase):
 
     def test_instance_dti(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class AClass(object):\n    pass\n"
-            '\ndef a_func(arg):\n    return eval("arg()")\n'
-            "a_var = a_func(AClass)\n"
-        )
+        code = dedent("""\
+            class AClass(object):
+                pass
+
+            def a_func(arg):
+                return eval("arg()")
+            a_var = a_func(AClass)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -85,12 +103,13 @@ class DynamicOITest(unittest.TestCase):
 
     def test_method_dti(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class AClass(object):\n    def a_method(self, arg):\n"
-            '        return eval("arg()")\n'
-            "an_instance = AClass()\n"
-            "a_var = an_instance.a_method(AClass)\n"
-        )
+        code = dedent("""\
+            class AClass(object):
+                def a_method(self, arg):
+                    return eval("arg()")
+            an_instance = AClass()
+            a_var = an_instance.a_method(AClass)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -100,7 +119,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_function_argument_dti(self):
         mod = testutils.create_module(self.project, "mod")
-        code = "def a_func(arg):\n    pass\n" "a_func(a_func)\n"
+        code = dedent("""\
+            def a_func(arg):
+                pass
+            a_func(a_func)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
@@ -110,12 +133,15 @@ class DynamicOITest(unittest.TestCase):
 
     def test_classes_with_the_same_name(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "def a_func(arg):\n    class AClass(object):\n"
-            '        pass\n    return eval("arg")\n'
-            "class AClass(object):\n    pass\n"
-            "a_var = a_func(AClass)\n"
-        )
+        code = dedent("""\
+            def a_func(arg):
+                class AClass(object):
+                    pass
+                return eval("arg")
+            class AClass(object):
+                pass
+            a_var = a_func(AClass)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -123,12 +149,15 @@ class DynamicOITest(unittest.TestCase):
 
     def test_nested_classes(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "def a_func():\n    class AClass(object):\n"
-            "        pass\n    return AClass\n"
-            'def another_func(arg):\n    return eval("arg")\n'
-            "a_var = another_func(a_func())\n"
-        )
+        code = dedent("""\
+            def a_func():
+                class AClass(object):
+                    pass
+                return AClass
+            def another_func(arg):
+                return eval("arg")
+            a_var = another_func(a_func())
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
@@ -139,7 +168,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_function_argument_dti2(self):
         mod = testutils.create_module(self.project, "mod")
-        code = "def a_func(arg, a_builtin_type):\n    pass\n" "a_func(a_func, [])\n"
+        code = dedent("""\
+            def a_func(arg, a_builtin_type):
+                pass
+            a_func(a_func, [])
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
@@ -149,7 +182,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dti_and_concluded_data_invalidation(self):
         mod = testutils.create_module(self.project, "mod")
-        code = 'def a_func(arg):\n    return eval("arg")\n' "a_var = a_func(a_func)\n"
+        code = dedent("""\
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(a_func)
+        """)
         mod.write(code)
         pymod = self.project.get_pymodule(mod)
         pymod["a_var"].get_object()
@@ -158,11 +195,13 @@ class DynamicOITest(unittest.TestCase):
 
     def test_list_objects_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "a_var = a_func([C()])[0]\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func([C()])[0]
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -172,11 +211,14 @@ class DynamicOITest(unittest.TestCase):
 
     def test_for_loops_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "for c in a_func([C()]):\n    a_var = c\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            for c in a_func([C()]):
+                a_var = c
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -186,11 +228,13 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_objects_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "a_var = a_func({1: C()})[1]\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func({1: C()})[1]
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -200,18 +244,13 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_keys_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        if pycompat.PY3:
-            code = (
-                "class C(object):\n    pass\n"
-                'def a_func(arg):\n    return eval("arg")\n'
-                "a_var = list(a_func({C(): 1}))[0]\n"
-            )
-        else:
-            code = (
-                "class C(object):\n    pass\n"
-                'def a_func(arg):\n    return eval("arg")\n'
-                "a_var = a_func({C(): 1}).keys()[0]\n"
-            )
+        code = dedent("""\
+                class C(object):
+                    pass
+                def a_func(arg):
+                    return eval("arg")
+                a_var = list(a_func({C(): 1}))[0]
+            """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -221,11 +260,15 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_keys_and_dynamicoi2(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "a, b = a_func((C1(), C2()))\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            a, b = a_func((C1(), C2()))
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -238,7 +281,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_strs_and_dynamicoi(self):
         mod = testutils.create_module(self.project, "mod")
-        code = 'def a_func(arg):\n    return eval("arg")\n' 'a_var = a_func("hey")\n'
+        code = dedent("""\
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func("hey")
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -247,11 +294,16 @@ class DynamicOITest(unittest.TestCase):
 
     def test_textual_transformations(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C(object):\n    pass\ndef f():"
-            "\n    pass\na_var = C()\n"
-            'a_list = [C()]\na_str = "hey"\na_file = open("file.txt")\n'
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def f():
+                pass
+            a_var = C()
+            a_list = [C()]
+            a_str = "hey"
+            a_file = open("file.txt")
+        """)
         mod.write(code)
         to_pyobject = rope.base.oi.transform.TextualToPyObject(self.project)
         to_textual = rope.base.oi.transform.PyObjectToTextual(self.project)
@@ -284,11 +336,16 @@ class DynamicOITest(unittest.TestCase):
 
     def test_arguments_with_keywords(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "a = a_func(arg=C1())\nb = a_func(arg=C2())\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            a = a_func(arg=C1())
+            b = a_func(arg=C2())
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -301,11 +358,16 @@ class DynamicOITest(unittest.TestCase):
 
     def test_a_function_with_different_returns(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            'def a_func(arg):\n    return eval("arg")\n'
-            "a = a_func(C1())\nb = a_func(C2())\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(arg):
+                return eval("arg")
+            a = a_func(C1())
+            b = a_func(C2())
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -318,12 +380,19 @@ class DynamicOITest(unittest.TestCase):
 
     def test_a_function_with_different_returns2(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "def a_func(p):\n    if p == C1:\n        return C1()\n"
-            "    else:\n        return C2()\n"
-            "a = a_func(C1)\nb = a_func(C2)\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(p):
+                if p == C1:
+                    return C1()
+                else:
+                    return C2()
+            a = a_func(C1)
+            b = a_func(C2)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -336,13 +405,19 @@ class DynamicOITest(unittest.TestCase):
 
     def test_ignoring_star_args(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "def a_func(p, *args):"
-            "\n    if p == C1:\n        return C1()\n"
-            "    else:\n        return C2()\n"
-            "a = a_func(C1, 1)\nb = a_func(C2, 2)\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(p, *args):
+                if p == C1:
+                    return C1()
+                else:
+                    return C2()
+            a = a_func(C1, 1)
+            b = a_func(C2, 2)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -355,13 +430,19 @@ class DynamicOITest(unittest.TestCase):
 
     def test_ignoring_double_star_args(self):
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "def a_func(p, *kwds, **args):\n    "
-            "if p == C1:\n        return C1()\n"
-            "    else:\n        return C2()\n"
-            "a = a_func(C1, kwd=1)\nb = a_func(C2, kwd=2)\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(p, *kwds, **args):
+                if p == C1:
+                    return C1()
+                else:
+                    return C2()
+            a = a_func(C1, kwd=1)
+            b = a_func(C2, kwd=2)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
@@ -374,7 +455,11 @@ class DynamicOITest(unittest.TestCase):
 
     def test_invalidating_data_after_changing(self):
         mod = testutils.create_module(self.project, "mod")
-        code = 'def a_func(arg):\n    return eval("arg")\n' "a_var = a_func(a_func)\n"
+        code = dedent("""\
+            def a_func(arg):
+                return eval("arg")
+            a_var = a_func(a_func)
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         mod.write(code.replace("a_func", "newfunc"))
@@ -386,10 +471,12 @@ class DynamicOITest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, "mod2")
         mod2.write("class C(object):\n    pass\n")
         mod = testutils.create_module(self.project, "mod")
-        code = (
-            "import mod2\ndef a_func(arg):\n    return eval(arg)\n"
-            'a_var = a_func("mod2.C")\n'
-        )
+        code = dedent("""\
+            import mod2
+            def a_func(arg):
+                return eval(arg)
+            a_var = a_func("mod2.C")
+        """)
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         mod.move("newmod.py")
@@ -410,7 +497,13 @@ class NewStaticOITest(unittest.TestCase):
         super(NewStaticOITest, self).tearDown()
 
     def test_static_oi_for_simple_function_calls(self):
-        code = "class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n"
+        code = dedent("""\
+            class C(object):
+                pass
+            def f(p):
+                pass
+            f(C())
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -420,15 +513,24 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, p_type)
 
     def test_static_oi_not_failing_when_callin_callables(self):
-        code = "class C(object):\n    pass\nC()\n"
+        code = dedent("""\
+            class C(object):
+                pass
+            C()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
 
     def test_static_oi_for_nested_calls(self):
-        code = (
-            "class C(object):\n    pass\ndef f(p):\n    pass\n"
-            "def g(p):\n    return p\nf(g(C()))\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def f(p):
+                pass
+            def g(p):
+                return p
+            f(g(C()))
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -438,7 +540,11 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, p_type)
 
     def test_static_oi_class_methods(self):
-        code = "class C(object):\n    def f(self, p):\n        pass\n" "C().f(C())"
+        code = dedent("""\
+            class C(object):
+                def f(self, p):
+                    pass
+            C().f(C())""")
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -448,7 +554,11 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, p_type)
 
     def test_static_oi_preventing_soi_maximum_recursion_exceptions(self):
-        code = "item = {}\nfor item in item.keys():\n    pass\n"
+        code = dedent("""\
+            item = {}
+            for item in item.keys():
+                pass
+        """)
         self.mod.write(code)
         try:
             self.pycore.analyze_module(self.mod)
@@ -456,10 +566,13 @@ class NewStaticOITest(unittest.TestCase):
             self.fail(str(e))
 
     def test_static_oi_for_infer_return_typs_from_funcs_based_on_params(self):
-        code = (
-            "class C(object):\n    pass\ndef func(p):\n    return p\n"
-            "a_var = func(C())\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            def func(p):
+                return p
+            a_var = func(C())
+        """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -467,11 +580,16 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_a_function_with_different_returns(self):
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "def a_func(arg):\n    return arg\n"
-            "a = a_func(C1())\nb = a_func(C2())\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            def a_func(arg):
+                return arg
+            a = a_func(C1())
+            b = a_func(C2())
+        """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -482,11 +600,13 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_not_reporting_out_of_date_information(self):
-        code = (
-            "class C1(object):\n    pass\n"
-            "def f(arg):\n    return C1()\na_var = f("
-            ")\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            def f(arg):
+                return C1()
+            a_var = f()
+        """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -502,12 +622,22 @@ class NewStaticOITest(unittest.TestCase):
     def test_invalidating_concluded_data_in_a_function(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        mod1.write("def func(arg):\n    temp = arg\n    return temp\n")
+        mod1.write(
+            dedent("""\
+                def func(arg):
+                    temp = arg
+                    return temp
+            """)
+        )
         mod2.write(
-            "import mod1\n"
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    pass\n"
-            "a_var = mod1.func(C1())\n"
+            dedent("""\
+                import mod1
+                class C1(object):
+                    pass
+                class C2(object):
+                    pass
+                a_var = mod1.func(C1())
+            """)
         )
         pymod2 = self.project.get_pymodule(mod2)
         c1_class = pymod2["C1"].get_object()
@@ -522,8 +652,14 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_handling_generator_functions_for_strs(self):
         self.mod.write(
-            "class C(object):\n    pass\ndef f(p):\n    yield p()\n"
-            "for c in f(C):\n    a_var = c\n"
+            dedent("""\
+                class C(object):
+                    pass
+                def f(p):
+                    yield p()
+                for c in f(C):
+                    a_var = c
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
@@ -534,19 +670,26 @@ class NewStaticOITest(unittest.TestCase):
     @unittest.skip("Returning a generator that yields unknowns")
     def xxx_test_handl_generator_functions_when_unknown_type_is_yielded(self):
         self.mod.write(
-            "class C(object):\n    pass"
-            '\ndef f():\n    yield eval("C()")\n'
-            "a_var = f()\n"
+            dedent("""\
+                class C(object):
+                    pass
+                def f():
+                    yield eval("C()")
+                a_var = f()
+            """)
         )
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod["a_var"].get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Generator))
 
     def test_static_oi_for_lists_depending_on_append_function(self):
-        code = (
-            "class C(object):\n    pass\nl = list()\n"
-            "l.append(C())\na_var = l.pop()\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            l = list()
+            l.append(C())
+            a_var = l.pop()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -555,9 +698,13 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_get_item(self):
-        code = (
-            "class C(object):\n    pass\nl = list()\n" "l.append(C())\na_var = l[0]\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            l = list()
+            l.append(C())
+            a_var = l[0]
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -566,13 +713,18 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_fields(self):
-        code = (
-            "class C(object):\n    pass\n"
-            "class A(object):\n    "
-            "def __init__(self):\n        self.l = []\n"
-            "    def set(self):\n        self.l.append(C())\n"
-            "a = A()\na.set()\na_var = a.l[0]\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            class A(object):
+                def __init__(self):
+                    self.l = []
+                def set(self):
+                    self.l.append(C())
+            a = A()
+            a.set()
+            a_var = a.l[0]
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -581,7 +733,13 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_set_item(self):
-        code = "class C(object):\n    pass\nl = [None]\n" "l[0] = C()\na_var = l[0]\n"
+        code = dedent("""\
+            class C(object):
+                pass
+            l = [None]
+            l[0] = C()
+            a_var = l[0]
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -590,10 +748,15 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_extending_lists(self):
-        code = (
-            "class C(object):\n    pass\nl = []\n"
-            "l.append(C())\nl2 = []\nl2.extend(l)\na_var = l2[0]\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            l = []
+            l.append(C())
+            l2 = []
+            l2.extend(l)
+            a_var = l2[0]
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -602,11 +765,14 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_iters(self):
-        code = (
-            "class C(object):\n    pass\n"
-            "l = []\nl.append(C())\n"
-            "for c in l:\n    a_var = c\n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            l = []
+            l.append(C())
+            for c in l:
+                a_var = c
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -615,10 +781,15 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_append_function(self):
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "d = {}\nd[C1()] = C2()\na, b = d.popitem()\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            d = {}
+            d[C1()] = C2()
+            a, b = d.popitem()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -630,11 +801,17 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_for_loops(self):
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "d = {}\nd[C1()] = C2()\n"
-            "for k, v in d.items():\n    a = k\n    b = v\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            d = {}
+            d[C1()] = C2()
+            for k, v in d.items():
+                a = k
+                b = v
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -646,11 +823,17 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_update(self):
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "d = {}\nd[C1()] = C2()\n"
-            "d2 = {}\nd2.update(d)\na, b = d2.popitem()\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            d = {}
+            d[C1()] = C2()
+            d2 = {}
+            d2.update(d)
+            a, b = d2.popitem()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -662,10 +845,15 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_update_on_seqs(self):
-        code = (
-            "class C1(object):\n    pass\nclass C2(object):\n    pass\n"
-            "d = {}\nd.update([(C1(), C2())])\na, b = d.popitem()\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            d = {}
+            d.update([(C1(), C2())])
+            a, b = d.popitem()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -677,9 +865,13 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, b_var.get_type())
 
     def test_static_oi_for_sets_per_object_for_set_item(self):
-        code = (
-            "class C(object):\n    pass\ns = set()\n" "s.add(C())\na_var = s.pop() \n"
-        )
+        code = dedent("""\
+            class C(object):
+                pass
+            s = set()
+            s.add(C())
+            a_var = s.pop()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -688,12 +880,17 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_type())
 
     def test_properties_and_calling_get_property(self):
-        code = (
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n    c1 = C1()\n"
-            "    def get_c1(self):\n        return self.c1\n"
-            "    p = property(get_c1)\nc2 = C2()\na_var = c2.p\n"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                c1 = C1()
+                def get_c1(self):
+                    return self.c1
+                p = property(get_c1)
+            c2 = C2()
+            a_var = c2.p
+        """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
@@ -701,12 +898,14 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c1_class, a_var.get_type())
 
     def test_soi_on_constructors(self):
-        code = (
-            "class C1(object):\n    pass\n"
-            "class C2(object):\n"
-            "    def __init__(self, arg):\n        self.attr = arg\n"
-            "c2 = C2(C1())\na_var = c2.attr"
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                def __init__(self, arg):
+                    self.attr = arg
+            c2 = C2(C1())
+            a_var = c2.attr""")
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -733,8 +932,22 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, "mod2")
-        self.mod.write("class C(object):\n    pass\nl = []\nl.append(C())\n")
-        mod2.write("import mod\ndef f():\n    " "return mod.l.pop()\na_var = f()\n")
+        self.mod.write(
+            dedent("""\
+                class C(object):
+                    pass
+                l = []
+                l.append(C())
+            """)
+        )
+        mod2.write(
+            dedent("""\
+                import mod
+                def f():
+                    return mod.l.pop()
+                a_var = f()
+            """)
+        )
         pymod = self.project.get_pymodule(self.mod)
         pymod2 = self.project.get_pymodule(mod2)
         c_class = pymod["C"].get_object()
@@ -747,11 +960,14 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, a_var.get_object().get_type())
 
     def test_using_the_best_callinfo(self):
-        code = (
-            "class C1(object):\n    pass\n"
-            "def f(arg1, arg2, arg3):\n    pass\n"
-            'f("", None, C1())\nf("", C1(), None)\n'
-        )
+        code = dedent("""\
+            class C1(object):
+                pass
+            def f(arg1, arg2, arg3):
+                pass
+            f("", None, C1())
+            f("", C1(), None)
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -761,9 +977,12 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c1_class, arg2.get_type())
 
     def test_call_function_and_parameters(self):
-        code = (
-            "class A(object):\n    def __call__(self, p):\n        pass\n" 'A()("")\n'
-        )
+        code = dedent("""\
+            class A(object):
+                def __call__(self, p):
+                    pass
+            A()("")
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         scope = self.project.get_pymodule(self.mod).get_scope()
@@ -772,7 +991,13 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_report_change_in_libutils(self):
         self.project.prefs["automatic_soa"] = True
-        code = "class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n"
+        code = dedent("""\
+            class C(object):
+                pass
+            def f(p):
+                pass
+            f(C())
+        """)
         with open(self.mod.real_path, "w") as mod_file:
             mod_file.write(code)
 
@@ -784,7 +1009,13 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c_class, p_type)
 
     def test_report_libutils_and_analyze_all_modules(self):
-        code = "class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n"
+        code = dedent("""\
+            class C(object):
+                pass
+            def f(p):
+                pass
+            f(C())
+        """)
         self.mod.write(code)
         rope.base.libutils.analyze_modules(self.project)
         pymod = self.project.get_pymodule(self.mod)
@@ -796,8 +1027,21 @@ class NewStaticOITest(unittest.TestCase):
     def test_validation_problems_for_objectdb_retrievals(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        mod1.write("l = []\nvar = l.pop()\n")
-        mod2.write("import mod1\n\nclass C(object):\n    pass\n" "mod1.l.append(C())\n")
+        mod1.write(
+            dedent("""\
+                l = []
+                var = l.pop()
+            """)
+        )
+        mod2.write(
+            dedent("""\
+                import mod1
+
+                class C(object):
+                    pass
+                mod1.l.append(C())
+            """)
+        )
         self.pycore.analyze_module(mod2)
 
         pymod2 = self.project.get_pymodule(mod2)
@@ -805,25 +1049,46 @@ class NewStaticOITest(unittest.TestCase):
         pymod1 = self.project.get_pymodule(mod1)
         var_pyname = pymod1["var"]
         self.assertEqual(c_class, var_pyname.get_object().get_type())
-        mod2.write('import mod1\n\nmod1.l.append("")\n')
+        mod2.write(
+            dedent("""\
+                import mod1
+
+                mod1.l.append("")
+            """)
+        )
         self.assertNotEqual(
             c_class, var_pyname.get_object().get_type(), "Class `C` no more exists"
         )
 
     def test_validation_problems_for_changing_builtin_types(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write('l = []\nl.append("")\n')
+        mod1.write(
+            dedent("""\
+                l = []
+                l.append("")
+            """)
+        )
         self.pycore.analyze_module(mod1)
 
-        mod1.write('l = {}\nv = l["key"]\n')
+        mod1.write(
+            dedent("""\
+                l = {}
+                v = l["key"]
+            """)
+        )
         pymod1 = self.project.get_pymodule(mod1)  # noqa
         var = pymod1["v"].get_object()  # noqa
 
     def test_always_returning_containing_class_for_selfs(self):
-        code = (
-            "class A(object):\n    def f(p):\n        return p\n"
-            "class B(object):\n    pass\nb = B()\nb.f()\n"
-        )
+        code = dedent("""\
+            class A(object):
+                def f(p):
+                    return p
+            class B(object):
+                pass
+            b = B()
+            b.f()
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.project.get_pymodule(self.mod)
@@ -833,17 +1098,29 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(a_class, p_type)
 
     def test_following_function_calls_when_asked_to(self):
-        code = (
-            "class A(object):\n    pass\n"
-            "class C(object):\n"
-            "    def __init__(self, arg):\n"
-            "        self.attr = arg\n"
-            "def f(p):\n    return C(p)\n"
-            "c = f(A())\nx = c.attr\n"
-        )
+        code = dedent("""\
+            class A(object):
+                pass
+            class C(object):
+                def __init__(self, arg):
+                    self.attr = arg
+            def f(p):
+                return C(p)
+            c = f(A())
+            x = c.attr
+        """)
         self.mod.write(code)
         self.pycore.analyze_module(self.mod, followed_calls=1)
         pymod = self.project.get_pymodule(self.mod)
         a_class = pymod["A"].get_object()
         x_var = pymod["x"].get_object().get_type()
         self.assertEqual(a_class, x_var)
+
+    def test_set_comprehension(self):
+        code = dedent("""\
+            x = {s.strip() for s in X()}
+            x.add('x')
+        """)
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        x_var = pymod['x'].pyobject.get()

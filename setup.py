@@ -17,22 +17,19 @@ classifiers = [
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Natural Language :: English",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Software Development",
 ]
 
 
 def get_long_description():
     lines = io.open("README.rst", "r", encoding="utf8").read().splitlines(False)
-    end = lines.index("Getting Started")
+    end = lines.index("Maintainers")
     return "\n" + "\n".join(lines[:end]) + "\n"
 
 
@@ -43,7 +40,7 @@ def get_version():
     ) as inif:
         for line in inif:
             if line.startswith("VERSION"):
-                version = line.split("=")[1].strip(" \t'\n")
+                version = line.split("=")[1].strip(" \t\"'\n")
                 break
     return version
 
@@ -66,6 +63,7 @@ setup(
         "rope.base.oi.type_hinting.resolvers",
         "rope.base.utils",
         "rope.contrib",
+        "rope.contrib.autoimport",
         "rope.refactor",
         "rope.refactor.importutils",
     ],
@@ -73,8 +71,10 @@ setup(
     classifiers=classifiers,
     extras_require={
         "dev": [
+            "build",
             "pytest",
             "pytest-timeout",
         ]
     },
+    python_requires=">=3.7",
 )

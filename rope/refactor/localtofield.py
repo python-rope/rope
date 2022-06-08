@@ -2,7 +2,7 @@ from rope.base import pynames, evaluate, exceptions, worder
 from rope.refactor.rename import Rename
 
 
-class LocalToField(object):
+class LocalToField:
     def __init__(self, project, resource, offset):
         self.project = project
         self.resource = resource

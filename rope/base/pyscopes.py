@@ -2,9 +2,10 @@ import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.pynames
 from rope.base import ast, exceptions, utils
+from rope.refactor import patchedast
 
 
-class Scope(object):
+class Scope:
     def __init__(self, pycore, pyobject, parent_scope):
         self.pycore = pycore
         self.pyobject = pyobject
@@ -100,10 +101,25 @@ class Scope(object):
     def get_kind(self):
         pass
 
+    def get_region(self):
+        self._calculate_scope_regions_for_module()
+        node = self.pyobject.get_ast()
+        region = patchedast.node_region(node)
+        return region
+
+    def _calculate_scope_regions_for_module(self):
+        self._get_global_scope()._calculate_scope_regions()
+
+    def in_region(self, offset):
+        """Checks if offset is in scope region"""
+
+        region = self.get_region()
+        return region[0] < offset < region[1]
+
 
 class GlobalScope(Scope):
     def __init__(self, pycore, module):
-        super(GlobalScope, self).__init__(pycore, module, None)
+        super().__init__(pycore, module, None)
         self.names = module._get_concluded_data()
 
     def get_start(self):
@@ -120,10 +136,18 @@ class GlobalScope(Scope):
                 return self.builtin_names[name]
             raise exceptions.NameNotFoundError("name %s not found" % name)
 
+    @utils.saveit
+    def _calculate_scope_regions(self):
+        source = self._get_source()
+        patchedast.patch_ast(self.pyobject.get_ast(), source)
+
+    def _get_source(self):
+        return self.pyobject.source_code
+
     def get_names(self):
         if self.names.get() is None:
             result = dict(self.builtin_names)
-            result.update(super(GlobalScope, self).get_names())
+            result.update(super().get_names())
             self.names.set(result)
         return self.names.get()
 
@@ -145,9 +169,7 @@ class GlobalScope(Scope):
 
 class ComprehensionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super(ComprehensionScope, self).__init__(
-            pycore, pyobject, pyobject.parent.get_scope()
-        )
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.defineds = None
@@ -166,8 +188,8 @@ class ComprehensionScope(Scope):
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for node in ast.get_child_nodes(self.pyobject.get_ast()):
                 ast.walk(node, new_visitor)
-            self.names = new_visitor.names
-            self.names.update(self.parent.get_names())
+            self.names = dict(self.parent.get_names())
+            self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
 
     def get_logical_end(self):
@@ -181,9 +203,7 @@ class ComprehensionScope(Scope):
 
 class FunctionScope(Scope):
     def __init__(self, pycore, pyobject, visitor):
-        super(FunctionScope, self).__init__(
-            pycore, pyobject, pyobject.parent.get_scope()
-        )
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.is_generator = None
@@ -238,7 +258,7 @@ class FunctionScope(Scope):
 
 class ClassScope(Scope):
     def __init__(self, pycore, pyobject):
-        super(ClassScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        super().__init__(pycore, pyobject, pyobject.parent.get_scope())
 
     def get_kind(self):
         return "Class"
@@ -247,7 +267,7 @@ class ClassScope(Scope):
         return {}
 
 
-class _HoldingScopeFinder(object):
+class _HoldingScopeFinder:
     def __init__(self, pymodule):
         self.pymodule = pymodule
 
@@ -289,8 +309,14 @@ class _HoldingScopeFinder(object):
     def _get_body_indents(self, scope):
         return self.get_indents(scope.get_body_start())
 
-    def get_holding_scope_for_offset(self, scope, offset):
-        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
+    @staticmethod
+    def get_holding_scope_for_offset(scope, offset):
+        for inner_scope in scope.get_scopes():
+            if inner_scope.in_region(offset):
+                return _HoldingScopeFinder.get_holding_scope_for_offset(
+                    inner_scope, offset
+                )
+        return scope
 
     def find_scope_end(self, scope):
         if not scope.parent:
@@ -333,9 +359,7 @@ class TemporaryScope(Scope):
     """
 
     def __init__(self, pycore, parent_scope, names):
-        super(TemporaryScope, self).__init__(
-            pycore, parent_scope.pyobject, parent_scope
-        )
+        super().__init__(pycore, parent_scope.pyobject, parent_scope)
         self.names = names
 
     def get_names(self):

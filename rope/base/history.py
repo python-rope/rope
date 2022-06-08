@@ -1,7 +1,7 @@
 from rope.base import exceptions, change, taskhandle
 
 
-class History(object):
+class History:
     """A class that holds project history"""
 
     def __init__(self, project, maxundos=None):
@@ -202,7 +202,7 @@ class History(object):
         del self.redo_list[:]
 
 
-class _FindChangeDependencies(object):
+class _FindChangeDependencies:
     def __init__(self, change_list):
         self.change = change_list[0]
         self.change_list = change_list

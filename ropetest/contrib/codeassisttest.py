@@ -69,77 +69,111 @@ class CodeAssistTest(unittest.TestCase):
                 self.fail("completion <%s> was proposed" % name)
 
     def test_completing_global_variables(self):
-        code = "my_global = 10\nt = my"
+        code = dedent("""\
+            my_global = 10
+            t = my""")
         result = self._assist(code)
         self.assert_completion_in_result("my_global", "global", result)
 
     def test_not_proposing_unmatched_vars(self):
-        code = "my_global = 10\nt = you"
+        code = dedent("""\
+            my_global = 10
+            t = you""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_global", "global", result)
 
     def test_not_proposing_unmatched_vars_with_underlined_starting(self):
-        code = "my_global = 10\nt = your_"
+        code = dedent("""\
+            my_global = 10
+            t = your_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_global", "global", result)
 
     def test_not_proposing_local_assigns_as_global_completions(self):
-        code = "def f():    my_global = 10\nt = my_"
+        code = dedent("""\
+            def f():    my_global = 10
+            t = my_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_global", "global", result)
 
     def test_proposing_functions(self):
-        code = "def my_func():    return 2\nt = my_"
+        code = dedent("""\
+            def my_func():    return 2
+            t = my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_func", "global", result)
 
     def test_proposing_classes(self):
-        code = "class Sample(object):    pass\nt = Sam"
+        code = dedent("""\
+            class Sample(object):    pass
+            t = Sam""")
         result = self._assist(code)
         self.assert_completion_in_result("Sample", "global", result)
 
     def test_proposing_each_name_at_most_once(self):
-        code = "variable = 10\nvariable = 20\nt = vari"
+        code = dedent("""\
+            variable = 10
+            variable = 20
+            t = vari""")
         result = self._assist(code)
         count = len([x for x in result if x.name == "variable" and x.scope == "global"])
         self.assertEqual(1, count)
 
     def test_throwing_exception_in_case_of_syntax_errors(self):
-        code = "sample (sdf+)\n"
+        code = dedent("""\
+            sample (sdf+)
+        """)
         with self.assertRaises(exceptions.ModuleSyntaxError):
             self._assist(code, maxfixes=0)
 
     def test_fixing_errors_with_maxfixes(self):
-        code = "def f():\n    sldj sldj\ndef g():\n    ran"
+        code = dedent("""\
+            def f():
+                sldj sldj
+            def g():
+                ran""")
         result = self._assist(code, maxfixes=2)
         self.assertTrue(len(result) > 0)
 
     def test_ignoring_errors_in_current_line(self):
-        code = "def my_func():\n    return 2\nt = "
+        code = dedent("""\
+            def my_func():
+                return 2
+            t = """)
         result = self._assist(code)
         self.assert_completion_in_result("my_func", "global", result)
 
     def test_not_reporting_variables_in_current_line(self):
-        code = "def my_func():    return 2\nt = my_"
+        code = dedent("""\
+            def my_func():    return 2
+            t = my_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_", "global", result)
 
     def test_completion_result(self):
-        code = "my_global = 10\nt = my"
+        code = dedent("""\
+            my_global = 10
+            t = my""")
         self.assertEqual(len(code) - 2, starting_offset(code, len(code)))
 
     def test_completing_imported_names(self):
-        code = "import sys\na = sy"
+        code = dedent("""\
+            import sys
+            a = sy""")
         result = self._assist(code)
         self.assert_completion_in_result("sys", "imported", result)
 
     def test_completing_imported_names_with_as(self):
-        code = "import sys as mysys\na = mys"
+        code = dedent("""\
+            import sys as mysys
+            a = mys""")
         result = self._assist(code)
         self.assert_completion_in_result("mysys", "imported", result)
 
     def test_not_completing_imported_names_with_as(self):
-        code = "import sys as mysys\na = sy"
+        code = dedent("""\
+            import sys as mysys
+            a = sy""")
         result = self._assist(code)
         self.assert_completion_not_in_result("sys", "global", result)
 
@@ -159,7 +193,9 @@ class CodeAssistTest(unittest.TestCase):
         # we need to have it enabled to make pycore._find_module()
         # load ``sys`` module.
         self.project.prefs["import_dynload_stdmods"] = True
-        code = "from sys import stdout\nstdout.wr"
+        code = dedent("""\
+            from sys import stdout
+            stdout.wr""")
         result = self._assist(code)
         self.assert_completion_in_result("write", "builtin", result)
         self.assert_completion_in_result("writelines", "builtin", result)
@@ -170,136 +206,182 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("for", "keyword", result)
 
     def test_not_reporting_proposals_after_dot(self):
-        code = "a_dict = {}\nkey = 3\na_dict.ke"
+        code = dedent("""\
+            a_dict = {}
+            key = 3
+            a_dict.ke""")
         result = self._assist(code)
         self.assert_completion_not_in_result("key", "global", result)
 
     def test_proposing_local_variables_in_functions(self):
-        code = "def f(self):\n    my_var = 10\n    my_"
+        code = dedent("""\
+            def f(self):
+                my_var = 10
+                my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "local", result)
 
     def test_local_variables_override_global_ones(self):
-        code = "my_var = 20\ndef f(self):\n    my_var = 10\n    my_"
+        code = dedent("""\
+            my_var = 20
+            def f(self):
+                my_var = 10
+                my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "local", result)
 
     def test_not_including_class_body_variables(self):
-        code = (
-            "class C(object):\n    my_var = 20\n"
-            "    def f(self):\n        a = 20\n        my_"
-        )
+        code = dedent("""\
+            class C(object):
+                my_var = 20
+                def f(self):
+                    a = 20
+                    my_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_var", "local", result)
 
     def test_nested_functions(self):
-        code = (
-            "def my_func():\n    func_var = 20\n    "
-            "def inner_func():\n        a = 20\n        func"
-        )
+        code = dedent("""\
+            def my_func():
+                func_var = 20
+                def inner_func():
+                    a = 20
+                    func""")
         result = self._assist(code)
         self.assert_completion_in_result("func_var", "local", result)
 
     def test_scope_endpoint_selection(self):
-        code = "def my_func():\n    func_var = 20\n"
+        code = dedent("""\
+            def my_func():
+                func_var = 20
+        """)
         result = self._assist(code)
         self.assert_completion_not_in_result("func_var", "local", result)
 
     def test_scope_better_endpoint_selection(self):
-        code = "if True:\n    def f():\n        my_var = 10\n    my_"
+        code = dedent("""\
+            if True:
+                def f():
+                    my_var = 10
+                my_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_var", "local", result)
 
     def test_imports_inside_function(self):
-        code = "def f():\n    import sys\n    sy"
+        code = dedent("""\
+            def f():
+                import sys
+                sy""")
         result = self._assist(code)
         self.assert_completion_in_result("sys", "imported", result)
 
     def test_imports_inside_function_dont_mix_with_globals(self):
-        code = "def f():\n    import sys\nsy"
+        code = dedent("""\
+            def f():
+                import sys
+            sy""")
         result = self._assist(code)
         self.assert_completion_not_in_result("sys", "local", result)
 
     def test_nested_classes_local_names(self):
-        code = (
-            "global_var = 10\n"
-            "def my_func():\n"
-            "    func_var = 20\n"
-            "    class C(object):\n"
-            "        def another_func(self):\n"
-            "            local_var = 10\n"
-            "            func"
-        )
+        code = dedent("""\
+            global_var = 10
+            def my_func():
+                func_var = 20
+                class C(object):
+                    def another_func(self):
+                        local_var = 10
+                        func""")
         result = self._assist(code)
         self.assert_completion_in_result("func_var", "local", result)
 
     def test_nested_classes_global(self):
-        code = (
-            "global_var = 10\n"
-            "def my_func():\n"
-            "    func_var = 20\n"
-            "    class C(object):\n"
-            "        def another_func(self):\n"
-            "            local_var = 10\n"
-            "            globa"
-        )
+        code = dedent("""\
+            global_var = 10
+            def my_func():
+                func_var = 20
+                class C(object):
+                    def another_func(self):
+                        local_var = 10
+                        globa""")
         result = self._assist(code)
         self.assert_completion_in_result("global_var", "global", result)
 
     def test_nested_classes_global_function(self):
-        code = (
-            "global_var = 10\n"
-            "def my_func():\n"
-            "    func_var = 20\n"
-            "    class C(object):\n"
-            "        def another_func(self):\n"
-            "            local_var = 10\n"
-            "            my_f"
-        )
+        code = dedent("""\
+            global_var = 10
+            def my_func():
+                func_var = 20
+                class C(object):
+                    def another_func(self):
+                        local_var = 10
+                        my_f""")
         result = self._assist(code)
         self.assert_completion_in_result("my_func", "global", result)
 
     def test_proposing_function_parameters_in_functions(self):
-        code = "def my_func(my_param):\n    my_var = 20\n    my_"
+        code = dedent("""\
+            def my_func(my_param):
+                my_var = 20
+                my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_param", "local", result)
 
     def test_proposing_function_keyword_parameters_in_functions(self):
-        code = (
-            "def my_func(my_param, *my_list, **my_kws):\n" "    my_var = 20\n" "    my_"
-        )
+        code = dedent("""\
+            def my_func(my_param, *my_list, **my_kws):
+                my_var = 20
+                my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_param", "local", result)
         self.assert_completion_in_result("my_list", "local", result)
         self.assert_completion_in_result("my_kws", "local", result)
 
     def test_not_proposing_unmatching_function_parameters_in_functions(self):
-        code = "def my_func(my_param):\n    my_var = 20\n    you_"
+        code = dedent("""\
+            def my_func(my_param):
+                my_var = 20
+                you_""")
         result = self._assist(code)
         self.assert_completion_not_in_result("my_param", "local", result)
 
     def test_ignoring_current_statement(self):
-        code = "my_var = 10\nmy_tuple = (10, \n           my_"
+        code = dedent("""\
+            my_var = 10
+            my_tuple = (10,
+                       my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_ignoring_current_statement_brackets_continuation(self):
-        code = "my_var = 10\n'hello'[10:\n        my_"
+        code = dedent("""\
+            my_var = 10
+            'hello'[10:
+                    my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_ignoring_current_statement_explicit_continuation(self):
-        code = "my_var = 10\nmy_var2 = 2 + \\\n          my_"
+        code = dedent("""\
+            my_var = 10
+            my_var2 = 2 + \\
+                      my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_ignor_current_statement_while_the_first_stmnt_of_the_block(self):
-        code = "my_var = 10\ndef f():\n    my_"
+        code = dedent("""\
+            my_var = 10
+            def f():
+                my_""")
         result = self._assist(code)
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_ignor_current_stmnt_while_current_line_ends_with_a_colon(self):
-        code = "my_var = 10\nif my_:\n    pass"
+        code = dedent("""\
+            my_var = 10
+            if my_:
+                pass""")
         result = self._assist(code, 18)
         self.assert_completion_in_result("my_var", "global", result)
 
@@ -324,12 +406,19 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_not_proposing_later_defined_variables_in_current_block(self):
-        code = "my_\nmy_var = 10\n"
+        code = dedent("""\
+            my_
+            my_var = 10
+        """)
         result = self._assist(code, 3, later_locals=False)
         self.assert_completion_not_in_result("my_var", "global", result)
 
     def test_not_proposing_later_defined_variables_in_current_function(self):
-        code = "def f():\n    my_\n    my_var = 10\n"
+        code = dedent("""\
+            def f():
+                my_
+                my_var = 10
+        """)
         result = self._assist(code, 16, later_locals=False)
         self.assert_completion_not_in_result("my_var", "local", result)
 
@@ -349,114 +438,125 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("my_var", "global", result)
 
     def test_reporting_params_when_in_the_first_line_of_a_function(self):
-        code = "def f(param):\n    para"
+        code = dedent("""\
+            def f(param):
+                para""")
         result = self._assist(code)
         self.assert_completion_in_result("param", "local", result)
 
     def test_code_assist_when_having_a_two_line_function_header(self):
-        code = "def f(param1,\n      param2):\n    para"
+        code = dedent("""\
+            def f(param1,
+                  param2):
+                para""")
         result = self._assist(code)
         self.assert_completion_in_result("param1", "local", result)
 
     def test_code_assist_with_function_with_two_line_return(self):
-        code = "def f(param1, param2):\n    return(param1,\n           para"
+        code = dedent("""\
+            def f(param1, param2):
+                return(param1,
+                       para""")
         result = self._assist(code)
         self.assert_completion_in_result("param2", "local", result)
 
     def test_get_definition_location(self):
-        code = "def a_func():\n    pass\na_func()"
+        code = dedent("""\
+            def a_func():
+                pass
+            a_func()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 1), result)
 
     def test_get_definition_location_underlined_names(self):
-        code = "def a_sample_func():\n    pass\na_sample_func()"
+        code = dedent("""\
+            def a_sample_func():
+                pass
+            a_sample_func()""")
         result = get_definition_location(self.project, code, len(code) - 11)
         self.assertEqual((None, 1), result)
 
     def test_get_definition_location_dotted_names_method(self):
-        code = (
-            "class AClass(object):\n"
-            "    @staticmethod\n"
-            "    def a_method():\n"
-            "        pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @staticmethod
+                def a_method():
+                    pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dotted_names_property(self):
-        code = (
-            "class AClass(object):\n"
-            "    @property\n"
-            "    @somedecorator\n"
-            "    def a_method():\n"
-            "        pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @property
+                @somedecorator
+                def a_method():
+                    pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 4), result)
 
     def test_get_definition_location_dotted_names_free_function(self):
-        code = "@custom_decorator\n" "def a_method():\n" "    pass\n" "a_method()"
+        code = dedent("""\
+            @custom_decorator
+            def a_method():
+                pass
+            a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 2), result)
 
     @testutils.only_for_versions_higher("3.5")
     def test_get_definition_location_dotted_names_async_def(self):
-        code = (
-            "class AClass(object):\n"
-            "    @property\n"
-            "    @decorator2\n"
-            "    async def a_method():\n"
-            "        pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @property
+                @decorator2
+                async def a_method():
+                    pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 4), result)
 
     def test_get_definition_location_dotted_names_class(self):
-        code = (
-            "@custom_decorator\n"
-            "class AClass(object):\n"
-            "    def a_method():\n"
-            "        pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            @custom_decorator
+            class AClass(object):
+                def a_method():
+                    pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 12)
         self.assertEqual((None, 2), result)
 
     def test_get_definition_location_dotted_names_with_space(self):
-        code = (
-            "class AClass(object):\n"
-            "    @staticmethod\n"
-            "    def a_method():\n"
-            "        \n"
-            "        pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @staticmethod
+                def a_method():
+
+                    pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dotted_names_inline_body(self):
-        code = (
-            "class AClass(object):\n"
-            "    @staticmethod\n"
-            "    def a_method(): pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @staticmethod
+                def a_method(): pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dotted_names_inline_body_split_arg(self):
-        code = (
-            "class AClass(object):\n"
-            "    @staticmethod\n"
-            "    def a_method(\n"
-            "        self,\n"
-            "        arg1\n"
-            "    ): pass\n"
-            "AClass.a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @staticmethod
+                def a_method(
+                    self,
+                    arg1
+                ): pass
+            AClass.a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
@@ -485,154 +585,193 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEqual((None, None), result)
 
     def test_get_definition_location_dot_spaces(self):
-        code = (
-            "class AClass(object):\n    "
-            "@staticmethod\n    def a_method():\n"
-            "        pass\nAClass.\\\n     a_method()"
-        )
+        code = dedent("""\
+            class AClass(object):
+                @staticmethod
+                def a_method():
+                    pass
+            AClass.\\
+                 a_method()""")
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_dot_line_break_inside_parens(self):
-        code = (
-            "class A(object):\n    def a_method(self):\n        pass\n"
-            + "(A.\na_method)"
-        )
+        code = dedent("""\
+            class A(object):
+                def a_method(self):
+                    pass
+            (A.
+            a_method)""")
         result = get_definition_location(
             self.project, code, code.rindex("a_method") + 1
         )
         self.assertEqual((None, 2), result)
 
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
-        code = (
-            "def f(a_var):\n    pass\na_var = 10\n"
-            + "if True:\n"
-            + "    print(a_var)\n"
-        )
+        code = dedent("""\
+            def f(a_var):
+                pass
+            a_var = 10
+            if True:
+                print(a_var)
+        """)
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_false_triple_quoted_string(self):
-        code = dedent('''\
-            def foo():
-                a = 0
-                p = "foo"""
+        code = dedent(
+            dedent('''\
+                def foo():
+                    a = 0
+                    p = "foo"""
 
-            def bar():
-                a = 1
-                a += 1
-        ''')
+                def bar():
+                    a = 1
+                    a += 1
+            ''')
+        )
         result = get_definition_location(self.project, code, code.index("a += 1"))
         self.assertEqual((None, 6), result)
 
     def test_code_assists_in_parens(self):
-        code = "def a_func(a_var):\n    pass\na_var = 10\na_func(a_"
+        code = dedent("""\
+            def a_func(a_var):
+                pass
+            a_var = 10
+            a_func(a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_simple_type_inferencing(self):
-        code = (
-            "class Sample(object):\n"
-            "    def __init__(self, a_param):\n"
-            "        pass\n"
-            "    def a_method(self):\n"
-            "        pass\n"
-            'Sample("hey").a_'
-        )
+        code = dedent("""\
+            class Sample(object):
+                def __init__(self, a_param):
+                    pass
+                def a_method(self):
+                    pass
+            Sample("hey").a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_method", "attribute", result)
 
     def test_proposals_sorter(self):
-        code = (
-            "def my_sample_function(self):\n"
-            + "    my_sample_var = 20\n"
-            + "    my_sample_"
-        )
+        code = dedent("""\
+            def my_sample_function(self):
+                my_sample_var = 20
+                my_sample_""")
         proposals = sorted_proposals(self._assist(code))
         self.assertEqual("my_sample_var", proposals[0].name)
         self.assertEqual("my_sample_function", proposals[1].name)
 
     def test_proposals_sorter_for_methods_and_attributes(self):
-        code = (
-            "class A(object):\n"
-            + "    def __init__(self):\n"
-            + "        self.my_a_var = 10\n"
-            + "    def my_b_func(self):\n"
-            + "        pass\n"
-            + "    def my_c_func(self):\n"
-            + "        pass\n"
-            + "a_var = A()\n"
-            + "a_var.my_"
-        )
+        code = dedent("""\
+            class A(object):
+                def __init__(self):
+                    self.my_a_var = 10
+                def my_b_func(self):
+                    pass
+                def my_c_func(self):
+                    pass
+            a_var = A()
+            a_var.my_""")
         proposals = sorted_proposals(self._assist(code))
         self.assertEqual("my_b_func", proposals[0].name)
         self.assertEqual("my_c_func", proposals[1].name)
         self.assertEqual("my_a_var", proposals[2].name)
 
     def test_proposals_sorter_for_global_methods_and_funcs(self):
-        code = "def my_b_func(self):\n" + "    pass\n" + "my_a_var = 10\n" + "my_"
+        code = dedent("""\
+            def my_b_func(self):
+                pass
+            my_a_var = 10
+            my_""")
         proposals = sorted_proposals(self._assist(code))
         self.assertEqual("my_b_func", proposals[0].name)
         self.assertEqual("my_a_var", proposals[1].name)
 
     def test_proposals_sorter_underlined_methods(self):
-        code = (
-            "class A(object):\n"
-            + "    def _my_func(self):\n"
-            + "        self.my_a_var = 10\n"
-            + "    def my_func(self):\n"
-            + "        pass\n"
-            + "a_var = A()\n"
-            + "a_var."
-        )
+        code = dedent("""\
+            class A(object):
+                def _my_func(self):
+                    self.my_a_var = 10
+                def my_func(self):
+                    pass
+            a_var = A()
+            a_var.""")
         proposals = sorted_proposals(self._assist(code))
         self.assertEqual("my_func", proposals[0].name)
         self.assertEqual("_my_func", proposals[1].name)
 
     def test_proposals_sorter_and_scope_prefs(self):
-        code = (
-            "my_global_var = 1\n" "def func(self):\n" "    my_local_var = 2\n" "    my_"
-        )
+        code = dedent("""\
+            my_global_var = 1
+            def func(self):
+                my_local_var = 2
+                my_""")
         result = self._assist(code)
         proposals = sorted_proposals(result, scopepref=["global", "local"])
         self.assertEqual("my_global_var", proposals[0].name)
         self.assertEqual("my_local_var", proposals[1].name)
 
     def test_proposals_sorter_and_type_prefs(self):
-        code = "my_global_var = 1\n" "def my_global_func(self):\n" "    pass\n" "my_"
+        code = dedent("""\
+            my_global_var = 1
+            def my_global_func(self):
+                pass
+            my_""")
         result = self._assist(code)
         proposals = sorted_proposals(result, typepref=["instance", "function"])
         self.assertEqual("my_global_var", proposals[0].name)
         self.assertEqual("my_global_func", proposals[1].name)
 
     def test_proposals_sorter_and_missing_type_in_typepref(self):
-        code = "my_global_var = 1\n" "def my_global_func():\n" "    pass\n" "my_"
+        code = dedent("""\
+            my_global_var = 1
+            def my_global_func():
+                pass
+            my_""")
         result = self._assist(code)
         proposals = sorted_proposals(result, typepref=["function"])  # noqa
 
     def test_get_pydoc_unicode(self):
-        src = u'# coding: utf-8\ndef foo():\n  u"юникод-объект"'
+        src = dedent('''\
+            # coding: utf-8
+            def foo():
+              u"юникод-объект"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
         self.assertTrue(u"юникод-объект" in doc)
 
     def test_get_pydoc_utf8_bytestring(self):
-        src = u'# coding: utf-8\ndef foo():\n  "байтстринг"'
+        src = dedent('''\
+            # coding: utf-8
+            def foo():
+              "байтстринг"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
         self.assertTrue(u"байтстринг" in doc)
 
     def test_get_pydoc_for_functions(self):
-        src = "def a_func():\n" '    """a function"""\n' "    a_var = 10\n" "a_func()"
+        src = dedent('''\
+            def a_func():
+                """a function"""
+                a_var = 10
+            a_func()''')
         self.assertTrue(get_doc(self.project, src, len(src) - 4).endswith("a function"))
         get_doc(self.project, src, len(src) - 4).index("a_func()")
 
     def test_get_pydoc_for_classes(self):
-        src = "class AClass(object):\n    pass\n"
+        src = dedent("""\
+            class AClass(object):
+                pass
+        """)
         get_doc(self.project, src, src.index("AClass") + 1).index("AClass")
 
     def test_get_pydoc_for_classes_with_init(self):
-        src = "class AClass(object):\n    def __init__(self):\n        pass\n"
+        src = dedent("""\
+            class AClass(object):
+                def __init__(self):
+                    pass
+        """)
         get_doc(self.project, src, src.index("AClass") + 1).index("AClass")
 
     def test_get_pydoc_for_modules(self):
@@ -646,27 +785,27 @@ class CodeAssistTest(unittest.TestCase):
         self.assertTrue(get_doc(self.project, src, src.index("obj")) is not None)
 
     def test_get_pydoc_for_methods_should_include_class_name(self):
-        src = (
-            "class AClass(object):\n"
-            "    def a_method(self):\n"
-            '        """hey"""\n'
-            "        pass\n"
-        )
+        src = dedent('''\
+            class AClass(object):
+                def a_method(self):
+                    """hey"""
+                    pass
+        ''')
         doc = get_doc(self.project, src, src.index("a_method") + 1)
         doc.index("AClass.a_method")
         doc.index("hey")
 
     def test_get_pydoc_for_meths_should_inc_methods_from_super_classes(self):
-        src = (
-            "class A(object):\n"
-            "    def a_method(self):\n"
-            '        """hey1"""\n'
-            "        pass\n"
-            "class B(A):\n"
-            "    def a_method(self):\n"
-            '        """hey2"""\n'
-            "        pass\n"
-        )
+        src = dedent('''\
+            class A(object):
+                def a_method(self):
+                    """hey1"""
+                    pass
+            class B(A):
+                def a_method(self):
+                    """hey2"""
+                    pass
+        ''')
         doc = get_doc(self.project, src, src.rindex("a_method") + 1)
         doc.index("A.a_method")
         doc.index("hey1")
@@ -674,156 +813,267 @@ class CodeAssistTest(unittest.TestCase):
         doc.index("hey2")
 
     def test_get_pydoc_for_classes_should_name_super_classes(self):
-        src = "class A(object):\n    pass\n" "class B(A):\n    pass\n"
+        src = dedent("""\
+            class A(object):
+                pass
+            class B(A):
+                pass
+        """)
         doc = get_doc(self.project, src, src.rindex("B") + 1)
         doc.index("B(A)")
 
     def test_get_pydoc_for_builtin_functions(self):
-        src = 's = "hey"\ns.replace\n'
+        src = dedent("""\
+            s = "hey"
+            s.replace
+        """)
         doc = get_doc(self.project, src, src.rindex("replace") + 1)
         self.assertTrue(doc is not None)
 
     def test_commenting_errors_before_offset(self):
-        src = 'lsjd lsjdf\ns = "hey"\ns.replace()\n'
+        src = dedent("""\
+            lsjd lsjdf
+            s = "hey"
+            s.replace()
+        """)
         doc = get_doc(self.project, src, src.rindex("replace") + 1)  # noqa
 
     def test_proposing_variables_defined_till_the_end_of_scope(self):
-        code = "if True:\n    a_v\na_var = 10\n"
+        code = dedent("""\
+            if True:
+                a_v
+            a_var = 10
+        """)
         result = self._assist(code, code.index("a_v") + 3)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_completing_in_uncomplete_try_blocks(self):
-        code = "try:\n    a_var = 10\n    a_"
+        code = dedent("""\
+            try:
+                a_var = 10
+                a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_completing_in_uncomplete_try_blocks_in_functions(self):
-        code = "def a_func():\n    try:\n        a_var = 10\n        a_"
+        code = dedent("""\
+            def a_func():
+                try:
+                    a_var = 10
+                    a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "local", result)
 
     def test_already_complete_try_blocks_with_finally(self):
-        code = "def a_func():\n    try:\n        a_var = 10\n        a_"
+        code = dedent("""\
+            def a_func():
+                try:
+                    a_var = 10
+                    a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "local", result)
 
     def test_already_complete_try_blocks_with_finally2(self):
-        code = "try:\n    a_var = 10\n    a_\nfinally:\n    pass\n"
+        code = dedent("""\
+            try:
+                a_var = 10
+                a_
+            finally:
+                pass
+        """)
         result = self._assist(code, code.rindex("a_") + 2)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_already_complete_try_blocks_with_except(self):
-        code = "try:\n    a_var = 10\n    a_\nexcept Exception:\n    pass\n"
+        code = dedent("""\
+            try:
+                a_var = 10
+                a_
+            except Exception:
+                pass
+        """)
         result = self._assist(code, code.rindex("a_") + 2)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_already_complete_try_blocks_with_except2(self):
-        code = (
-            "a_var = 10\ntry:\n    "
-            "another_var = a_\n    another_var = 10\n"
-            "except Exception:\n    pass\n"
-        )
+        code = dedent("""\
+            a_var = 10
+            try:
+                another_var = a_
+                another_var = 10
+            except Exception:
+                pass
+        """)
         result = self._assist(code, code.rindex("a_") + 2)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_completing_ifs_in_uncomplete_try_blocks(self):
-        code = "try:\n    if True:\n        a_var = 10\n    a_"
+        code = dedent("""\
+            try:
+                if True:
+                    a_var = 10
+                a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_completing_ifs_in_uncomplete_try_blocks2(self):
-        code = "try:\n    if True:\n        a_var = 10\n        a_"
+        code = dedent("""\
+            try:
+                if True:
+                    a_var = 10
+                    a_""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_completing_excepts_in_uncomplete_try_blocks(self):
-        code = "try:\n    pass\nexcept Exc"
+        code = dedent("""\
+            try:
+                pass
+            except Exc""")
         result = self._assist(code)
         self.assert_completion_in_result("Exception", "builtin", result)
 
     def test_and_normal_complete_blocks_and_single_fixing(self):
-        code = "try:\n    range.\nexcept:\n    pass\n"
+        code = dedent("""\
+            try:
+                range.
+            except:
+                pass
+        """)
         result = self._assist(code, code.index("."), maxfixes=1)  # noqa
 
     def test_nested_blocks(self):
-        code = "a_var = 10\ntry:\n    try:\n        a_v"
+        code = dedent("""\
+            a_var = 10
+            try:
+                try:
+                    a_v""")
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
     def test_proposing_function_keywords_when_calling(self):
-        code = "def f(p):\n    pass\nf(p"
+        code = dedent("""\
+            def f(p):
+                pass
+            f(p""")
         result = self._assist(code)
         self.assert_completion_in_result("p=", "parameter_keyword", result)
 
     def test_proposing_function_keywords_when_calling_for_non_functions(self):
-        code = "f = 1\nf(p"
+        code = dedent("""\
+            f = 1
+            f(p""")
         result = self._assist(code)  # noqa
 
     def test_proposing_function_keywords_when_calling_extra_spaces(self):
-        code = "def f(p):\n    pass\nf( p"
+        code = dedent("""\
+            def f(p):
+                pass
+            f( p""")
         result = self._assist(code)
         self.assert_completion_in_result("p=", "parameter_keyword", result)
 
     def test_proposing_function_keywords_when_calling_on_second_argument(self):
-        code = "def f(p1, p2):\n    pass\nf(1, p"
+        code = dedent("""\
+            def f(p1, p2):
+                pass
+            f(1, p""")
         result = self._assist(code)
         self.assert_completion_in_result("p2=", "parameter_keyword", result)
 
     def test_proposing_function_keywords_when_calling_not_proposing_args(self):
-        code = "def f(p1, *args):\n    pass\nf(1, a"
+        code = dedent("""\
+            def f(p1, *args):
+                pass
+            f(1, a""")
         result = self._assist(code)
         self.assert_completion_not_in_result("args=", "parameter_keyword", result)
 
     def test_propos_function_kwrds_when_call_with_no_noth_after_parens(self):
-        code = "def f(p):\n    pass\nf("
+        code = dedent("""\
+            def f(p):
+                pass
+            f(""")
         result = self._assist(code)
         self.assert_completion_in_result("p=", "parameter_keyword", result)
 
     def test_propos_function_kwrds_when_call_with_no_noth_after_parens2(self):
-        code = "def f(p):\n    pass\ndef g():\n    h = f\n    f("
+        code = dedent("""\
+            def f(p):
+                pass
+            def g():
+                h = f
+                f(""")
         result = self._assist(code)
         self.assert_completion_in_result("p=", "parameter_keyword", result)
 
     def test_codeassists_before_opening_of_parens(self):
-        code = "def f(p):\n    pass\na_var = 1\nf(1)\n"
+        code = dedent("""\
+            def f(p):
+                pass
+            a_var = 1
+            f(1)
+        """)
         result = self._assist(code, code.rindex("f") + 1)
         self.assert_completion_not_in_result("a_var", "global", result)
 
     def test_codeassist_before_single_line_indents(self):
-        code = "myvar = 1\nif True:\n    (myv\nif True:\n    pass\n"
+        code = dedent("""\
+            myvar = 1
+            if True:
+                (myv
+            if True:
+                pass
+        """)
         result = self._assist(code, code.rindex("myv") + 3)
         self.assert_completion_not_in_result("myvar", "local", result)
 
     def test_codeassist_before_line_indents_in_a_blank_line(self):
-        code = "myvar = 1\nif True:\n    \nif True:\n    pass\n"
+        code = dedent("""\
+            myvar = 1
+            if True:
+
+            if True:
+                pass
+        """)
         result = self._assist(code, code.rindex("    ") + 4)
         self.assert_completion_not_in_result("myvar", "local", result)
 
     def test_simple_get_calltips(self):
-        src = "def f():\n    pass\nvar = f()\n"
+        src = dedent("""\
+            def f():
+                pass
+            var = f()
+        """)
         doc = get_calltip(self.project, src, src.rindex("f"))
         self.assertEqual("f()", doc)
 
     def test_get_calltips_for_classes(self):
-        src = "class C(object):\n" "    def __init__(self):\n        pass\nC("
+        src = dedent("""\
+            class C(object):
+                def __init__(self):
+                    pass
+            C(""")
         doc = get_calltip(self.project, src, len(src) - 1)
         self.assertEqual("C.__init__(self)", doc)
 
     def test_get_calltips_for_objects_with_call(self):
-        src = (
-            "class C(object):\n"
-            "    def __call__(self, p):\n        pass\n"
-            "c = C()\nc(1,"
-        )
+        src = dedent("""\
+            class C(object):
+                def __call__(self, p):
+                    pass
+            c = C()
+            c(1,""")
         doc = get_calltip(self.project, src, src.rindex("c"))
         self.assertEqual("C.__call__(self, p)", doc)
 
     def test_get_calltips_and_including_module_name(self):
-        src = (
-            "class C(object):\n"
-            "    def __call__(self, p):\n        pass\n"
-            "c = C()\nc(1,"
-        )
+        src = dedent("""\
+            class C(object):
+                def __call__(self, p):
+                    pass
+            c = C()
+            c(1,""")
         mod = testutils.create_module(self.project, "mod")
         mod.write(src)
         doc = get_calltip(self.project, src, src.rindex("c"), mod)
@@ -835,22 +1085,34 @@ class CodeAssistTest(unittest.TestCase):
         self.assertTrue(doc is None)
 
     def test_removing_self_parameter(self):
-        src = "class C(object):\n" "    def f(self):\n" "        pass\n" "C().f()"
+        src = dedent("""\
+            class C(object):
+                def f(self):
+                    pass
+            C().f()""")
         doc = get_calltip(self.project, src, src.rindex("f"), remove_self=True)
         self.assertEqual("C.f()", doc)
 
     def test_removing_self_parameter_and_more_than_one_parameter(self):
-        src = "class C(object):\n" "    def f(self, p1):\n" "        pass\n" "C().f()"
+        src = dedent("""\
+            class C(object):
+                def f(self, p1):
+                    pass
+            C().f()""")
         doc = get_calltip(self.project, src, src.rindex("f"), remove_self=True)
         self.assertEqual("C.f(p1)", doc)
 
     def test_lambda_calltip(self):
-        src = "foo = lambda x, y=1: None\n" "foo()"
+        src = dedent("""\
+            foo = lambda x, y=1: None
+            foo()""")
         doc = get_calltip(self.project, src, src.rindex("f"))
         self.assertEqual(doc, "lambda(x, y)")
 
     def test_keyword_before_parens(self):
-        code = "if (1).:\n pass"
+        code = dedent("""\
+            if (1).:
+             pass""")
         result = self._assist(code, offset=len("if (1)."))
         self.assertTrue(result)
 
@@ -858,12 +1120,17 @@ class CodeAssistTest(unittest.TestCase):
     # SEE RELATION MATRIX IN `CompletionProposal`'s DOCSTRING
 
     def test_local_variable_completion_proposal(self):
-        code = "def foo():\n  xvar = 5\n  x"
+        code = dedent("""\
+            def foo():
+              xvar = 5
+              x""")
         result = self._assist(code)
         self.assert_completion_in_result("xvar", "local", result, "instance")
 
     def test_global_variable_completion_proposal(self):
-        code = "yvar = 5\ny"
+        code = dedent("""\
+            yvar = 5
+            y""")
         result = self._assist(code)
         self.assert_completion_in_result("yvar", "global", result, "instance")
 
@@ -875,19 +1142,26 @@ class CodeAssistTest(unittest.TestCase):
             )
 
     def test_attribute_variable_completion_proposal(self):
-        code = (
-            "class AClass(object):\n  def foo(self):\n    " "self.bar = 1\n    self.b"
-        )
+        code = dedent("""\
+            class AClass(object):
+              def foo(self):
+                self.bar = 1
+                self.b""")
         result = self._assist(code)
         self.assert_completion_in_result("bar", "attribute", result, type="instance")
 
     def test_local_class_completion_proposal(self):
-        code = "def foo():\n  class LocalClass(object): pass\n  Lo"
+        code = dedent("""\
+            def foo():
+              class LocalClass(object): pass
+              Lo""")
         result = self._assist(code)
         self.assert_completion_in_result("LocalClass", "local", result, type="class")
 
     def test_global_class_completion_proposal(self):
-        code = "class GlobalClass(object): pass\nGl"
+        code = dedent("""\
+            class GlobalClass(object): pass
+            Gl""")
         result = self._assist(code)
         self.assert_completion_in_result("GlobalClass", "global", result, type="class")
 
@@ -897,17 +1171,25 @@ class CodeAssistTest(unittest.TestCase):
             self.assert_completion_in_result(varname, "builtin", result, type="class")
 
     def test_attribute_class_completion_proposal(self):
-        code = "class Outer(object):\n  class Inner(object): pass\nOuter."
+        code = dedent("""\
+            class Outer(object):
+              class Inner(object): pass
+            Outer.""")
         result = self._assist(code)
         self.assert_completion_in_result("Inner", "attribute", result, type="class")
 
     def test_local_function_completion_proposal(self):
-        code = "def outer():\n  def inner(): pass\n  in"
+        code = dedent("""\
+            def outer():
+              def inner(): pass
+              in""")
         result = self._assist(code)
         self.assert_completion_in_result("inner", "local", result, type="function")
 
     def test_global_function_completion_proposal(self):
-        code = "def foo(): pass\nf"
+        code = dedent("""\
+            def foo(): pass
+            f""")
         result = self._assist(code)
         self.assert_completion_in_result("foo", "global", result, type="function")
 
@@ -920,27 +1202,40 @@ class CodeAssistTest(unittest.TestCase):
             )
 
     def test_attribute_function_completion_proposal(self):
-        code = "class Some(object):\n  def method(self):\n    self."
+        code = dedent("""\
+            class Some(object):
+              def method(self):
+                self.""")
         result = self._assist(code)
         self.assert_completion_in_result("method", "attribute", result, type="function")
 
     def test_local_module_completion_proposal(self):
-        code = "def foo():\n  import types\n  t"
+        code = dedent("""\
+            def foo():
+              import types
+              t""")
         result = self._assist(code)
         self.assert_completion_in_result("types", "imported", result, type="module")
 
     def test_global_module_completion_proposal(self):
-        code = "import operator\no"
+        code = dedent("""\
+            import operator
+            o""")
         result = self._assist(code)
         self.assert_completion_in_result("operator", "imported", result, type="module")
 
     def test_attribute_module_completion_proposal(self):
-        code = "class Some(object):\n  import os\nSome.o"
+        code = dedent("""\
+            class Some(object):
+              import os
+            Some.o""")
         result = self._assist(code)
         self.assert_completion_in_result("os", "imported", result, type="module")
 
     def test_builtin_exception_completion_proposal(self):
-        code = "def blah():\n  Z"
+        code = dedent("""\
+            def blah():
+              Z""")
         result = self._assist(code)
         self.assert_completion_in_result(
             "ZeroDivisionError", "builtin", result, type="class"
@@ -953,7 +1248,9 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("from", "keyword", result, type=None)
 
     def test_parameter_keyword_completion_proposal(self):
-        code = "def func(abc, aloha, alpha, amigo): pass\nfunc(a"
+        code = dedent("""\
+            def func(abc, aloha, alpha, amigo): pass
+            func(a""")
         result = self._assist(code)
         for expected in ("abc=", "aloha=", "alpha=", "amigo="):
             self.assert_completion_in_result(
@@ -971,7 +1268,10 @@ class CodeAssistTest(unittest.TestCase):
         )
 
     def test_object_path_attribute(self):
-        code = "class Foo(object):\n" "    attr = 42\n"
+        code = dedent("""\
+            class Foo(object):
+                attr = 42
+        """)
         resource = testutils.create_module(self.project, "mod")
         resource.write(code)
         result = get_canonical_path(self.project, resource, 24)
@@ -981,7 +1281,11 @@ class CodeAssistTest(unittest.TestCase):
         )
 
     def test_object_path_subclass(self):
-        code = "class Foo(object):\n" "    class Bar(object):\n" "        pass\n"
+        code = dedent("""\
+            class Foo(object):
+                class Bar(object):
+                    pass
+        """)
         resource = testutils.create_module(self.project, "mod")
         resource.write(code)
         result = get_canonical_path(self.project, resource, 30)
@@ -991,7 +1295,11 @@ class CodeAssistTest(unittest.TestCase):
         )
 
     def test_object_path_method_parameter(self):
-        code = "class Foo(object):\n" "    def bar(self, a, b, c):\n" "        pass\n"
+        code = dedent("""\
+            class Foo(object):
+                def bar(self, a, b, c):
+                    pass
+        """)
         resource = testutils.create_module(self.project, "mod")
         resource.write(code)
         result = get_canonical_path(self.project, resource, 41)
@@ -1007,7 +1315,10 @@ class CodeAssistTest(unittest.TestCase):
         )
 
     def test_object_path_variable(self):
-        code = "def bar(a):\n" "    x = a + 42\n"
+        code = dedent("""\
+            def bar(a):
+                x = a + 42
+        """)
         resource = testutils.create_module(self.project, "mod")
         resource.write(code)
         result = get_canonical_path(self.project, resource, 17)
@@ -1023,13 +1334,19 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")
-        code = (
-            "class SampleClass(object):\n"
-            "    def sample_method():\n        pass\n\n"
-            "def sample_func():\n    pass\n"
-            "sample_var = 10\n\n"
-            "def _underlined_func():\n    pass\n\n"
-        )
+        code = dedent("""\
+            class SampleClass(object):
+                def sample_method():
+                    pass
+
+            def sample_func():
+                pass
+            sample_var = 10
+
+            def _underlined_func():
+                pass
+
+        """)
         samplemod.write(code)
         package = testutils.create_package(self.project, "package")
         nestedmod = testutils.create_module(self.project, "nestedmod", package)  # noqa
@@ -1053,114 +1370,130 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                 self.fail("completion <%s> was proposed" % name)
 
     def test_simple_import(self):
-        code = "import samplemod\nsample"
+        code = dedent("""\
+            import samplemod
+            sample""")
         result = self._assist(code)
         self.assert_completion_in_result("samplemod", "imported", result)
 
     def test_from_import_class(self):
-        code = "from samplemod import SampleClass\nSample"
+        code = dedent("""\
+            from samplemod import SampleClass
+            Sample""")
         result = self._assist(code)
         self.assert_completion_in_result("SampleClass", "imported", result)
 
     def test_from_import_function(self):
-        code = "from samplemod import sample_func\nsample"
+        code = dedent("""\
+            from samplemod import sample_func
+            sample""")
         result = self._assist(code)
         self.assert_completion_in_result("sample_func", "imported", result)
 
     def test_from_import_variable(self):
-        code = "from samplemod import sample_var\nsample"
+        code = dedent("""\
+            from samplemod import sample_var
+            sample""")
         result = self._assist(code)
         self.assert_completion_in_result("sample_var", "imported", result)
 
     def test_from_imports_inside_functions(self):
-        code = "def f():\n    from samplemod import SampleClass\n    Sample"
+        code = dedent("""\
+            def f():
+                from samplemod import SampleClass
+                Sample""")
         result = self._assist(code)
         self.assert_completion_in_result("SampleClass", "imported", result)
 
     def test_from_import_only_imports_imported(self):
-        code = "from samplemod import sample_func\nSample"
+        code = dedent("""\
+            from samplemod import sample_func
+            Sample""")
         result = self._assist(code)
         self.assert_completion_not_in_result("SampleClass", "global", result)
 
     def test_from_import_star(self):
-        code = "from samplemod import *\nSample"
+        code = dedent("""\
+            from samplemod import *
+            Sample""")
         result = self._assist(code)
         self.assert_completion_in_result("SampleClass", "imported", result)
 
     def test_from_import_star2(self):
-        code = "from samplemod import *\nsample"
+        code = dedent("""\
+            from samplemod import *
+            sample""")
         result = self._assist(code)
         self.assert_completion_in_result("sample_func", "imported", result)
         self.assert_completion_in_result("sample_var", "imported", result)
 
     def test_from_import_star_not_imporing_underlined(self):
-        code = "from samplemod import *\n_under"
+        code = dedent("""\
+            from samplemod import *
+            _under""")
         result = self._assist(code)
         self.assert_completion_not_in_result("_underlined_func", "global", result)
 
     def test_from_package_import_mod(self):
-        code = "from package import nestedmod\nnest"
+        code = dedent("""\
+            from package import nestedmod
+            nest""")
         result = self._assist(code)
         self.assert_completion_in_result("nestedmod", "imported", result)
 
     def test_completing_after_dot(self):
-        code = (
-            "class SampleClass(object):\n"
-            "    def sample_method(self):\n"
-            "        pass\n"
-            "SampleClass.sam"
-        )
+        code = dedent("""\
+            class SampleClass(object):
+                def sample_method(self):
+                    pass
+            SampleClass.sam""")
         result = self._assist(code)
         self.assert_completion_in_result("sample_method", "attribute", result)
 
     def test_completing_after_multiple_dots(self):
-        code = (
-            "class Class1(object):\n"
-            "    class Class2(object):\n"
-            "        def sample_method(self):\n"
-            "            pass\n"
-            "Class1.Class2.sam"
-        )
+        code = dedent("""\
+            class Class1(object):
+                class Class2(object):
+                    def sample_method(self):
+                        pass
+            Class1.Class2.sam""")
         result = self._assist(code)
         self.assert_completion_in_result("sample_method", "attribute", result)
 
     def test_completing_after_self_dot(self):
-        code = (
-            "class Sample(object):\n"
-            "    def method1(self):\n"
-            "        pass\n"
-            "    def method2(self):\n"
-            "        self.m"
-        )
+        code = dedent("""\
+            class Sample(object):
+                def method1(self):
+                    pass
+                def method2(self):
+                    self.m""")
         result = self._assist(code)
         self.assert_completion_in_result("method1", "attribute", result)
 
     def test_result_start_offset_for_dotted_completions(self):
-        code = (
-            "class Sample(object):\n"
-            "    def method1(self):\n"
-            "        pass\n"
-            "Sample.me"
-        )
+        code = dedent("""\
+            class Sample(object):
+                def method1(self):
+                    pass
+            Sample.me""")
         self.assertEqual(len(code) - 2, starting_offset(code, len(code)))
 
     def test_backslash_after_dots(self):
-        code = (
-            "class Sample(object):\n"
-            "    def a_method(self):\n"
-            "        pass\n"
-            "Sample.\\\n       a_m"
-        )
+        code = dedent("""\
+            class Sample(object):
+                def a_method(self):
+                    pass
+            Sample.\\
+                   a_m""")
         result = self._assist(code)
         self.assert_completion_in_result("a_method", "attribute", result)
 
     def test_not_proposing_global_names_after_dot(self):
-        code = (
-            "class Sample(object):\n"
-            "    def a_method(self):\n"
-            "        pass\n"
-            "Sample."
-        )
+        code = dedent("""\
+            class Sample(object):
+                def a_method(self):
+                    pass
+            Sample.""")
         result = self._assist(code)
         self.assert_completion_not_in_result("Sample", "global", result)
 
@@ -1168,8 +1501,15 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write("def a_func():\n    pass\n")
-        code = "import mod1\nmod1."
+        mod1.write(
+            dedent("""\
+                def a_func():
+                    pass
+            """)
+        )
+        code = dedent("""\
+            import mod1
+            mod1.""")
         result = self._assist(code, resource=mod2)
         self.assert_completion_in_result("a_func", "imported", result)
 
@@ -1177,8 +1517,16 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write("def a_func():\n    pass\n")
-        code = "import mod1\nmod1.a_func\n"
+        mod1.write(
+            dedent("""\
+                def a_func():
+                    pass
+            """)
+        )
+        code = dedent("""\
+            import mod1
+            mod1.a_func
+        """)
         result = get_definition_location(self.project, code, len(code) - 2, mod2)
         self.assertEqual((mod1, 1), result)
 
@@ -1191,21 +1539,39 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write('def a_func():\n    """hey"""\n    pass\n')
-        code = "import mod1\nmod1.a_func\n"
+        mod1.write(
+            dedent('''\
+                def a_func():
+                    """hey"""
+                    pass
+            ''')
+        )
+        code = dedent("""\
+            import mod1
+            mod1.a_func
+        """)
         result = get_doc(self.project, code, len(code) - 2, mod2)
         self.assertTrue(result.endswith("hey"))
 
     def test_get_doc_on_from_import_module(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write('"""mod1 docs"""\nvar = 1\n')
+        mod1.write(
+            dedent('''\
+                """mod1 docs"""
+                var = 1
+            ''')
+        )
         code = "from mod1 import var\n"
         result = get_doc(self.project, code, code.index("mod1"))
         result.index("mod1 docs")
 
     def test_fixing_errors_with_maxfixes_in_resources(self):
         mod = testutils.create_module(self.project, "mod")
-        code = "def f():\n    sldj sldj\ndef g():\n    ran"
+        code = dedent("""\
+            def f():
+                sldj sldj
+            def g():
+                ran""")
         mod.write(code)
         result = self._assist(code, maxfixes=2, resource=mod)
         self.assertTrue(len(result) > 0)
@@ -1236,5 +1602,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result("myvar", "global", result)
 
     def test_starting_expression(self):
-        code = "l = list()\nl.app"
+        code = dedent("""\
+            l = list()
+            l.app""")
         self.assertEqual("l.app", starting_expression(code, len(code)))

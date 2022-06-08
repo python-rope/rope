@@ -745,6 +745,10 @@ You can implement your own fscommands object:
         """Write `data` to file at `path`"""
         # ...
 
+    def read(self, path):
+        """Read `data` from file at `path`"""
+        # ...
+
 And you can create a project like this:
 
 .. code-block:: python
@@ -830,6 +834,43 @@ can use this module to auto-import names.  ``AutoImport.get_modules()``
 returns the list of modules with the given global name.
 ``AutoImport.import_assist()`` tries to find the modules that have a
 global name that starts with the given prefix.
+
+
+There are currently two implementations of autoimport in rope, a deprecated
+implementation that uses pickle-based storage
+(rope.contrib.autoimport.pickle.AutoImport) and a new, experimental one that
+uses sqlite3 database (rope.contrib.autoimport.sqlite.AutoImport). New and
+existing integrations should migrate to the sqlite3 storage as the pickle-based
+autoimport will be removed in the future.
+
+
+`rope.contrib.autoimport.sqlite`
+--------------------------------
+
+By default, the sqlite3-based only stores autoimport cache in an in-memory
+sqlite3 database, you can make it write the import cache to persistent storage
+by passing memory=False to AutoImport constructor.
+
+It must be closed when done with the ```AutoImport.close()``` method.
+
+AutoImport can search for a name from both modules and statements you can import from them.
+
+.. code-block:: python
+
+  from rope.base.project import Project
+  from rope.contrib.autoimport import AutoImport
+
+  project = Project("/path/to/project")
+  autoimport = AutoImport(project, memory=False)
+  autoimport.generate_resource_cache()  # Generates a cache of the local modules, from the project you're working on
+  autoimport.generate_modules_cache()  # Generates a cache of external modules
+  print(autoimport.search("Dict"))
+  autoimport.close()
+  project.close()
+
+It provides two new search methods: 
+ -  search_full() - returns a list of mostly unsorted tuples. This has itemkind and source information.
+ -  search() - simpler wrapper around search_full with a basic sorting algorithm
 
 
 Cross-Project Refactorings

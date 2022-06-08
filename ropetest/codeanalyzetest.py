@@ -13,12 +13,6 @@ from ropetest import testutils
 
 
 class SourceLinesAdapterTest(unittest.TestCase):
-    def setUp(self):
-        super(SourceLinesAdapterTest, self).setUp()
-
-    def tearDown(self):
-        super(SourceLinesAdapterTest, self).tearDown()
-
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter("line1\nline2\n")
         self.assertEqual("line1", to_lines.get_line(1))
@@ -51,19 +45,84 @@ class SourceLinesAdapterTest(unittest.TestCase):
 
 
 class WordRangeFinderTest(unittest.TestCase):
-    def setUp(self):
-        super(WordRangeFinderTest, self).setUp()
-
-    def tearDown(self):
-        super(WordRangeFinderTest, self).tearDown()
-
     def _find_primary(self, code, offset):
         word_finder = worder.Worder(code)
         result = word_finder.get_primary_at(offset)
         return result
 
+    def _annotated_code(self, annotated_code):
+        """
+        Split annotated code into raw code and annotation.
+
+        Odd lines in `annotated_code` is the actual Python code.
+
+        Even lines in `annotated_code` are single-char annotation for the
+        previous line.
+
+        The annotation may contain one extra character which annotates the
+        newline/end of line character.
+        """
+        code_lines = annotated_code.splitlines()[::2]
+        annotations_lines = annotated_code.splitlines()[1::2]
+        if len(annotations_lines) < len(code_lines):
+            annotations_lines.append("")
+        for idx, (line, line_ann) in enumerate(zip(code_lines, annotations_lines)):
+            newline_ann_char = 1  # for annotation of the end of line character
+            self.assertLessEqual(
+                len(line_ann),
+                len(line) + newline_ann_char,
+                msg="Extra character in annotations",
+            )
+            line_ann = line_ann.rstrip()
+            line_ann += " " * (len(line) - len(line_ann))
+            if len(line_ann) != len(line) + newline_ann_char:
+                line_ann += " "
+            self.assertEqual(len(line_ann), len(line) + newline_ann_char)
+            annotations_lines[idx] = line_ann
+        code, annotations = "\n".join(code_lines), "\n".join(annotations_lines)
+        if code[-1] != "\n":
+            annotations = annotations[:-1]
+        self.assertEqual(len(code) + code.count("\n"), len(annotations))
+        return code, annotations
+
+    def _make_offset_annotation(self, code, func):
+        """
+        Create annotation by calling `func(offset)` for every offset in `code`.
+
+        For example, when the annotated code looks like so:
+
+            import a.b.c.d
+                   ++++++++
+
+        This means that `func(offset)` returns True whenever offset points to
+        the 'a.b.c.d' part and returns False everywhere else.
+        """
+
+        def _annotation_char(offset):
+            ann_char = "+" if func(offset) else " "
+            if code[offset] == "\n":
+                ann_char = ann_char + "\n"
+            return ann_char
+
+        return "".join([_annotation_char(offset) for offset in range(len(code))])
+
+    def assert_equal_annotation(self, code, expected, actual):
+        if expected != actual:
+            msg = ["Annotation does not match:\n"]
+            for line, line_exp, line_actual in zip(
+                code.splitlines(), expected.splitlines(), actual.splitlines()
+            ):
+                msg.append("  " + line + "\n")
+                if line_exp != line_actual:
+                    msg.append("e " + line_exp + "\n")
+                    msg.append("a " + line_actual + "\n")
+            self.fail("".join(msg))
+
     def test_keyword_before_parens(self):
-        code = "if (a_var).an_attr:\n    pass\n"
+        code = dedent("""\
+            if (a_var).an_attr:
+                pass
+        """)
         self.assertEqual("(a_var).an_attr", self._find_primary(code, code.index(":")))
 
     def test_inside_parans(self):
@@ -115,7 +174,10 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEqual("is_keyword", result)
 
     def test_keyword_before_parens_no_space(self):
-        code = "if(a_var).an_attr:\n    pass\n"
+        code = dedent("""\
+            if(a_var).an_attr:
+                pass
+        """)
         self.assertEqual("(a_var).an_attr", self._find_primary(code, code.index(":")))
 
     def test_strings(self):
@@ -218,19 +280,54 @@ class WordRangeFinderTest(unittest.TestCase):
         code = '"" + # var2.\n  var3'
         self.assertEqual("var3", self._find_primary(code, 21))
 
-    def test_import_statement_finding(self):
-        code = "import mod\na_var = 10\n"
+    def test_is_import_statement(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+                   ++++++++
+            from a.b import c
+
+            import a.b.c.d as d
+                   +++++++++++++
+            from a.b import c as e
+
+            from a.b import (
+
+                abc
+
+            )
+
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, word_finder.is_import_statement),
+        )
+
+    def test_is_import_statement_finding(self):
+        code = dedent("""\
+            import mod
+            a_var = 10
+        """)
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_import_statement(code.index("mod") + 1))
         self.assertFalse(word_finder.is_import_statement(code.index("a_var") + 1))
 
-    def test_import_statement_finding2(self):
-        code = "import a.b.c.d\nresult = a.b.c.d.f()\n"
+    def test_is_import_statement_finding2(self):
+        code = dedent("""\
+            import a.b.c.d
+            result = a.b.c.d.f()
+        """)
         word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_import_statement(code.rindex("d") + 1))
 
     def test_word_parens_range(self):
-        code = "s = str()\ns.title()\n"
+        code = dedent("""\
+            s = str()
+            s.title()
+        """)
         word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(code.rindex("()") - 1)
         self.assertEqual((len(code) - 3, len(code) - 1), result)
@@ -293,6 +390,120 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
 
+    def test_is_from_statement(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+                 +++++++++++++
+            import a.b.c.d as d
+
+            from a.b import c as e
+                 ++++++++++++++++++
+            from a.b import (
+                 +++++++++++++
+                abc
+            ++++++++
+            )
+            ++
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, word_finder.is_from_statement),
+        )
+
+    def test_is_from_statement_module(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+                +++++
+            import a.b.c.d as d
+
+            from a.b import c as e
+                +++++
+            from a.b import (
+                +++++
+                abc
+
+            )
+
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, word_finder.is_from_statement_module),
+        )
+
+    def test_is_import_statement_aliased_module(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+
+            import a.b.c.d as d
+                   +++++++
+            from a.b import c as e
+
+            from a.b import (
+
+                abc
+
+            )
+
+            import mod1, \\
+
+                mod2 as c, mod3, mod4 as d
+               +++++            +++++
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(
+                code, word_finder.is_import_statement_aliased_module
+            ),
+        )
+
+    def test_is_from_aliased(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            import a.b.c.d
+
+            from a.b import c
+
+            import a.b.c.d as d
+
+            from a.b import c as e
+                           ++
+            from a.b import (
+
+                abc
+
+            )
+
+            from a.b import mod1, \\
+
+                mod2 as c, mod3, mod4 as d
+               +++++            +++++
+            result = a.b.c.d.f()
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, word_finder.is_from_aliased),
+        )
+
     def test_is_from_with_from_import_and_multiline_parens(self):
         code = "from mod import \\\n  (f,\n  g, h)\n"
         word_finder = worder.Worder(code)
@@ -303,7 +514,31 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex("g")))
 
-    def test_one_letter_function_keyword_arguments(self):
+    def test_is_function_keyword_parameter(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            func(param=1)
+                ++++++
+            func(
+
+                param=1
+               ++++++
+            )
+
+            def func(param=1):
+                    ++++++
+                pass
+
+        """))
+        word_finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(
+                code, word_finder.is_function_keyword_parameter
+            ),
+        )
+
+    def test_one_letter_is_function_keyword_parameter(self):
         code = "f(p=1)\n"
         word_finder = worder.Worder(code)
         index = code.rindex("p")
@@ -347,13 +582,30 @@ class WordRangeFinderTest(unittest.TestCase):
             code.index("("), finder.find_parens_start_from_inside(len(code) - 1)
         )
 
-    def test_is_on_function_keyword(self):
+    def test_is_on_function_call_keyword(self):
+        code, annotations = self._annotated_code(annotated_code=dedent("""\
+            myfunc(va
+                  +++
+        """))
+
+        finder = worder.Worder(code)
+        self.assert_equal_annotation(
+            code,
+            annotations,
+            self._make_offset_annotation(code, finder.is_on_function_call_keyword),
+        )
+
+    def test_is_on_function_keyword_partial(self):
         code = "myfunc(va"
         finder = worder.Worder(code)
         self.assertTrue(finder.is_on_function_call_keyword(len(code) - 1))
 
     def test_get_word_range_with_fstring(self):
-        code = 'auth = 8\nmy_var = f"some value {auth}"\nprint(auth)\nother_val = "some other"'
+        code = dedent('''\
+            auth = 8
+            my_var = f"some value {auth}"
+            print(auth)
+            other_val = "some other"''')
         finder = worder.Worder(code)
         self.assertEqual(finder.get_word_range(45), (45, 49))
 
@@ -370,14 +622,22 @@ class ScopeNameFinderTest(unittest.TestCase):
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`
     # exception, but not in class bodies
     def xxx_test_global_name_in_class_body(self):
-        code = "a_var = 10\nclass C(object):\n    a_var = a_var\n"
+        code = dedent("""\
+            a_var = 10
+            class C(object):
+                a_var = a_var
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(len(code) - 3)
         self.assertEqual(scope["a_var"], result)
 
     def test_class_variable_attribute_in_class_body(self):
-        code = "a_var = 10\nclass C(object):\n    a_var = a_var\n"
+        code = dedent("""\
+            a_var = 10
+            class C(object):
+                a_var = a_var
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope["C"].get_object()["a_var"]
@@ -385,7 +645,12 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(a_var_pyname, result)
 
     def test_class_variable_attribute_in_class_body2(self):
-        code = "a_var = 10\nclass C(object):\n    a_var \\\n= a_var\n"
+        code = dedent("""\
+            a_var = 10
+            class C(object):
+                a_var \\
+            = a_var
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope["C"].get_object()["a_var"]
@@ -393,7 +658,11 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(a_var_pyname, result)
 
     def test_class_method_attribute_in_class_body(self):
-        code = "class C(object):\n    def a_method(self):\n        pass\n"
+        code = dedent("""\
+            class C(object):
+                def a_method(self):
+                    pass
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_method_pyname = scope["C"].get_object()["a_method"]
@@ -401,7 +670,11 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(a_method_pyname, result)
 
     def test_inner_class_attribute_in_class_body(self):
-        code = "class C(object):\n    class CC(object):\n        pass\n"
+        code = dedent("""\
+            class C(object):
+                class CC(object):
+                    pass
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_class_pyname = scope["C"].get_object()["CC"]
@@ -409,7 +682,11 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(a_class_pyname, result)
 
     def test_class_method_in_class_body_but_not_indexed(self):
-        code = "class C(object):\n    def func(self, func):\n        pass\n"
+        code = dedent("""\
+            class C(object):
+                def func(self, func):
+                    pass
+        """)
         scope = libutils.get_string_scope(self.project, code)
         a_func_pyname = scope.get_scopes()[0].get_scopes()[0]["func"]
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
@@ -417,7 +694,10 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(a_func_pyname, result)
 
     def test_function_but_not_indexed(self):
-        code = "def a_func(a_func):\n    pass\n"
+        code = dedent("""\
+            def a_func(a_func):
+                pass
+        """)
         scope = libutils.get_string_scope(self.project, code)
         a_func_pyname = scope["a_func"]
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
@@ -427,7 +707,10 @@ class ScopeNameFinderTest(unittest.TestCase):
     def test_modules_after_from_statements(self):
         root_folder = self.project.root
         mod = testutils.create_module(self.project, "mod", root_folder)
-        mod.write("def a_func():\n    pass\n")
+        mod.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = "from mod import a_func\n"
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
@@ -437,8 +720,14 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_renaming_functions_with_from_import_and_parens(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write("def afunc():\n    pass\n")
-        code = "from mod1 import (\n    afunc as func)\n"
+        mod1.write(dedent("""\
+            def afunc():
+                pass
+        """))
+        code = dedent("""\
+            from mod1 import (
+                afunc as func)
+        """)
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.project.get_pymodule(mod1)
@@ -452,7 +741,10 @@ class ScopeNameFinderTest(unittest.TestCase):
         pkg2 = testutils.create_package(self.project, "pkg2", pkg1)
         mod1 = testutils.create_module(self.project, "mod1", pkg1)
         mod2 = testutils.create_module(self.project, "mod2", pkg2)
-        mod1.write("def a_func():\n    pass\n")
+        mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = "from ..mod1 import a_func\n"
         mod2.write(code)
         mod2_scope = self.project.get_pymodule(mod2).get_scope()
@@ -475,41 +767,63 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEqual(pkg2_pyobject, found_pyname.get_object())
 
     def test_get_pyname_at_on_language_keywords(self):
-        code = "def a_func(a_func):\n    pass\n"
+        code = dedent("""\
+            def a_func(a_func):
+                pass
+        """)
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         with self.assertRaises(exceptions.RopeError):
             name_finder.get_pyname_at(code.index("pass"))
 
     def test_one_liners(self):
-        code = "var = 1\ndef f(): var = 2\nprint(var)\n"
+        code = dedent("""\
+            var = 1
+            def f(): var = 2
+            print(var)
+        """)
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex("var"))
         self.assertEqual(pymod["var"], pyname)
 
     def test_one_liners_with_line_breaks(self):
-        code = "var = 1\ndef f(\n): var = 2\nprint(var)\n"
+        code = dedent("""\
+            var = 1
+            def f(
+            ): var = 2
+            print(var)
+        """)
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex("var"))
         self.assertEqual(pymod["var"], pyname)
 
     def test_one_liners_with_line_breaks2(self):
-        code = "var = 1\ndef f(\np): var = 2\nprint(var)\n"
+        code = dedent("""\
+            var = 1
+            def f(
+            p): var = 2
+            print(var)
+        """)
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex("var"))
         self.assertEqual(pymod["var"], pyname)
 
+    def test_var_in_list_comprehension_differs_from_var_outside(self):
+        code = "var = 1\n[var for var in range(1)]\n"
+        pymod = libutils.get_string_module(self.project, code)
+
+        name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
+
+        outside_pyname = name_finder.get_pyname_at(code.index("var"))
+        inside_pyname = name_finder.get_pyname_at(code.rindex("var"))
+
+        self.assertNotEqual(outside_pyname, inside_pyname)
+
 
 class LogicalLineFinderTest(unittest.TestCase):
-    def setUp(self):
-        super(LogicalLineFinderTest, self).setUp()
-
-    def tearDown(self):
-        super(LogicalLineFinderTest, self).tearDown()
-
     def _logical_finder(self, code):
         return LogicalLineFinder(SourceLinesAdapter(code))
 
@@ -519,7 +833,10 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual((1, 1), line_finder.logical_line_in(1))
 
     def test_normal_lines2(self):
-        code = "another = 10\na_var = 20\n"
+        code = dedent("""\
+            another = 10
+            a_var = 20
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((1, 1), line_finder.logical_line_in(1))
         self.assertEqual((2, 2), line_finder.logical_line_in(2))
@@ -530,7 +847,12 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual((1, 3), line_finder.logical_line_in(2))
 
     def test_explicit_continuation(self):
-        code = "print(2)\na_var = (3 + \n    4, \n    5)\n"
+        code = dedent("""\
+            print(2)
+            a_var = (3 +
+                4,
+                5)
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((2, 4), line_finder.logical_line_in(2))
 
@@ -540,42 +862,69 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_multiple_indented_ifs(self):
-        code = (
-            "if True:\n    if True:\n        "
-            "if True:\n            pass\n    a = 10\n"
-        )
+        code = dedent("""\
+            if True:
+                if True:
+                    if True:
+                        pass
+                a = 10
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((5, 5), line_finder.logical_line_in(5))
 
     def test_list_comprehensions_and_fors(self):
-        code = "a_list = [i\n    for i in range(10)]\n"
+        code = dedent("""\
+            a_list = [i
+                for i in range(10)]
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((1, 2), line_finder.logical_line_in(2))
 
     def test_generator_expressions_and_fors(self):
-        code = "a_list = (i\n    for i in range(10))\n"
+        code = dedent("""\
+            a_list = (i
+                for i in range(10))
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((1, 2), line_finder.logical_line_in(2))
 
     def test_fors_and_block_start(self):
-        code = "l = range(10)\nfor i in l:\n    print(i)\n"
+        code = dedent("""\
+            l = range(10)
+            for i in l:
+                print(i)
+        """)
         self.assertEqual(2, get_block_start(SourceLinesAdapter(code), 2))
 
     def test_problems_with_inner_indentations(self):
-        code = (
-            "if True:\n    if True:\n        if True:\n            pass\n"
-            "    a = \\\n        1\n"
-        )
+        code = dedent("""\
+            if True:
+                if True:
+                    if True:
+                        pass
+                a = \\
+                    1
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((5, 6), line_finder.logical_line_in(6))
 
     def test_problems_with_inner_indentations2(self):
-        code = "if True:\n    if True:\n        pass\n" "a = 1\n"
+        code = dedent("""\
+            if True:
+                if True:
+                    pass
+            a = 1
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((4, 4), line_finder.logical_line_in(4))
 
     def test_logical_lines_for_else(self):
-        code = "if True:\n    pass\nelse:\n    pass\n"
+        code = dedent("""\
+            if True:
+                pass
+            else:
+                pass
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual((3, 3), line_finder.logical_line_in(3))
 
@@ -595,7 +944,12 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_generating_line_starts(self):
-        code = "a = 1\na = 2\n\na = 3\n"
+        code = dedent("""\
+            a = 1
+            a = 2
+
+            a = 3
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual([1, 2, 4], list(line_finder.generate_starts()))
 
@@ -615,10 +969,13 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEqual([2], list(line_finder.generate_starts()))
 
     def test_generating_line_starts_and_unmatched_deindents(self):
-        code = (
-            "if True:\n    if True:\n        if True:\n"
-            "            a = 1\n    b = 1\n"
-        )
+        code = dedent("""\
+            if True:
+                if True:
+                    if True:
+                        a = 1
+                b = 1
+        """)
         line_finder = self._logical_finder(code)
         self.assertEqual([4, 5], list(line_finder.generate_starts(4)))
 

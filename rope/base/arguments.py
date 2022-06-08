@@ -2,7 +2,7 @@ import rope.base.evaluate
 from rope.base import ast
 
 
-class Arguments(object):
+class Arguments:
     """A class for evaluating parameters passed to a function
 
     You can use the `create_arguments` factory.  It handles implicit
@@ -52,7 +52,7 @@ def create_arguments(primary, pyfunction, call_node, scope):
     return Arguments(args, scope)
 
 
-class ObjectArguments(object):
+class ObjectArguments:
     def __init__(self, pynames):
         self.pynames = pynames
 
@@ -72,7 +72,7 @@ class ObjectArguments(object):
         return self.pynames[0]
 
 
-class MixedArguments(object):
+class MixedArguments:
     def __init__(self, pyname, arguments, scope):
         """`argumens` is an instance of `Arguments`"""
         self.pyname = pyname

@@ -1,3 +1,15 @@
+"""
+IMPORTANT: This is a deprecated implementation of autoimport using pickle-based
+storage.
+
+This pickle-based autoimport is provided only for backwards compatibility
+purpose and will be removed and the sqlite backend will be the new default
+implementation in the future.
+
+If you are still using this module, you should migrate to the new and improved
+sqlite-based storage backend (rope.contrib.autoimport.sqlite.AutoImport).
+"""
+
 import re
 
 from rope.base import builtins
@@ -11,7 +23,7 @@ from rope.base import taskhandle
 from rope.refactor import importutils
 
 
-class AutoImport(object):
+class AutoImport:
     """A class for finding the module that provides a name
 
     This class maintains a cache of global names in python modules.
@@ -216,11 +228,11 @@ class AutoImport(object):
 def submodules(mod):
     if isinstance(mod, resources.File):
         if mod.name.endswith(".py") and mod.name != "__init__.py":
-            return set([mod])
+            return {mod}
         return set()
     if not mod.has_child("__init__.py"):
         return set()
-    result = set([mod])
+    result = {mod}
     for child in mod.get_children():
         result |= submodules(child)
     return result

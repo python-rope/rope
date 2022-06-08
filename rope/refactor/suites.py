@@ -1,3 +1,5 @@
+from itertools import chain
+
 from rope.base import ast
 from rope.base.utils import pycompat
 
@@ -50,7 +52,7 @@ def ast_suite_tree(node):
     return Suite(node.body, lineno)
 
 
-class Suite(object):
+class Suite:
     def __init__(self, child_nodes, lineno, parent=None, ignored=False):
         self.parent = parent
         self.lineno = lineno
@@ -97,7 +99,7 @@ class Suite(object):
         return self.parent._get_level() + 1
 
 
-class _SuiteWalker(object):
+class _SuiteWalker:
     def __init__(self, suite):
         self.suite = suite
         self.suites = []
@@ -114,20 +116,26 @@ class _SuiteWalker(object):
     def _With(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
 
+    def _AsyncWith(self, node):
+        self.suites.append(Suite(node.body, node.lineno, self.suite))
+
+    def _Match(self, node):
+        case_bodies = list(
+            chain.from_iterable([[case.pattern] + case.body for case in node.cases])
+        )
+        self.suites.append(Suite(case_bodies, node.lineno, self.suite))
+
     def _TryFinally(self, node):
         proceed_to_except_handler = False
         if len(node.finalbody) == 1:
-            if pycompat.PY2:
-                proceed_to_except_handler = isinstance(node.body[0], ast.TryExcept)
-            elif pycompat.PY3:
-                try:
-                    proceed_to_except_handler = isinstance(
-                        node.handlers[0], ast.ExceptHandler
-                    )
-                except IndexError:
-                    pass
+            try:
+                proceed_to_except_handler = isinstance(
+                    node.handlers[0], ast.ExceptHandler
+                )
+            except IndexError:
+                pass
         if proceed_to_except_handler:
-            self._TryExcept(node if pycompat.PY3 else node.body[0])
+            self._TryExcept(node)
         else:
             self.suites.append(Suite(node.body, node.lineno, self.suite))
         self.suites.append(Suite(node.finalbody, node.lineno, self.suite))
@@ -151,6 +159,9 @@ class _SuiteWalker(object):
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
     def _FunctionDef(self, node):
+        self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
+
+    def _AsyncFunctionDef(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
 
     def _ClassDef(self, node):

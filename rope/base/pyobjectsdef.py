@@ -133,6 +133,9 @@ class PyComprehension(pyobjects.PyComprehension):
             self.pycore, self, _ComprehensionVisitor
         )
 
+    def get_kind(self):
+        return "Comprehension"
+
 
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
@@ -190,7 +193,7 @@ class PyModule(pyobjects.PyModule):
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
-        super(PyModule, self).__init__(pycore, node, resource)
+        super().__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):
         filename = "string"
@@ -199,7 +202,7 @@ class PyModule(pyobjects.PyModule):
         try:
             if source_code is None:
                 source_bytes = resource.read_bytes()
-                source_code = fscommands.file_data_to_unicode(source_bytes)
+                source_code, _ = fscommands.file_data_to_unicode(source_bytes)
             else:
                 if isinstance(source_code, unicode):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
@@ -248,7 +251,7 @@ class PyPackage(pyobjects.PyPackage):
             ).get_ast()
         else:
             ast_node = ast.parse("\n")
-        super(PyPackage, self).__init__(pycore, ast_node, resource)
+        super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
         result = {}
@@ -296,7 +299,7 @@ class PyPackage(pyobjects.PyPackage):
         return self
 
 
-class _AnnAssignVisitor(object):
+class _AnnAssignVisitor:
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
@@ -338,7 +341,7 @@ class _AnnAssignVisitor(object):
         pass
 
 
-class _ExpressionVisitor(object):
+class _ExpressionVisitor:
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
@@ -365,7 +368,7 @@ class _ExpressionVisitor(object):
         ast.walk(node.value, self)
 
 
-class _AssignVisitor(object):
+class _AssignVisitor:
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
@@ -507,7 +510,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         return self._With(node)
 
     def _excepthandler(self, node):
-        node_name_type = str if pycompat.PY3 else ast.Name
+        node_name_type = str
         if node.name is not None and isinstance(node.name, node_name_type):
             type_node = node.type
             if isinstance(node.type, ast.Tuple) and type_node.elts:
@@ -579,20 +582,20 @@ class _ComprehensionVisitor(_ScopeVisitor):
 
     def _Name(self, node):
         if isinstance(node.ctx, ast.Store):
-            self.names[node.id] = DefinedName(self._get_pyobject(node))
+            self.names[node.id] = self._get_pyobject(node)
 
     def _get_pyobject(self, node):
-        return pyobjects.PyDefinedObject(None, node, self.owner_object)
+        return pynames.AssignedName(lineno=node.lineno, module=self.get_module())
 
 
 class _GlobalVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
-        super(_GlobalVisitor, self).__init__(pycore, owner_object)
+        super().__init__(pycore, owner_object)
 
 
 class _ClassVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
-        super(_ClassVisitor, self).__init__(pycore, owner_object)
+        super().__init__(pycore, owner_object)
 
     def _FunctionDef(self, node):
         _ScopeVisitor._FunctionDef(self, node)
@@ -608,7 +611,7 @@ class _ClassVisitor(_ScopeVisitor):
 
 class _FunctionVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
-        super(_FunctionVisitor, self).__init__(pycore, owner_object)
+        super().__init__(pycore, owner_object)
         self.returned_asts = []
         self.generator = False
 
@@ -624,7 +627,7 @@ class _FunctionVisitor(_ScopeVisitor):
 
 class _ClassInitVisitor(_AssignVisitor):
     def __init__(self, scope_visitor, self_name):
-        super(_ClassInitVisitor, self).__init__(scope_visitor)
+        super().__init__(scope_visitor)
         self.self_name = self_name
 
     def _Attribute(self, node):
@@ -664,7 +667,7 @@ class _ClassInitVisitor(_AssignVisitor):
         pass
 
 
-class StarImport(object):
+class StarImport:
     def __init__(self, imported_module):
         self.imported_module = imported_module
 
