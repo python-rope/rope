@@ -1105,6 +1105,7 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue(self.project.get_file("loaded").exists())
         myfile = self.project.get_file("myfile.txt")
         self.assertTrue(self.project.is_ignored(myfile))
+
     def test_loading_pyproject(self):
         self.project = testutils.sample_project(ropefolder=".ropeproject")
         config = self.project.get_file("pyproject.toml")
