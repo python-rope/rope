@@ -171,6 +171,19 @@ class PyDefinedObject:
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
 
+    def __repr__(self):
+        return '<{}.{} "{}" at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.absolute_name,
+            hex(id(self)),
+        )
+
+    @property
+    def absolute_name(self):
+        obj_name = self.get_name() if hasattr(self, "get_name") else ""
+        return self.get_module().get_name() + ("::" + obj_name if obj_name else "")
+
     visitor_class = None
 
     @utils.prevent_recursion(lambda: {})
@@ -250,6 +263,9 @@ class PyFunction(PyDefinedObject, AbstractFunction):
 class PyComprehension(PyDefinedObject, PyObject):
     """Only a placeholder"""
 
+    def get_name(self):
+        return "<comprehension>"
+
 
 class PyClass(PyDefinedObject, AbstractClass):
     """Only a placeholder"""
@@ -280,6 +296,10 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
+
+    @property
+    def absolute_name(self) -> str:
+        return self.get_name()
 
     def _get_concluded_data(self):
         new_data = _ConcludedData()
