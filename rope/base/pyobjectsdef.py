@@ -298,6 +298,9 @@ class PyPackage(pyobjects.PyPackage):
             return self.pycore.project.get_pymodule(init_dot_py)
         return self
 
+    def get_name(self):
+        return rope.base.libutils.modname(self.get_resource())
+
 
 class _AnnAssignVisitor:
     def __init__(self, scope_visitor):
