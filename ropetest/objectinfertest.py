@@ -13,12 +13,12 @@ from ropetest import testutils
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
-        super(ObjectInferTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ObjectInferTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_type_inferencing(self):
         code = dedent("""\

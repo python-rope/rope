@@ -18,13 +18,13 @@ from ropetest import testutils
 
 class PyCoreTest(unittest.TestCase):
     def setUp(self):
-        super(PyCoreTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(PyCoreTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_module(self):
         testutils.create_module(self.project, "mod")
@@ -1290,13 +1290,13 @@ class TextChangeDetectorTest(unittest.TestCase):
 
 class PyCoreProjectConfigsTest(unittest.TestCase):
     def setUp(self):
-        super(PyCoreProjectConfigsTest, self).setUp()
+        super().setUp()
         self.project = None
 
     def tearDown(self):
         if self.project:
             testutils.remove_project(self.project)
-        super(PyCoreProjectConfigsTest, self).tearDown()
+        super().tearDown()
 
     def test_python_files_config(self):
         self.project = testutils.sample_project(python_files=["myscript"])

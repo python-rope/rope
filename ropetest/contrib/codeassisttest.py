@@ -29,12 +29,12 @@ except NameError:
 
 class CodeAssistTest(unittest.TestCase):
     def setUp(self):
-        super(CodeAssistTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(CodeAssistTest, self).tearDown()
+        super().tearDown()
 
     def _assist(self, code, offset=None, **args):
         if offset is None:
@@ -1330,7 +1330,7 @@ class CodeAssistTest(unittest.TestCase):
 
 class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
-        super(CodeAssistInProjectsTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")

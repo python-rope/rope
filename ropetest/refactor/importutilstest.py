@@ -11,7 +11,7 @@ from ropetest import testutils
 
 class ImportUtilsTest(unittest.TestCase):
     def setUp(self):
-        super(ImportUtilsTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.import_tools = ImportTools(self.project)
 
@@ -29,7 +29,7 @@ class ImportUtilsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ImportUtilsTest, self).tearDown()
+        super().tearDown()
 
     def test_get_import_for_module(self):
         mod = self.project.find_module("mod")
@@ -2239,7 +2239,7 @@ class ImportUtilsTest(unittest.TestCase):
 
 class AddImportTest(unittest.TestCase):
     def setUp(self):
-        super(AddImportTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
         self.mod1 = testutils.create_module(self.project, "mod1")
@@ -2249,7 +2249,7 @@ class AddImportTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(AddImportTest, self).tearDown()
+        super().tearDown()
 
     def test_normal_imports(self):
         self.mod2.write("myvar = None\n")

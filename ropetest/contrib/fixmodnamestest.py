@@ -13,12 +13,12 @@ from rope.contrib.generate import create_module, create_package
 # uses a name.replace('x', '_') fixer.
 class FixModuleNamesTest(unittest.TestCase):
     def setUp(self):
-        super(FixModuleNamesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(FixModuleNamesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_module_renaming(self):
         mod = create_module(self.project, "xod")

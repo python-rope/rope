@@ -11,14 +11,14 @@ from rope.base.builtins import Dict
 
 class BuiltinTypesTest(unittest.TestCase):
     def setUp(self):
-        super(BuiltinTypesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(BuiltinTypesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         self.mod.write("l = []\n")
@@ -696,7 +696,7 @@ class BuiltinTypesTest(unittest.TestCase):
 
 class BuiltinModulesTest(unittest.TestCase):
     def setUp(self):
-        super(BuiltinModulesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(
             extension_modules=["time", "invalid", "invalid.sub"]
         )
@@ -704,7 +704,7 @@ class BuiltinModulesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(BuiltinModulesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         self.mod.write("import time")

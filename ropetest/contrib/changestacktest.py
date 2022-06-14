@@ -12,12 +12,12 @@ from ropetest import testutils
 
 class ChangeStackTest(unittest.TestCase):
     def setUp(self):
-        super(ChangeStackTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ChangeStackTest, self).tearDown()
+        super().tearDown()
 
     def test_change_stack(self):
         myfile = self.project.root.create_file("myfile.txt")

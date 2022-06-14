@@ -14,13 +14,13 @@ from ropetest import testutils
 
 class ExtractMethodTest(unittest.TestCase):
     def setUp(self):
-        super(ExtractMethodTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ExtractMethodTest, self).tearDown()
+        super().tearDown()
 
     def do_extract_method(self, source_code, start, end, extracted, **kwds):
         testmod = testutils.create_module(self.project, "testmod")

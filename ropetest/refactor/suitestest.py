@@ -12,10 +12,10 @@ from ropetest import testutils
 
 class SuiteTest(unittest.TestCase):
     def setUp(self):
-        super(SuiteTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(SuiteTest, self).tearDown()
+        super().tearDown()
 
     def test_trivial_case(self):
         root = source_suite_tree("")

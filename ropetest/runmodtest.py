@@ -13,13 +13,13 @@ from ropetest import testutils
 
 class PythonFileRunnerTest(unittest.TestCase):
     def setUp(self):
-        super(PythonFileRunnerTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(PythonFileRunnerTest, self).tearDown()
+        super().tearDown()
 
     def make_sample_python_file(self, file_path, get_text_function_source=None):
         self.project.root.create_file(file_path)
@@ -144,7 +144,7 @@ class PythonFileRunnerTest(unittest.TestCase):
             runner = self.pycore.run_module(file_resource, stdout=stdout)
             runner.wait_process()
             stdout.close()
-            temp_file = open(temp_file_name, "r")
+            temp_file = open(temp_file_name)
             self.assertEqual("output text\n", temp_file.read())
             temp_file.close()
         finally:
