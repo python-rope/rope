@@ -3,6 +3,7 @@
 # New feature
 
 - #489 Rope now publishes documentations to readthedocs.org (@bageljrkhanofemus)
+- #490 Migrate from setup.py to pyproject.toml (@bageljrkhanofemus)
 
 # Improvement
 
