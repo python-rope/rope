@@ -75,7 +75,7 @@ separating folders regardless of the platform rope is running on.
     soa_followed_calls: int = field(
         default=0, description="The depth of calls to follow in static object analysis"
     )
-    preform_doa: bool = field(
+    perform_doa: bool = field(
         default=True,
         description="""
 If `False` when running modules or unit tests 'dynamic object analysis' is turned off.
@@ -173,7 +173,7 @@ the search type-hinting in a class hierarchy, etc.
     project_opened: Optional[Callable] = field(
         None,
         description="""
-This function is called after opening the project. 
+This function is called after opening the project.
 Can only be set in config.py.""",
     )
     py_version: Optional[Tuple[int, int]] = field(
@@ -187,7 +187,7 @@ Can only be set in config.py.""",
     callbacks: Dict[str, Callable[[Any], None]] = field(
         default_factory=lambda: {},
         description="""
-Callbacks run when configuration values are changed. 
+Callbacks run when configuration values are changed.
 Can only be set in config.py.""",
     )
 
