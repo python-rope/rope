@@ -24,13 +24,3 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -v
-
-    # === NOTIFICATIONS ===
-    # https://github.com/rectalogic/notify-irc
-    - name: Dump event info
-      if: always()
-      # Usually unnecessary, but insanely useful if IRC notifications fail.
-      run: |
-        cat <<"EOF"
-        ${{ toJSON(github.event) }}
-        EOF
