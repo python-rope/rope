@@ -217,7 +217,7 @@ the project. It is recommended that you call this function occasionally,
 and especially before performing large refactorings. Note that analyzing
 all modules of a project may take a long time.
 
-If you have ``automatic_soa`` set, which instructs rop to analyze the
+If you have ``automatic_soa`` set, which instructs rope to analyze the
 changed scopes of modules, then you should report the changes by calling
 ``rope.base.libutils.report_change()`` when saving files, as follows:
 
