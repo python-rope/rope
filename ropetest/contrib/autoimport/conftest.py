@@ -1,7 +1,7 @@
 import pathlib
 
 import pytest
-
+import sys
 from ropetest import testutils
 
 
@@ -35,8 +35,6 @@ def typing_path():
     yield pathlib.Path(typing.__file__)
 
 
-
-
 @pytest.fixture
 def build_env_path():
     from build import env
@@ -57,4 +55,6 @@ def build_path():
 def zlib_path():
     import zlib
 
+    if sys.platform == "windows":
+        pytest.skip()
     yield pathlib.Path(zlib.__file__)
