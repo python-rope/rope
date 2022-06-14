@@ -1042,7 +1042,7 @@ class IntroduceParameterTest(unittest.TestCase):
         self.assertEqual(expected, self.mod.read())
 
 
-class _MockTaskObserver(object):
+class _MockTaskObserver:
     def __init__(self):
         self.called = 0
 

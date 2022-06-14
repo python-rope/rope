@@ -1549,7 +1549,7 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
 
-class _ResultChecker(object):
+class _ResultChecker:
     def __init__(self, test_case, ast):
         self.test_case = test_case
         self.ast = ast
@@ -1565,7 +1565,7 @@ class _ResultChecker(object):
         if not isinstance(text, (tuple, list)):
             goal = [text]
 
-        class Search(object):
+        class Search:
             result = None
 
             def __call__(self, node):

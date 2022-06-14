@@ -16,7 +16,7 @@ def _do_for_all_dbs(function):
     return called
 
 
-class _MockValidation(object):
+class _MockValidation:
     def is_value_valid(self, value):
         return value != -1
 
@@ -30,7 +30,7 @@ class _MockValidation(object):
         return path != "invalid" and key != "invalid"
 
 
-class _MockFileListObserver(object):
+class _MockFileListObserver:
 
     log = ""
 

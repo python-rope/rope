@@ -845,7 +845,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEqual(0, sample_observer.change_count)
 
 
-class _MockChangeIndicator(object):
+class _MockChangeIndicator:
     def __init__(self):
         self.times = {}
 
@@ -856,7 +856,7 @@ class _MockChangeIndicator(object):
         return self.times.get(resource, 0)
 
 
-class _SampleObserver(object):
+class _SampleObserver:
     def __init__(self):
         self.change_count = 0
         self.last_changed = None
@@ -947,7 +947,7 @@ class OutOfProjectTest(unittest.TestCase):
         )
 
 
-class _MockFSCommands(object):
+class _MockFSCommands:
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
@@ -973,7 +973,7 @@ class _MockFSCommands(object):
         return self.fscommands.read(path)
 
 
-class _DeprecatedFSCommands(object):
+class _DeprecatedFSCommands:
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
