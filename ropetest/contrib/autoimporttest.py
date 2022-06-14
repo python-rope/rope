@@ -9,7 +9,7 @@ from ropetest import testutils
 
 class AutoImportTest(unittest.TestCase):
     def setUp(self):
-        super(AutoImportTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(extension_modules=["sys"])
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
@@ -18,7 +18,7 @@ class AutoImportTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(AutoImportTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         self.assertEqual([], self.importer.import_assist("A"))
@@ -53,7 +53,7 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
         self.assertEqual(
-            set(["mod1", "pkg.mod2"]), set(self.importer.get_modules("myvar"))
+            {"mod1", "pkg.mod2"}, set(self.importer.get_modules("myvar"))
         )
 
     def test_trivial_insertion_line(self):
@@ -107,7 +107,7 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
         self.assertEqual(
-            set([(self.mod1, 1), (self.mod2, 2)]),
+            {(self.mod1, 1), (self.mod2, 2)},
             set(self.importer.get_name_locations("myvar")),
         )
 
@@ -150,7 +150,7 @@ class AutoImportTest(unittest.TestCase):
 
 class AutoImportObservingTest(unittest.TestCase):
     def setUp(self):
-        super(AutoImportObservingTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
@@ -159,7 +159,7 @@ class AutoImportObservingTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(AutoImportObservingTest, self).tearDown()
+        super().tearDown()
 
     def test_writing_files(self):
         self.mod1.write("myvar = None\n")

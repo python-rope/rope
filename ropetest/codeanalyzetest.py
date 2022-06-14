@@ -612,12 +612,12 @@ class WordRangeFinderTest(unittest.TestCase):
 
 class ScopeNameFinderTest(unittest.TestCase):
     def setUp(self):
-        super(ScopeNameFinderTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ScopeNameFinderTest, self).tearDown()
+        super().tearDown()
 
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`
     # exception, but not in class bodies

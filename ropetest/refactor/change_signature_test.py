@@ -11,14 +11,14 @@ from ropetest import testutils
 
 class ChangeSignatureTest(unittest.TestCase):
     def setUp(self):
-        super(ChangeSignatureTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ChangeSignatureTest, self).tearDown()
+        super().tearDown()
 
     def test_normalizing_parameters_for_trivial_case(self):
         code = dedent("""\

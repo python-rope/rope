@@ -10,7 +10,7 @@ from ropetest import testutils
 
 class MultiProjectRefactoringTest(unittest.TestCase):
     def setUp(self):
-        super(MultiProjectRefactoringTest, self).setUp()
+        super().setUp()
         self.project1 = testutils.sample_project(foldername="testproject1")
         self.project2 = testutils.sample_project(foldername="testproject2")
         self.mod1 = self.project1.root.create_file("mod1.py")
@@ -20,7 +20,7 @@ class MultiProjectRefactoringTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_project(self.project1)
         testutils.remove_project(self.project2)
-        super(MultiProjectRefactoringTest, self).tearDown()
+        super().tearDown()
 
     def test_trivial_rename(self):
         self.mod1.write("var = 1\n")

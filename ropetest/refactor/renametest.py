@@ -15,12 +15,12 @@ from ropetest import testutils
 
 class RenameRefactoringTest(unittest.TestCase):
     def setUp(self):
-        super(RenameRefactoringTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(RenameRefactoringTest, self).tearDown()
+        super().tearDown()
 
     def _local_rename(self, source_code, offset, new_name):
         testmod = testutils.create_module(self.project, "testmod")
@@ -1407,11 +1407,11 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_multi_byte_strs_and_renaming(self):
-        s = u"{LATIN SMALL LETTER I WITH DIAERESIS}" * 4
-        code = u"# -*- coding: utf-8 -*-\n# " + s + "\na = 1\nprint(2 + a + 2)\n"
+        s = "{LATIN SMALL LETTER I WITH DIAERESIS}" * 4
+        code = "# -*- coding: utf-8 -*-\n# " + s + "\na = 1\nprint(2 + a + 2)\n"
         refactored = self._local_rename(code, code.rindex("a"), "b")
         self.assertEqual(
-            u"# -*- coding: utf-8 -*-\n# " + s + "\nb = 1\nprint(2 + b + 2)\n",
+            "# -*- coding: utf-8 -*-\n# " + s + "\nb = 1\nprint(2 + b + 2)\n",
             refactored,
         )
 
@@ -1554,7 +1554,7 @@ class ChangeOccurrencesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ChangeOccurrencesTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_case(self):
         self.mod.write(
@@ -1649,7 +1649,7 @@ class ChangeOccurrencesTest(unittest.TestCase):
 
 class ImplicitInterfacesTest(unittest.TestCase):
     def setUp(self):
-        super(ImplicitInterfacesTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.pycore
         self.mod1 = testutils.create_module(self.project, "mod1")
@@ -1657,7 +1657,7 @@ class ImplicitInterfacesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ImplicitInterfacesTest, self).tearDown()
+        super().tearDown()
 
     def _rename(self, resource, offset, new_name, **kwds):
         changes = Rename(self.project, resource, offset).get_changes(new_name, **kwds)

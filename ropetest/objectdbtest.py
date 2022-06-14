@@ -16,7 +16,7 @@ def _do_for_all_dbs(function):
     return called
 
 
-class _MockValidation(object):
+class _MockValidation:
     def is_value_valid(self, value):
         return value != -1
 
@@ -30,7 +30,7 @@ class _MockValidation(object):
         return path != "invalid" and key != "invalid"
 
 
-class _MockFileListObserver(object):
+class _MockFileListObserver:
 
     log = ""
 
@@ -43,7 +43,7 @@ class _MockFileListObserver(object):
 
 class ObjectDBTest(unittest.TestCase):
     def setUp(self):
-        super(ObjectDBTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         validation = _MockValidation()
         self.dbs = [objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation)]
@@ -52,7 +52,7 @@ class ObjectDBTest(unittest.TestCase):
         for db in self.dbs:
             db.write()
         testutils.remove_project(self.project)
-        super(ObjectDBTest, self).tearDown()
+        super().tearDown()
 
     @_do_for_all_dbs
     def test_simple_per_name(self, db):
@@ -120,7 +120,7 @@ class ObjectDBTest(unittest.TestCase):
     def test_get_files(self, db):
         db.add_callinfo("file1", "key", (1, 2), 3)
         db.add_callinfo("file2", "key", (1, 2), 3)
-        self.assertEqual(set(["file1", "file2"]), set(db.get_files()))
+        self.assertEqual({"file1", "file2"}, set(db.get_files()))
 
     @_do_for_all_dbs
     def test_validating_files(self, db):

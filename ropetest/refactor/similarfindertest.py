@@ -11,13 +11,13 @@ from ropetest import testutils
 
 class SimilarFinderTest(unittest.TestCase):
     def setUp(self):
-        super(SimilarFinderTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(SimilarFinderTest, self).tearDown()
+        super().tearDown()
 
     def _create_finder(self, source, **kwds):
         self.mod.write(source)
@@ -195,13 +195,13 @@ class SimilarFinderTest(unittest.TestCase):
 
 class CheckingFinderTest(unittest.TestCase):
     def setUp(self):
-        super(CheckingFinderTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.mod1 = testutils.create_module(self.project, "mod1")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(CheckingFinderTest, self).tearDown()
+        super().tearDown()
 
     def test_trivial_case(self):
         self.mod1.write("")
@@ -336,7 +336,7 @@ class CheckingFinderTest(unittest.TestCase):
 class TemplateTest(unittest.TestCase):
     def test_simple_templates(self):
         template = similarfinder.CodeTemplate("${a}\n")
-        self.assertEqual(set(["a"]), set(template.get_names()))
+        self.assertEqual({"a"}, set(template.get_names()))
 
     def test_ignoring_matches_in_comments(self):
         template = similarfinder.CodeTemplate("#${a}\n")
