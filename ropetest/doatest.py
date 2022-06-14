@@ -18,20 +18,21 @@ except ImportError:
 from rope.base.oi import doa
 
 
+def cve_2014_3539_attacker(data_port, payload):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("127.0.0.1", data_port))
+    s_file = s.makefile("wb")
+    s_file.write(payload)
+    s.close()
+
+
 class DOATest(unittest.TestCase):
     def try_CVE_2014_3539_exploit(self, receiver, payload):
         # Simulated attacker writing to the socket
-        def attacker(data_port):
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(("127.0.0.1", data_port))
-            s_file = s.makefile("wb")
-            s_file.write(payload)
-            s.close()
-
         # Assume the attacker guesses the port correctly; 3037 is used by
         # default if it is available.
         attacker_proc = multiprocessing.Process(
-            target=attacker, args=(receiver.data_port,)
+            target=cve_2014_3539_attacker, args=(receiver.data_port, payload)
         )
 
         attacker_proc.start()
