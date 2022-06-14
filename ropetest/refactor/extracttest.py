@@ -2210,7 +2210,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             rope.base.exceptions.RefactoringError,
             "Extracted piece cannot contain named expression \\(:= operator\\).",
         ):
@@ -2353,7 +2353,7 @@ class ExtractMethodTest(unittest.TestCase):
                 return var
         """)
         start, end = self._convert_line_range_to_offset(code, 2, 3)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             rope.base.exceptions.RefactoringError,
             "Extracted piece can only have async/await statements if Rope is running on Python 3.8 or higher",
         ):
@@ -2465,7 +2465,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             rope.base.exceptions.RefactoringError,
             "Cannot extract to staticmethod/classmethod outside class",
         ):
@@ -2504,7 +2504,7 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             rope.base.exceptions.RefactoringError,
             "Cannot extract to staticmethod/classmethod outside class",
         ):
@@ -2613,7 +2613,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_raises_exception_when_sign_in_name_and_kind_mismatch(self):
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             rope.base.exceptions.RefactoringError, "Kind and shortcut in name mismatch"
         ):
             self.do_extract_method("code", 0, 1, "$second_method", kind="classmethod")
