@@ -336,7 +336,7 @@ class CheckingFinderTest(unittest.TestCase):
 class TemplateTest(unittest.TestCase):
     def test_simple_templates(self):
         template = similarfinder.CodeTemplate("${a}\n")
-        self.assertEqual(set(["a"]), set(template.get_names()))
+        self.assertEqual({"a"}, set(template.get_names()))
 
     def test_ignoring_matches_in_comments(self):
         template = similarfinder.CodeTemplate("#${a}\n")

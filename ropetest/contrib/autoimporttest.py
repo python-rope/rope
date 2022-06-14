@@ -53,7 +53,7 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
         self.assertEqual(
-            set(["mod1", "pkg.mod2"]), set(self.importer.get_modules("myvar"))
+            {"mod1", "pkg.mod2"}, set(self.importer.get_modules("myvar"))
         )
 
     def test_trivial_insertion_line(self):
@@ -107,7 +107,7 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
         self.assertEqual(
-            set([(self.mod1, 1), (self.mod2, 2)]),
+            {(self.mod1, 1), (self.mod2, 2)},
             set(self.importer.get_name_locations("myvar")),
         )
 

@@ -120,7 +120,7 @@ class ObjectDBTest(unittest.TestCase):
     def test_get_files(self, db):
         db.add_callinfo("file1", "key", (1, 2), 3)
         db.add_callinfo("file2", "key", (1, 2), 3)
-        self.assertEqual(set(["file1", "file2"]), set(db.get_files()))
+        self.assertEqual({"file1", "file2"}, set(db.get_files()))
 
     @_do_for_all_dbs
     def test_validating_files(self, db):
