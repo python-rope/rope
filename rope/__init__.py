@@ -4,7 +4,7 @@ from pkg_resources import get_distribution
 
 
 INFO = __doc__
-VERSION = get_distribution('rope').version
+VERSION = get_distribution("rope").version
 COPYRIGHT = """\
 Copyright (C) 2021-2021 Lie Ryan
 Copyright (C) 2019-2021 Matej Cepl
