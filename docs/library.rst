@@ -282,7 +282,7 @@ that it might take a long time to finish.
 
 Returns a ``rope.base.pyobjects.PyModule`` object for the code string.
 An optional ``resource`` argument can be specified for the resource this
-code is associated with. If ``force_errors` is ``True``, then
+code is associated with. If ``force_errors`` is ``True``, then
 ``rope.base.exceptions.ModuleSyntaxError`` is raised when the code has
 syntax errors. Otherwise, syntax errors are silently ignored. Note that
 ``force_errors`` overrides the ``ignore_syntax_errors`` project
