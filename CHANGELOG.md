@@ -1,5 +1,8 @@
 # **Upcoming release**
 
+# New feature
+
+- #489 Rope now publishes documentations to readthedocs.org (@bageljrkhanofemus)
 
 # Improvement
 
