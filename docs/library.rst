@@ -72,7 +72,7 @@ In rope, files and folders in a project are accessed through
 ``Change``\s (we'll talk about them later) use resources.
 
 There are two options for creating a ``Resource`` for a path in a project.
-The first approach uses the `Project.get_resource()`_ method.
+The first approach uses the ``Project.get_resource()`` method.
 
 .. code-block:: python
 
@@ -851,7 +851,7 @@ By default, the sqlite3-based only stores autoimport cache in an in-memory
 sqlite3 database, you can make it write the import cache to persistent storage
 by passing memory=False to AutoImport constructor.
 
-It must be closed when done with the ```AutoImport.close()``` method.
+It must be closed when done with the ``AutoImport.close()`` method.
 
 AutoImport can search for a name from both modules and statements you can import from them.
 
