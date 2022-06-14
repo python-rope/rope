@@ -44,7 +44,8 @@ Additionally, you can run an executable function at startup of rope.
         # Do whatever you like here!
  
 
-Options
--------
-.. autopytoolconfigtable:: rope.base.prefs.Prefs
+..
+    Options
+    -------
+    .. autopytoolconfigtable:: rope.base.prefs.Prefs
 
