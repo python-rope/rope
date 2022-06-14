@@ -1,6 +1,7 @@
 # **Upcoming release**
 
-## New feature 
+# New feature
+
 - #473 Pyproject.toml support (@bageljrkhanofemus)
 - #489 Rope now publishes documentations to readthedocs.org (@bageljrkhanofemus)
 
