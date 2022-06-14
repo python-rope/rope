@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import os.path
 from textwrap import dedent
 
@@ -739,7 +737,7 @@ class CodeAssistTest(unittest.TestCase):
               u"юникод-объект"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
-        self.assertTrue(u"юникод-объект" in doc)
+        self.assertTrue("юникод-объект" in doc)
 
     def test_get_pydoc_utf8_bytestring(self):
         src = dedent('''\
@@ -748,7 +746,7 @@ class CodeAssistTest(unittest.TestCase):
               "байтстринг"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
-        self.assertTrue(u"байтстринг" in doc)
+        self.assertTrue("байтстринг" in doc)
 
     def test_get_pydoc_for_functions(self):
         src = dedent('''\

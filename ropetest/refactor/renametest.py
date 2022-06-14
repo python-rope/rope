@@ -1407,11 +1407,11 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     def test_multi_byte_strs_and_renaming(self):
-        s = u"{LATIN SMALL LETTER I WITH DIAERESIS}" * 4
-        code = u"# -*- coding: utf-8 -*-\n# " + s + "\na = 1\nprint(2 + a + 2)\n"
+        s = "{LATIN SMALL LETTER I WITH DIAERESIS}" * 4
+        code = "# -*- coding: utf-8 -*-\n# " + s + "\na = 1\nprint(2 + a + 2)\n"
         refactored = self._local_rename(code, code.rindex("a"), "b")
         self.assertEqual(
-            u"# -*- coding: utf-8 -*-\n# " + s + "\nb = 1\nprint(2 + b + 2)\n",
+            "# -*- coding: utf-8 -*-\n# " + s + "\nb = 1\nprint(2 + b + 2)\n",
             refactored,
         )
 

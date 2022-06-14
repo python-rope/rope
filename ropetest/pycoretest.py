@@ -512,7 +512,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_file_encoding_reading(self):
         contents = (
-            u"# -*- coding: utf-8 -*-\n" + u"#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n"
+            "# -*- coding: utf-8 -*-\n" + "#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n"
         )
         mod = testutils.create_module(self.project, "mod")
         mod.write(contents)
