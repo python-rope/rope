@@ -1,5 +1,75 @@
-[tool.black]
+[project]
+name = 'rope'
+description = 'a python refactoring library...'
+readme = 'README.rst'
+requires-python = '>=3.6'
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Operating System :: OS Independent',
+    'Environment :: X11 Applications',
+    'Environment :: Win32 (MS Windows)',
+    'Environment :: MacOS X',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+    'Natural Language :: English',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Topic :: Software Development',
+]
+dynamic = ['version']
+dependencies = ['pytoolconfig > 1.0.0']
 
-target-version = ['py35', 'py36', 'py37', 'py38', 'py39']
+[[project.authors]]
+name = 'Ali Gholami Rudi'
+email = 'aligrudi@users.sourceforge.net'
+
+[project.license]
+text = 'LGPL-3.0-or-later'
+
+[project.urls]
+Source = 'https://github.com/python-rope/rope'
+
+[project.optional-dependencies]
+dev = [
+    'pytest>=7.0.1',
+    'pytest-timeout>=2.1.0',
+    'build>=0.7.0',
+    'pytoolconfig[doc]'
+]
+[tool.setuptools]
+packages = [
+    'rope',
+    'rope.base',
+    'rope.base.oi',
+    'rope.base.oi.type_hinting',
+    'rope.base.oi.type_hinting.providers',
+    'rope.base.oi.type_hinting.resolvers',
+    'rope.base.utils',
+    'rope.contrib',
+    'rope.refactor',
+    'rope.refactor.importutils',
+]
+[tool.setuptools.dynamic.version]
+attr = 'rope.VERSION'
+
+[tool.black]
+target-version = [
+    'py36',
+    'py37',
+    'py38',
+    'py39',
+]
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest'
+
+[build-system]
+requires = [
+    'setuptools',
+    'setuptools-scm',
+]
+build-backend = 'setuptools.build_meta'
