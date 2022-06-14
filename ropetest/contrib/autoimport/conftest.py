@@ -56,5 +56,5 @@ def zlib_path():
     import zlib
 
     if sys.platform == "windows":
-        pytest.skip()
+        return None
     yield pathlib.Path(zlib.__file__)
