@@ -1,9 +1,7 @@
-from rope.base import ast
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import utils
-from rope.refactor.importutils import actions
-from rope.refactor.importutils import importinfo
+from typing import Union, List
+
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.refactor.importutils import actions, importinfo
 
 
 class ModuleImports:
@@ -32,37 +30,75 @@ class ModuleImports:
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
+        def _resolve_name(
+            name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+        ) -> List:
+            while isinstance(name, pynames.ImportedName):
+                try:
+                    name = name.imported_module.get_object().get_attribute(
+                        name.imported_name,
+                    )
+                except exceptions.AttributeNotFoundError:
+                    return []
+            assert isinstance(name, pynamesdef.AssignedName)
+            return name.assignments
+
         result = set()
         try:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
             return result
 
+        assignments = [
+            assignment.ast_node for assignment in _resolve_name(all_star_list)
+        ]
+
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
-        for assignment in all_star_list.assignments:
-            if isinstance(assignment.ast_node, ast.List):
-                stack = list(assignment.ast_node.elts)
+
+        while assignments:
+            assignment = assignments.pop()
+            if isinstance(assignment, ast.List):
+                stack = list(assignment.elts)
                 while stack:
                     el = stack.pop()
-                    if isinstance(el, ast.Str):
-                        result.add(el.s)
-                    elif isinstance(el, ast.Name):
-                        name = pymodule.get_attribute(el.id)
-                        if isinstance(name, pynames.AssignedName):
-                            for av in name.assignments:
-                                if isinstance(av.ast_node, ast.Str):
-                                    result.add(av.ast_node.s)
-                    elif isinstance(el, ast.IfExp):
+                    if isinstance(el, ast.IfExp):
                         stack.append(el.body)
                         stack.append(el.orelse)
+                    elif isinstance(el, ast.Starred):
+                        assignments.append(el.value)
+                    else:
+                        if isinstance(el, ast.Str):
+                            result.add(el.s)
+                        elif isinstance(el, ast.Name):
+                            try:
+                                name = pymodule.get_attribute(el.id)
+                            except exceptions.AttributeNotFoundError:
+                                continue
+                            else:
+                                for av in _resolve_name(name):
+                                    if isinstance(av.ast_node, ast.Str):
+                                        result.add(av.ast_node.s)
+            elif isinstance(assignment, ast.Name):
+                try:
+                    name = pymodule.get_attribute(assignment.id)
+                except exceptions.AttributeNotFoundError:
+                    continue
+                else:
+                    assignments.extend(
+                        assignment.ast_node for assignment in _resolve_name(name)
+                    )
+            elif isinstance(assignment, ast.BinOp):
+                assignments.append(assignment.left)
+                assignments.append(assignment.right)
         return result
 
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(
             self._get_unbound_names(self.pymodule)
             | self._get_all_star_list(self.pymodule)
+            | {"__all__"}
         )
         visitor = actions.RemovingVisitor(
             self.project, self._current_folder(), can_select
