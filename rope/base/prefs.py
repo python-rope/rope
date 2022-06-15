@@ -15,7 +15,7 @@ class Prefs:
     """Class to store rope preferences."""
 
     ignored_resources: List[str] = field(
-        default_factory=[
+        default_factory=lambda: [
             "*.pyc",
             "*~",
             ".ropeproject",
@@ -26,7 +26,7 @@ class Prefs:
             ".tox",
             ".venv",
             "venv",
-        ].copy,
+        ],
         description="""
 Specify which files and folders to ignore in the project.
 Changes to ignored resources are not added to the history and
@@ -204,8 +204,6 @@ Can only be set in config.py.""",
         Add `value` to the list of entries for the `key` preference.
 
         """
-        if key not in fields(self):
-            pass
         if getattr(self, key) is None:
             self[key] = []
         getattr(self, key).append(value)
