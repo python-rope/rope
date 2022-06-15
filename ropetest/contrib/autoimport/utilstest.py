@@ -55,7 +55,7 @@ def test_get_package_tuple_typing(typing_path):
 
 
 def test_get_package_tuple_compiled(zlib_path):
-    if platform == "windows":
+    if platform == "win32":
         skip()
     assert Package(
         "zlib", Source.STANDARD, zlib_path, PackageType.COMPILED

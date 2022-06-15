@@ -55,6 +55,6 @@ def build_path():
 def zlib_path():
     import zlib
 
-    if sys.platform == "windows":
+    if sys.platform == "win32":
         return None
     yield pathlib.Path(zlib.__file__)
