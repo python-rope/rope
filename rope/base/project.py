@@ -5,9 +5,9 @@ import warnings
 
 import rope.base.fscommands
 import rope.base.resourceobserver as resourceobserver
-import rope.base.utils.pycompat as pycompat
-from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
+from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
@@ -17,10 +17,12 @@ except ImportError:
 
 
 class _Project:
+    prefs: Prefs
+
     def __init__(self, fscommands):
         self.observers = []
         self.fscommands = fscommands
-        self.prefs = prefs.Prefs()
+        self.prefs = Prefs()
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
 
@@ -215,10 +217,9 @@ class Project(_Project):
         super().__init__(fscommands)
         self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
-        self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
-        if ropefolder is not None:
-            self.prefs["ignored_resources"] = [ropefolder]
         self._init_prefs(prefs)
+        if ropefolder is not None:
+            self.prefs.add("ignored_resources", ropefolder)
         self._init_source_folders()
 
     def __repr__(self):
@@ -252,9 +253,6 @@ class Project(_Project):
         if self.ropefolder is not None:
             if not self.ropefolder.exists():
                 self._create_recursively(self.ropefolder)
-            if not self.ropefolder.has_child("config.py"):
-                config = self.ropefolder.create_file("config.py")
-                config.write(self._default_config())
 
     def _create_recursively(self, folder):
         if folder.parent != self.root and not folder.parent.exists():
@@ -262,35 +260,16 @@ class Project(_Project):
         folder.create()
 
     def _init_prefs(self, prefs):
-        run_globals = {}
-        if self.ropefolder is not None:
-            config = self.get_file(self.ropefolder.path + "/config.py")
-            run_globals.update(
-                {
-                    "__name__": "__main__",
-                    "__builtins__": __builtins__,
-                    "__file__": config.real_path,
-                }
-            )
-            if config.exists():
-                config = self.ropefolder.get_child("config.py")
-                pycompat.execfile(config.real_path, run_globals)
-            else:
-                exec(self._default_config(), run_globals)
-            if "set_prefs" in run_globals:
-                run_globals["set_prefs"](self.prefs)
+        config = get_config(self.root, self.ropefolder).parse()
+        self.prefs = config
+        self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
+        self.ignored.set_patterns(self.prefs.ignored_resources)
         for key, value in prefs.items():
-            self.prefs[key] = value
+            self.prefs.set(key, value)
         self._init_other_parts()
         self._init_ropefolder()
-        if "project_opened" in run_globals:
-            run_globals["project_opened"](self)
-
-    def _default_config(self):
-        import rope.base.default_config
-        import inspect
-
-        return inspect.getsource(rope.base.default_config)
+        if config.project_opened:
+            config.project_opened(self)
 
     def _init_other_parts(self):
         # Forcing the creation of `self.pycore` to register observers

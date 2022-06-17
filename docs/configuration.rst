@@ -42,10 +42,17 @@ Additionally, you can run an executable function at startup of rope.
     def project_opened(project):
         """This function is called after opening the project"""
         # Do whatever you like here!
- 
 
-..
-    Options
-    -------
-    .. autopytoolconfigtable:: rope.base.prefs.Prefs
 
+
+
+Options
+-------
+.. autopytoolconfigtable:: rope.base.prefs.Prefs
+
+Old Configuration File
+----------------------
+This is a sample config.py. While this config.py works and all options here should be supported, the above documentation reflects the latest version of rope.
+
+.. literalinclude:: default_config.py  
+   :language: python3
