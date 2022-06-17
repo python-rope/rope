@@ -21,10 +21,10 @@ Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
 
 class PatchedASTTest(unittest.TestCase):
     def setUp(self):
-        super(PatchedASTTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(PatchedASTTest, self).tearDown()
+        super().tearDown()
 
     def assert_single_case_match_block(self, checker, match_type):
         checker.check_children("Match", [
@@ -1549,7 +1549,7 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
 
-class _ResultChecker(object):
+class _ResultChecker:
     def __init__(self, test_case, ast):
         self.test_case = test_case
         self.ast = ast
@@ -1565,7 +1565,7 @@ class _ResultChecker(object):
         if not isinstance(text, (tuple, list)):
             goal = [text]
 
-        class Search(object):
+        class Search:
             result = None
 
             def __call__(self, node):

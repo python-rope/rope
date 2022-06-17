@@ -16,13 +16,14 @@
 
 
 # -- Project information -----------------------------------------------------
+import rope
 
 project = "rope"
 copyright = "2022, Ali Gholami Rudi"
 author = "Ali Gholami Rudi"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0.0"
+version = release = rope.VERSION
 
 
 # -- General configuration ---------------------------------------------------

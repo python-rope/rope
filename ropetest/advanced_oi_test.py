@@ -14,13 +14,13 @@ from ropetest import testutils
 
 class DynamicOITest(unittest.TestCase):
     def setUp(self):
-        super(DynamicOITest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(DynamicOITest, self).tearDown()
+        super().tearDown()
 
     def test_simple_dti(self):
         mod = testutils.create_module(self.project, "mod")
@@ -487,14 +487,14 @@ class DynamicOITest(unittest.TestCase):
 
 class NewStaticOITest(unittest.TestCase):
     def setUp(self):
-        super(NewStaticOITest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, "mod")
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(NewStaticOITest, self).tearDown()
+        super().tearDown()
 
     def test_static_oi_for_simple_function_calls(self):
         code = dedent("""\

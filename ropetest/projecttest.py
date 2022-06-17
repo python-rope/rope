@@ -618,12 +618,12 @@ class ProjectTest(unittest.TestCase):
 
 class ResourceObserverTest(unittest.TestCase):
     def setUp(self):
-        super(ResourceObserverTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(ResourceObserverTest, self).tearDown()
+        super().tearDown()
 
     def test_resource_change_observer(self):
         sample_file = self.project.root.create_file("my_file.txt")
@@ -845,7 +845,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEqual(0, sample_observer.change_count)
 
 
-class _MockChangeIndicator(object):
+class _MockChangeIndicator:
     def __init__(self):
         self.times = {}
 
@@ -856,7 +856,7 @@ class _MockChangeIndicator(object):
         return self.times.get(resource, 0)
 
 
-class _SampleObserver(object):
+class _SampleObserver:
     def __init__(self):
         self.change_count = 0
         self.last_changed = None
@@ -883,7 +883,7 @@ class _SampleObserver(object):
 
 class OutOfProjectTest(unittest.TestCase):
     def setUp(self):
-        super(OutOfProjectTest, self).setUp()
+        super().setUp()
         self.test_directory = "temp_test_directory"
         testutils.remove_recursively(self.test_directory)
         os.mkdir(self.test_directory)
@@ -893,7 +893,7 @@ class OutOfProjectTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_project(self.project)
         testutils.remove_recursively(self.test_directory)
-        super(OutOfProjectTest, self).tearDown()
+        super().tearDown()
 
     def test_simple_out_of_project_file(self):
         sample_file_path = os.path.join(self.test_directory, "sample.txt")
@@ -947,7 +947,7 @@ class OutOfProjectTest(unittest.TestCase):
         )
 
 
-class _MockFSCommands(object):
+class _MockFSCommands:
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
@@ -973,7 +973,7 @@ class _MockFSCommands(object):
         return self.fscommands.read(path)
 
 
-class _DeprecatedFSCommands(object):
+class _DeprecatedFSCommands:
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
@@ -997,13 +997,13 @@ class _DeprecatedFSCommands(object):
 
 class RopeFolderTest(unittest.TestCase):
     def setUp(self):
-        super(RopeFolderTest, self).setUp()
+        super().setUp()
         self.project = None
 
     def tearDown(self):
         if self.project:
             testutils.remove_project(self.project)
-        super(RopeFolderTest, self).tearDown()
+        super().tearDown()
 
     def test_none_project_rope_folder(self):
         self.project = testutils.sample_project(ropefolder=None)

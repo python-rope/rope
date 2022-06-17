@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import os.path
 from textwrap import dedent
 
@@ -29,12 +27,12 @@ except NameError:
 
 class CodeAssistTest(unittest.TestCase):
     def setUp(self):
-        super(CodeAssistTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(CodeAssistTest, self).tearDown()
+        super().tearDown()
 
     def _assist(self, code, offset=None, **args):
         if offset is None:
@@ -739,7 +737,7 @@ class CodeAssistTest(unittest.TestCase):
               u"юникод-объект"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
-        self.assertTrue(u"юникод-объект" in doc)
+        self.assertTrue("юникод-объект" in doc)
 
     def test_get_pydoc_utf8_bytestring(self):
         src = dedent('''\
@@ -748,7 +746,7 @@ class CodeAssistTest(unittest.TestCase):
               "байтстринг"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
         self.assertTrue(isinstance(doc, unicode))
-        self.assertTrue(u"байтстринг" in doc)
+        self.assertTrue("байтстринг" in doc)
 
     def test_get_pydoc_for_functions(self):
         src = dedent('''\
@@ -1330,7 +1328,7 @@ class CodeAssistTest(unittest.TestCase):
 
 class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
-        super(CodeAssistInProjectsTest, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")
