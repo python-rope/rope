@@ -1092,14 +1092,12 @@ class RopeFolderTest(unittest.TestCase):
         config = self.project.get_file(".ropeproject/config.py")
         if not config.exists():
             config.create()
-        config.write(
-            dedent("""\
-                def set_prefs(prefs):
-                    prefs["ignored_resources"] = ["myfile.txt"]
-                def project_opened(project):
-                    project.root.create_file("loaded")
-            """)
-        )
+        config.write(dedent("""\
+            def set_prefs(prefs):
+                prefs["ignored_resources"] = ["myfile.txt"]
+            def project_opened(project):
+                project.root.create_file("loaded")
+        """))
         self.project.close()
         self.project = Project(self.project.address, ropefolder=".ropeproject")
         self.assertTrue(self.project.get_file("loaded").exists())
@@ -1111,12 +1109,10 @@ class RopeFolderTest(unittest.TestCase):
         config = self.project.get_file("pyproject.toml")
         if not config.exists():
             config.create()
-        config.write(
-            dedent("""\
-                [tool.rope]
-                ignored_resources=["pyproject.py"]
-            """)
-        )
+        config.write(dedent("""\
+            [tool.rope]
+            ignored_resources=["pyproject.py"]
+        """))
         self.project.close()
         self.project = Project(self.project.address, ropefolder=".ropeproject")
         myfile = self.project.get_file("pyproject.py")
