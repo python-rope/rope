@@ -4,13 +4,13 @@
 
 Date: 2022-04-22
 
-# New feature
+## New feature
 
 - #473 Pyproject.toml support (@bageljrkhanofemus)
 - #489 Rope now publishes documentations to readthedocs.org (@bageljrkhanofemus)
 - #490 Migrate from setup.py to pyproject.toml (@bageljrkhanofemus)
 
-# Improvement
+## Improvement
 
 - #479 Add ABC and type hints for TaskHandle and JobSet (@bageljrkhanofemus)
 - #486 Drop Python 2 support (@bageljrkhanofemus, @lieryan)
