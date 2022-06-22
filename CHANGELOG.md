@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+# Release 1.2.0
+
+Date: 2022-04-22
+
 # New feature
 
 - #473 Pyproject.toml support (@bageljrkhanofemus)
