@@ -19,8 +19,8 @@
 import rope
 
 project = "rope"
-copyright = "2022, Ali Gholami Rudi"
-author = "Ali Gholami Rudi"
+copyright = "2022, Rope Contributors"
+author = "Rope Contributors"
 
 # The full version, including alpha/beta/rc tags
 version = release = rope.VERSION
