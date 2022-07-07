@@ -70,7 +70,7 @@ Send your bug reports and feature requests at `python-rope's issue tracker`_ in 
 Maintainers
 ===========
 
-Current active maintainers of Rope are Matej Cepl (`@mcepl`_) and Lie Ryan (`@lieryan`_).
+Current active maintainer of Rope is Lie Ryan (`@lieryan`_).
 
 Special Thanks
 ==============
@@ -78,6 +78,7 @@ Special Thanks
 Many thanks the following people:
 
 - Ali Gholami Rudi (`@aligrudi`_) for initially creating the initial Rope project and most of Rope's code
+- Matej Cepl (`@mcepl`_) as former long-time Rope maintainer
 - Nick Smith <nicks@fastmail.fm> (`@soupytwist`_) as former Rope maintainer
 - `all of our current and former contributors`_
 - authors of editor integrations
