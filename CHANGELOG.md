@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+## Bug fixes
+
+- #496,#497 Add MatMul operator to patchedast
+
 # Release 1.2.0
 
 Date: 2022-04-22
