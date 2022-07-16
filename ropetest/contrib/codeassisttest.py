@@ -617,17 +617,15 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEqual((None, 3), result)
 
     def test_get_definition_location_false_triple_quoted_string(self):
-        code = dedent(
-            dedent('''\
-                def foo():
-                    a = 0
-                    p = "foo"""
+        code = dedent('''\
+            def foo():
+                a = 0
+                p = "foo"""
 
-                def bar():
-                    a = 1
-                    a += 1
-            ''')
-        )
+            def bar():
+                a = 1
+                a += 1
+        ''')
         result = get_definition_location(self.project, code, code.index("a += 1"))
         self.assertEqual((None, 6), result)
 
@@ -1499,12 +1497,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = dedent("""\
             import mod1
             mod1.""")
@@ -1515,12 +1511,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
         code = dedent("""\
             import mod1
             mod1.a_func
@@ -1537,13 +1531,11 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
         mod2 = testutils.create_module(self.project, "mod2", pkg)
-        mod1.write(
-            dedent('''\
-                def a_func():
-                    """hey"""
-                    pass
-            ''')
-        )
+        mod1.write(dedent('''\
+            def a_func():
+                """hey"""
+                pass
+        '''))
         code = dedent("""\
             import mod1
             mod1.a_func
@@ -1553,12 +1545,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
 
     def test_get_doc_on_from_import_module(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write(
-            dedent('''\
-                """mod1 docs"""
-                var = 1
-            ''')
-        )
+        mod1.write(dedent('''\
+            """mod1 docs"""
+            var = 1
+        '''))
         code = "from mod1 import var\n"
         result = get_doc(self.project, code, code.index("mod1"))
         result.index("mod1 docs")

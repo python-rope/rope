@@ -3046,7 +3046,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_async_with_simple(self):
         code = dedent("""\
             async def afunc():
@@ -3065,7 +3065,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_containing_async_with(self):
         code = dedent("""\
             async def afunc():
