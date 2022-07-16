@@ -68,7 +68,7 @@ target-version = [
     'py39',
 ]
 include = 'rope/.*\.pyi?$'
-force-exclude = 'ropetest'
+force-exclude = 'ropetest|rope/base/prefs.py'
 
 [build-system]
 requires = [
