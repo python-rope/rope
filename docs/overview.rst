@@ -683,7 +683,7 @@ Organize imports sorts imports, too.  It does that according to
 Handling Long Imports
 ---------------------
 
-``Handle long imports`` command trys to make long imports look better by
+``Handle long imports`` command tries to make long imports look better by
 transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
 pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
 either by having lots of dots or being very long.  The default
