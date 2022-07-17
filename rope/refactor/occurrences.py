@@ -18,7 +18,7 @@ calling the `create_finder()` function.
   * `imports`: If False, don't return instances that are in import
     statements.
 
-  * `unsure`: If a prediate function, return instances where we don't
+  * `unsure`: If a predicate function, return instances where we don't
     know what the name references. It also filters based on the
     predicate function.
 

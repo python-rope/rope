@@ -346,7 +346,7 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEqual("(4 + 1).x", result)
 
-    # XXX: cancatenated string literals
+    # XXX: concatenated string literals
     def xxx_test_getting_primary_cancatenating_strs(self):
         code = 's = "a"\n"b" "c"\n'
         result = self._find_primary(code, len(code) - 2)

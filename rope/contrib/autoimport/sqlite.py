@@ -140,7 +140,7 @@ class AutoImport:
         ).fetchall()
         return sort_and_deduplicate_tuple(
             results
-        )  # Remove duplicates from multiple occurences of the same item
+        )  # Remove duplicates from multiple occurrences of the same item
 
     def search(self, name: str, exact_match: bool = False) -> List[Tuple[str, str]]:
         """
