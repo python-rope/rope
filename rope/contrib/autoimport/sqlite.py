@@ -109,7 +109,7 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        packages_table = "(package TEXT)"
+        packages_table = "(package TEXT, path TEXT)"
         names_table = (
             "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
         )
@@ -456,7 +456,7 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         for package in packages:
-            self.connection.execute("INSERT into packages values(?)", (package.name,))
+            self.connection.execute("INSERT into packages values(?, ?)", (package.name, str(package.path)))
 
     def _get_existing(self) -> List[str]:
         existing: List[str] = list(
