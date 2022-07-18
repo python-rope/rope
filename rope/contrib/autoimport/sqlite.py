@@ -300,7 +300,7 @@ class AutoImport:
         modules: List[str] = None,
         task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
         single_thread: bool = False,
-        underlined: bool = False,
+        underlined: Optional[bool] = None,
     ):
         """
         Generate global name cache for external modules listed in `modules`.
@@ -310,9 +310,9 @@ class AutoImport:
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
+        underlined = self.underlined if underlined is None else underlined
+
         packages: List[Package] = []
-        if self.underlined:
-            underlined = True
         existing = self._get_existing()
         if modules is None:
             packages = self._get_available_packages()
