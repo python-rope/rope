@@ -1,5 +1,5 @@
 """AutoImport module for rope."""
-import pathlib
+from pathlib import Path
 import re
 import sqlite3
 import sys
@@ -89,7 +89,7 @@ class AutoImport:
         """
         self.project = project
         project_package = get_package_tuple(
-            pathlib.Path(project.root.real_path), project
+            Path(project.root.real_path), project
         )
         assert project_package is not None
         assert project_package.path is not None
@@ -99,7 +99,7 @@ class AutoImport:
         if memory or project.ropefolder is None:
             db_path = ":memory:"
         else:
-            db_path = str(pathlib.Path(project.ropefolder.real_path) / "autoimport.db")
+            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
         if observe:
@@ -432,12 +432,12 @@ class AutoImport:
         if commit:
             self.connection.commit()
 
-    def _get_python_folders(self) -> List[pathlib.Path]:
-        def filter_folders(folder: pathlib.Path) -> bool:
+    def _get_python_folders(self) -> List[Path]:
+        def filter_folders(folder: Path) -> bool:
             return folder.is_dir() and folder.as_posix() != "/usr/bin"
 
         folders = self.project.get_python_path_folders()
-        folder_paths = map(lambda folder: pathlib.Path(folder.real_path), folders)
+        folder_paths = map(lambda folder: Path(folder.real_path), folders)
         folder_paths = filter(filter_folders, folder_paths)
         return list(OrderedDict.fromkeys(folder_paths))
 
@@ -508,7 +508,7 @@ class AutoImport:
     ) -> ModuleFile:
         assert self.project_package.path
         underlined = underlined if underlined else self.underlined
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+        resource_path: Path = Path(resource.real_path)
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
