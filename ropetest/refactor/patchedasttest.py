@@ -175,6 +175,12 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("BoolOp", 0, len(source) - 1)
         checker.check_children("BoolOp", [NameConstant, " ", "and", " ", NameConstant])
 
+    def test_matmult_node(self):
+        source = "a @ b\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("BinOp", ["Name", " ", "@", " ", "Name"])
+
     def test_basic_closing_parens(self):
         source = "1 + (2)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
