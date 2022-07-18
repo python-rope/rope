@@ -8,7 +8,8 @@
 
 |Build status badge| |Latest version badge| |Download count badge| |ReadTheDocs status badge|
 
-.. |Build status badge| image:: https://secure.travis-ci.org/python-rope/rope.svg
+.. |Build status badge| image:: https://github.com/python-rope/rope/actions/workflows/main.yml/badge.svg
+   :target: https://github.com/python-rope/rope/actions/workflows/main.yml
    :alt: Build Status
 
 .. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
