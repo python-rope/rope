@@ -113,11 +113,11 @@ class AutoImport:
         names_table = (
             "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
         )
-        self.connection.execute(f"create table if not exists names{names_table}")
-        self.connection.execute(f"create table if not exists packages{packages_table}")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS name on names(name)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS module on names(module)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS package on names(package)")
+        self.connection.execute(f"CREATE TABLE IF NOT EXISTS names{names_table}")
+        self.connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
         self.connection.commit()
 
     def import_assist(self, starting: str):
@@ -135,7 +135,7 @@ class AutoImport:
         Return a list of ``(name, module)`` tuples
         """
         results = self.connection.execute(
-            "select name, module, source from names WHERE name LIKE (?)",
+            "SELECT name, module, source FROM names WHERE name LIKE (?)",
             (starting + "%",),
         ).fetchall()
         return sort_and_deduplicate_tuple(
@@ -220,7 +220,7 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         for module, source in self.connection.execute(
-            "Select module, source FROM names where module LIKE (?)",
+            "SELECT module, source FROM names WHERE module LIKE (?)",
             ("%." + name,),
         ):
             parts = module.split(".")
@@ -238,7 +238,7 @@ class AutoImport:
                 )
             )
         for module, source in self.connection.execute(
-            "Select module, source from names where module LIKE (?)", (name,)
+            "SELECT module, source FROM names WHERE module LIKE (?)", (name,)
         ):
             if "." in module:
                 continue
@@ -255,13 +255,13 @@ class AutoImport:
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self.connection.execute("select name from names").fetchall()
+        results = self.connection.execute("SELECT name FROM names").fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        name_results = self.connection.execute("select * from names").fetchall()
-        package_results = self.connection.execute("select * from packages").fetchall()
+        name_results = self.connection.execute("SELECT * FROM names").fetchall()
+        package_results = self.connection.execute("SELECT * FROM packages").fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -357,7 +357,7 @@ class AutoImport:
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
         modules = self.connection.execute(
-            "select module from names where name like (?)", (name,)
+            "SELECT module FROM names WHERE name LIKE (?)", (name,)
         ).fetchall()
         for module in modules:
             try:
@@ -460,7 +460,7 @@ class AutoImport:
 
     def _get_existing(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self.connection.execute("select * from packages").fetchall())
+            chain(*self.connection.execute("SELECT * FROM packages").fetchall())
         )
         existing.append(self.project_package.name)
         return existing
