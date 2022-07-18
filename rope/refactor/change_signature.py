@@ -154,7 +154,7 @@ class ChangeSignature:
         """Get changes caused by this refactoring
 
         `changers` is a list of `_ArgumentChanger`.  If `in_hierarchy`
-        is `True` the changers are applyed to all matching methods in
+        is `True` the changers are applied to all matching methods in
         the class hierarchy.
         `resources` can be a list of `rope.base.resource.File` that
         should be searched for occurrences; if `None` all python files
