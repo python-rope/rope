@@ -277,6 +277,7 @@ class _PatchingASTWalker:
         "Div": "/",
         "Mod": "%",
         "Pow": "**",
+        "MatMult": "@",
         "LShift": "<<",
         "RShift": ">>",
         "BitOr": "|",
