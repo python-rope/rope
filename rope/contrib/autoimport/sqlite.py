@@ -455,8 +455,8 @@ class AutoImport:
         return packages
 
     def _add_packages(self, packages: List[Package]):
-        for package in packages:
-            self.connection.execute("INSERT into packages values(?, ?)", (package.name, str(package.path)))
+        data = [(p.name, str(p.path)) for p in packages]
+        self.connection.executemany('INSERT INTO packages(package, path) VALUES (?, ?)', data)
 
     def _get_existing(self) -> List[str]:
         existing: List[str] = list(
