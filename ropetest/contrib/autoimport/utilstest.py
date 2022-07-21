@@ -56,8 +56,8 @@ def test_get_package_tuple_typing(typing_path):
     ) == utils.get_package_tuple(typing_path)
 
 
-@pytest.mark.skipif(platform == "win32", reason="Windows doesn't have compiled modules")
-def test_get_package_tuple_compiled(zlib_path):
+def test_get_package_tuple_compiled(compiled_lib):
+    lib_name, lib_path = compiled_lib
     assert Package(
-        "zlib", Source.STANDARD, zlib_path, PackageType.COMPILED
-    ) == utils.get_package_tuple(zlib_path)
+	lib_name, Source.STANDARD, lib_path, PackageType.COMPILED
+    ) == utils.get_package_tuple(lib_path)
