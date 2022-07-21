@@ -311,7 +311,6 @@ class AutoImport:
         underlined = self.underlined if underlined is None else underlined
 
         packages: List[Package] = []
-        existing = self._get_existing()
         if modules is None:
             packages = self._get_available_packages()
         else:
@@ -320,6 +319,7 @@ class AutoImport:
                 if package is None:
                     continue
                 packages.append(package)
+        existing = self._get_packages_from_cache()
         packages = list(filter_packages(packages, underlined, existing))
         if len(packages) == 0:
             return
@@ -458,7 +458,7 @@ class AutoImport:
             "INSERT INTO packages(package, path) VALUES (?, ?)", data
         )
 
-    def _get_existing(self) -> List[str]:
+    def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
             chain(*self.connection.execute("SELECT * FROM packages").fetchall())
         )
