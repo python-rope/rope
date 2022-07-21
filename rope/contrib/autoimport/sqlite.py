@@ -1,12 +1,12 @@
 """AutoImport module for rope."""
-from pathlib import Path
 import re
 import sqlite3
 import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
-from typing import Generator, Iterable, List, Optional, Set, Tuple
+from pathlib import Path
+from typing import Generator, Iterable, List, Optional, Set, Tuple, Iterator
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -310,15 +310,12 @@ class AutoImport:
         """
         underlined = self.underlined if underlined is None else underlined
 
-        packages: List[Package] = []
-        if modules is None:
-            packages = self._get_available_packages()
-        else:
-            for modname in modules:
-                package = self._find_package_path(modname)
-                if package is None:
-                    continue
-                packages.append(package)
+        packages: List[Package] = (
+            self._get_available_packages()
+            if modules is None
+            else list(self._get_packages_from_modules(modules))
+        )
+
         existing = self._get_packages_from_cache()
         packages = list(filter_packages(packages, underlined, existing))
         if len(packages) == 0:
@@ -340,6 +337,13 @@ class AutoImport:
                 job_set.finished_job()
 
         self.connection.commit()
+
+    def _get_packages_from_modules(self, modules: List[str]) -> Iterator[Package]:
+        for modname in modules:
+            package = self._find_package_path(modname)
+            if package is None:
+                continue
+            yield package
 
     def update_module(self, module: str):
         """Update a module in the cache, or add it if it doesn't exist."""
