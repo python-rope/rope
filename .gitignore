@@ -133,3 +133,6 @@ docs/_build/
 build/
 .ctags
 tags
+
+# Vim swap files
+*.sw[po]
