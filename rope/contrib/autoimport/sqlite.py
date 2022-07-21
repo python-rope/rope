@@ -88,9 +88,7 @@ class AutoImport:
             if true, don't persist to disk
         """
         self.project = project
-        project_package = get_package_tuple(
-            Path(project.root.real_path), project
-        )
+        project_package = get_package_tuple(Path(project.root.real_path), project)
         assert project_package is not None
         assert project_package.path is not None
         self.project_package = project_package
@@ -456,7 +454,9 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany('INSERT INTO packages(package, path) VALUES (?, ?)', data)
+        self.connection.executemany(
+            "INSERT INTO packages(package, path) VALUES (?, ?)", data
+        )
 
     def _get_existing(self) -> List[str]:
         existing: List[str] = list(
