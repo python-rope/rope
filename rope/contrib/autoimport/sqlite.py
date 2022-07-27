@@ -454,7 +454,7 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany(models.Package.objects.insert_into(), data)
+        self._executemany(models.Package.objects.insert_into(), data)
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
@@ -523,3 +523,7 @@ class AutoImport:
     def _execute(self, query: models.FinalQuery, *args, **kwargs):
         assert isinstance(query, models.FinalQuery)
         return self.connection.execute(query, *args, **kwargs)
+
+    def _executemany(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.executemany(query, *args, **kwargs)
