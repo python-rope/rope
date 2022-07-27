@@ -189,7 +189,7 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         for import_name, module, source, name_type in self.connection.execute(
-            "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
+            models.Name.search_name_like, (name,)
         ):
             yield (
                 SearchResult(

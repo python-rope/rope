@@ -16,6 +16,8 @@ class Name:
 
     import_assist = "SELECT name, module, source FROM names WHERE name LIKE (? || '%')"
 
+    search_name_like = "SELECT name, module, source, type FROM names WHERE name LIKE (?)"
+
 
 class Package:
     @classmethod
