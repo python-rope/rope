@@ -251,9 +251,7 @@ class AutoImport:
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        name_results = self._execute(
-            models.Name.objects.select_star()
-        ).fetchall()
+        name_results = self._execute(models.Name.objects.select_star()).fetchall()
         package_results = self._execute(models.Package.objects.select_star()).fetchall()
         return name_results, package_results
 

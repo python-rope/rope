@@ -27,7 +27,9 @@ class Query:
     def insert_into(self) -> FinalQuery:
         columns = ", ".join(self.columns)
         placeholders = ", ".join(["?"] * len(self.columns))
-        return FinalQuery(f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})")
+        return FinalQuery(
+            f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})"
+        )
 
     def drop_table(self) -> FinalQuery:
         return FinalQuery(f"DROP TABLE {self.query}")
