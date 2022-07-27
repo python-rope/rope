@@ -58,7 +58,7 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
-    get_all = Query("names", columns)
+    get_all = Query(table_name, columns)
 
     search_submodule_like = get_all.where('module LIKE ("%." || ?)')
     search_module_like = get_all.where("module LIKE (?)")
@@ -77,11 +77,12 @@ class Package:
         "package",
         "path",
     ]
+
     @classmethod
     def create_table(self, connection):
         packages_table = "(package TEXT, path TEXT)"
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
-    get_all = Query("packages", columns)
+    get_all = Query(table_name, columns)
 
     delete_by_package_name = "DELETE FROM names WHERE package = ?"
