@@ -246,15 +246,15 @@ class AutoImport:
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self._execute(models.Name.get_all.select("name")).fetchall()
+        results = self._execute(models.Name.objects.select("name")).fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
         name_results = self._execute(
-            models.Name.get_all.select_star()
+            models.Name.objects.select_star()
         ).fetchall()
-        package_results = self._execute(models.Package.get_all.select_star()).fetchall()
+        package_results = self._execute(models.Package.objects.select_star()).fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -380,8 +380,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self._execute(models.Name.get_all.drop_table())
-        self._execute(models.Package.get_all.drop_table())
+        self._execute(models.Name.objects.drop_table())
+        self._execute(models.Package.objects.drop_table())
         self._setup_db()
         self.connection.commit()
 
@@ -454,11 +454,11 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany(models.Package.get_all.insert_into(), data)
+        self.connection.executemany(models.Package.objects.insert_into(), data)
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self._execute(models.Package.get_all.select_star()).fetchall())
+            chain(*self._execute(models.Package.objects.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
         return existing
@@ -477,7 +477,7 @@ class AutoImport:
 
     def _add_name(self, name: Name):
         self._execute(
-            models.Name.get_all.insert_into(),
+            models.Name.objects.insert_into(),
             (
                 name.name,
                 name.modname,

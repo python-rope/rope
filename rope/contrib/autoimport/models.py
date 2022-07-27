@@ -54,14 +54,14 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
-    get_all = Query(table_name, columns)
+    objects = Query(table_name, columns)
 
-    search_submodule_like = get_all.where('module LIKE ("%." || ?)')
-    search_module_like = get_all.where("module LIKE (?)")
+    search_submodule_like = objects.where('module LIKE ("%." || ?)')
+    search_module_like = objects.where("module LIKE (?)")
 
-    import_assist = get_all.where("name LIKE (? || '%')")
+    import_assist = objects.where("name LIKE (? || '%')")
 
-    search_by_name_like = get_all.where("name LIKE (?)")
+    search_by_name_like = objects.where("name LIKE (?)")
 
     delete_by_module_name = FinalQuery("DELETE FROM names WHERE module = ?")
 
@@ -78,6 +78,6 @@ class Package:
         packages_table = "(package TEXT, path TEXT)"
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
-    get_all = Query(table_name, columns)
+    objects = Query(table_name, columns)
 
     delete_by_package_name = FinalQuery("DELETE FROM names WHERE package = ?")
