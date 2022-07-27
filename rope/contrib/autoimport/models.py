@@ -10,7 +10,7 @@ class Query:
         self.query = query
         self.columns = columns
 
-    def select(self, *columns):
+    def select(self, *columns: str):
         assert set(columns) <= set(self.columns)
         selected_columns = ", ".join(columns)
         return FinalQuery(f"SELECT {selected_columns} FROM {self.query}")
@@ -18,7 +18,7 @@ class Query:
     def select_star(self):
         return FinalQuery(f"SELECT * FROM {self.query}")
 
-    def where(self, where_clause):
+    def where(self, where_clause: str):
         return Query(
             f"{self.query} WHERE {where_clause}",
             columns=self.columns,
@@ -29,10 +29,10 @@ class Query:
         placeholders = ", ".join(["?"] * len(self.columns))
         return FinalQuery(f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})")
 
-    def drop_table(self):
+    def drop_table(self) -> FinalQuery:
         return FinalQuery(f"DROP TABLE {self.query}")
 
-    def delete_from(self):
+    def delete_from(self) -> FinalQuery:
         return FinalQuery(f"DELETE FROM {self.query}")
 
 
