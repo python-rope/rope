@@ -243,7 +243,7 @@ class AutoImport:
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self.connection.execute("SELECT name FROM names").fetchall()
+        results = self.connection.execute(models.Name.get_all_names).fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:

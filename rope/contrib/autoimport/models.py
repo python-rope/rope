@@ -20,6 +20,8 @@ class Name:
 
     get_modules = "SELECT module, source FROM names WHERE name LIKE (?)"
 
+    get_all_names = "SELECT name FROM names"
+
 
 class Package:
     @classmethod
