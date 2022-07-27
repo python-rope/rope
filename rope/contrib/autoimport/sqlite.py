@@ -229,7 +229,7 @@ class AutoImport:
                 )
             )
         for module, source in self.connection.execute(
-            "SELECT module, source FROM names WHERE module LIKE (?)", (name,)
+            models.Name.search_module_like, (name,)
         ):
             if "." in module:
                 continue
