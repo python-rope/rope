@@ -25,6 +25,8 @@ class Name:
 
     select_all = "SELECT * FROM names"
 
+    delete_by_module_name = "DELETE FROM names WHERE module = ?"
+
 
 class Package:
     @classmethod

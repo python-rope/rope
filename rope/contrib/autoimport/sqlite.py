@@ -421,7 +421,7 @@ class AutoImport:
             self.update_resource(newresource)
 
     def _del_if_exist(self, module_name, commit: bool = True):
-        self.connection.execute("DELETE FROM names WHERE module = ?", (module_name,))
+        self.connection.execute(models.Name.delete_by_module_name, (module_name,))
         if commit:
             self.connection.commit()
 
