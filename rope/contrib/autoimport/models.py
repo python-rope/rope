@@ -47,19 +47,13 @@ class Name:
         "name", "module", "source"
     )
 
-    search_name_like = Query("names WHERE name LIKE (?)", columns).select(
-        "name", "module", "source", "type"
-    )
-
-    get_modules = Query("names WHERE name LIKE (?)", columns).select("module", "source")
+    search_by_name_like = Query("names WHERE name LIKE (?)", columns)
 
     get_all_names = Query("names", columns).select("name")
 
     select_all = "SELECT * FROM names"
 
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
-
-    get_name_locations = Query("names WHERE name LIKE (?)", columns).select("module")
 
 
 class Package:

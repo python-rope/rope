@@ -189,7 +189,8 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         for import_name, module, source, name_type in self.connection.execute(
-            models.Name.search_name_like, (name,)
+            models.Name.search_by_name_like.select("name", "module", "source", "type"),
+            (name,),
         ):
             yield (
                 SearchResult(
@@ -238,7 +239,9 @@ class AutoImport:
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
-        results = self.connection.execute(models.Name.get_modules, (name,)).fetchall()
+        results = self.connection.execute(
+            models.Name.search_by_name_like.select("module", "source"), (name,)
+        ).fetchall()
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
@@ -349,7 +352,7 @@ class AutoImport:
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
         modules = self.connection.execute(
-            models.Name.get_name_locations, (name,)
+            models.Name.search_by_name_like.select("module"), (name,)
         ).fetchall()
         for module in modules:
             try:
