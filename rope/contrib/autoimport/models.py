@@ -1,4 +1,26 @@
+from typing import List
+
+
+class Query:
+    def __init__(self, query: str, columns: List[str]):
+        self.query = query
+        self.columns = columns
+
+    def select(self, *columns):
+        assert set(columns) <= set(self.columns)
+        selected_columns = ", ".join(columns)
+        return f"SELECT {selected_columns} FROM {self.query}"
+
+
 class Name:
+    columns = [
+        "name",
+        "module",
+        "package",
+        "source",
+        "type",
+    ]
+
     @classmethod
     def create_table(self, connection):
         names_table = (
@@ -9,25 +31,35 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
-    insert = "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)"
+    insert = (
+        "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)"
+    )
     drop_table = "DROP TABLE names"
 
-    search_submodule_like = 'SELECT module, source FROM names WHERE module LIKE ("%." || ?)'
-    search_module_like = "SELECT module, source FROM names WHERE module LIKE (?)"
+    search_submodule_like = Query(
+        'names WHERE module LIKE ("%." || ?)', columns
+    ).select("module", "source")
+    search_module_like = Query("names WHERE module LIKE (?)", columns).select(
+        "module", "source"
+    )
 
-    import_assist = "SELECT name, module, source FROM names WHERE name LIKE (? || '%')"
+    import_assist = Query("names WHERE name LIKE (? || '%')", columns).select(
+        "name", "module", "source"
+    )
 
-    search_name_like = "SELECT name, module, source, type FROM names WHERE name LIKE (?)"
+    search_name_like = Query("names WHERE name LIKE (?)", columns).select(
+        "name", "module", "source", "type"
+    )
 
-    get_modules = "SELECT module, source FROM names WHERE name LIKE (?)"
+    get_modules = Query("names WHERE name LIKE (?)", columns).select("module", "source")
 
-    get_all_names = "SELECT name FROM names"
+    get_all_names = Query("names", columns).select("name")
 
     select_all = "SELECT * FROM names"
 
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
 
-    get_name_locations = "SELECT module FROM names WHERE name LIKE (?)"
+    get_name_locations = Query("names WHERE name LIKE (?)", columns).select("module")
 
 
 class Package:
