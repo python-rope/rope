@@ -126,7 +126,7 @@ class AutoImport:
         __________
         Return a list of ``(name, module)`` tuples
         """
-        results = self.connection.execute(
+        results = self._execute(
             models.Name.import_assist.select("name", "module", "source"), (starting,)
         ).fetchall()
         return sort_and_deduplicate_tuple(
@@ -188,7 +188,7 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for import_name, module, source, name_type in self.connection.execute(
+        for import_name, module, source, name_type in self._execute(
             models.Name.search_by_name_like.select("name", "module", "source", "type"),
             (name,),
         ):
@@ -211,7 +211,7 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for module, source in self.connection.execute(
+        for module, source in self._execute(
             models.Name.search_submodule_like.select("module", "source"), (name,)
         ):
             parts = module.split(".")
@@ -228,7 +228,7 @@ class AutoImport:
                     NameType.Module.value,
                 )
             )
-        for module, source in self.connection.execute(
+        for module, source in self._execute(
             models.Name.search_module_like.select("module", "source"), (name,)
         ):
             if "." in module:
@@ -239,22 +239,22 @@ class AutoImport:
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
-        results = self.connection.execute(
+        results = self._execute(
             models.Name.search_by_name_like.select("module", "source"), (name,)
         ).fetchall()
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self.connection.execute(models.Name.get_all.select("name")).fetchall()
+        results = self._execute(models.Name.get_all.select("name")).fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        name_results = self.connection.execute(
+        name_results = self._execute(
             models.Name.get_all.select_star()
         ).fetchall()
-        package_results = self.connection.execute(models.Package.get_all.select_star()).fetchall()
+        package_results = self._execute(models.Package.get_all.select_star()).fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -274,7 +274,7 @@ class AutoImport:
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
-        self.connection.execute(
+        self._execute(
             models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
@@ -353,7 +353,7 @@ class AutoImport:
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
-        modules = self.connection.execute(
+        modules = self._execute(
             models.Name.search_by_name_like.select("module"), (name,)
         ).fetchall()
         for module in modules:
@@ -380,8 +380,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self.connection.execute(models.Name.drop_table)
-        self.connection.execute(models.Package.drop_table)
+        self._execute(models.Name.drop_table)
+        self._execute(models.Package.drop_table)
         self._setup_db()
         self.connection.commit()
 
@@ -426,7 +426,7 @@ class AutoImport:
             self.update_resource(newresource)
 
     def _del_if_exist(self, module_name, commit: bool = True):
-        self.connection.execute(models.Name.delete_by_module_name, (module_name,))
+        self._execute(models.Name.delete_by_module_name, (module_name,))
         if commit:
             self.connection.commit()
 
@@ -458,7 +458,7 @@ class AutoImport:
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self.connection.execute(models.Package.get_all.select_star()).fetchall())
+            chain(*self._execute(models.Package.get_all.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
         return existing
@@ -476,7 +476,7 @@ class AutoImport:
             self._add_name(name)
 
     def _add_name(self, name: Name):
-        self.connection.execute(
+        self._execute(
             models.Name.insert_into,
             (
                 name.name,
@@ -519,3 +519,7 @@ class AutoImport:
             underlined,
             resource_path.name == "__init__.py",
         )
+
+    def _execute(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.execute(query, *args, **kwargs)

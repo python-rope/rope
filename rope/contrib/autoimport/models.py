@@ -1,6 +1,10 @@
 from typing import List
 
 
+class FinalQuery(str):
+    pass
+
+
 class Query:
     def __init__(self, query: str, columns: List[str]):
         self.query = query
@@ -9,10 +13,10 @@ class Query:
     def select(self, *columns):
         assert set(columns) <= set(self.columns)
         selected_columns = ", ".join(columns)
-        return f"SELECT {selected_columns} FROM {self.query}"
+        return FinalQuery(f"SELECT {selected_columns} FROM {self.query}")
 
     def select_star(self):
-        return f"SELECT * FROM {self.query}"
+        return FinalQuery(f"SELECT * FROM {self.query}")
 
     def where(self, where_clause):
         return Query(
@@ -20,14 +24,14 @@ class Query:
             columns=self.columns,
         )
 
-    def insert_into(self):
+    def insert_into(self) -> FinalQuery:
         columns = ", ".join(self.columns)
         placeholders = ", ".join(["?"] * len(self.columns))
-        return f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})"
+        return FinalQuery(f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})")
 
 
     def drop_table(self):
-        return f"DROP TABLE {self.query}"
+        return FinalQuery(f"DROP TABLE {self.query}")
 
 
 
@@ -67,7 +71,7 @@ class Name:
 
     search_by_name_like = get_all.where("name LIKE (?)")
 
-    delete_by_module_name = "DELETE FROM names WHERE module = ?"
+    delete_by_module_name = FinalQuery("DELETE FROM names WHERE module = ?")
 
 
 @table
@@ -85,4 +89,4 @@ class Package:
 
     get_all = Query(table_name, columns)
 
-    delete_by_package_name = "DELETE FROM names WHERE package = ?"
+    delete_by_package_name = FinalQuery("DELETE FROM names WHERE package = ?")
