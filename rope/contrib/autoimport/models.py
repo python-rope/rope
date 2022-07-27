@@ -20,3 +20,5 @@ class Package:
     def create_table(self, connection):
         packages_table = "(package TEXT, path TEXT)"
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
+
+    insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
