@@ -14,6 +14,12 @@ class Query:
     def select_star(self):
         return f"SELECT * FROM {self.query}"
 
+    def where(self, where_clause):
+        return Query(
+            f"{self.query} WHERE {where_clause}",
+            columns=self.columns,
+        )
+
 
 class Name:
     columns = [
@@ -40,18 +46,12 @@ class Name:
     )
     drop_table = "DROP TABLE names"
 
-    search_submodule_like = Query(
-        'names WHERE module LIKE ("%." || ?)', columns
-    ).select("module", "source")
-    search_module_like = Query("names WHERE module LIKE (?)", columns).select(
-        "module", "source"
-    )
+    search_submodule_like = get_all.where('module LIKE ("%." || ?)')
+    search_module_like = get_all.where("module LIKE (?)")
 
-    import_assist = Query("names WHERE name LIKE (? || '%')", columns).select(
-        "name", "module", "source"
-    )
+    import_assist = get_all.where("name LIKE (? || '%')")
 
-    search_by_name_like = Query("names WHERE name LIKE (?)", columns)
+    search_by_name_like = get_all.where("name LIKE (?)")
 
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
 

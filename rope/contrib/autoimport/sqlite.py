@@ -127,7 +127,7 @@ class AutoImport:
         Return a list of ``(name, module)`` tuples
         """
         results = self.connection.execute(
-            models.Name.import_assist, (starting,)
+            models.Name.import_assist.select("name", "module", "source"), (starting,)
         ).fetchall()
         return sort_and_deduplicate_tuple(
             results
@@ -212,7 +212,7 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         for module, source in self.connection.execute(
-            models.Name.search_submodule_like, (name,)
+            models.Name.search_submodule_like.select("module", "source"), (name,)
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -229,7 +229,7 @@ class AutoImport:
                 )
             )
         for module, source in self.connection.execute(
-            models.Name.search_module_like, (name,)
+            models.Name.search_module_like.select("module", "source"), (name,)
         ):
             if "." in module:
                 continue
