@@ -24,6 +24,10 @@ version = '1.2.0'
 dependencies = ['pytoolconfig >= 1.1.2']
 
 [[project.authors]]
+name = 'Ali Gholami Rudi'
+email = 'aligrudi@users.sourceforge.net'
+
+[[project.maintainers]]
 name = 'Lie Ryan'
 email = 'lieryan.24@proton.me'
 
