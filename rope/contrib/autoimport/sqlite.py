@@ -238,9 +238,7 @@ class AutoImport:
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
-        results = self.connection.execute(
-            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
-        ).fetchall()
+        results = self.connection.execute(models.Name.get_modules, (name,)).fetchall()
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
