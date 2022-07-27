@@ -520,8 +520,8 @@ class AutoImport:
 
     def _execute(self, query: models.FinalQuery, *args, **kwargs):
         assert isinstance(query, models.FinalQuery)
-        return self.connection.execute(query, *args, **kwargs)
+        return self.connection.execute(query._query, *args, **kwargs)
 
     def _executemany(self, query: models.FinalQuery, *args, **kwargs):
         assert isinstance(query, models.FinalQuery)
-        return self.connection.executemany(query, *args, **kwargs)
+        return self.connection.executemany(query._query, *args, **kwargs)

@@ -1,8 +1,9 @@
 from typing import List
 
 
-class FinalQuery(str):
-    pass
+class FinalQuery:
+    def __init__(self, query):
+        self._query = query
 
 
 class Query:
