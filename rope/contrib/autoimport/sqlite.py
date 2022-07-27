@@ -212,8 +212,8 @@ class AutoImport:
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
         for module, source in self.connection.execute(
-            "SELECT module, source FROM names WHERE module LIKE (?)",
-            ("%." + name,),
+            'SELECT module, source FROM names WHERE module LIKE ("%" || ?)',
+            (name,),
         ):
             parts = module.split(".")
             import_name = parts[-1]
