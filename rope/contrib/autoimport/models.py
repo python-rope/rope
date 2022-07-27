@@ -20,8 +20,26 @@ class Query:
             columns=self.columns,
         )
 
+    def insert_into(self):
+        columns = ", ".join(self.columns)
+        placeholders = ", ".join(["?"] * len(self.columns))
+        return f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})"
 
+
+    def drop_table(self):
+        return f"DROP TABLE {self.query}"
+
+
+
+def table(cls):
+    cls.insert_into = cls.get_all.insert_into()
+    cls.drop_table = cls.get_all.drop_table()
+    return cls
+
+
+@table
 class Name:
+    table_name = "names"
     columns = [
         "name",
         "module",
@@ -41,10 +59,6 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
     get_all = Query("names", columns)
-    insert = (
-        "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)"
-    )
-    drop_table = "DROP TABLE names"
 
     search_submodule_like = get_all.where('module LIKE ("%." || ?)')
     search_module_like = get_all.where("module LIKE (?)")
@@ -56,7 +70,9 @@ class Name:
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
 
 
+@table
 class Package:
+    table_name = "packages"
     columns = [
         "package",
         "path",
@@ -67,7 +83,5 @@ class Package:
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
     get_all = Query("packages", columns)
-    insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
-    drop_table = "DROP TABLE packages"
 
     delete_by_package_name = "DELETE FROM names WHERE package = ?"

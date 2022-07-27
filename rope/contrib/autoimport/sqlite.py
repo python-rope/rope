@@ -454,7 +454,7 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany(models.Package.insert, data)
+        self.connection.executemany(models.Package.insert_into, data)
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
@@ -477,7 +477,7 @@ class AutoImport:
 
     def _add_name(self, name: Name):
         self.connection.execute(
-            models.Name.insert,
+            models.Name.insert_into,
             (
                 name.name,
                 name.modname,
