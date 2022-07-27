@@ -29,9 +29,11 @@ class Query:
         placeholders = ", ".join(["?"] * len(self.columns))
         return FinalQuery(f"INSERT INTO {self.query}({columns}) VALUES ({placeholders})")
 
-
     def drop_table(self):
         return FinalQuery(f"DROP TABLE {self.query}")
+
+    def delete_from(self):
+        return FinalQuery(f"DELETE FROM {self.query}")
 
 
 class Name:
@@ -63,7 +65,7 @@ class Name:
 
     search_by_name_like = objects.where("name LIKE (?)")
 
-    delete_by_module_name = FinalQuery("DELETE FROM names WHERE module = ?")
+    delete_by_module_name = objects.where("module = ?").delete_from()
 
 
 class Package:
@@ -80,4 +82,4 @@ class Package:
 
     objects = Query(table_name, columns)
 
-    delete_by_package_name = FinalQuery("DELETE FROM names WHERE package = ?")
+    delete_by_package_name = objects.where("package = ?").delete_from()
