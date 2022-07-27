@@ -349,7 +349,7 @@ class AutoImport:
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
         modules = self.connection.execute(
-            "SELECT module FROM names WHERE name LIKE (?)", (name,)
+            models.Name.get_name_locations, (name,)
         ).fetchall()
         for module in modules:
             try:

@@ -27,6 +27,8 @@ class Name:
 
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
 
+    get_name_locations = "SELECT module FROM names WHERE name LIKE (?)"
+
 
 class Package:
     @classmethod
