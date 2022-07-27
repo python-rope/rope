@@ -34,14 +34,6 @@ class Query:
         return FinalQuery(f"DROP TABLE {self.query}")
 
 
-
-def table(cls):
-    cls.insert_into = cls.get_all.insert_into()
-    cls.drop_table = cls.get_all.drop_table()
-    return cls
-
-
-@table
 class Name:
     table_name = "names"
     columns = [
@@ -74,7 +66,6 @@ class Name:
     delete_by_module_name = FinalQuery("DELETE FROM names WHERE module = ?")
 
 
-@table
 class Package:
     table_name = "packages"
     columns = [

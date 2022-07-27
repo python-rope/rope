@@ -380,8 +380,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self._execute(models.Name.drop_table)
-        self._execute(models.Package.drop_table)
+        self._execute(models.Name.get_all.drop_table())
+        self._execute(models.Package.get_all.drop_table())
         self._setup_db()
         self.connection.commit()
 
@@ -454,7 +454,7 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany(models.Package.insert_into, data)
+        self.connection.executemany(models.Package.get_all.insert_into(), data)
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
@@ -477,7 +477,7 @@ class AutoImport:
 
     def _add_name(self, name: Name):
         self._execute(
-            models.Name.insert_into,
+            models.Name.get_all.insert_into(),
             (
                 name.name,
                 name.modname,
