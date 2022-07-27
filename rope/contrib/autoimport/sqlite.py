@@ -473,7 +473,7 @@ class AutoImport:
 
     def _add_name(self, name: Name):
         self.connection.execute(
-            "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)",
+            models.Name.insert,
             (
                 name.name,
                 name.modname,
