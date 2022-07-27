@@ -272,7 +272,7 @@ class AutoImport:
             "Generating autoimport cache", len(resources)
         )
         self.connection.execute(
-            "delete from names where package = ?", (self.project_package.name,)
+            "DELETE FROM names WHERE package = ?", (self.project_package.name,)
         )
         futures = []
         with ProcessPoolExecutor() as executor:
@@ -377,7 +377,7 @@ class AutoImport:
         regenerating global names.
 
         """
-        self.connection.execute("drop table names")
+        self.connection.execute("DROP TABLE names")
         self._setup_db()
         self.connection.commit()
 
@@ -422,7 +422,7 @@ class AutoImport:
             self.update_resource(newresource)
 
     def _del_if_exist(self, module_name, commit: bool = True):
-        self.connection.execute("delete from names where module = ?", (module_name,))
+        self.connection.execute("DELETE FROM names WHERE module = ?", (module_name,))
         if commit:
             self.connection.commit()
 
