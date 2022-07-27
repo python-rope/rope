@@ -22,6 +22,8 @@ class Name:
 
     get_all_names = "SELECT name FROM names"
 
+    select_all = "SELECT * FROM names"
+
 
 class Package:
     @classmethod
@@ -30,3 +32,5 @@ class Package:
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
     insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
+
+    select_all = "SELECT * FROM packages"
