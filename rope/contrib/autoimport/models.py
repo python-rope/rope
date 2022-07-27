@@ -12,6 +12,8 @@ class Name:
     search_submodule_like = 'SELECT module, source FROM names WHERE module LIKE ("%." || ?)'
     search_module_like = "SELECT module, source FROM names WHERE module LIKE (?)"
 
+    import_assist = "SELECT name, module, source FROM names WHERE name LIKE (? || '%')"
+
 
 class Package:
     @classmethod

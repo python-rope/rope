@@ -127,8 +127,7 @@ class AutoImport:
         Return a list of ``(name, module)`` tuples
         """
         results = self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)",
-            (starting + "%",),
+            models.Name.import_assist, (starting,)
         ).fetchall()
         return sort_and_deduplicate_tuple(
             results
