@@ -10,6 +10,7 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
     insert = "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)"
+    drop_table = "DROP TABLE names"
 
     search_submodule_like = 'SELECT module, source FROM names WHERE module LIKE ("%." || ?)'
     search_module_like = "SELECT module, source FROM names WHERE module LIKE (?)"
@@ -32,6 +33,7 @@ class Package:
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
     insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
+    drop_table = "DROP TABLE packages"
 
     select_all = "SELECT * FROM packages"
 

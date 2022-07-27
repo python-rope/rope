@@ -375,7 +375,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self.connection.execute("DROP TABLE names")
+        self.connection.execute(models.Name.drop_table)
+        self.connection.execute(models.Package.drop_table)
         self._setup_db()
         self.connection.commit()
 
