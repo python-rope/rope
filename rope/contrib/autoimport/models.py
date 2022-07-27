@@ -11,6 +11,9 @@ class Query:
         selected_columns = ", ".join(columns)
         return f"SELECT {selected_columns} FROM {self.query}"
 
+    def select_star(self):
+        return f"SELECT * FROM {self.query}"
+
 
 class Name:
     columns = [
@@ -31,6 +34,7 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
+    get_all = Query("names", columns)
     insert = (
         "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)"
     )
@@ -48,10 +52,6 @@ class Name:
     )
 
     search_by_name_like = Query("names WHERE name LIKE (?)", columns)
-
-    get_all_names = Query("names", columns).select("name")
-
-    select_all = "SELECT * FROM names"
 
     delete_by_module_name = "DELETE FROM names WHERE module = ?"
 
