@@ -57,14 +57,17 @@ class Name:
 
 
 class Package:
+    columns = [
+        "package",
+        "path",
+    ]
     @classmethod
     def create_table(self, connection):
         packages_table = "(package TEXT, path TEXT)"
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
+    get_all = Query("packages", columns)
     insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
     drop_table = "DROP TABLE packages"
-
-    select_all = "SELECT * FROM packages"
 
     delete_by_package_name = "DELETE FROM names WHERE package = ?"

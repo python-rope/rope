@@ -254,7 +254,7 @@ class AutoImport:
         name_results = self.connection.execute(
             models.Name.get_all.select_star()
         ).fetchall()
-        package_results = self.connection.execute(models.Package.select_all).fetchall()
+        package_results = self.connection.execute(models.Package.get_all.select_star()).fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -458,7 +458,7 @@ class AutoImport:
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self.connection.execute(models.Package.select_all).fetchall())
+            chain(*self.connection.execute(models.Package.get_all.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
         return existing
