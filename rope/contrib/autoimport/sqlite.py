@@ -29,6 +29,7 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
+from rope.contrib.autoimport import models
 
 
 def get_future_names(
@@ -107,15 +108,8 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        packages_table = "(package TEXT, path TEXT)"
-        names_table = (
-            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
-        )
-        self.connection.execute(f"CREATE TABLE IF NOT EXISTS names{names_table}")
-        self.connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
+        models.Name.create_table(self.connection)
+        models.Package.create_table(self.connection)
         self.connection.commit()
 
     def import_assist(self, starting: str):
