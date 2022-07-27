@@ -34,3 +34,5 @@ class Package:
     insert = "INSERT INTO packages(package, path) VALUES (?, ?)"
 
     select_all = "SELECT * FROM packages"
+
+    delete_by_package_name = "DELETE FROM names WHERE package = ?"

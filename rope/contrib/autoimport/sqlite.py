@@ -270,7 +270,7 @@ class AutoImport:
             "Generating autoimport cache", len(resources)
         )
         self.connection.execute(
-            "DELETE FROM names WHERE package = ?", (self.project_package.name,)
+            models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
         with ProcessPoolExecutor() as executor:
