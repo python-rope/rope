@@ -9,6 +9,8 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
 
+    search_submodule_like = 'SELECT module, source FROM names WHERE module LIKE ("%." || ?)'
+
 
 class Package:
     @classmethod
