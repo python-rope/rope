@@ -1,9 +1,14 @@
 # **Upcoming release**
 
+# Release 1.3.0
+
 ## Bug fixes
 
 - #496,#497 Add MatMul operator to patchedast
 - #495 Fix autoimport collection for compiled modules
+
+## Improvement
+
 - #501, #502 Autoimport improvements
 
 # Release 1.2.0
