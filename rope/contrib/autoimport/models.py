@@ -13,7 +13,9 @@ class Query:
 
     def select(self, *columns: str):
         if not (set(columns) <= set(self.columns)):
-            raise ValueError(f"Unknown column names passed: {set(columns) - set(self.columns)}")
+            raise ValueError(
+                f"Unknown column names passed: {set(columns) - set(self.columns)}"
+            )
 
         selected_columns = ", ".join(columns)
         return FinalQuery(f"SELECT {selected_columns} FROM {self.query}")
