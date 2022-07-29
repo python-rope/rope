@@ -29,6 +29,7 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
+from rope.contrib.autoimport import models
 
 
 def get_future_names(
@@ -107,15 +108,8 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        packages_table = "(package TEXT, path TEXT)"
-        names_table = (
-            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
-        )
-        self.connection.execute(f"CREATE TABLE IF NOT EXISTS names{names_table}")
-        self.connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
+        models.Name.create_table(self.connection)
+        models.Package.create_table(self.connection)
         self.connection.commit()
 
     def import_assist(self, starting: str):
@@ -132,9 +126,8 @@ class AutoImport:
         __________
         Return a list of ``(name, module)`` tuples
         """
-        results = self.connection.execute(
-            "SELECT name, module, source FROM names WHERE name LIKE (?)",
-            (starting + "%",),
+        results = self._execute(
+            models.Name.import_assist.select("name", "module", "source"), (starting,)
         ).fetchall()
         return sort_and_deduplicate_tuple(
             results
@@ -195,8 +188,9 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for import_name, module, source, name_type in self.connection.execute(
-            "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
+        for import_name, module, source, name_type in self._execute(
+            models.Name.search_by_name_like.select("name", "module", "source", "type"),
+            (name,),
         ):
             yield (
                 SearchResult(
@@ -217,9 +211,8 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for module, source in self.connection.execute(
-            "SELECT module, source FROM names WHERE module LIKE (?)",
-            ("%." + name,),
+        for module, source in self._execute(
+            models.Name.search_submodule_like.select("module", "source"), (name,)
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -235,8 +228,8 @@ class AutoImport:
                     NameType.Module.value,
                 )
             )
-        for module, source in self.connection.execute(
-            "SELECT module, source FROM names WHERE module LIKE (?)", (name,)
+        for module, source in self._execute(
+            models.Name.search_module_like.select("module", "source"), (name,)
         ):
             if "." in module:
                 continue
@@ -246,20 +239,20 @@ class AutoImport:
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
-        results = self.connection.execute(
-            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
+        results = self._execute(
+            models.Name.search_by_name_like.select("module", "source"), (name,)
         ).fetchall()
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self.connection.execute("SELECT name FROM names").fetchall()
+        results = self._execute(models.Name.objects.select("name")).fetchall()
         return results
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        name_results = self.connection.execute("SELECT * FROM names").fetchall()
-        package_results = self.connection.execute("SELECT * FROM packages").fetchall()
+        name_results = self._execute(models.Name.objects.select_star()).fetchall()
+        package_results = self._execute(models.Package.objects.select_star()).fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -279,8 +272,8 @@ class AutoImport:
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
-        self.connection.execute(
-            "delete from names where package = ?", (self.project_package.name,)
+        self._execute(
+            models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
         with ProcessPoolExecutor() as executor:
@@ -358,8 +351,8 @@ class AutoImport:
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
-        modules = self.connection.execute(
-            "SELECT module FROM names WHERE name LIKE (?)", (name,)
+        modules = self._execute(
+            models.Name.search_by_name_like.select("module"), (name,)
         ).fetchall()
         for module in modules:
             try:
@@ -385,7 +378,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self.connection.execute("drop table names")
+        self._execute(models.Name.objects.drop_table())
+        self._execute(models.Package.objects.drop_table())
         self._setup_db()
         self.connection.commit()
 
@@ -430,7 +424,7 @@ class AutoImport:
             self.update_resource(newresource)
 
     def _del_if_exist(self, module_name, commit: bool = True):
-        self.connection.execute("delete from names where module = ?", (module_name,))
+        self._execute(models.Name.delete_by_module_name, (module_name,))
         if commit:
             self.connection.commit()
 
@@ -458,13 +452,11 @@ class AutoImport:
 
     def _add_packages(self, packages: List[Package]):
         data = [(p.name, str(p.path)) for p in packages]
-        self.connection.executemany(
-            "INSERT INTO packages(package, path) VALUES (?, ?)", data
-        )
+        self._executemany(models.Package.objects.insert_into(), data)
 
     def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self.connection.execute("SELECT * FROM packages").fetchall())
+            chain(*self._execute(models.Package.objects.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
         return existing
@@ -482,8 +474,8 @@ class AutoImport:
             self._add_name(name)
 
     def _add_name(self, name: Name):
-        self.connection.execute(
-            "INSERT INTO names(name, module, package, source, type) VALUES (?, ?, ?, ?, ?)",
+        self._execute(
+            models.Name.objects.insert_into(),
             (
                 name.name,
                 name.modname,
@@ -525,3 +517,11 @@ class AutoImport:
             underlined,
             resource_path.name == "__init__.py",
         )
+
+    def _execute(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.execute(query._query, *args, **kwargs)
+
+    def _executemany(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.executemany(query._query, *args, **kwargs)

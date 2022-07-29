@@ -4,7 +4,7 @@
 
 - #496,#497 Add MatMul operator to patchedast
 - #495 Fix autoimport collection for compiled modules
-- #501 Autoimport improvements
+- #501, #502 Autoimport improvements
 
 # Release 1.2.0
 
