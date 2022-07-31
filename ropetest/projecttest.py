@@ -1,19 +1,21 @@
-import os
-from textwrap import dedent
 import os.path
 import shutil
+from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import pytest
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
 from rope.base.project import Project, NoProject, _realpath
-from ropetest import testutils
 from rope.base.resourceobserver import FilteredResourceObserver
+from ropetest import testutils
+
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 
 class ProjectTest(unittest.TestCase):
@@ -1117,6 +1119,45 @@ class RopeFolderTest(unittest.TestCase):
         self.project = Project(self.project.address, ropefolder=".ropeproject")
         myfile = self.project.get_file("pyproject.py")
         self.assertTrue(self.project.is_ignored(myfile))
+
+    def test_loading_pyproject_empty_file(self):
+        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        config = self.project.get_file("pyproject.toml")
+        if not config.exists():
+            config.create()
+        config.write("")
+        self.project.close()
+        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        myfile = self.project.get_file("pyproject.py")
+        self.assertFalse(self.project.is_ignored(myfile))
+
+    def test_loading_pyproject_no_tool_section(self):
+        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        config = self.project.get_file("pyproject.toml")
+        if not config.exists():
+            config.create()
+        config.write(dedent("""\
+            [project]
+            name = 'testproject'
+        """))
+        self.project.close()
+        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        myfile = self.project.get_file("pyproject.py")
+        self.assertFalse(self.project.is_ignored(myfile))
+
+    def test_loading_pyproject_no_tool_rope_section(self):
+        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        config = self.project.get_file("pyproject.toml")
+        if not config.exists():
+            config.create()
+        config.write(dedent("""\
+            [tool.anothertool]
+            name = 'testproject'
+        """))
+        self.project.close()
+        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        myfile = self.project.get_file("pyproject.py")
+        self.assertFalse(self.project.is_ignored(myfile))
 
     def test_ignoring_syntax_errors(self):
         self.project = testutils.sample_project(
