@@ -27,6 +27,8 @@ class Prefs:
             ".tox",
             ".venv",
             "venv",
+            ".mypy_cache",
+            ".pytest_cache",
         ],
         description=dedent("""
             Specify which files and folders to ignore in the project.

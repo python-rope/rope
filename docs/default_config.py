@@ -26,6 +26,8 @@ def set_prefs(prefs):
     #        ".tox",
     #        ".venv",
     #        "venv",
+    #        ".mypy_cache",
+    #        ".pytest_cache",
     #    ]
 
     # Specifies which files should be considered python files.  It is
