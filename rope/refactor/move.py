@@ -49,7 +49,7 @@ def create_move(project, resource, offset=None):
         ):
             return MoveGlobal(project, resource, offset)
     raise exceptions.RefactoringError(
-        "Move only works on global classes/functions/variables, modules andmethods."
+        "Move only works on global classes/functions/variables, modules and methods."
     )
 
 
