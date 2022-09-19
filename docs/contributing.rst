@@ -48,7 +48,7 @@ tickets labeled `good first issue`_ is a good place start.
 
 The `unresolved issues list`_ in Github is the latest todo list.
 
-There is also a rather outdated list in :doc:`/dev/issues.rst`. There
+There is also a rather outdated list in :ref:`dev/issues:Rope Issues`. There
 is a section called "unresolved issues"; it contains almost every kind
 of task.  This file will need some cleanup, thoughts, and discussions.
 
@@ -79,8 +79,8 @@ Rope package structure:
 * `rope.refactor`: refactorings and tools used in them
 * `rope.contrib`: IDE helpers
 
-Have a look at ``__init__.py`` of these packages or :doc:`/library.rst` for
-more information.
+Have a look at ``__init__.py`` of these packages or 
+:ref:`library:Using Rope As A Library` for more information.
 
 Source Repository
 =================
