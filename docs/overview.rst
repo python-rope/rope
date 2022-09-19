@@ -10,7 +10,7 @@ want to feel the power of rope try its features and see its unit
 tests.
 
 This file is more suitable for the users.  Developers who plan to use
-rope as a library might find library.rst_ more useful.
+rope as a library might find :ref:`library.rst` more useful.
 
 .. contents:: Table of Contents
 
@@ -879,7 +879,7 @@ will match (for instance, if ``exact`` is specified , ``${name}``
 matches ``name`` and ``x.name`` but not ``var`` nor ``(1 + 2)`` while
 a normal ``${name}`` can match all of them).
 
-For performing this refactoring using rope library see `library.rst`_.
+For performing this refactoring using rope library see :ref:`library.rst`.
 
 
 Example 2
@@ -1397,7 +1397,7 @@ there is no version control at all.  Also don't forget to commit your
 changes yourself, rope doesn't do that.
 
 Adding support for other VCSs is easy; have a look at
-`library.rst`_.
+:ref:`library.rst`.
 
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
