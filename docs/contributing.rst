@@ -90,7 +90,7 @@ Source Repository
 =================
 
 Rope uses GitHub_. The repository exists at
-`https://github.com/python-rope/rope`_.
+`python-rope/rope`_.
 
 
 Submitting pull requests
