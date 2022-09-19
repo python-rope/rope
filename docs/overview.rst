@@ -13,7 +13,6 @@ This file is more suitable for the users.  Developers who plan to use
 rope as a library might find library.rst_ more useful.
 
 .. contents:: Table of Contents
-.. _library.rst: library.rst
 
 
 ``.ropeproject`` Folder
