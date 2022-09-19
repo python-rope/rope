@@ -663,7 +663,7 @@ Restructuring
 -------------
 
 The example for replacing occurrences of our ``pow`` function to ``**``
-operator (see the restructuring section of :ref:`overview:Restructurings`):
+operator (see ref:`overview:Restructurings`):
 
 .. code-block:: python
 
