@@ -1,11 +1,9 @@
-.. _library.rst:
-
 =========================
  Using Rope As A Library
 =========================
 
 If you need other features, send a feature request.  Have a look at
-`contributing.rst`_.
+:doc:`contributing.rst`.
 
 
 .. contents:: Table of Contents
@@ -665,7 +663,7 @@ Restructuring
 -------------
 
 The example for replacing occurrences of our ``pow`` function to ``**``
-operator (see the restructuring section of `overview.rst`_):
+operator (see the restructuring section of :doc:`overview.rst`):
 
 .. code-block:: python
 
@@ -699,9 +697,6 @@ operator (see the restructuring section of `overview.rst`_):
 
 
 See code documentation and test suites for more information.
-
-.. _overview.rst: overview.rst
-.. _contributing.rst: contributing.rst
 
 
 Other Topics
