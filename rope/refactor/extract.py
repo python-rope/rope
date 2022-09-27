@@ -1117,6 +1117,10 @@ def _get_single_expression_body(extracted, info):
     if not large_multiline:
         extracted = _join_lines(extracted)
     multiline_expression = "\n" in extracted
-    if info.returning_named_expr or info.returning_generator_exp or (multiline_expression and not large_multiline):
+    if (
+        info.returning_named_expr
+        or info.returning_generator_exp
+        or (multiline_expression and not large_multiline)
+    ):
         extracted = "(" + extracted + ")"
     return extracted
