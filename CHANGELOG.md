@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+## Bug fixes
+
+- #411 Fix extracting generator without parens
+
 # Release 1.3.0
 
 ## Bug fixes
