@@ -251,6 +251,20 @@ class _ExtractInfo:
             )
         return self._returning_named_expr
 
+    _returning_generator = None
+
+    @property
+    def returning_generator_exp(self):
+        """Does the extracted piece contains a generator expression"""
+        if self._returning_generator is None:
+            self._returning_generator = (
+                isinstance(self._parsed_extracted, ast.Module)
+                and isinstance(self._parsed_extracted.body[0], ast.Expr)
+                and isinstance(self._parsed_extracted.body[0].value, ast.GeneratorExp)
+            )
+
+        return self._returning_generator
+
 
 class _ExtractCollector:
     """Collects information needed for performing the extract"""
@@ -1103,6 +1117,6 @@ def _get_single_expression_body(extracted, info):
     if not large_multiline:
         extracted = _join_lines(extracted)
     multiline_expression = "\n" in extracted
-    if info.returning_named_expr or (multiline_expression and not large_multiline):
+    if info.returning_named_expr or info.returning_generator_exp or (multiline_expression and not large_multiline):
         extracted = "(" + extracted + ")"
     return extracted
