@@ -759,9 +759,7 @@ def moving_code_with_imports(project, resource, source):
 
     origin = project.get_pymodule(resource)
 
-    imports = []
-    for stmt in import_tools.module_imports(origin).imports:
-        imports.append(stmt.import_info)
+    imports = [stmt.import_info for stmt in import_tools.module_imports(origin).imports]
 
     back_names = []
     for name in origin:

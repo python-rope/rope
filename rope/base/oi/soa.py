@@ -93,9 +93,10 @@ class SOAVisitor:
             pyfunction.get_returned_object(args)
 
     def _parameter_objects(self, pyfunction):
-        result = []
-        for i in range(len(pyfunction.get_param_names(False))):
-            result.append(pyfunction.get_parameter(i))
+        result = [
+            pyfunction.get_parameter(i)
+            for i in range(len(pyfunction.get_param_names(False)))
+        ]
         return result
 
     def _AnnAssign(self, node):
