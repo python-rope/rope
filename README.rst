@@ -63,7 +63,7 @@ Why use Rope?
 Bug Reports
 ===========
 
-Send your bug reports and feature requests at `python-rope's issue tracker`_ in Github.
+Send your bug reports and feature requests at `python-rope's issue tracker`_ in GitHub.
 
 .. _`python-rope's issue tracker`: https://github.com/python-rope/rope/issues
 
