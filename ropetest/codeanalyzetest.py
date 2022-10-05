@@ -47,8 +47,7 @@ class SourceLinesAdapterTest(unittest.TestCase):
 class WordRangeFinderTest(unittest.TestCase):
     def _find_primary(self, code, offset):
         word_finder = worder.Worder(code)
-        result = word_finder.get_primary_at(offset)
-        return result
+        return word_finder.get_primary_at(offset)
 
     def _annotated_code(self, annotated_code):
         """

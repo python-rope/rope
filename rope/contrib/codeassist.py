@@ -403,12 +403,11 @@ class _PythonCodeAssist:
         return current_offset + 1
 
     def _matching_keywords(self, starting):
-        result = [
+        return [
             CompletionProposal(kw, "keyword")
             for kw in self.keywords
             if kw.startswith(starting)
         ]
-        return result
 
     def __call__(self):
         if self.offset > len(self.code):

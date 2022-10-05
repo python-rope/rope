@@ -572,8 +572,7 @@ class _GlobalImportFinder:
         )
 
     def _get_names(self, alias_names):
-        result = [(alias.name, alias.asname) for alias in alias_names]
-        return result
+        return [(alias.name, alias.asname) for alias in alias_names]
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body

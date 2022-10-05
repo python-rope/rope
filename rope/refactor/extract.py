@@ -766,8 +766,7 @@ class _ExtractVariableParts:
 
     def get_definition(self):
         extracted = _get_single_expression_body(self.info.extracted, info=self.info)
-        result = self.info.new_name + " = " + extracted + "\n"
-        return result
+        return self.info.new_name + " = " + extracted + "\n"
 
     def get_body_pattern(self):
         return "(%s)" % self.info.extracted.strip()
