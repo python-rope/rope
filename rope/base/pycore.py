@@ -146,13 +146,10 @@ class PyCore:
         return self.project.get_python_files()
 
     def _is_package(self, folder):
-        if (
+        return (
             folder.has_child("__init__.py")
             and not folder.get_child("__init__.py").is_folder()
-        ):
-            return True
-        else:
-            return False
+        )
 
     def _find_source_folders(self, folder):
         for resource in folder.get_folders():
@@ -335,9 +332,7 @@ class _TextChangeDetector:
         The end points are inclusive and indices start from 1.
         """
         left, right = self._get_changed(start, end)
-        if left < right:
-            return True
-        return False
+        return left < right
 
     def consume_changes(self, start, end):
         """Clear the changed status of lines from start till end"""

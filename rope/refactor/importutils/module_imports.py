@@ -507,9 +507,7 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
             names = self.pyobject.get_scope().get_propagated_names()
         else:
             names = self.pyobject.get_scope().get_names()
-        if name in names or self.parent.is_bound(name, propagated=True):
-            return True
-        return False
+        return name in names or self.parent.is_bound(name, propagated=True)
 
     def add_unbound(self, name):
         self.parent.add_unbound(name)
