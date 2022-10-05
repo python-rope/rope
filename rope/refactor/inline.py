@@ -225,12 +225,10 @@ class InlineMethod(_Inliner):
         class_start, class_end = sourceutils.get_body_region(pyclass)
         source = self.pymodule.source_code
         func_start, func_end = self._get_scope_range()
-        if (
+        return (
             source[class_start:func_start].strip() == ""
             and source[func_end:class_end].strip() == ""
-        ):
-            return True
-        return False
+        )
 
     def get_kind(self):
         return "method"

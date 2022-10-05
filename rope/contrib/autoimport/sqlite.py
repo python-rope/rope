@@ -246,8 +246,7 @@ class AutoImport:
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self._execute(models.Name.objects.select("name")).fetchall()
-        return results
+        return self._execute(models.Name.objects.select("name")).fetchall()
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""

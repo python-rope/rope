@@ -145,9 +145,7 @@ class TextualToPyObject:
         return rope.base.builtins.get_dict(keys, values)
 
     def builtin_tuple_to_pyobject(self, textual):
-        objects = []
-        for holding in textual[2:]:
-            objects.append(self.transform(holding))
+        objects = [self.transform(holding) for holding in textual[2:]]
         return rope.base.builtins.get_tuple(*objects)
 
     def builtin_set_to_pyobject(self, textual):
