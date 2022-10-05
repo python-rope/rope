@@ -86,10 +86,11 @@ class FilteringVisitor(ImportInfoVisitor):
         return can_select_name_and_alias
 
     def visitNormalImport(self, import_stmt, import_info):
-        new_pairs = []
-        for name, alias in import_info.names_and_aliases:
-            if self.can_select(name, alias):
-                new_pairs.append((name, alias))
+        new_pairs = [
+            (name, alias)
+            for name, alias in import_info.names_and_aliases
+            if self.can_select(name, alias)
+        ]
         return importinfo.NormalImport(new_pairs)
 
     def visitFromImport(self, import_stmt, import_info):

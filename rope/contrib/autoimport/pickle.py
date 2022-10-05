@@ -68,10 +68,7 @@ class AutoImport:
 
     def get_modules(self, name):
         """Return the list of modules that have global `name`"""
-        result = []
-        for module in self.names:
-            if name in self.names[module]:
-                result.append(module)
+        result = [module for module in self.names if name in self.names[module]]
         return result
 
     def get_all_names(self):

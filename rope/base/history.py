@@ -155,10 +155,11 @@ class History:
             self.project.data_files.write_data("history", data, compress=self.compress)
 
     def get_file_undo_list(self, resource):
-        result = []
-        for change in self.undo_list:
-            if resource in change.get_changed_resources():
-                result.append(change)
+        result = [
+            change
+            for change in self.undo_list
+            if resource in change.get_changed_resources()
+        ]
         return result
 
     def __str__(self):

@@ -761,10 +761,7 @@ def moving_code_with_imports(project, resource, source):
 
     imports = [stmt.import_info for stmt in import_tools.module_imports(origin).imports]
 
-    back_names = []
-    for name in origin:
-        if name not in pymodule:
-            back_names.append(name)
+    back_names = [name for name in origin if name not in pymodule]
     imports.append(import_tools.get_from_import(resource, back_names))
 
     source = _add_imports_to_module(import_tools, pymodule, imports)
