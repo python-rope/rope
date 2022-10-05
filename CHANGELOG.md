@@ -2,7 +2,8 @@
 
 ## Bug fixes
 
-- #411 Fix extracting generator without parens
+- #506,#507 Fix extracting generator without parens
+- #411,#505 Fix extracting generator without parens
 
 # Release 1.3.0
 
