@@ -71,13 +71,11 @@ class ScopeNameFinder:
         return False
 
     def _is_function_name_in_function_header(self, scope, offset, lineno):
-        if (
+        return (
             scope.get_start() <= lineno <= scope.get_body_start()
             and scope.get_kind() == "Function"
             and self.worder.is_a_class_or_function_name_in_header(offset)
-        ):
-            return True
-        return False
+        )
 
     def get_pyname_at(self, offset):
         return self.get_primary_and_pyname_at(offset)[1]
