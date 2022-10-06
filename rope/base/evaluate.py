@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Optional
+from typing import Optional, Tuple
 
 import rope.base.builtins
 import rope.base.pynames
@@ -91,7 +91,7 @@ class ScopeNameFinder:
     def get_primary_and_pyname_at(
         self,
         offset: int,
-    ) -> tuple[
+    ) -> Tuple[
         Optional[rope.base.pynames.PyName],
         Optional[rope.base.pynames.PyName],
     ]:
