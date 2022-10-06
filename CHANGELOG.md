@@ -2,14 +2,15 @@
 
 ## Bug fixes
 
-- #506,#507 Fix extracting generator without parens
-- #411,#505 Fix extracting generator without parens
+- #506, #507 Fix issue with parsing function call args list
+- #411, #505 Fix extracting generator without parens
+- #18, #510 When the function is a builtin function, the call parameter's name was sometimes incorrectly identified as an AssignedName. This led to rename refactoring incorrectly renaming these parameters.
 
 # Release 1.3.0
 
 ## Bug fixes
 
-- #496,#497 Add MatMul operator to patchedast
+- #496, #497 Add MatMul operator to patchedast
 - #495 Fix autoimport collection for compiled modules
 
 ## Improvement

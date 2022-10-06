@@ -35,6 +35,21 @@ class RenameRefactoringTest(unittest.TestCase):
         changes = Rename(self.project, resource, offset).get_changes(new_name, **kwds)
         self.project.do(changes)
 
+    def test_local_variable_but_not_parameter(self):
+        code = dedent("""\
+            a = 10
+            foo = dict(a=a)
+        """)
+
+        refactored = self._local_rename(code, 1, "new_a")
+        self.assertEqual(
+            dedent("""\
+                new_a = 10
+                foo = dict(a=new_a)
+            """),
+            refactored,
+        )
+
     def test_simple_global_variable_renaming(self):
         refactored = self._local_rename("a_var = 20\n", 2, "new_var")
         self.assertEqual("new_var = 20\n", refactored)
