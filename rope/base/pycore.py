@@ -11,11 +11,11 @@ import rope.base.oi.objectinfo
 import rope.base.oi.soa
 from rope.base import builtins
 from rope.base import exceptions
+from rope.base import pyobjectsdef
 from rope.base import stdmods
 from rope.base import taskhandle
 from rope.base import utils
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.pyobjectsdef import PyModule, PyPackage
 
 
 class PyCore:
@@ -100,7 +100,7 @@ class PyCore:
         ``ignore_syntax_errors`` project config.
 
         """
-        return PyModule(self, code, resource, force_errors=force_errors)
+        return pyobjectsdef.PyModule(self, code, resource, force_errors=force_errors)
 
     @utils.deprecated("Use `libutils.get_string_scope` instead")
     def get_string_scope(self, code, resource=None):
@@ -253,9 +253,9 @@ class _ModuleCache:
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
-            result = PyPackage(self.pycore, resource, force_errors=force_errors)
+            result = pyobjectsdef.PyPackage(self.pycore, resource, force_errors=force_errors)
         else:
-            result = PyModule(self.pycore, resource=resource, force_errors=force_errors)
+            result = pyobjectsdef.PyModule(self.pycore, resource=resource, force_errors=force_errors)
             if result.has_errors:
                 return result
         self.module_map[resource] = result
