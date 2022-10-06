@@ -253,9 +253,17 @@ class _ModuleCache:
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
-            result = pyobjectsdef.PyPackage(self.pycore, resource, force_errors=force_errors)
+            result = pyobjectsdef.PyPackage(
+                self.pycore,
+                resource,
+                force_errors=force_errors,
+            )
         else:
-            result = pyobjectsdef.PyModule(self.pycore, resource=resource, force_errors=force_errors)
+            result = pyobjectsdef.PyModule(
+                self.pycore,
+                resource=resource,
+                force_errors=force_errors,
+            )
             if result.has_errors:
                 return result
         self.module_map[resource] = result

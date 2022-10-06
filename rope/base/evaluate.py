@@ -91,10 +91,7 @@ class ScopeNameFinder:
     def get_primary_and_pyname_at(
         self,
         offset: int,
-    ) -> Tuple[
-        Optional[rope.base.pynames.PyName],
-        Optional[rope.base.pynames.PyName],
-    ]:
+    ) -> Tuple[Optional[rope.base.pynames.PyName], Optional[rope.base.pynames.PyName]]:
         lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_offset(offset)
         # function keyword parameter
