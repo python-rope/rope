@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+- ...
+
+# Release 1.4.0
+
 ## Bug fixes
 
 - #506, #507 Fix issue with parsing function call args list
