@@ -468,20 +468,27 @@ class AutoImport:
     def _add_future_names(self, names: Future):
         self._add_names(names.result())
 
+    @staticmethod
+    def _convert_name(name: Name) -> tuple:
+        return (
+            name.name,
+            name.modname,
+            name.package,
+            name.source.value,
+            name.name_type.value,
+        )
+
     def _add_names(self, names: Iterable[Name]):
-        for name in names:
-            self._add_name(name)
+        if names is not None:
+            self._executemany(
+                models.Name.objects.insert_into(),
+                [self._convert_name(name) for name in names]
+
+            )
 
     def _add_name(self, name: Name):
         self._execute(
-            models.Name.objects.insert_into(),
-            (
-                name.name,
-                name.modname,
-                name.package,
-                name.source.value,
-                name.name_type.value,
-            ),
+            models.Name.objects.insert_into(), self._convert_name(name)
         )
 
     def _find_package_path(self, target_name: str) -> Optional[Package]:
