@@ -1,6 +1,7 @@
 from textwrap import dedent
 
 from rope.base.builtins import Str
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -622,23 +623,19 @@ class NewStaticOITest(unittest.TestCase):
     def test_invalidating_concluded_data_in_a_function(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        mod1.write(
-            dedent("""\
-                def func(arg):
-                    temp = arg
-                    return temp
-            """)
-        )
-        mod2.write(
-            dedent("""\
-                import mod1
-                class C1(object):
-                    pass
-                class C2(object):
-                    pass
-                a_var = mod1.func(C1())
-            """)
-        )
+        mod1.write(dedent("""\
+            def func(arg):
+                temp = arg
+                return temp
+        """))
+        mod2.write(dedent("""\
+            import mod1
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            a_var = mod1.func(C1())
+        """))
         pymod2 = self.project.get_pymodule(mod2)
         c1_class = pymod2["C1"].get_object()
         a_var = pymod2["a_var"].get_object()
@@ -651,16 +648,14 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEqual(c2_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
-        self.mod.write(
-            dedent("""\
-                class C(object):
-                    pass
-                def f(p):
-                    yield p()
-                for c in f(C):
-                    a_var = c
-            """)
-        )
+        self.mod.write(dedent("""\
+            class C(object):
+                pass
+            def f(p):
+                yield p()
+            for c in f(C):
+                a_var = c
+        """))
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
@@ -669,15 +664,13 @@ class NewStaticOITest(unittest.TestCase):
     # TODO: Returning a generator for functions that yield unknowns
     @unittest.skip("Returning a generator that yields unknowns")
     def xxx_test_handl_generator_functions_when_unknown_type_is_yielded(self):
-        self.mod.write(
-            dedent("""\
-                class C(object):
-                    pass
-                def f():
-                    yield eval("C()")
-                a_var = f()
-            """)
-        )
+        self.mod.write(dedent("""\
+            class C(object):
+                pass
+            def f():
+                yield eval("C()")
+            a_var = f()
+        """))
         pymod = self.project.get_pymodule(self.mod)
         a_var = pymod["a_var"].get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Generator))
@@ -932,22 +925,18 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, "mod2")
-        self.mod.write(
-            dedent("""\
-                class C(object):
-                    pass
-                l = []
-                l.append(C())
-            """)
-        )
-        mod2.write(
-            dedent("""\
-                import mod
-                def f():
-                    return mod.l.pop()
-                a_var = f()
-            """)
-        )
+        self.mod.write(dedent("""\
+            class C(object):
+                pass
+            l = []
+            l.append(C())
+        """))
+        mod2.write(dedent("""\
+            import mod
+            def f():
+                return mod.l.pop()
+            a_var = f()
+        """))
         pymod = self.project.get_pymodule(self.mod)
         pymod2 = self.project.get_pymodule(mod2)
         c_class = pymod["C"].get_object()
@@ -1027,21 +1016,17 @@ class NewStaticOITest(unittest.TestCase):
     def test_validation_problems_for_objectdb_retrievals(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
-        mod1.write(
-            dedent("""\
-                l = []
-                var = l.pop()
-            """)
-        )
-        mod2.write(
-            dedent("""\
-                import mod1
+        mod1.write(dedent("""\
+            l = []
+            var = l.pop()
+        """))
+        mod2.write(dedent("""\
+            import mod1
 
-                class C(object):
-                    pass
-                mod1.l.append(C())
-            """)
-        )
+            class C(object):
+                pass
+            mod1.l.append(C())
+        """))
         self.pycore.analyze_module(mod2)
 
         pymod2 = self.project.get_pymodule(mod2)
@@ -1049,33 +1034,27 @@ class NewStaticOITest(unittest.TestCase):
         pymod1 = self.project.get_pymodule(mod1)
         var_pyname = pymod1["var"]
         self.assertEqual(c_class, var_pyname.get_object().get_type())
-        mod2.write(
-            dedent("""\
-                import mod1
+        mod2.write(dedent("""\
+            import mod1
 
-                mod1.l.append("")
-            """)
-        )
+            mod1.l.append("")
+        """))
         self.assertNotEqual(
             c_class, var_pyname.get_object().get_type(), "Class `C` no more exists"
         )
 
     def test_validation_problems_for_changing_builtin_types(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write(
-            dedent("""\
-                l = []
-                l.append("")
-            """)
-        )
+        mod1.write(dedent("""\
+            l = []
+            l.append("")
+        """))
         self.pycore.analyze_module(mod1)
 
-        mod1.write(
-            dedent("""\
-                l = {}
-                v = l["key"]
-            """)
-        )
+        mod1.write(dedent("""\
+            l = {}
+            v = l["key"]
+        """))
         pymod1 = self.project.get_pymodule(mod1)  # noqa
         var = pymod1["v"].get_object()  # noqa
 
@@ -1123,4 +1102,4 @@ class NewStaticOITest(unittest.TestCase):
         """)
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
-        x_var = pymod['x'].pyobject.get()
+        x_var = pymod["x"].pyobject.get()

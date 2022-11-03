@@ -507,9 +507,7 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
             names = self.pyobject.get_scope().get_propagated_names()
         else:
             names = self.pyobject.get_scope().get_names()
-        if name in names or self.parent.is_bound(name, propagated=True):
-            return True
-        return False
+        return name in names or self.parent.is_bound(name, propagated=True)
 
     def add_unbound(self, name):
         self.parent.add_unbound(name)
@@ -548,9 +546,7 @@ class _GlobalImportFinder:
         return self._count_empty_lines_after(self.imports[-1].end_line - 1)
 
     def _get_text(self, start_line, end_line):
-        result = []
-        for index in range(start_line, end_line):
-            result.append(self.lines.get_line(index))
+        result = [self.lines.get_line(index) for index in range(start_line, end_line)]
         return "\n".join(result)
 
     def visit_from(self, node, end_line):
@@ -574,10 +570,7 @@ class _GlobalImportFinder:
         )
 
     def _get_names(self, alias_names):
-        result = []
-        for alias in alias_names:
-            result.append((alias.name, alias.asname))
-        return result
+        return [(alias.name, alias.asname) for alias in alias_names]
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body

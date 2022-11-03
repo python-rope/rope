@@ -391,9 +391,7 @@ def _get_destination_for_move(resource, destination):
 class ChangeToData:
     def convertChangeSet(self, change):
         description = change.description
-        changes = []
-        for child in change.changes:
-            changes.append(self(child))
+        changes = [self(child) for child in change.changes]
         return (description, changes, change.time)
 
     def convertChangeContents(self, change):

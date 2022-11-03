@@ -49,7 +49,7 @@ def create_move(project, resource, offset=None):
         ):
             return MoveGlobal(project, resource, offset)
     raise exceptions.RefactoringError(
-        "Move only works on global classes/functions/variables, modules and " "methods."
+        "Move only works on global classes/functions/variables, modules and methods."
     )
 
 
@@ -69,7 +69,7 @@ class MoveMethod:
         self.method_name = worder.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
         if self.pyfunction.get_kind() != "method":
-            raise exceptions.RefactoringError("Only normal methods" " can be moved.")
+            raise exceptions.RefactoringError("Only normal methods can be moved.")
 
     def get_changes(
         self,
@@ -759,14 +759,9 @@ def moving_code_with_imports(project, resource, source):
 
     origin = project.get_pymodule(resource)
 
-    imports = []
-    for stmt in import_tools.module_imports(origin).imports:
-        imports.append(stmt.import_info)
+    imports = [stmt.import_info for stmt in import_tools.module_imports(origin).imports]
 
-    back_names = []
-    for name in origin:
-        if name not in pymodule:
-            back_names.append(name)
+    back_names = [name for name in origin if name not in pymodule]
     imports.append(import_tools.get_from_import(resource, back_names))
 
     source = _add_imports_to_module(import_tools, pymodule, imports)

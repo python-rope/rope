@@ -5,7 +5,7 @@ try:
 except ImportError:
     pass
 import rope.base.utils as base_utils
-from rope.base.evaluate import ScopeNameFinder
+from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
 from rope.base.utils import pycompat
@@ -95,7 +95,7 @@ def resolve_type(type_name, pyobject):
     else:
         mod_name, attr_name = type_name.rsplit(".", 1)
         try:
-            mod_finder = ScopeNameFinder(pyobject.get_module())
+            mod_finder = evaluate.ScopeNameFinder(pyobject.get_module())
             mod = mod_finder._find_module(mod_name).get_object()
             ret_type = mod.get_attribute(attr_name).get_object()
         except AttributeNotFoundError:

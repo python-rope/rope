@@ -28,6 +28,9 @@ def get_package_tuple(
         if package_name.endswith(".so"):
             package_name = package_name.split(".")[0]
             package_type = PackageType.COMPILED
+        elif package_name.endswith(".pyd"):
+            package_name = package_name.split(".")[0]
+            package_type = PackageType.COMPILED
         elif package_name.endswith(".py"):
             package_name = package_path.stem
             package_type = PackageType.SINGLE_FILE

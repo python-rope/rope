@@ -3,7 +3,7 @@
 =========================
 
 If you need other features, send a feature request.  Have a look at
-`contributing.rst`_.
+:ref:`contributing:Contributing to Rope`.
 
 
 .. contents:: Table of Contents
@@ -663,7 +663,7 @@ Restructuring
 -------------
 
 The example for replacing occurrences of our ``pow`` function to ``**``
-operator (see the restructuring section of `overview.rst`_):
+operator (see ref:`overview:Restructurings`):
 
 .. code-block:: python
 
@@ -697,9 +697,6 @@ operator (see the restructuring section of `overview.rst`_):
 
 
 See code documentation and test suites for more information.
-
-.. _overview.rst: overview.rst
-.. _contributing.rst: contributing.rst
 
 
 Other Topics

@@ -260,9 +260,7 @@ class _ResourceMatcher:
             if pattern.match(resource.path):
                 return True
         path = os.path.join(resource.project.address, *resource.path.split("/"))
-        if os.path.islink(path):
-            return True
-        return False
+        return os.path.islink(path)
 
     @property
     def compiled_patterns(self):

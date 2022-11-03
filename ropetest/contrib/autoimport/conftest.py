@@ -52,7 +52,7 @@ def build_path():
 
 
 @pytest.fixture
-def zlib_path():
-    import zlib
+def compiled_lib():
+    import _sqlite3
 
-    yield pathlib.Path(zlib.__file__)
+    yield "_sqlite3", pathlib.Path(_sqlite3.__file__)

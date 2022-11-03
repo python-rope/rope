@@ -175,6 +175,12 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("BoolOp", 0, len(source) - 1)
         checker.check_children("BoolOp", [NameConstant, " ", "and", " ", NameConstant])
 
+    def test_matmult_node(self):
+        source = "a @ b\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("BinOp", ["Name", " ", "@", " ", "Name"])
+
     def test_basic_closing_parens(self):
         source = "1 + (2)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1219,7 +1225,7 @@ class PatchedASTTest(unittest.TestCase):
             node_to_test,
             ["try", "", ":", "\n    ", "Pass", "\n", ("excepthandler", "ExceptHandler")],
         )
-        expected_child = "e" 
+        expected_child = "e"
         checker.check_children(
             ("excepthandler", "ExceptHandler"),
             ["except", " ", "Name", " ", "as", " ", expected_child, "", ":", "\n    ", "Pass"],
@@ -1333,6 +1339,16 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             "Call",
             ["Name", "", "(", "", "keyword", "", ",", " *", "Starred", "", ",", " ", "keyword", "", ")"],
+        )
+
+    @testutils.only_for("3.5")
+    def test_starargs_in_positional(self):
+        source = "foo(a, *b, c)\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "Call",
+            ["Name", "", "(", "", "Name", "", ",", " *", "Starred", "", ",", " ", "Name", "", ")"],
         )
 
     @testutils.only_for("3.5")

@@ -77,7 +77,7 @@ def _remove_recursively(path):
 
 
 def parse_version(version):
-    return tuple(map(int, version.split('.')))
+    return tuple(map(int, version.split(".")))
 
 
 def only_for(version):

@@ -1,4 +1,4 @@
-"""This module trys to support builtin types and functions."""
+"""This module tries to support builtin types and functions."""
 import inspect
 import io
 

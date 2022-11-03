@@ -48,7 +48,7 @@ tickets labeled `good first issue`_ is a good place start.
 
 The `unresolved issues list`_ in Github is the latest todo list.
 
-There is also a rather outdated list in `dev/issues.rst`_. There
+There is also a rather outdated list in :ref:`dev/issues:Rope Issues`. There
 is a section called "unresolved issues"; it contains almost every kind
 of task.  This file will need some cleanup, thoughts, and discussions.
 
@@ -57,7 +57,6 @@ about them, don't hesitate to create a Github ticket for it.
 
 .. _`good first issue`: https://github.com/python-rope/rope/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 .. _`unresolved issues list`: https://github.com/python-rope/rope/issues
-.. _`dev/issues.rst`: dev/issues.rst
 
 Write Plugins For Other IDEs
 ----------------------------
@@ -80,17 +79,14 @@ Rope package structure:
 * `rope.refactor`: refactorings and tools used in them
 * `rope.contrib`: IDE helpers
 
-Have a look at ``__init__.py`` of these packages or `library.rst`_ for
-more information.
-
-.. _`library.rst`: library.rst
-
+Have a look at ``__init__.py`` of these packages or 
+:ref:`library:Using Rope As A Library` for more information.
 
 Source Repository
 =================
 
 Rope uses GitHub_. The repository exists at
-`https://github.com/python-rope/rope`_.
+`python-rope/rope`_.
 
 
 Submitting pull requests

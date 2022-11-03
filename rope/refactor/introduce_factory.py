@@ -137,10 +137,9 @@ class IntroduceFactory:
         finder = occurrences.create_finder(
             self.project, self.old_name, self.old_pyname, only_calls=True
         )
-        result = rename.rename_in_module(
+        return rename.rename_in_module(
             finder, changed_name, resource=file_, replace_primary=global_factory
         )
-        return result
 
 
 IntroduceFactoryRefactoring = IntroduceFactory

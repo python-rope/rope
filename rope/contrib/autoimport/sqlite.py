@@ -1,12 +1,12 @@
 """AutoImport module for rope."""
-import pathlib
 import re
 import sqlite3
 import sys
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
-from typing import Generator, Iterable, List, Optional, Set, Tuple
+from pathlib import Path
+from typing import Generator, Iterable, List, Optional, Set, Tuple, Iterator
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
@@ -29,6 +29,7 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
+from rope.contrib.autoimport import models
 
 
 def get_future_names(
@@ -88,9 +89,7 @@ class AutoImport:
             if true, don't persist to disk
         """
         self.project = project
-        project_package = get_package_tuple(
-            pathlib.Path(project.root.real_path), project
-        )
+        project_package = get_package_tuple(Path(project.root.real_path), project)
         assert project_package is not None
         assert project_package.path is not None
         self.project_package = project_package
@@ -99,7 +98,7 @@ class AutoImport:
         if memory or project.ropefolder is None:
             db_path = ":memory:"
         else:
-            db_path = str(pathlib.Path(project.ropefolder.real_path) / "autoimport.db")
+            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
         self.connection = sqlite3.connect(db_path)
         self._setup_db()
         if observe:
@@ -109,15 +108,8 @@ class AutoImport:
             project.add_observer(observer)
 
     def _setup_db(self):
-        packages_table = "(package TEXT)"
-        names_table = (
-            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
-        )
-        self.connection.execute(f"create table if not exists names{names_table}")
-        self.connection.execute(f"create table if not exists packages{packages_table}")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS name on names(name)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS module on names(module)")
-        self.connection.execute("CREATE INDEX IF NOT EXISTS package on names(package)")
+        models.Name.create_table(self.connection)
+        models.Package.create_table(self.connection)
         self.connection.commit()
 
     def import_assist(self, starting: str):
@@ -134,13 +126,12 @@ class AutoImport:
         __________
         Return a list of ``(name, module)`` tuples
         """
-        results = self.connection.execute(
-            "select name, module, source from names WHERE name LIKE (?)",
-            (starting + "%",),
+        results = self._execute(
+            models.Name.import_assist.select("name", "module", "source"), (starting,)
         ).fetchall()
         return sort_and_deduplicate_tuple(
             results
-        )  # Remove duplicates from multiple occurences of the same item
+        )  # Remove duplicates from multiple occurrences of the same item
 
     def search(self, name: str, exact_match: bool = False) -> List[Tuple[str, str]]:
         """
@@ -197,8 +188,9 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for import_name, module, source, name_type in self.connection.execute(
-            "SELECT name, module, source, type FROM names WHERE name LIKE (?)", (name,)
+        for import_name, module, source, name_type in self._execute(
+            models.Name.search_by_name_like.select("name", "module", "source", "type"),
+            (name,),
         ):
             yield (
                 SearchResult(
@@ -219,9 +211,8 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for module, source in self.connection.execute(
-            "Select module, source FROM names where module LIKE (?)",
-            ("%." + name,),
+        for module, source in self._execute(
+            models.Name.search_submodule_like.select("module", "source"), (name,)
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -237,8 +228,8 @@ class AutoImport:
                     NameType.Module.value,
                 )
             )
-        for module, source in self.connection.execute(
-            "Select module, source from names where module LIKE (?)", (name,)
+        for module, source in self._execute(
+            models.Name.search_module_like.select("module", "source"), (name,)
         ):
             if "." in module:
                 continue
@@ -248,20 +239,19 @@ class AutoImport:
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
-        results = self.connection.execute(
-            "SELECT module, source FROM names WHERE name LIKE (?)", (name,)
+        results = self._execute(
+            models.Name.search_by_name_like.select("module", "source"), (name,)
         ).fetchall()
         return sort_and_deduplicate(results)
 
     def get_all_names(self) -> List[str]:
         """Get the list of all cached global names."""
-        results = self.connection.execute("select name from names").fetchall()
-        return results
+        return self._execute(models.Name.objects.select("name")).fetchall()
 
     def _dump_all(self) -> Tuple[List[Name], List[Package]]:
         """Dump the entire database."""
-        name_results = self.connection.execute("select * from names").fetchall()
-        package_results = self.connection.execute("select * from packages").fetchall()
+        name_results = self._execute(models.Name.objects.select_star()).fetchall()
+        package_results = self._execute(models.Package.objects.select_star()).fetchall()
         return name_results, package_results
 
     def generate_cache(
@@ -281,8 +271,8 @@ class AutoImport:
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
-        self.connection.execute(
-            "delete from names where package = ?", (self.project_package.name,)
+        self._execute(
+            models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
         with ProcessPoolExecutor() as executor:
@@ -300,7 +290,7 @@ class AutoImport:
         modules: List[str] = None,
         task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
         single_thread: bool = False,
-        underlined: bool = False,
+        underlined: Optional[bool] = None,
     ):
         """
         Generate global name cache for external modules listed in `modules`.
@@ -310,18 +300,15 @@ class AutoImport:
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        packages: List[Package] = []
-        if self.underlined:
-            underlined = True
-        existing = self._get_existing()
-        if modules is None:
-            packages = self._get_available_packages()
-        else:
-            for modname in modules:
-                package = self._find_package_path(modname)
-                if package is None:
-                    continue
-                packages.append(package)
+        underlined = self.underlined if underlined is None else underlined
+
+        packages: List[Package] = (
+            self._get_available_packages()
+            if modules is None
+            else list(self._get_packages_from_modules(modules))
+        )
+
+        existing = self._get_packages_from_cache()
         packages = list(filter_packages(packages, underlined, existing))
         if len(packages) == 0:
             return
@@ -343,6 +330,13 @@ class AutoImport:
 
         self.connection.commit()
 
+    def _get_packages_from_modules(self, modules: List[str]) -> Iterator[Package]:
+        for modname in modules:
+            package = self._find_package_path(modname)
+            if package is None:
+                continue
+            yield package
+
     def update_module(self, module: str):
         """Update a module in the cache, or add it if it doesn't exist."""
         self._del_if_exist(module)
@@ -356,8 +350,8 @@ class AutoImport:
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
         result = []
-        modules = self.connection.execute(
-            "select module from names where name like (?)", (name,)
+        modules = self._execute(
+            models.Name.search_by_name_like.select("module"), (name,)
         ).fetchall()
         for module in modules:
             try:
@@ -383,7 +377,8 @@ class AutoImport:
         regenerating global names.
 
         """
-        self.connection.execute("drop table names")
+        self._execute(models.Name.objects.drop_table())
+        self._execute(models.Package.objects.drop_table())
         self._setup_db()
         self.connection.commit()
 
@@ -428,16 +423,16 @@ class AutoImport:
             self.update_resource(newresource)
 
     def _del_if_exist(self, module_name, commit: bool = True):
-        self.connection.execute("delete from names where module = ?", (module_name,))
+        self._execute(models.Name.delete_by_module_name, (module_name,))
         if commit:
             self.connection.commit()
 
-    def _get_python_folders(self) -> List[pathlib.Path]:
-        def filter_folders(folder: pathlib.Path) -> bool:
+    def _get_python_folders(self) -> List[Path]:
+        def filter_folders(folder: Path) -> bool:
             return folder.is_dir() and folder.as_posix() != "/usr/bin"
 
         folders = self.project.get_python_path_folders()
-        folder_paths = map(lambda folder: pathlib.Path(folder.real_path), folders)
+        folder_paths = map(lambda folder: Path(folder.real_path), folders)
         folder_paths = filter(filter_folders, folder_paths)
         return list(OrderedDict.fromkeys(folder_paths))
 
@@ -455,12 +450,12 @@ class AutoImport:
         return packages
 
     def _add_packages(self, packages: List[Package]):
-        for package in packages:
-            self.connection.execute("INSERT into packages values(?)", (package.name,))
+        data = [(p.name, str(p.path)) for p in packages]
+        self._executemany(models.Package.objects.insert_into(), data)
 
-    def _get_existing(self) -> List[str]:
+    def _get_packages_from_cache(self) -> List[str]:
         existing: List[str] = list(
-            chain(*self.connection.execute("select * from packages").fetchall())
+            chain(*self._execute(models.Package.objects.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
         return existing
@@ -478,8 +473,8 @@ class AutoImport:
             self._add_name(name)
 
     def _add_name(self, name: Name):
-        self.connection.execute(
-            "insert into names values (?,?,?,?,?)",
+        self._execute(
+            models.Name.objects.insert_into(),
             (
                 name.name,
                 name.modname,
@@ -508,7 +503,7 @@ class AutoImport:
     ) -> ModuleFile:
         assert self.project_package.path
         underlined = underlined if underlined else self.underlined
-        resource_path: pathlib.Path = pathlib.Path(resource.real_path)
+        resource_path: Path = Path(resource.real_path)
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
@@ -521,3 +516,11 @@ class AutoImport:
             underlined,
             resource_path.name == "__init__.py",
         )
+
+    def _execute(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.execute(query._query, *args, **kwargs)
+
+    def _executemany(self, query: models.FinalQuery, *args, **kwargs):
+        assert isinstance(query, models.FinalQuery)
+        return self.connection.executemany(query._query, *args, **kwargs)

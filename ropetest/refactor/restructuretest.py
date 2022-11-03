@@ -53,14 +53,12 @@ class RestructureTest(unittest.TestCase):
         self.assertEqual("a = 1 * 2\n", self.mod.read())
 
     def test_replacing_patterns_with_checks(self):
-        self.mod.write(
-            dedent("""\
-                def f(p=1):
-                    return p
-                g = f
-                g()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f(p=1):
+                return p
+            g = f
+            g()
+        """))
         refactoring = restructure.Restructure(
             self.project, "${f}()", "${f}(2)", args={"f": "object=mod.f"}
         )
@@ -98,14 +96,12 @@ class RestructureTest(unittest.TestCase):
         )
 
     def test_using_make_checks(self):
-        self.mod.write(
-            dedent("""\
-                def f(p=1):
-                    return p
-                g = f
-                g()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f(p=1):
+                return p
+            g = f
+            g()
+        """))
         refactoring = restructure.Restructure(
             self.project, "${f}()", "${f}(2)", args={"f": "object=mod.f"}
         )
@@ -143,12 +139,10 @@ class RestructureTest(unittest.TestCase):
         )
 
     def test_auto_indentation(self):
-        self.mod.write(
-            dedent("""\
-                def f():
-                    a = 2
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f():
+                a = 2
+        """))
         refactoring = restructure.Restructure(
             self.project, "${a} = 2", "${a} = 1\n${a} += 1"
         )
@@ -231,14 +225,12 @@ class RestructureTest(unittest.TestCase):
         self.assertEqual("b = 2 / 1\n", mod2.read())
 
     def test_unsure_argument_of_default_wildcard(self):
-        self.mod.write(
-            dedent("""\
-                def f(p):
-                    return p * 2
-                x = "" * 2
-                i = 1 * 2
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f(p):
+                return p * 2
+            x = "" * 2
+            i = 1 * 2
+        """))
         refactoring = restructure.Restructure(
             self.project,
             "${s} * 2",
@@ -289,4 +281,3 @@ class RestructureTest(unittest.TestCase):
             """),
             self.mod.read(),
         )
-

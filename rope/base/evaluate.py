@@ -1,10 +1,18 @@
 from operator import itemgetter
+from typing import Optional, Tuple
 
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import ast, astutils, exceptions, pyobjects, arguments, worder
-from rope.base.utils import pycompat
+from rope.base import (
+    ast,
+    astutils,
+    exceptions,
+    pyobjects,
+    pyobjectsdef,
+    arguments,
+    worder,
+)
 
 
 BadIdentifierError = exceptions.BadIdentifierError
@@ -71,26 +79,31 @@ class ScopeNameFinder:
         return False
 
     def _is_function_name_in_function_header(self, scope, offset, lineno):
-        if (
+        return (
             scope.get_start() <= lineno <= scope.get_body_start()
             and scope.get_kind() == "Function"
             and self.worder.is_a_class_or_function_name_in_header(offset)
-        ):
-            return True
-        return False
+        )
 
     def get_pyname_at(self, offset):
         return self.get_primary_and_pyname_at(offset)[1]
 
-    def get_primary_and_pyname_at(self, offset):
+    def get_primary_and_pyname_at(
+        self,
+        offset: int,
+    ) -> Tuple[Optional[rope.base.pynames.PyName], Optional[rope.base.pynames.PyName]]:
         lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_offset(offset)
         # function keyword parameter
         if self.worder.is_function_keyword_parameter(offset):
             keyword_name = self.worder.get_word_at(offset)
             pyobject = self.get_enclosing_function(offset)
-            if isinstance(pyobject, pyobjects.PyFunction):
-                return (None, pyobject.get_parameters().get(keyword_name, None))
+            if isinstance(pyobject, pyobjectsdef.PyFunction):
+                parameter_name = pyobject.get_parameters().get(keyword_name, None)
+                return (None, parameter_name)
+            elif isinstance(pyobject, pyobjects.AbstractFunction):
+                parameter_name = rope.base.pynames.ParameterName()
+                return (None, parameter_name)
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope

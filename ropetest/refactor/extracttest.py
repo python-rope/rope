@@ -2708,6 +2708,27 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_with_generator_2(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum(x for x in y)
+        """)
+        extract_target = "x for x in y"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum(_a(y))
+
+            def _a(y):
+                return (x for x in y)
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_with_set_comprehension(self):
         code = dedent("""\
             def f():
@@ -3046,7 +3067,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_async_with_simple(self):
         code = dedent("""\
             async def afunc():
@@ -3065,7 +3086,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_containing_async_with(self):
         code = dedent("""\
             async def afunc():

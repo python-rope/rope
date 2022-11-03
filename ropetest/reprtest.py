@@ -75,7 +75,9 @@ def test_repr_pyobjectsdef_pyfunction(project, mod1):
     mod = libutils.get_string_module(project, code, mod1)
     obj = mod.get_attribute("func").pyobject
     assert isinstance(obj, pyobjectsdef.PyFunction)
-    assert repr(obj).startswith('<rope.base.pyobjectsdef.PyFunction "pkg1.mod1::func" at 0x')
+    assert repr(obj).startswith(
+        '<rope.base.pyobjectsdef.PyFunction "pkg1.mod1::func" at 0x'
+    )
 
 
 def test_repr_pyobjectsdef_pyfunction_without_associated_resource(project):
@@ -91,7 +93,9 @@ def test_repr_pyobjectsdef_pyclass(project, mod1):
     mod = libutils.get_string_module(project, code, mod1)
     obj = mod.get_attribute("MyClass").pyobject
     assert isinstance(obj, pyobjectsdef.PyClass)
-    assert repr(obj).startswith('<rope.base.pyobjectsdef.PyClass "pkg1.mod1::MyClass" at 0x')
+    assert repr(obj).startswith(
+        '<rope.base.pyobjectsdef.PyClass "pkg1.mod1::MyClass" at 0x'
+    )
 
 
 def test_repr_pyobjectsdef_pyclass_without_associated_resource(project):
@@ -109,7 +113,9 @@ def test_repr_pyobjectsdef_pycomprehension(project, mod1):
     assert len(mod.defineds) == 1
     obj = mod.defineds[0]
     assert isinstance(obj, pyobjectsdef.PyComprehension)
-    assert repr(obj).startswith('<rope.base.pyobjectsdef.PyComprehension "pkg1.mod1::<comprehension>" at 0x')
+    assert repr(obj).startswith(
+        '<rope.base.pyobjectsdef.PyComprehension "pkg1.mod1::<comprehension>" at 0x'
+    )
 
 
 def test_repr_pyobjectsdef_pycomprehension_without_associated_resource(project):
@@ -119,4 +125,6 @@ def test_repr_pyobjectsdef_pycomprehension_without_associated_resource(project):
     assert len(mod.defineds) == 1
     obj = mod.defineds[0]
     assert isinstance(obj, pyobjectsdef.PyComprehension)
-    assert repr(obj).startswith('<rope.base.pyobjectsdef.PyComprehension "::<comprehension>" at 0x')
+    assert repr(obj).startswith(
+        '<rope.base.pyobjectsdef.PyComprehension "::<comprehension>" at 0x'
+    )
