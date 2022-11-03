@@ -482,14 +482,11 @@ class AutoImport:
         if names is not None:
             self._executemany(
                 models.Name.objects.insert_into(),
-                [self._convert_name(name) for name in names]
-
+                [self._convert_name(name) for name in names],
             )
 
     def _add_name(self, name: Name):
-        self._execute(
-            models.Name.objects.insert_into(), self._convert_name(name)
-        )
+        self._execute(models.Name.objects.insert_into(), self._convert_name(name))
 
     def _find_package_path(self, target_name: str) -> Optional[Package]:
         if target_name in sys.builtin_module_names:
