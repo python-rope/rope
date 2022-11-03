@@ -21,11 +21,15 @@ classifiers = [
     'Topic :: Software Development',
 ]
 version = '1.4.0'
-dependencies = ['pytoolconfig[global] >= 1.1.2']
+dependencies = ['pytoolconfig[global] >= 1.2.2']
 
 [[project.authors]]
 name = 'Ali Gholami Rudi'
 email = 'aligrudi@users.sourceforge.net'
+
+[[project.maintainers]]
+name = 'Lie Ryan'
+email = 'lieryan.24@proton.me'
 
 [project.license]
 text = 'LGPL-3.0-or-later'
@@ -68,7 +72,7 @@ target-version = [
     'py39',
 ]
 include = 'rope/.*\.pyi?$'
-force-exclude = 'ropetest'
+force-exclude = 'ropetest|rope/base/prefs.py'
 
 [build-system]
 requires = [
