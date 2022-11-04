@@ -65,6 +65,11 @@ target-version = ['py36', 'py37', 'py38', 'py39']
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
 
+[tool.pytest.ini_options]
+
+python_files = ["*test.py", "__init__.py"]
+markers = ["time_limit: sets a maximum amount of time the test can run"]
+
 [build-system]
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = 'setuptools.build_meta'
