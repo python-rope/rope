@@ -20,7 +20,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Topic :: Software Development',
 ]
-version = '1.4.0'
+dynamic = ["version"]
 dependencies = ['pytoolconfig >= 1.2.2']
 
 [[project.authors]]
@@ -44,11 +44,7 @@ doc = [
     "sphinx-autodoc-typehints>=1.18.1",
     "sphinx-rtd-theme>=1.0.0",
 ]
-dev = [
-    'pytest>=7.0.1',
-    'pytest-timeout>=2.1.0',
-    'build>=0.7.0',
-]
+dev = ['pytest>=7.0.1', 'pytest-timeout>=2.1.0', 'build>=0.7.0']
 [tool.setuptools]
 packages = [
     'rope',
@@ -63,20 +59,12 @@ packages = [
     'rope.refactor',
     'rope.refactor.importutils',
 ]
-
+[tool.setuptools_scm]
 [tool.black]
-target-version = [
-    'py36',
-    'py37',
-    'py38',
-    'py39',
-]
+target-version = ['py36', 'py37', 'py38', 'py39']
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
 
 [build-system]
-requires = [
-    'setuptools',
-    'setuptools-scm',
-]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = 'setuptools.build_meta'
