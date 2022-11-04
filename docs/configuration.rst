@@ -4,6 +4,7 @@ Rope supports the following configuration formats
 
 1. pyproject.toml
 2. config.py 
+3. pytool.toml
 
 pyproject.toml 
 --------------
@@ -44,6 +45,14 @@ Additionally, you can run an executable function at startup of rope.
         # Do whatever you like here!
 
 
+pytool.toml 
+-----------
+If neither a config.py or a pyproject.toml is present, rope will use a pytool.toml.  
+It follows the exact same syntax of the pyproject.toml.   
+
+- Mac OS X: ``~/Library/Application Support/pytool.toml.``    
+- Unix: ``~/.config/pytool.toml``` or in $XDG_CONFIG_HOME, if defined    
+- Windows: ``C:\Users\<username>\AppData\Local\pytool.toml``  
 
 
 Options

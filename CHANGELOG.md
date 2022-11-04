@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #492, Feat: Global configuration support
 
 # Release 1.4.0
 
