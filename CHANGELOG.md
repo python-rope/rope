@@ -1,6 +1,9 @@
 # **Upcoming release**
 
+## Improvement
+
 - #492, Feat: Global configuration support
+- #519, dynamic versioning and move pytest to pyproject.toml
 
 # Release 1.4.0
 
