@@ -281,5 +281,6 @@ def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
         custom_sources=custom_sources,
         bases=[".ropefolder"],
         recursive=False,
+        global_config=True,
     )
     return config

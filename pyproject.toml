@@ -21,7 +21,7 @@ classifiers = [
     'Topic :: Software Development',
 ]
 version = '1.4.0'
-dependencies = ['pytoolconfig >= 1.2.2']
+dependencies = ['pytoolconfig[global] >= 1.2.2']
 
 [[project.authors]]
 name = 'Ali Gholami Rudi'
