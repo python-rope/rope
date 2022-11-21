@@ -1762,7 +1762,69 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_extract_method_and_augmentedj_assignment_in_try_block(self):
+    def test_extract_method_and_augmented_assignment_nested_1(self):
+        code = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                print(1)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                g()
+
+            def g():
+                print(1)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_nested_2(self):
+        code = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                print(my_var)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                g(my_var)
+                print(my_var)
+
+            def g(my_var):
+                my_var[0][0] += 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_var_to_read_in_lhs(self):
+        code = dedent("""\
+            def f():
+                var_to_read = 0
+                my_var = [0, 1, 2]
+                my_var[var_to_read] += 1
+                print(my_var)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                var_to_read = 0
+                my_var = [0, 1, 2]
+                g(my_var, var_to_read)
+                print(my_var)
+
+            def g(my_var, var_to_read):
+                my_var[var_to_read] += 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_in_try_block(self):
         code = dedent("""\
             def f():
                 any_subscriptable = [0]
