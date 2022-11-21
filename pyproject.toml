@@ -82,6 +82,5 @@ markers = ["time_limit: sets a maximum amount of time the test can run"]
 [build-system]
 requires = [
     'setuptools',
-    'setuptools-scm',
 ]
 build-backend = 'setuptools.build_meta'
