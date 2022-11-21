@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.base import builtins, libutils, pyobjects
 from ropetest import testutils

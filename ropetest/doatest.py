@@ -9,10 +9,7 @@ except ImportError:
     import pickle
 import socket
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 
 from rope.base.oi import doa

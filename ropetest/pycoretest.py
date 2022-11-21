@@ -3,10 +3,7 @@ from textwrap import dedent
 
 from rope.base.builtins import File, BuiltinClass
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.base import exceptions
 from rope.base import libutils

@@ -3,10 +3,7 @@ from textwrap import dedent
 from rope.refactor import restructure
 from ropetest import testutils
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 
 class RestructureTest(unittest.TestCase):

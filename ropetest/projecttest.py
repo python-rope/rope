@@ -12,10 +12,7 @@ from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
 
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 
 class ProjectTest(unittest.TestCase):

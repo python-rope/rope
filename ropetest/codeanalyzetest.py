@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.evaluate
 from rope.base import libutils

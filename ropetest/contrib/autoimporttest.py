@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.contrib.autoimport import sqlite as autoimport
 from ropetest import testutils
