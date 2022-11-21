@@ -1565,6 +1565,36 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_mapping_match_as(self):
+        source = dedent("""\
+            match x:
+                case {"a": b} as c:
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "MatchMapping",
+            " ",
+            "as",
+            " ",
+            "c",
+        ])
+        checker.check_children("MatchMapping", [
+            "{",
+            "",
+            "Constant",
+            "",
+            ":",
+            " ",
+            "MatchAs",
+            "",
+            "}",
+        ])
+
+
 class _ResultChecker:
     def __init__(self, test_case, ast):
         self.test_case = test_case
