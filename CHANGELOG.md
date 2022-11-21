@@ -2,6 +2,7 @@
 
 - #492 Feat: Global configuration support
 - #509 Fix read/write analysis of the left-hand side of an augmented assignment
+- #522 Implement patchedast parsing of MatchMapping
 
 # Release 1.4.0
 
