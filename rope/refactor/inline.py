@@ -353,7 +353,7 @@ class InlineParameter(_Inliner):
         return "parameter"
 
 
-def _join_lines(lines):
+def _join_lines(lines: List[str]) -> str:
     definition_lines = []
     for unchanged_line in lines:
         line = unchanged_line.strip()
