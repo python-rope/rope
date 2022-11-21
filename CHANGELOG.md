@@ -1,6 +1,7 @@
 # **Upcoming release**
 
-- #492, Feat: Global configuration support
+- #492 Feat: Global configuration support
+- #509 Fix read/write analysis of the left-hand side of an augmented assignment
 
 # Release 1.4.0
 
