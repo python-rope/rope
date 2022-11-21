@@ -76,8 +76,14 @@ force-exclude = 'ropetest|rope/base/prefs.py'
 
 [tool.pytest.ini_options]
 
-python_files = ["*test.py", "__init__.py"]
-markers = ["time_limit: sets a maximum amount of time the test can run"]
+python_files = [
+    "*test.py",
+    "__init__.py",
+]
+
+markers = [
+    "time_limit: sets a maximum amount of time the test can run",
+]
 
 [build-system]
 requires = [
