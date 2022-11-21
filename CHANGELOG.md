@@ -4,6 +4,7 @@
 - #519 dynamic versioning and move pytest to pyproject.toml (@gliptak, @bagel897)
 - #509 Fix read/write analysis of the left-hand side of an augmented assignment (@lieryan)
 - #522 Implement patchedast parsing of MatchMapping (@lieryan)
+- #514 Fix inlining dictionary with inline comment
 
 # Release 1.4.0
 
