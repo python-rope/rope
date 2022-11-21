@@ -903,6 +903,16 @@ class _PatchingASTWalker:
     def _MatchValue(self, node):
         self._handle(node, [node.value])
 
+    def _MatchMapping(self, node):
+        children = []
+        children.append("{")
+        for index, (key, value) in enumerate(zip(node.keys, node.patterns)):
+            children.extend([key, ":", value])
+            if index < len(node.keys) - 1:
+                children.append(",")
+        children.append("}")
+        self._handle(node, children)
+
 
 class _Source:
     def __init__(self, source):
