@@ -1,8 +1,9 @@
 # **Upcoming release**
 
-- #492 Feat: Global configuration support
-- #509 Fix read/write analysis of the left-hand side of an augmented assignment
-- #522 Implement patchedast parsing of MatchMapping
+- #492 Feat: Global configuration support (@bagel897)
+- #519 dynamic versioning and move pytest to pyproject.toml (@gliptak, @bagel897)
+- #509 Fix read/write analysis of the left-hand side of an augmented assignment (@lieryan)
+- #522 Implement patchedast parsing of MatchMapping (@lieryan)
 
 # Release 1.4.0
 
