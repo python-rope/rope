@@ -36,6 +36,7 @@ text = 'LGPL-3.0-or-later'
 
 [project.urls]
 Source = 'https://github.com/python-rope/rope'
+Documentation = 'https://rope.readthedocs.io/'
 
 [project.optional-dependencies]
 doc = [
