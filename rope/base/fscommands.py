@@ -14,10 +14,6 @@ import subprocess
 import rope.base.utils.pycompat as pycompat
 import typing
 
-try:
-    unicode
-except NameError:
-    unicode = str
 
 FileContent = typing.NewType("FileContent", bytes)
 
@@ -244,7 +240,7 @@ def file_data_to_unicode(data, encoding=None):
 
 
 def _decode_data(data, encoding):
-    if isinstance(data, unicode):
+    if isinstance(data, str):
         return data
     if encoding is None:
         encoding = read_str_coding(data)
