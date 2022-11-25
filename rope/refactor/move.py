@@ -4,6 +4,8 @@
 based on inputs.
 
 """
+from typing import Union
+
 from rope.base import (
     pyobjects,
     codeanalyze,
@@ -13,6 +15,8 @@ from rope.base import (
     evaluate,
     worder,
     libutils,
+    resources,
+    project,
 )
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
@@ -231,6 +235,8 @@ class MoveMethod:
 class MoveGlobal:
     """For moving global function and classes"""
 
+    project: project.Project
+
     def __init__(self, project, resource, offset):
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
@@ -299,8 +305,13 @@ class MoveGlobal:
         return isinstance(pyname, pynames.AssignedName)
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()
+        self,
+        dest: Union[None, str, resources.Resource],
+        resources=None,
+        task_handle=taskhandle.NullTaskHandle(),
     ):
+        if isinstance(dest, str):
+            dest = self.project.find_module(dest)
         if resources is None:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():
