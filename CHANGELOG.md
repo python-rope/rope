@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #533 Refactoring to Remove usage of unicode type
 
 # Release 1.5.1
 
