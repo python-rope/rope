@@ -16,11 +16,6 @@ from rope.contrib.codeassist import (
 )
 from ropetest import testutils
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 
 class CodeAssistTest(unittest.TestCase):
     def setUp(self):
@@ -731,7 +726,7 @@ class CodeAssistTest(unittest.TestCase):
             def foo():
               u"юникод-объект"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
-        self.assertTrue(isinstance(doc, unicode))
+        self.assertTrue(isinstance(doc, str))
         self.assertTrue("юникод-объект" in doc)
 
     def test_get_pydoc_utf8_bytestring(self):
@@ -740,7 +735,7 @@ class CodeAssistTest(unittest.TestCase):
             def foo():
               "байтстринг"''')
         doc = get_doc(self.project, src, src.index("foo") + 1)
-        self.assertTrue(isinstance(doc, unicode))
+        self.assertTrue(isinstance(doc, str))
         self.assertTrue("байтстринг" in doc)
 
     def test_get_pydoc_for_functions(self):

@@ -1,4 +1,5 @@
-from rope.base.fscommands import _decode_data
+from typing import Optional
+
 from rope.base import ast, exceptions, utils
 
 
@@ -224,13 +225,14 @@ class PyDefinedObject:
             current_object = current_object.parent
         return current_object
 
-    def get_doc(self):
+    def get_doc(self) -> Optional[str]:
         if len(self.get_ast().body) > 0:
             expr = self.get_ast().body[0]
             if isinstance(expr, ast.Expr) and isinstance(expr.value, ast.Str):
                 docstring = expr.value.s
-                coding = self.get_module().coding
-                return _decode_data(docstring, coding)
+                assert isinstance(docstring, str)
+                return docstring
+        return None
 
     def _get_defined_objects(self):
         if self.defineds is None:

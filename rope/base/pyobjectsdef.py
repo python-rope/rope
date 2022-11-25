@@ -17,11 +17,6 @@ from rope.base import (
 )
 from rope.base.utils import pycompat
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
@@ -204,7 +199,7 @@ class PyModule(pyobjects.PyModule):
                 source_bytes = resource.read_bytes()
                 source_code, _ = fscommands.file_data_to_unicode(source_bytes)
             else:
-                if isinstance(source_code, unicode):
+                if isinstance(source_code, str):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
