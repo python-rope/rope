@@ -3,6 +3,7 @@
 - ...
 
 # Release 1.5.1
+
 - #531 Add alternative way to retrieve version number from pyproject.toml
 
 # Release 1.5.0
