@@ -218,8 +218,7 @@ def _execute(args, cwd=None):
 
 
 def unicode_to_file_data(contents: str, encoding=None, newlines=None) -> FileContent:
-    if not isinstance(contents, str):
-        return contents
+    assert isinstance(contents, str)
     if newlines and newlines != "\n":
         contents = contents.replace("\n", newlines)
     if encoding is None:
