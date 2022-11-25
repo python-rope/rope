@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.refactor import similarfinder
 from ropetest import testutils
@@ -210,39 +207,33 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEqual([], list(finder.get_matches("10", {})))
 
     def test_simple_finding(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    pass
-                a = A()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                pass
+            a = A()
+        """))
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${A}()", {}))
         self.assertEqual(1, len(result))
 
     def test_not_matching_when_the_name_does_not_match(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    pass
-                a = list()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                pass
+            a = list()
+        """))
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${C}()", {"C": "name=mod1.A"}))
         self.assertEqual(0, len(result))
 
     def test_not_matching_unknowns_finding(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    pass
-                a = unknown()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                pass
+            a = unknown()
+        """))
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${anything} = ${C}()", {"C": "name=mod1.A"}))
@@ -284,28 +275,24 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEqual((start, len(source) - 1), result[0].get_region())
 
     def test_checking_the_type_of_an_ass_name_node(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    pass
-                an_a = A()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                pass
+            an_a = A()
+        """))
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches("${a} = ${assigned}", {"a": "type=mod1.A"}))
         self.assertEqual(1, len(result))
 
     def test_checking_instance_of_an_ass_name_node(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    pass
-                class B(A):
-                    pass
-                b = B()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                pass
+            class B(A):
+                pass
+            b = B()
+        """))
         pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(
@@ -315,18 +302,14 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_checking_equality_of_imported_pynames(self):
         mod2 = testutils.create_module(self.project, "mod2")
-        mod2.write(
-            dedent("""\
-                class A(object):
-                    pass
-            """)
-        )
-        self.mod1.write(
-            dedent("""\
-                from mod2 import A
-                an_a = A()
-            """)
-        )
+        mod2.write(dedent("""\
+            class A(object):
+                pass
+        """))
+        self.mod1.write(dedent("""\
+            from mod2 import A
+            an_a = A()
+        """))
         pymod1 = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymod1)
         result = list(finder.get_matches("${a_class}()", {"a_class": "name=mod2.A"}))

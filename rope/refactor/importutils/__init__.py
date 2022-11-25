@@ -174,9 +174,7 @@ class ImportTools:
         return source
 
     def _is_transformable_to_normal(self, import_info):
-        if not isinstance(import_info, FromImport):
-            return False
-        return True
+        return isinstance(import_info, FromImport)
 
     def organize_imports(
         self,

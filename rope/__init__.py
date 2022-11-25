@@ -15,7 +15,7 @@ except DistributionNotFound:
 
 INFO = __doc__
 COPYRIGHT = """\
-Copyright (C) 2021-2021 Lie Ryan
+Copyright (C) 2021-2022 Lie Ryan
 Copyright (C) 2019-2021 Matej Cepl
 Copyright (C) 2015-2018 Nicholas Smith
 Copyright (C) 2014-2015 Matej Cepl

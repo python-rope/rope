@@ -46,10 +46,9 @@ Features implemented so far:
   * Saving object information on disk and validating them
   * Type hints using docstring or type comments PEP 0484
 
-For more information see `overview.rst`_.
+For more information see :ref:`overview:Rope Overview`.
 
 
-.. _overview.rst: overview.rst
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
 .. _GIT: http://git.or.cz

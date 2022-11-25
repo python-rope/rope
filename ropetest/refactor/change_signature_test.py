@@ -1,8 +1,6 @@
 from textwrap import dedent
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+
+import unittest
 
 import rope.base.exceptions
 from rope.refactor import change_signature
@@ -45,13 +43,10 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEqual(code, self.mod.read())
 
     def test_normalizing_parameters_for_unneeded_keyword(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(param):
-                    pass
-                a_func(param=1)"""
-            )
-        )
+        self.mod.write(dedent("""\
+            def a_func(param):
+                pass
+            a_func(param=1)"""))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -60,9 +55,8 @@ class ChangeSignatureTest(unittest.TestCase):
             dedent("""\
                 def a_func(param):
                     pass
-                a_func(1)"""
-            ),
-            self.mod.read()
+                a_func(1)"""),
+            self.mod.read(),
         )
 
     def test_normalizing_parameters_for_unneeded_keyword_for_methods(self):
@@ -88,13 +82,10 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEqual(expected, self.mod.read())
 
     def test_normalizing_parameters_for_unsorted_keyword(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, p2):
-                    pass
-                a_func(p2=2, p1=1)"""
-            )
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, p2):
+                pass
+            a_func(p2=2, p1=1)"""))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -103,9 +94,8 @@ class ChangeSignatureTest(unittest.TestCase):
             dedent("""\
                 def a_func(p1, p2):
                     pass
-                a_func(1, 2)"""
-            ),
-            self.mod.read()
+                a_func(1, 2)"""),
+            self.mod.read(),
         )
 
     def test_raising_exceptions_for_non_functions(self):
@@ -116,13 +106,11 @@ class ChangeSignatureTest(unittest.TestCase):
             )
 
     def test_normalizing_parameters_for_args_parameter(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(*arg):
-                    pass
-                a_func(1, 2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(*arg):
+                pass
+            a_func(1, 2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -137,13 +125,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_normalizing_parameters_for_args_parameter_and_keywords(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(param, *args):
-                    pass
-                a_func(*[1, 2, 3])
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(param, *args):
+                pass
+            a_func(*[1, 2, 3])
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -159,18 +145,14 @@ class ChangeSignatureTest(unittest.TestCase):
 
     def test_normalizing_functions_from_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write(
-            dedent("""\
-                def a_func(param):
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                import mod1
-                mod1.a_func(param=1)
-            """)
-        )
+        mod1.write(dedent("""\
+            def a_func(param):
+                pass
+        """))
+        self.mod.write(dedent("""\
+            import mod1
+            mod1.a_func(param=1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, mod1, mod1.read().index("a_func") + 1
         )
@@ -184,13 +166,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_normalizing_parameters_for_keyword_parameters(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, **kwds):
-                    pass
-                a_func(p2=2, p1=1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, **kwds):
+                pass
+            a_func(p2=2, p1=1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -205,13 +185,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_arguments(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -226,13 +204,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_arguments_with_multiple_args(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, p2):
-                    pass
-                a_func(1, 2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, p2):
+                pass
+            a_func(1, 2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -247,13 +223,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_arguments_passed_as_keywords(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1):
-                    pass
-                a_func(p1=1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1):
+                pass
+            a_func(p1=1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -268,13 +242,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_arguments_with_defaults(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1=1):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1=1):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -289,13 +261,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_arguments_star_args(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, *args):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, *args):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -310,13 +280,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_keyword_arg(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, **kwds):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, **kwds):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -331,13 +299,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_removing_keyword_arg2(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, *args, **kwds):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, *args, **kwds):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -354,13 +320,11 @@ class ChangeSignatureTest(unittest.TestCase):
     # XXX: What to do here for star args?
     @unittest.skip("How to deal with start args?")
     def xxx_test_removing_arguments_star_args2(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, *args):
-                    pass
-                a_func(2, 3, p1=1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, *args):
+                pass
+            a_func(2, 3, p1=1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -376,13 +340,11 @@ class ChangeSignatureTest(unittest.TestCase):
 
     # XXX: What to do here for star args?
     def xxx_test_removing_arguments_star_args3(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, *args):
-                    pass
-                a_func(*[1, 2, 3])
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, *args):
+                pass
+            a_func(*[1, 2, 3])
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -397,12 +359,10 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_arguments_for_normal_args_changing_definition(self):
-        self.mod.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func():
+                pass
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -418,13 +378,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_arguments_for_normal_args_with_defaults(self):
-        self.mod.write(
-            dedent("""\
-                def a_func():
-                    pass
-                a_func()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func():
+                pass
+            a_func()
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -440,13 +398,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_arguments_for_normal_args_changing_calls(self):
-        self.mod.write(
-            dedent("""\
-                def a_func():
-                    pass
-                a_func()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func():
+                pass
+            a_func()
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -462,13 +418,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_arguments_for_norm_args_chang_calls_with_kwords(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1=0):
-                    pass
-                a_func()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1=0):
+                pass
+            a_func()
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -484,13 +438,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_arguments_for_norm_args_chang_calls_with_no_value(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p2=0):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p2=0):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -506,12 +458,10 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_adding_duplicate_parameter_and_raising_exceptions(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1):
-                    pass
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1):
+                pass
+        """))
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             signature = change_signature.ChangeSignature(
                 self.project, self.mod, self.mod.read().index("a_func") + 1
@@ -521,13 +471,11 @@ class ChangeSignatureTest(unittest.TestCase):
             )
 
     def test_inlining_default_arguments(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1=0):
-                    pass
-                a_func()
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1=0):
+                pass
+            a_func()
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -544,13 +492,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_inlining_default_arguments2(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1=0):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1=0):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -567,13 +513,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_preserving_args_and_keywords_order(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(*args, **kwds):
-                    pass
-                a_func(3, 1, 2, a=1, c=3, b=2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(*args, **kwds):
+                pass
+            a_func(3, 1, 2, a=1, c=3, b=2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -588,13 +532,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_change_order_for_only_one_parameter(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1):
+                pass
+            a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -611,13 +553,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_change_order_for_two_parameter(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, p2):
-                    pass
-                a_func(1, 2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, p2):
+                pass
+            a_func(1, 2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -634,14 +574,12 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_reordering_multi_line_function_headers(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1,
-                 p2):
-                    pass
-                a_func(1, 2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1,
+                p2):
+                pass
+            a_func(1, 2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -658,13 +596,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_changing_order_with_static_params(self):
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, p2=0, p3=0):
-                    pass
-                a_func(1, 2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, p2=0, p3=0):
+                pass
+            a_func(1, 2)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -682,13 +618,11 @@ class ChangeSignatureTest(unittest.TestCase):
 
     def test_doing_multiple_changes(self):
         changers = []
-        self.mod.write(
-            dedent("""\
-                def a_func(p1):
-                    pass
-                a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1):
+                pass
+            a_func(1)
+        """))
         changers.append(change_signature.ArgumentRemover(0))
         changers.append(change_signature.ArgumentAdder(0, "p2", None, None))
         signature = change_signature.ChangeSignature(
@@ -706,13 +640,11 @@ class ChangeSignatureTest(unittest.TestCase):
 
     def test_doing_multiple_changes2(self):
         changers = []
-        self.mod.write(
-            dedent("""\
-                def a_func(p1, p2):
-                    pass
-                a_func(p2=2)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func(p1, p2):
+                pass
+            a_func(p2=2)
+        """))
         changers.append(change_signature.ArgumentAdder(2, "p3", None, "3"))
         changers.append(change_signature.ArgumentReorderer([1, 0, 2]))
         changers.append(change_signature.ArgumentRemover(1))
@@ -730,16 +662,14 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_changing_signature_in_subclasses(self):
-        self.mod.write(
-            dedent("""\
-                class A(object):
-                    def a_method(self):
-                        pass
-                class B(A):
-                    def a_method(self):
-                        pass
-            """)
-        )
+        self.mod.write(dedent("""\
+            class A(object):
+                def a_method(self):
+                    pass
+            class B(A):
+                def a_method(self):
+                    pass
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_method") + 1
         )
@@ -759,15 +689,12 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_differentiating_class_accesses_from_instance_accesses(self):
-        self.mod.write(
-            dedent("""\
-                class A(object):
-                    def a_func(self, param):
-                        pass
-                a_var = A()
-                A.a_func(a_var, param=1)"""
-            )
-        )
+        self.mod.write(dedent("""\
+            class A(object):
+                def a_func(self, param):
+                    pass
+            a_var = A()
+            A.a_func(a_var, param=1)"""))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("a_func") + 1
         )
@@ -778,20 +705,17 @@ class ChangeSignatureTest(unittest.TestCase):
                     def a_func(self):
                         pass
                 a_var = A()
-                A.a_func(a_var)"""
-            ),
-            self.mod.read()
+                A.a_func(a_var)"""),
+            self.mod.read(),
         )
 
     def test_changing_signature_for_constructors(self):
-        self.mod.write(
-            dedent("""\
-                class C(object):
-                    def __init__(self, p):
-                        pass
-                c = C(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            class C(object):
+                def __init__(self, p):
+                    pass
+            c = C(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("C") + 1
         )
@@ -807,14 +731,12 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_changing_signature_for_constructors2(self):
-        self.mod.write(
-            dedent("""\
-                class C(object):
-                    def __init__(self, p):
-                        pass
-                c = C(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            class C(object):
+                def __init__(self, p):
+                    pass
+            c = C(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("__init__") + 1
         )
@@ -830,16 +752,14 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_changing_signature_for_constructors_when_using_super(self):
-        self.mod.write(
-            dedent("""\
-                class A(object):
-                    def __init__(self, p):
-                        pass
-                class B(A):
-                    def __init__(self, p):
-                        super(B, self).__init__(p)
-            """)
-        )
+        self.mod.write(dedent("""\
+            class A(object):
+                def __init__(self, p):
+                    pass
+            class B(A):
+                def __init__(self, p):
+                    super(B, self).__init__(p)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().index("__init__") + 1
         )
@@ -857,13 +777,11 @@ class ChangeSignatureTest(unittest.TestCase):
         )
 
     def test_redordering_arguments_reported_by_mft(self):
-        self.mod.write(
-            dedent("""\
-                def f(a, b, c):
-                    pass
-                f(1, 2, 3)
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f(a, b, c):
+                pass
+            f(1, 2, 3)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, self.mod, self.mod.read().rindex("f")
         )
@@ -880,12 +798,10 @@ class ChangeSignatureTest(unittest.TestCase):
     def test_resources_parameter(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write("def a_func(param):\n    pass\n")
-        self.mod.write(
-            dedent("""\
-                import mod1
-                mod1.a_func(1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import mod1
+            mod1.a_func(1)
+        """))
         signature = change_signature.ChangeSignature(
             self.project, mod1, mod1.read().index("a_func") + 1
         )

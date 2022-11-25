@@ -1,11 +1,45 @@
 # **Upcoming release**
 
-# New feature
+- ...
 
-- #489 Rope now publishes documentations to readthedocs.org (@bageljrkhanofemus)
+# Release 1.5.0
+
+- #492 Feat: Global configuration support (@bagel897)
+- #519 Move pytest to pyproject.toml (@gliptak, @bagel897)
+- #509 Fix read/write analysis of the left-hand side of an augmented assignment (@lieryan)
+- #522 Implement patchedast parsing of MatchMapping (@lieryan)
+- #514 Fix inlining dictionary with inline comment (@lieryan)
+
+# Release 1.4.0
+
+## Bug fixes
+
+- #506, #507 Fix issue with parsing function call args list
+- #411, #505 Fix extracting generator without parens
+- #18, #510 When the function is a builtin function, the call parameter's name was sometimes incorrectly identified as an AssignedName. This led to rename refactoring incorrectly renaming these parameters.
+
+# Release 1.3.0
+
+## Bug fixes
+
+- #496, #497 Add MatMul operator to patchedast
+- #495 Fix autoimport collection for compiled modules
+
+## Improvement
+
+- #501, #502 Autoimport improvements
+
+# Release 1.2.0
+
+Date: 2022-04-22
+
+## New feature
+
+- #473 Pyproject.toml support (@bageljrkhanofemus)
+- #489 Rope now publishes documentations to rope.readthedocs.org (@bageljrkhanofemus)
 - #490 Migrate from setup.py to pyproject.toml (@bageljrkhanofemus)
 
-# Improvement
+## Improvement
 
 - #479 Add ABC and type hints for TaskHandle and JobSet (@bageljrkhanofemus)
 - #486 Drop Python 2 support (@bageljrkhanofemus, @lieryan)

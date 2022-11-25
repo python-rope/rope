@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.history
 from rope.base import exceptions
@@ -221,16 +218,12 @@ class IsolatedHistoryTest(unittest.TestCase):
     def test_get_file_undo_list_simple(self):
         change = rope.base.change.ChangeContents(self.file1, "1")
         self.history.do(change)
-        self.assertEqual(
-            {change}, set(self.history.get_file_undo_list(self.file1))
-        )
+        self.assertEqual({change}, set(self.history.get_file_undo_list(self.file1)))
 
     def test_get_file_undo_list_for_moves(self):
         change = rope.base.change.MoveResource(self.file1, "file2.txt")
         self.history.do(change)
-        self.assertEqual(
-            {change}, set(self.history.get_file_undo_list(self.file1))
-        )
+        self.assertEqual({change}, set(self.history.get_file_undo_list(self.file1)))
 
     # XXX: What happens for moves before the file is created?
     def xxx_test_get_file_undo_list_and_moving_its_contining_folder(self):

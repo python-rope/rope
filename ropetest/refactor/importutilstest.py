@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from textwrap import dedent
 
@@ -121,12 +118,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_ignoring_indented_imports(self):
-        self.mod.write(
-            dedent("""\
-                if True:
-                    import pkg1
-            """)
-        )
+        self.mod.write(dedent("""\
+            if True:
+                import pkg1
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.imports
@@ -149,12 +144,10 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual(["pkg1"], imports[0].import_info.get_imported_names(context))
 
     def test_import_get_names_with_alias2(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import *\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -185,13 +178,11 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("import pkg", imports[0].get_import_statement())
 
     def test_simple_getting_used_imports2(self):
-        self.mod.write(
-            dedent("""\
-                import pkg
-                def a_func():
-                    print(pkg)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg
+            def a_func():
+                print(pkg)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
@@ -199,28 +190,24 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("import pkg", imports[0].get_import_statement())
 
     def test_getting_used_imports_for_nested_scopes(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                print(pkg1)
-                def a_func():
-                    pass
-                print(pkg1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1
+            print(pkg1)
+            def a_func():
+                pass
+            print(pkg1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod["a_func"].get_object())
         self.assertEqual(0, len(imports))
 
     def test_getting_used_imports_for_nested_scopes2(self):
-        self.mod.write(
-            dedent("""\
-                from pkg1 import mod1
-                def a_func():
-                    print(mod1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg1 import mod1
+            def a_func():
+                print(mod1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod["a_func"].get_object())
@@ -244,21 +231,17 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("", module_with_imports.get_changed_source())
 
     def test_simple_removing_unused_imports_for_froms(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import a_func, another_func
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import a_func, another_func
 
-                a_func()
-            """)
-        )
+            a_func()
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -272,30 +255,23 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_simple_removing_unused_imports_for_from_stars(self):
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import *
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import *
 
-            """)
-        )
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEqual("", module_with_imports.get_changed_source())
 
     def test_simple_removing_unused_imports_for_nested_modules(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                import pkg1.mod1
-                pkg1.mod1.a_func()"""
-            )
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            import pkg1.mod1
+            pkg1.mod1.a_func()"""))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -305,14 +281,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_functions_of_the_same_name(self):
-        self.mod.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def a_func():
-                    pass
-            """)
-        )
+        self.mod.write(dedent("""\
+            def a_func():
+                pass
+            def a_func():
+                pass
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -328,12 +302,10 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_removing_unused_imports_for_from_import_with_as(self):
         self.mod.write("a_var = 1\n")
-        self.mod1.write(
-            dedent("""\
-                from mod import a_var as myvar
-                a_var = myvar
-            """)
-        )
+        self.mod1.write(dedent("""\
+            from mod import a_var as myvar
+            a_var = myvar
+        """))
         pymod = self.project.get_pymodule(self.mod1)
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -368,15 +340,13 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("import pkg1.mod1\n", module_with_imports.get_changed_source())
 
     def test_adding_imports_no_pull_to_top(self):
-        self.mod.write(
-            dedent("""\
-                import pkg2.mod3
-                class A(object):
-                    pass
+        self.mod.write(dedent("""\
+            import pkg2.mod3
+            class A(object):
+                pass
 
-                import pkg2.mod2
-            """)
-        )
+            import pkg2.mod2
+        """))
         pymod = self.project.get_module("mod")
         self.project.prefs["pull_imports_to_top"] = False
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -395,14 +365,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_adding_from_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import a_func\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -414,14 +382,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_adding_to_star_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import *\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -432,14 +398,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_adding_star_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import a_func\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -450,14 +414,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_adding_imports_and_preserving_spaces_after_imports(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
+        self.mod.write(dedent("""\
+            import pkg1
 
 
-                print(pkg1)
-            """)
-        )
+            print(pkg1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_import(self.pkg2)
@@ -474,20 +436,16 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_not_changing_the_format_of_unchanged_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import (a_func,
-                    another_func)
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import (a_func,
+                another_func)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         self.assertEqual(
@@ -499,20 +457,16 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_not_changing_the_format_of_unchanged_imports2(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import (a_func)
-                a_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import (a_func)
+            a_func()
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -525,21 +479,17 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_reoccuring_names(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import *
-                from pkg1.mod1 import a_func
-                a_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import *
+            from pkg1.mod1 import a_func
+            a_func()
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -552,13 +502,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_reoccuring_names2(self):
-        self.mod.write(
-            dedent("""\
-                import pkg2.mod2
-                import pkg2.mod3
-                print(pkg2.mod2, pkg2.mod3)"""
-            )
-        )
+        self.mod.write(dedent("""\
+            import pkg2.mod2
+            import pkg2.mod3
+            print(pkg2.mod2, pkg2.mod3)"""))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -566,19 +513,16 @@ class ImportUtilsTest(unittest.TestCase):
             dedent("""\
                 import pkg2.mod2
                 import pkg2.mod3
-                print(pkg2.mod2, pkg2.mod3)"""
-            ),
-            module_with_imports.get_changed_source()
+                print(pkg2.mod2, pkg2.mod3)"""),
+            module_with_imports.get_changed_source(),
         )
 
     def test_removing_unused_imports_and_common_packages(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1.mod1
-                import pkg1
-                print(pkg1, pkg1.mod1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1.mod1
+            import pkg1
+            print(pkg1, pkg1.mod1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -591,13 +535,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_common_packages_reversed(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                import pkg1.mod1
-                print(pkg1, pkg1.mod1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1
+            import pkg1.mod1
+            print(pkg1, pkg1.mod1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
@@ -610,13 +552,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_common_packages2(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1.mod1
-                import pkg1.mod2
-                print(pkg1)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1.mod1
+            import pkg1.mod2
+            print(pkg1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -629,60 +569,46 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_froms(self):
-        self.mod1.write(
-            dedent("""\
-                def func1():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import func1
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def func1():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import func1
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEqual("", module_with_imports.get_changed_source())
 
     def test_removing_unused_imports_and_froms2(self):
-        self.mod1.write(
-            dedent("""\
-                def func1():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import func1
-                func1()"""
-            )
-        )
+        self.mod1.write(dedent("""\
+            def func1():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import func1
+            func1()"""))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEqual(
             dedent("""\
                 from pkg1.mod1 import func1
-                func1()"""
-            ),
+                func1()"""),
             module_with_imports.get_changed_source(),
         )
 
     def test_removing_unused_imports_and_froms3(self):
-        self.mod1.write(
-            dedent("""\
-                def func1():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import func1
-                def a_func():
-                    func1()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def func1():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import func1
+            def a_func():
+                func1()
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -696,20 +622,16 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_froms4(self):
-        self.mod1.write(
-            dedent("""\
-                def func1():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import func1
-                class A(object):
-                    def a_func(self):
-                        func1()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def func1():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import func1
+            class A(object):
+                def a_func(self):
+                    func1()
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -724,44 +646,34 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_unused_imports_and_getting_attributes(self):
-        self.mod1.write(
-            dedent("""\
-                class A(object):
-                    def f(self):
-                        pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import A
-                var = A().f()"""
-            )
-        )
+        self.mod1.write(dedent("""\
+            class A(object):
+                def f(self):
+                    pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import A
+            var = A().f()"""))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEqual(
             dedent("""\
                 from pkg1.mod1 import A
-                var = A().f()"""
-            ),
+                var = A().f()"""),
             module_with_imports.get_changed_source(),
         )
 
     def test_removing_unused_imports_function_parameters(self):
-        self.mod1.write(
-            dedent("""\
-                def func1():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                def a_func(pkg1):
-                    my_var = pkg1
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def func1():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            import pkg1
+            def a_func(pkg1):
+                my_var = pkg1
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -774,14 +686,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_trivial_expanding_star_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import *\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -789,14 +699,12 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("", module_with_imports.get_changed_source())
 
     def test_expanding_star_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
         self.mod.write("from pkg1.mod1 import *\na_func()\n")
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
@@ -824,20 +732,16 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_duplicate_imports_for_froms(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1 import a_func
-                from pkg1 import a_func, another_func
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1 import a_func
+            from pkg1 import a_func, another_func
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
@@ -847,18 +751,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transforming_froms_to_normal_changing_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import a_func
-                print(a_func)
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import a_func
+            print(a_func)
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -877,21 +777,17 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("import pkg1.mod1\npkg1.mod1.a_func()", changed_module)
 
     def test_transforming_froms_to_normal_for_multi_imports(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import *
-                a_func()
-                another_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import *
+            a_func()
+            another_func()
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -904,22 +800,18 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transform_froms_to_norm_for_multi_imports_inside_parens(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-                def another_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import (a_func,
-                    another_func)
-                a_func()
-                another_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+            def another_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import (a_func,
+                another_func)
+            a_func()
+            another_func()
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -932,18 +824,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transforming_froms_to_normal_from_stars(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import *
-                a_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import *
+            a_func()
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -956,14 +844,12 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_transforming_froms_to_normal_from_stars2(self):
         self.mod1.write("a_var = 10")
-        self.mod.write(
-            dedent("""\
-                import pkg1.mod1
-                from pkg1.mod1 import a_var
-                def a_func():
-                    print(pkg1.mod1, a_var)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1.mod1
+            from pkg1.mod1 import a_var
+            def a_func():
+                print(pkg1.mod1, a_var)
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -976,18 +862,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transforming_froms_to_normal_from_with_alias(self):
-        self.mod1.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
-        self.mod.write(
-            dedent("""\
-                from pkg1.mod1 import a_func as another_func
-                another_func()
-            """)
-        )
+        self.mod1.write(dedent("""\
+            def a_func():
+                pass
+        """))
+        self.mod.write(dedent("""\
+            from pkg1.mod1 import a_func as another_func
+            another_func()
+        """))
         pymod = self.project.get_module("mod")
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -999,18 +881,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transforming_froms_to_normal_for_relatives(self):
-        self.mod2.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
-        self.mod3.write(
-            dedent("""\
-                from mod2 import *
-                a_func()
-            """)
-        )
+        self.mod2.write(dedent("""\
+            def a_func():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from mod2 import *
+            a_func()
+        """))
         pymod = self.project.get_pymodule(self.mod3)
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual(
@@ -1043,12 +921,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_transform_relatives_imports_to_absolute_imports_for_froms(self):
-        self.mod3.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        self.mod3.write(dedent("""\
+            def a_func():
+                pass
+        """))
         self.mod2.write("from mod3 import a_func\n")
         pymod = self.project.get_pymodule(self.mod2)
         self.assertEqual(
@@ -1058,12 +934,10 @@ class ImportUtilsTest(unittest.TestCase):
 
     @testutils.only_for("2.5")
     def test_transform_rel_imports_to_abs_imports_for_new_relatives(self):
-        self.mod3.write(
-            dedent("""\
-                def a_func():
-                    pass
-            """)
-        )
+        self.mod3.write(dedent("""\
+            def a_func():
+                pass
+        """))
         self.mod2.write("from .mod3 import a_func\n")
         pymod = self.project.get_pymodule(self.mod2)
         self.assertEqual(
@@ -1105,12 +979,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_splitting_imports(self):
-        self.mod.write(
-            dedent("""\
-                from pkg1 import mod1
-                from pkg2 import mod2, mod3
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg1 import mod1
+            from pkg2 import mod2, mod3
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["split_imports"] = True
         self.assertEqual(
@@ -1123,13 +995,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_splitting_imports_no_pull_to_top(self):
-        self.mod.write(
-            dedent("""\
-                from pkg2 import mod3, mod4
-                from pkg1 import mod2
-                from pkg1 import mod1
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg2 import mod3, mod4
+            from pkg1 import mod2
+            from pkg1 import mod1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["split_imports"] = True
         self.project.prefs["pull_imports_to_top"] = False
@@ -1144,12 +1014,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_splitting_imports_with_filter(self):
-        self.mod.write(
-            dedent("""\
-                from pkg1 import mod1, mod2
-                from pkg2 import mod3, mod4
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg1 import mod1, mod2
+            from pkg2 import mod3, mod4
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["split_imports"] = True
 
@@ -1168,12 +1036,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_splitting_duplicate_imports(self):
-        self.mod.write(
-            dedent("""\
-                from pkg2 import mod1
-                from pkg2 import mod1, mod2
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg2 import mod1
+            from pkg2 import mod1, mod2
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["split_imports"] = True
         self.assertEqual(
@@ -1185,13 +1051,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_splitting_duplicate_imports2(self):
-        self.mod.write(
-            dedent("""\
-                from pkg2 import mod1, mod3
-                from pkg2 import mod1, mod2
-                from pkg2 import mod2, mod3
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg2 import mod1, mod3
+            from pkg2 import mod1, mod2
+            from pkg2 import mod2, mod3
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["split_imports"] = True
         self.assertEqual(
@@ -1204,13 +1068,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports(self):
-        self.mod.write(
-            dedent("""\
-                import mod
-                mod.a_var = 1
-                print(mod.a_var)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import mod
+            mod.a_var = 1
+            print(mod.a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1221,13 +1083,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports2(self):
-        self.mod1.write(
-            dedent("""\
-                import pkg1.mod1
-                pkg1.mod1.a_var = 1
-                print(pkg1.mod1.a_var)
-            """)
-        )
+        self.mod1.write(dedent("""\
+            import pkg1.mod1
+            pkg1.mod1.a_var = 1
+            print(pkg1.mod1.a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod1)
         self.assertEqual(
             dedent("""\
@@ -1238,13 +1098,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_with_as(self):
-        self.mod.write(
-            dedent("""\
-                import mod as mymod
-                mymod.a_var = 1
-                print(mymod.a_var)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import mod as mymod
+            mymod.a_var = 1
+            print(mymod.a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1255,13 +1113,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_froms(self):
-        self.mod1.write(
-            dedent("""\
-                from pkg1 import mod1
-                mod1.a_var = 1
-                print(mod1.a_var)
-            """)
-        )
+        self.mod1.write(dedent("""\
+            from pkg1 import mod1
+            mod1.a_var = 1
+            print(mod1.a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod1)
         self.assertEqual(
             dedent("""\
@@ -1272,13 +1128,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_froms_with_as(self):
-        self.mod1.write(
-            dedent("""\
-                from pkg1 import mod1 as mymod
-                mymod.a_var = 1
-                print(mymod.a_var)
-            """)
-        )
+        self.mod1.write(dedent("""\
+            from pkg1 import mod1 as mymod
+            mymod.a_var = 1
+            print(mymod.a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod1)
         self.assertEqual(
             dedent("""\
@@ -1289,13 +1143,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_froms2(self):
-        self.mod.write(
-            dedent("""\
-                from mod import a_var
-                a_var = 1
-                print(a_var)
-            """)
-        )
+        self.mod.write(dedent("""\
+            from mod import a_var
+            a_var = 1
+            print(a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1306,13 +1158,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_froms3(self):
-        self.mod.write(
-            dedent("""\
-                from mod import a_var
-                a_var = 1
-                print(a_var)
-            """)
-        )
+        self.mod.write(dedent("""\
+            from mod import a_var
+            a_var = 1
+            print(a_var)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1323,13 +1173,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_froms4(self):
-        self.mod.write(
-            dedent("""\
-                from mod import a_var as myvar
-                a_var = 1
-                print(myvar)
-            """)
-        )
+        self.mod.write(dedent("""\
+            from mod import a_var as myvar
+            a_var = 1
+            print(myvar)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1340,12 +1188,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_with_no_dot_after_mod(self):
-        self.mod.write(
-            dedent("""\
-                import mod
-                print(mod)
-            """)
-        )
+        self.mod.write(dedent("""\
+            import mod
+            print(mod)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1358,16 +1204,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_with_no_dot_after_mod2(self):
-        self.mod.write(
-            dedent("""\
-                import mod
-                a_var = 1
-                print(mod\\
-                     \\
-                     .var)
+        self.mod.write(dedent("""\
+            import mod
+            a_var = 1
+            print(mod\\
+                    \\
+                    .var)
 
-            """)
-        )
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1379,13 +1223,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_removing_self_imports_for_from_import_star(self):
-        self.mod.write(
-            dedent("""\
-                from mod import *
-                a_var = 1
-                print(myvar)
-            """)
-        )
+        self.mod.write(dedent("""\
+            from mod import *
+            a_var = 1
+            print(myvar)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1422,13 +1264,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_purely_alphabetically(self):
-        self.mod.write(
-            dedent("""\
-                from pkg2 import mod3 as mod0
-                import pkg2.mod2
-                import pkg1.mod1
-            """)
-        )
+        self.mod.write(dedent("""\
+            from pkg2 import mod3 as mod0
+            import pkg2.mod2
+            import pkg1.mod1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.project.prefs["sort_imports_alphabetically"] = True
         self.assertEqual(
@@ -1449,12 +1289,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_and_standard_modules(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                import sys
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1
+            import sys
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1466,13 +1304,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_and_standard_modules2(self):
-        self.mod.write(
-            dedent("""\
-                import sys
+        self.mod.write(dedent("""\
+            import sys
 
-                import time
-            """)
-        )
+            import time
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1488,12 +1324,10 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual("import sys\n", self.import_tools.sort_imports(pymod))
 
     def test_sorting_third_party(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                import a_third_party
-            """)
-        )
+        self.mod.write(dedent("""\
+            import pkg1
+            import a_third_party
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1505,12 +1339,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_only_third_parties(self):
-        self.mod.write(
-            dedent("""\
-                import a_third_party
-                a_var = 1
-            """)
-        )
+        self.mod.write(dedent("""\
+            import a_third_party
+            a_var = 1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1523,14 +1355,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_simple_handling_long_imports(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1.mod1
+        self.mod.write(dedent("""\
+            import pkg1.mod1
 
 
-                m = pkg1.mod1
-            """)
-        )
+            m = pkg1.mod1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1543,14 +1373,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_handling_long_imports_for_many_dots(self):
-        self.mod.write(
-            dedent("""\
-                import p1.p2.p3.m1
+        self.mod.write(dedent("""\
+            import p1.p2.p3.m1
 
 
-                m = p1.p2.p3.m1
-            """)
-        )
+            m = p1.p2.p3.m1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1563,14 +1391,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_handling_long_imports_for_their_length(self):
-        self.mod.write(
-            dedent("""\
-                import p1.p2.p3.m1
+        self.mod.write(dedent("""\
+            import p1.p2.p3.m1
 
 
-                m = p1.p2.p3.m1
-            """)
-        )
+            m = p1.p2.p3.m1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1583,14 +1409,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_handling_long_imports_for_many_dots2(self):
-        self.mod.write(
-            dedent("""\
-                import p1.p2.p3.m1
+        self.mod.write(dedent("""\
+            import p1.p2.p3.m1
 
 
-                m = p1.p2.p3.m1
-            """)
-        )
+            m = p1.p2.p3.m1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1603,14 +1427,12 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_handling_long_imports_with_one_letter_last(self):
-        self.mod.write(
-            dedent("""\
-                import p1.p2.p3.l
+        self.mod.write(dedent("""\
+            import p1.p2.p3.l
 
 
-                m = p1.p2.p3.l
-            """)
-        )
+            m = p1.p2.p3.l
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -1623,15 +1445,13 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_empty_removing_unused_imports_and_eating_blank_lines(self):
-        self.mod.write(
-            dedent("""\
-                import pkg1
-                import pkg2
+        self.mod.write(dedent("""\
+            import pkg1
+            import pkg2
 
 
-                print(pkg1)
-            """)
-        )
+            print(pkg1)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
@@ -1646,15 +1466,13 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_moving_to_top(self):
-        self.mod.write(
-            dedent("""\
-                import mod
-                def f():
-                    print(mod, pkg1, pkg2)
-                import pkg1
-                import pkg2
-            """)
-        )
+        self.mod.write(dedent("""\
+            import mod
+            def f():
+                print(mod, pkg1, pkg2)
+            import pkg1
+            import pkg2
+        """))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent("""\
@@ -1670,13 +1488,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_moving_to_top2(self):
-        self.mod.write(
-            dedent("""\
-                def f():
-                    print(mod)
-                import mod
-            """)
-        )
+        self.mod.write(dedent("""\
+            def f():
+                print(mod)
+            import mod
+        """))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent("""\
@@ -1715,16 +1531,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_moving_to_top_and_module_docs(self):
-        self.mod.write(
-            dedent('''\
-                """
-                docs
-                """
-                def f():
-                    print(mod)
-                import mod
-            ''')
-        )
+        self.mod.write(dedent('''\
+            """
+            docs
+            """
+            def f():
+                print(mod)
+            import mod
+        '''))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent('''\
@@ -1741,20 +1555,18 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_imports_moving_to_top_and_module_docs2(self):
-        self.mod.write(
-            dedent('''\
-                """
-                docs
-                """
+        self.mod.write(dedent('''\
+            """
+            docs
+            """
 
 
-                import bbb
-                import aaa
-                def f():
-                    print(mod)
-                import mod
-            ''')
-        )
+            import bbb
+            import aaa
+            def f():
+                print(mod)
+            import mod
+        '''))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent('''\
@@ -1776,18 +1588,16 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_get_changed_source_preserves_blank_lines(self):
-        self.mod.write(
-            dedent("""\
-                __author__ = "author"
+        self.mod.write(dedent("""\
+            __author__ = "author"
 
-                import aaa
+            import aaa
 
-                import bbb
+            import bbb
 
-                def f():
-                    print(mod)
-            """)
-        )
+            def f():
+                print(mod)
+        """))
         pymod = self.project.get_module("mod")
         module_with_imports = self.import_tools.module_imports(pymod)
         self.assertEqual(
@@ -1805,12 +1615,10 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_sorting_future_imports(self):
-        self.mod.write(
-            dedent("""\
-                import os
-                from __future__ import devision
-            """)
-        )
+        self.mod.write(dedent("""\
+            import os
+            from __future__ import devision
+        """))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent("""\
@@ -1995,11 +1803,9 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_organizing_indirect_all_star_import(self):
         self.mod1.write("some_name = 1")
-        self.mod2.write(
-            dedent("""\
-                __all__ = ['some_name', *imported_all]
-            """)
-        )
+        self.mod2.write(dedent("""\
+            __all__ = ['some_name', *imported_all]
+        """))
 
         code = expected = dedent("""\
             from mod1 import some_name
@@ -2012,12 +1818,10 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
     def test_customized_import_organization(self):
-        self.mod.write(
-            dedent("""\
-                import sys
-                import sys
-            """)
-        )
+        self.mod.write(dedent("""\
+            import sys
+            import sys
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             "import sys\n", self.import_tools.organize_imports(pymod, unused=False)
@@ -2031,16 +1835,14 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_customized_import_organization3(self):
-        self.mod.write(
-            dedent("""\
-                import sys
-                import mod
+        self.mod.write(dedent("""\
+            import sys
+            import mod
 
 
-                var = 1
-                print(mod.var)
-            """)
-        )
+            var = 1
+            print(mod.var)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2056,14 +1858,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_trivial_filtered_expand_stars(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
-        self.mod.write(
-            dedent("""\
-                from pkg1 import *
-                from pkg2 import *
+        self.mod.write(dedent("""\
+            from pkg1 import *
+            from pkg2 import *
 
-                print(var1, var2)
-            """)
-        )
+            print(var1, var2)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2084,14 +1884,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_filtered_expand_stars(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
-        self.mod.write(
-            dedent("""\
-                from pkg1 import *
-                from pkg2 import *
+        self.mod.write(dedent("""\
+            from pkg1 import *
+            from pkg2 import *
 
-                print(var1, var2)
-            """)
-        )
+            print(var1, var2)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2127,14 +1925,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_filtered_froms_to_normals(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
-        self.mod.write(
-            dedent("""\
-                from pkg1 import var1
-                from pkg2 import var2
+        self.mod.write(dedent("""\
+            from pkg1 import var1
+            from pkg2 import var2
 
-                print(var1, var2)
-            """)
-        )
+            print(var1, var2)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2158,14 +1954,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_filtered_froms_to_normals2(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
-        self.mod.write(
-            dedent("""\
-                from pkg1 import *
-                from pkg2 import *
+        self.mod.write(dedent("""\
+            from pkg1 import *
+            from pkg2 import *
 
-                print(var1, var2)
-            """)
-        )
+            print(var1, var2)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2178,15 +1972,13 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_filtered_handle_long_imports(self):
-        self.mod.write(
-            dedent("""\
-                import p1.p2.p3.m1
-                import pkg1.mod1
+        self.mod.write(dedent("""\
+            import p1.p2.p3.m1
+            import pkg1.mod1
 
 
-                m = p1.p2.p3.m1, pkg1.mod1
-            """)
-        )
+            m = p1.p2.p3.m1, pkg1.mod1
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2204,14 +1996,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_filtering_and_import_actions_with_more_than_one_phase(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
-        self.mod.write(
-            dedent("""\
-                from pkg1 import *
-                from pkg2 import *
+        self.mod.write(dedent("""\
+            from pkg1 import *
+            from pkg2 import *
 
-                print(var2)
-            """)
-        )
+            print(var2)
+        """))
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(
             dedent("""\
@@ -2223,13 +2013,11 @@ class ImportUtilsTest(unittest.TestCase):
         )
 
     def test_non_existent_module_and_used_imports(self):
-        self.mod.write(
-            dedent("""\
-                from does_not_exist import func
+        self.mod.write(dedent("""\
+            from does_not_exist import func
 
-                func()
-            """)
-        )
+            func()
+        """))
         pymod = self.project.get_module("mod")
 
         module_with_imports = self.import_tools.module_imports(pymod)

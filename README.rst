@@ -8,7 +8,8 @@
 
 |Build status badge| |Latest version badge| |Download count badge| |ReadTheDocs status badge|
 
-.. |Build status badge| image:: https://secure.travis-ci.org/python-rope/rope.svg
+.. |Build status badge| image:: https://github.com/python-rope/rope/actions/workflows/main.yml/badge.svg
+   :target: https://github.com/python-rope/rope/actions/workflows/main.yml
    :alt: Build Status
 
 .. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
@@ -41,17 +42,13 @@ releases.
 Getting Started
 ===============
 
+* `Documentatation <https://rope.readthedocs.io/en/latest/overview.html>`_
 * `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
-* `List of features <docs/rope.rst>`_
-* `Overview of some of rope's features <docs/overview.rst>`_
-* `Using as a library <docs/library.rst>`_
-* `Contributing <docs/contributing.rst>`_
-
-To change your project preferences edit
-``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
-the root folder of your project (this file is created the first time
-you open a project).
-
+* `Configuration <https://rope.readthedocs.io/en/latest/configuration.html>`_
+* `List of features <https://rope.readthedocs.io/en/latest/rope.html>`_
+* `Overview of some of rope's features <https://rope.readthedocs.io/en/latest/overview.html>`_
+* `Using as a library <https://rope.readthedocs.io/en/latest/library.html>`_
+* `Contributing <https://rope.readthedocs.io/en/latest/contributing.html>`_
 
 Why use Rope?
 =============
@@ -66,7 +63,7 @@ Why use Rope?
 Bug Reports
 ===========
 
-Send your bug reports and feature requests at `python-rope's issue tracker`_ in Github.
+Send your bug reports and feature requests at `python-rope's issue tracker`_ in GitHub.
 
 .. _`python-rope's issue tracker`: https://github.com/python-rope/rope/issues
 
@@ -74,7 +71,7 @@ Send your bug reports and feature requests at `python-rope's issue tracker`_ in 
 Maintainers
 ===========
 
-Current active maintainers of Rope are Matej Cepl (`@mcepl`_) and Lie Ryan (`@lieryan`_).
+Current active maintainer of Rope is Lie Ryan (`@lieryan`_).
 
 Special Thanks
 ==============
@@ -82,6 +79,7 @@ Special Thanks
 Many thanks the following people:
 
 - Ali Gholami Rudi (`@aligrudi`_) for initially creating the initial Rope project and most of Rope's code
+- Matej Cepl (`@mcepl`_) as former long-time Rope maintainer
 - Nick Smith <nicks@fastmail.fm> (`@soupytwist`_) as former Rope maintainer
 - `all of our current and former contributors`_
 - authors of editor integrations
@@ -98,11 +96,6 @@ License
 This program is under the terms of LGPL v3+ (GNU Lesser General Public License).
 Have a look at `COPYING`_ for more information.
 
-
-.. _`docs/rope.rst`: docs/rope.html
-.. _`docs/overview.rst`: docs/overview.html
-.. _`docs/contributing.rst`: docs/contributing.html
-.. _`docs/library.rst`: docs/library.html
 .. _`COPYING`: COPYING
 
    

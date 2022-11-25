@@ -4,10 +4,7 @@ import sys
 import logging
 
 logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.project
 from rope.contrib import generate
@@ -77,7 +74,7 @@ def _remove_recursively(path):
 
 
 def parse_version(version):
-    return tuple(map(int, version.split('.')))
+    return tuple(map(int, version.split(".")))
 
 
 def only_for(version):

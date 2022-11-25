@@ -4,17 +4,18 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: Test - ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Test - ${{ matrix.python-version }} - ${{matrix.os}}
+    runs-on: ${{matrix.os}}
 
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.0-beta.3']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -22,14 +23,4 @@ jobs:
         python -m pip install -e .[dev] 
     - name: Test with pytest
       run: |
-        pytest -v
-
-    # === NOTIFICATIONS ===
-    # https://github.com/rectalogic/notify-irc
-    - name: Dump event info
-      if: always()
-      # Usually unnecessary, but insanely useful if IRC notifications fail.
-      run: |
-        cat <<"EOF"
-        ${{ toJSON(github.event) }}
-        EOF
+        python -m pytest -v

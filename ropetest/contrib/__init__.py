@@ -1,9 +1,6 @@
 import sys
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import ropetest.contrib.autoimporttest
 import ropetest.contrib.changestacktest

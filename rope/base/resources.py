@@ -33,6 +33,7 @@ import warnings
 from rope.base import change
 from rope.base import exceptions
 from rope.base import fscommands
+from pathlib import Path
 
 
 class Resource:
@@ -93,6 +94,11 @@ class Resource:
     def real_path(self):
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.path)
+
+    @property
+    def pathlib(self):
+        """Return the file as a pathlib path."""
+        return Path(self.real_path)
 
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
@@ -254,9 +260,7 @@ class _ResourceMatcher:
             if pattern.match(resource.path):
                 return True
         path = os.path.join(resource.project.address, *resource.path.split("/"))
-        if os.path.islink(path):
-            return True
-        return False
+        return os.path.islink(path)
 
     @property
     def compiled_patterns(self):

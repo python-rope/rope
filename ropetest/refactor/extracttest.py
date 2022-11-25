@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.codeanalyze
 import rope.base.exceptions
@@ -1762,7 +1759,69 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_extract_method_and_augmentedj_assignment_in_try_block(self):
+    def test_extract_method_and_augmented_assignment_nested_1(self):
+        code = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                print(1)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                g()
+
+            def g():
+                print(1)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_nested_2(self):
+        code = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                my_var[0][0] += 1
+                print(my_var)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                my_var = [[0], [1], [2]]
+                g(my_var)
+                print(my_var)
+
+            def g(my_var):
+                my_var[0][0] += 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_var_to_read_in_lhs(self):
+        code = dedent("""\
+            def f():
+                var_to_read = 0
+                my_var = [0, 1, 2]
+                my_var[var_to_read] += 1
+                print(my_var)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                var_to_read = 0
+                my_var = [0, 1, 2]
+                g(my_var, var_to_read)
+                print(my_var)
+
+            def g(my_var, var_to_read):
+                my_var[var_to_read] += 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_and_augmented_assignment_in_try_block(self):
         code = dedent("""\
             def f():
                 any_subscriptable = [0]
@@ -2708,6 +2767,27 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_with_generator_2(self):
+        code = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum(x for x in y)
+        """)
+        extract_target = "x for x in y"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_a")
+        expected = dedent("""\
+            def f():
+                y = [1,2,3,4]
+                a = sum(_a(y))
+
+            def _a(y):
+                return (x for x in y)
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_with_set_comprehension(self):
         code = dedent("""\
             def f():
@@ -3046,7 +3126,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_async_with_simple(self):
         code = dedent("""\
             async def afunc():
@@ -3065,7 +3145,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for_versions_higher('3.8')
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_method_containing_async_with(self):
         code = dedent("""\
             async def afunc():

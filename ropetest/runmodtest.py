@@ -1,10 +1,7 @@
 import os
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 
 from rope.base import exceptions

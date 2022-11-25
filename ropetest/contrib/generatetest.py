@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.base import exceptions
 from rope.contrib import generate
@@ -130,9 +127,9 @@ class GenerateTest(unittest.TestCase):
 
                     attr = None
                 c = C()
-                a_var = c.attr"""
-            ),
-            self.mod.read(),)
+                a_var = c.attr"""),
+            self.mod.read(),
+        )
 
     def test_generating_variable_in_classes_removing_pass(self):
         code = dedent("""\
@@ -149,9 +146,9 @@ class GenerateTest(unittest.TestCase):
 
                     attr = None
                 c = C()
-                a_var = c.attr"""
-            ),
-            self.mod.read(),)
+                a_var = c.attr"""),
+            self.mod.read(),
+        )
 
     def test_generating_variable_in_packages(self):
         code = "import pkg\na = pkg.a\n"
@@ -368,12 +365,10 @@ class GenerateTest(unittest.TestCase):
         )
 
     def test_generating_calls_in_other_modules(self):
-        self.mod2.write(
-            dedent("""\
-                class C(object):
-                    pass
-            """)
-        )
+        self.mod2.write(dedent("""\
+            class C(object):
+                pass
+        """))
         code = dedent("""\
             import mod2
             c = mod2.C()

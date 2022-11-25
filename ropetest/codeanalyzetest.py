@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.evaluate
 from rope.base import libutils
@@ -47,8 +44,7 @@ class SourceLinesAdapterTest(unittest.TestCase):
 class WordRangeFinderTest(unittest.TestCase):
     def _find_primary(self, code, offset):
         word_finder = worder.Worder(code)
-        result = word_finder.get_primary_at(offset)
-        return result
+        return word_finder.get_primary_at(offset)
 
     def _annotated_code(self, annotated_code):
         """
@@ -346,7 +342,7 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEqual("(4 + 1).x", result)
 
-    # XXX: cancatenated string literals
+    # XXX: concatenated string literals
     def xxx_test_getting_primary_cancatenating_strs(self):
         code = 's = "a"\n"b" "c"\n'
         result = self._find_primary(code, len(code) - 2)

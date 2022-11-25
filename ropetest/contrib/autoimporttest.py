@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from rope.contrib.autoimport import sqlite as autoimport
 from ropetest import testutils
@@ -52,9 +49,7 @@ class AutoImportTest(unittest.TestCase):
         self.mod2.write("myvar = None\n")
         self.importer.update_resource(self.mod1)
         self.importer.update_resource(self.mod2)
-        self.assertEqual(
-            {"mod1", "pkg.mod2"}, set(self.importer.get_modules("myvar"))
-        )
+        self.assertEqual({"mod1", "pkg.mod2"}, set(self.importer.get_modules("myvar")))
 
     def test_trivial_insertion_line(self):
         result = self.importer.find_insertion_line("")
