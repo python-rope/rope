@@ -1,10 +1,7 @@
 import sys
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences

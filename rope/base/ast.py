@@ -3,15 +3,10 @@ from ast import *
 
 from rope.base import fscommands
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 
 def parse(source, filename="<string>"):
     # NOTE: the raw string should be given to `compile` function
-    if isinstance(source, unicode):
+    if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
     if b"\r" in source:
         source = source.replace(b"\r\n", b"\n").replace(b"\r", b"\n")

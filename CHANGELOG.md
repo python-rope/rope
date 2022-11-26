@@ -1,8 +1,18 @@
 # **Upcoming release**
 
-- #492 Feat: Global configuration support
-- #509 Fix read/write analysis of the left-hand side of an augmented assignment
-- #522 Implement patchedast parsing of MatchMapping
+- #533 Refactoring to Remove usage of unicode type
+
+# Release 1.5.1
+
+- #531 Add alternative way to retrieve version number from pyproject.toml
+
+# Release 1.5.0
+
+- #492 Feat: Global configuration support (@bagel897)
+- #519 Move pytest to pyproject.toml (@gliptak, @bagel897)
+- #509 Fix read/write analysis of the left-hand side of an augmented assignment (@lieryan)
+- #522 Implement patchedast parsing of MatchMapping (@lieryan)
+- #514 Fix inlining dictionary with inline comment (@lieryan)
 
 # Release 1.4.0
 

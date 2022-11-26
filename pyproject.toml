@@ -20,7 +20,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Topic :: Software Development',
 ]
-version = '1.4.0'
+version = '1.5.1'
 dependencies = ['pytoolconfig[global] >= 1.2.2']
 
 [[project.authors]]
@@ -36,6 +36,7 @@ text = 'LGPL-3.0-or-later'
 
 [project.urls]
 Source = 'https://github.com/python-rope/rope'
+Documentation = 'https://rope.readthedocs.io/'
 
 [project.optional-dependencies]
 doc = [
@@ -74,9 +75,19 @@ target-version = [
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
 
+[tool.pytest.ini_options]
+
+python_files = [
+    "*test.py",
+    "__init__.py",
+]
+
+markers = [
+    "time_limit: sets a maximum amount of time the test can run",
+]
+
 [build-system]
 requires = [
     'setuptools',
-    'setuptools-scm',
 ]
 build-backend = 'setuptools.build_meta'

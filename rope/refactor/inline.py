@@ -17,10 +17,12 @@
 #  but it should be 200.
 
 import re
+from typing import List
 
 import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import (
+    ast,
     pynames,
     pyobjects,
     codeanalyze,
@@ -353,15 +355,25 @@ class InlineParameter(_Inliner):
         return "parameter"
 
 
-def _join_lines(lines):
-    definition_lines = []
-    for unchanged_line in lines:
-        line = unchanged_line.strip()
-        if line.endswith("\\"):
-            line = line[:-1].strip()
-        definition_lines.append(line)
-    joined = " ".join(definition_lines)
-    return joined
+def _join_lines(lines: List[str]) -> str:
+    return "\n".join(lines)
+
+
+class _ComplexExpressionVisitor:
+    def __init__(self):
+        self.is_complex_expression = False
+
+    def _Set(self, node):
+        self.is_complex_expression = True
+
+    def _List(self, node):
+        self.is_complex_expression = True
+
+    def _Tuple(self, node):
+        self.is_complex_expression = True
+
+    def _Dict(self, node):
+        self.is_complex_expression = True
 
 
 class _DefinitionGenerator:
@@ -477,7 +489,7 @@ class _DefinitionGenerator:
                         self._check_nothing_after_return(source, match.end("return"))
                         beg_idx = match.end("return")
                         returned = _join_lines(
-                            source[beg_idx : len(source)].splitlines()
+                            source[beg_idx : len(source)].lstrip().splitlines(),
                         )
                         last_changed = len(source)
                     else:
@@ -641,7 +653,7 @@ def _getvardef(pymodule, pyname):
     lines = pymodule.lines
     start, end = _assigned_lineno(pymodule, pyname)
     definition_with_assignment = _join_lines(
-        [lines.get_line(n) for n in range(start, end + 1)]
+        [lines.get_line(n) for n in range(start, end + 1)],
     )
     if assignment.levels:
         raise rope.base.exceptions.RefactoringError("Cannot inline tuple assignments.")

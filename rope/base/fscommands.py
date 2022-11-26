@@ -12,11 +12,10 @@ import shutil
 import subprocess
 
 import rope.base.utils.pycompat as pycompat
+import typing
 
-try:
-    unicode
-except NameError:
-    unicode = str
+
+FileContent = typing.NewType("FileContent", bytes)
 
 
 def create_fscommands(root):
@@ -214,19 +213,18 @@ def _execute(args, cwd=None):
     return process.returncode
 
 
-def unicode_to_file_data(contents, encoding=None, newlines=None):
-    if not isinstance(contents, unicode):
-        return contents
+def unicode_to_file_data(contents: str, encoding=None, newlines=None) -> FileContent:
+    assert isinstance(contents, str)
     if newlines and newlines != "\n":
         contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
     if encoding is not None:
-        return contents.encode(encoding)
+        return FileContent(contents.encode(encoding))
     try:
-        return contents.encode()
+        return FileContent(contents.encode())
     except UnicodeEncodeError:
-        return contents.encode("utf-8")
+        return FileContent(contents.encode("utf-8"))
 
 
 def file_data_to_unicode(data, encoding=None):
@@ -242,7 +240,7 @@ def file_data_to_unicode(data, encoding=None):
 
 
 def _decode_data(data, encoding):
-    if isinstance(data, unicode):
+    if isinstance(data, str):
         return data
     if encoding is None:
         encoding = read_str_coding(data)

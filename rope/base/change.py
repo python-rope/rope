@@ -2,9 +2,11 @@ import datetime
 import difflib
 import os
 import time
+from typing import Union
 
 import rope.base.fscommands
-from rope.base import taskhandle, exceptions, utils
+from rope.base import exceptions, taskhandle, utils
+from rope.base.fscommands import FileContent
 
 
 class Change:
@@ -329,11 +331,15 @@ class _ResourceOperations:
             return self.direct_commands
         return self.fscommands
 
-    def write_file(self, resource, contents):
-        data = rope.base.fscommands.unicode_to_file_data(
-            contents,
-            newlines=resource.newlines,
-        )
+    def write_file(self, resource, contents: Union[str, FileContent]):
+        data: FileContent
+        if not isinstance(contents, bytes):
+            data = rope.base.fscommands.unicode_to_file_data(
+                contents,
+                newlines=resource.newlines,
+            )
+        else:
+            data = contents
         fscommands = self._get_fscommands(resource)
         fscommands.write(resource.real_path, data)
         for observer in list(self.project.observers):

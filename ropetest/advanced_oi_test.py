@@ -2,10 +2,7 @@ from textwrap import dedent
 
 from rope.base.builtins import Str
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.libutils
 import rope.base.oi

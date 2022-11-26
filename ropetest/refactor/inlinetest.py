@@ -1,9 +1,6 @@
 from textwrap import dedent
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 import rope.base.exceptions
 from rope.refactor import inline
@@ -61,7 +58,13 @@ class InlineTest(unittest.TestCase):
             another_var = a_var
         """)
         refactored = self._inline(code, code.index("a_var") + 1)
-        self.assertEqual("another_var = (10 + 10)\n", refactored)
+        self.assertEqual(
+            dedent("""\
+                another_var = (10 +
+                 10)
+            """),
+            refactored,
+        )
 
     def test_implicit_continuation(self):
         code = dedent("""\
@@ -70,7 +73,13 @@ class InlineTest(unittest.TestCase):
             another_var = a_var
         """)
         refactored = self._inline(code, code.index("a_var") + 1)
-        self.assertEqual("another_var = 10 + 10\n", refactored)
+        self.assertEqual(
+            dedent("""\
+                another_var = 10 +\\
+                       10
+            """),
+            refactored,
+        )
 
     def test_inlining_at_the_end_of_input(self):
         code = dedent("""\
@@ -757,7 +766,14 @@ class InlineTest(unittest.TestCase):
             a = a_func()
         """))
         self._inline2(self.mod, self.mod.read().index("a_func") + 1)
-        self.assertEqual("a = 1 + 2\n", self.mod.read())
+        self.assertEqual(
+            "a = 1\\\n    + 2\n",
+            dedent("""\
+                a = 1\\
+                    + 2
+            """),
+            self.mod.read(),
+        )
 
     def test_a_function_with_pass_body(self):
         self.mod.write(dedent("""\
@@ -1395,3 +1411,18 @@ class InlineTest(unittest.TestCase):
         """))
         self._inline2(self.mod, self.mod.read().index("a_func") + 1)
         self.assertEqual("print(1, 3)\n", self.mod.read())
+
+    def test_dictionary_with_inline_comment(self):
+        code = dedent("""\
+            myvar = {
+                "key": "value",  # noqa
+            }
+            print(myvar)
+        """)
+        refactored = self._inline(code, code.index("myvar") + 1)
+        expected = dedent("""\
+            print({
+                "key": "value",  # noqa
+            })
+        """)
+        self.assertEqual(expected, refactored)
