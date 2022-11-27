@@ -287,7 +287,8 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
             "        for i in self.a_attr.values():\n"
             "            i.is_a"
         )
-        self._assist(code)
+        result = self._assist(code)
+        self.assertEqual(result, [])
 
     def test_hint_invalid_syntax(self):
         code = (
@@ -297,7 +298,8 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
             "        for i in self.a_attr.values():\n"
             "            i.is_a"
         )
-        self._assist(code)
+        result = self._assist(code)
+        self.assertEqual(result, [])
 
 
 class DocstringNoneAssignmentHintingTest(AbstractAssignmentHintingTest):
