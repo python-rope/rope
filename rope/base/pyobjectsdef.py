@@ -1,4 +1,3 @@
-from rope.base.pynames import DefinedName
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -461,8 +460,8 @@ class _ScopeVisitor(_ExpressionVisitor):
         pass
 
     def _For(self, node):
-        names = self._update_evaluated(
-            node.target, node.iter, ".__iter__().next()"  # noqa
+        self._update_evaluated(
+            node.target, node.iter, ".__iter__().next()"
         )
         for child in node.body + node.orelse:
             ast.walk(child, self)

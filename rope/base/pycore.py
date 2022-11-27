@@ -1,6 +1,5 @@
 import bisect
 import difflib
-import sys
 import warnings
 
 import rope.base.libutils
@@ -15,7 +14,6 @@ from rope.base import pyobjectsdef
 from rope.base import stdmods
 from rope.base import taskhandle
 from rope.base import utils
-from rope.base.exceptions import ModuleNotFoundError
 
 
 class PyCore:
