@@ -1,5 +1,6 @@
 import unittest
 from textwrap import dedent
+from textwrap import dedent, indent
 
 import pytest
 
@@ -83,6 +84,10 @@ class DocstringReturnHintingTest(AbstractHintingTest):
         self.assert_completion_in_result("is_alive", "attribute", result)
 
 
+def fix_indents(hint):
+    return indent(hint, " " * 12).strip()
+
+
 class AbstractAssignmentHintingTest(AbstractHintingTest):
     def _make_class_hint(self, type_str):
         raise NotImplementedError
@@ -91,190 +96,181 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
         raise NotImplementedError
 
     def test_hint_attr(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("threading.Thread")
-            + "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("threading.Thread"))}
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hierarchical_hint_attr(self):
-        code = (
-            "class ISample(object):\n"
-            + self._make_class_hint("threading.Thread")
-            + "\n\n"
-            "class Sample(ISample):\n"
-            "    a_attr = None\n"
-            "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class ISample(object):
+                {fix_indents(self._make_class_hint("threading.Thread"))}
+
+
+            class Sample(ISample):
+                a_attr = None
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_defined_by_constructor(self):
-        code = (
-            "class Sample(object):\n"
-            "    def __init__(self, arg):\n"
-            + self._make_constructor_hint("threading.Thread")
-            + "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                def __init__(self, arg):
+                    {fix_indents(self._make_constructor_hint("threading.Thread"))}
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_attr_redefined_by_constructor(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("threading.Thread")
-            + "    def __init__(self):\n"
-            "        self.a_attr = None\n"
-            "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("threading.Thread"))}
+                def __init__(self):
+                    self.a_attr = None
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hierarchical_hint_attr_redefined_by_constructor(self):
-        code = (
-            "class ISample(object):\n"
-            + self._make_class_hint("threading.Thread")
-            + "\n\n"
-            "class Sample(ISample):\n"
-            "    def __init__(self):\n"
-            "        self.a_attr = None\n"
-            "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class ISample(object):
+                {fix_indents(self._make_class_hint("threading.Thread"))}
+
+
+            class Sample(ISample):
+                def __init__(self):
+                    self.a_attr = None
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_attr_for_pre_defined_type(self):
-        code = (
-            "class Other(object):\n"
-            "    def is_alive(self):\n"
-            "        pass\n"
-            "\n\n"
-            "class Sample(object):\n"
-            + self._make_class_hint("Other")
-            + "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class Other(object):
+                def is_alive(self):
+                    pass
+
+
+            class Sample(object):
+                {fix_indents(self._make_class_hint("Other"))}
+                def a_method(self):
+                    self.a_attr.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_attr_for_post_defined_type(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("Other")
-            + "    def a_method(self):\n"
-            "        self.a_attr.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("Other"))}
+                def a_method(self):
+                    self.a_attr.is_a""")
         offset = len(code)
-        code += (
-            "\n\n" "class Other(object):\n" "    def is_alive(self):\n" "        pass\n"
-        )
+        code += dedent(f"""\
+
+
+            class Other(object):
+                def is_alive(self):
+                    pass
+        """)
         result = self._assist(code, offset)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_list(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("list[threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr:\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("list[threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr:
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_tuple(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("tuple[threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr:\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("tuple[threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr:
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_set(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("set[threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr:\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("set[threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr:
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_iterable(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("collections.Iterable[threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr:\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("collections.Iterable[threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr:
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_iterator(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("collections.Iterator[threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr:\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("collections.Iterator[threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr:
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_dict_key(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("dict[str, threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr.keys():\n"
-            "            i.sta"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("dict[str, threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr.keys():
+                        i.sta""")
         result = self._assist(code)
         self.assert_completion_in_result("startswith", "builtin", result)
 
     def test_hint_parametrized_dict_value(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("dict[str, threading.Thread]")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr.values():\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("dict[str, threading.Thread]"))}
+                def a_method(self):
+                    for i in self.a_attr.values():
+                        i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_parametrized_nested_tuple_list(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("tuple[list[threading.Thread]]")
-            + "    def a_method(self):\n"
-            "        for j in self.a_attr:\n"
-            "            for i in j:\n"
-            "                i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("tuple[list[threading.Thread]]"))}
+                def a_method(self):
+                    for j in self.a_attr:
+                        for i in j:
+                            i.is_a""")
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
     def test_hint_or(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("str | threading.Thread")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr.values():\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("str | threading.Thread"))}
+                def a_method(self):
+                    for i in self.a_attr.values():
+                        i.is_a""")
         result = self._assist(code)
         try:
             # Be sure, there isn't errors currently
@@ -283,64 +279,84 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
             pytest.xfail("failing configuration (but should work)")
 
     def test_hint_nonexistent(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("sdfdsf.asdfasdf.sdfasdf.Dffg")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr.values():\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("sdfdsf.asdfasdf.sdfasdf.Dffg"))}
+                def a_method(self):
+                    for i in self.a_attr.values():
+                        i.is_a""")
         result = self._assist(code)
         self.assertEqual(result, [])
 
     def test_hint_invalid_syntax(self):
-        code = (
-            "class Sample(object):\n"
-            + self._make_class_hint("sdf | & # &*")
-            + "    def a_method(self):\n"
-            "        for i in self.a_attr.values():\n"
-            "            i.is_a"
-        )
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("sdf | & # &*"))}
+                def a_method(self):
+                    for i in self.a_attr.values():
+                        i.is_a""")
         result = self._assist(code)
         self.assertEqual(result, [])
 
 
 class DocstringNoneAssignmentHintingTest(AbstractAssignmentHintingTest):
     def _make_class_hint(self, type_str):
-        return '    """:type a_attr: ' + type_str + '"""\n' "    a_attr = None\n"
+        hint = dedent(f'''\
+            """:type a_attr: {type_str}"""
+            a_attr = None
+        ''')
+        return indent(hint, " " * 4)
 
     def _make_constructor_hint(self, type_str):
-        return (
-            '        """:type arg: ' + type_str + '"""\n' "        self.a_attr = arg\n"
-        )
+        hint = dedent(f'''\
+            """:type arg: {type_str}"""
+            self.a_attr = arg
+        ''')
+        return indent(hint, " " * 8)
 
 
 class DocstringNotImplementedAssignmentHintingTest(AbstractAssignmentHintingTest):
     def _make_class_hint(self, type_str):
-        return (
-            '    """:type a_attr: ' + type_str + '"""\n' "    a_attr = NotImplemented\n"
-        )
+        hint = dedent(f'''\
+            """:type a_attr: {type_str}"""
+            a_attr = NotImplemented
+        ''')
+        return indent(hint, " " * 4)
 
     def _make_constructor_hint(self, type_str):
-        return (
-            '        """:type arg: ' + type_str + '"""\n' "        self.a_attr = arg\n"
-        )
+        hint = dedent(f'''\
+            """:type arg: {type_str}"""
+            self.a_attr = arg
+        ''')
+        return indent(hint, " " * 8)
 
 
 class PEP0484CommentNoneAssignmentHintingTest(AbstractAssignmentHintingTest):
     def _make_class_hint(self, type_str):
-        return "    a_attr = None  # type: " + type_str + "\n"
+        hint = dedent(f"""\
+            a_attr = None  # type: {type_str}
+        """)
+        return indent(hint, " " * 4)
 
     def _make_constructor_hint(self, type_str):
-        return "        self.a_attr = None  # type: " + type_str + "\n"
+        hint = dedent(f"""\
+            self.a_attr = None  # type: {type_str}
+        """)
+        return indent(hint, " " * 8)
 
 
 class PEP0484CommentNotImplementedAssignmentHintingTest(AbstractAssignmentHintingTest):
     def _make_class_hint(self, type_str):
-        return "    a_attr = NotImplemented  # type: " + type_str + "\n"
+        hint = dedent(f"""\
+            a_attr = NotImplemented  # type: {type_str}
+        """)
+        return indent(hint, " " * 4)
 
     def _make_constructor_hint(self, type_str):
-        return "        self.a_attr = NotImplemented  # type: " + type_str + "\n"
+        hint = dedent(f"""\
+            self.a_attr = NotImplemented  # type: {type_str}
+        """)
+        return indent(hint, " " * 8)
 
 
 class EvaluateTest(unittest.TestCase):
