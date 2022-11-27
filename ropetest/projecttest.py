@@ -1,8 +1,7 @@
 import os.path
 import shutil
 from textwrap import dedent
-
-import pytest
+import unittest
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
@@ -10,9 +9,6 @@ from rope.base.libutils import path_to_resource
 from rope.base.project import Project, NoProject, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
-
-
-import unittest
 
 
 class ProjectTest(unittest.TestCase):
@@ -705,7 +701,7 @@ class ResourceObserverTest(unittest.TestCase):
     def test_revalidating_folders(self):
         root = self.project.root
         my_folder = root.create_folder("myfolder")
-        my_file = my_folder.create_file("myfile.txt")  # noqa
+        my_file = my_folder.create_file("myfile.txt")
         sample_observer = _SampleObserver()
         self.project.add_observer(
             FilteredResourceObserver(sample_observer, [my_folder])
@@ -714,6 +710,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.project.validate(root)
         self.assertEqual(my_folder, sample_observer.last_removed)
         self.assertEqual(1, sample_observer.change_count)
+        self.assertTrue(my_file is not None)
 
     def test_removing_and_adding_resources_to_filtered_observer(self):
         my_file = self.project.root.create_file("my_file.txt")
@@ -812,7 +809,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEqual(1, sample_observer.change_count)
 
     def test_changes_and_adding_resources(self):
-        root = self.project.root  # noqa
+        # root = self.project.root
         file1 = self.project.get_file("file1.txt")
         file2 = self.project.get_file("file2.txt")
         file1.create()
@@ -826,7 +823,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEqual((file1, file2), sample_observer.last_moved)
 
     def test_validating_get_files_list(self):
-        root = self.project.root  # noqa
+        # root = self.project.root
         self.assertEqual(0, len(self.project.get_files()))
         file = open(os.path.join(self.project.address, "myfile.txt"), "w")
         file.close()
@@ -1040,8 +1037,9 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(
             ignored_resources=["myfile.txt"], ropefolder=None
         )
-        myfile = self.project.root.create_file("myfile.txt")  # noqa
+        myfile = self.project.root.create_file("myfile.txt")
         self.assertEqual(0, len(self.project.get_files()))
+        self.assertTrue(myfile is not None)
 
     def test_setting_ignored_resources_patterns(self):
         self.project = testutils.sample_project(ignored_resources=["m?file.*"])
@@ -1162,7 +1160,8 @@ class RopeFolderTest(unittest.TestCase):
         )
         mod = testutils.create_module(self.project, "mod")
         mod.write("xyz print")
-        pymod = self.project.get_pymodule(mod)  # noqa
+        pymod = self.project.get_pymodule(mod)
+        self.assertTrue(pymod is not None)
 
     def test_compressed_history(self):
         self.project = testutils.sample_project(compress_history=True)
