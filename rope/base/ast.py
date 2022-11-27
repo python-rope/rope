@@ -22,7 +22,7 @@ def parse(source, filename="<string>"):
         raise error
 
 
-def walk(node, walker):
+def walk(node, walker) -> None:
     """Walk the syntax tree"""
     method_name = "_" + node.__class__.__name__
     method = getattr(walker, method_name, None)
@@ -31,7 +31,8 @@ def walk(node, walker):
             # In python < 2.7 ``node.module == ''`` for relative imports
             # but for python 2.7 it is None. Generalizing it to ''.
             node.module = ""
-        return method(node)
+        method(node)
+        return
     for child in get_child_nodes(node):
         walk(child, walker)
 
