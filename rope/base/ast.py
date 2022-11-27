@@ -1,5 +1,5 @@
-import ast
-from ast import *
+import ast  # noqu
+from ast import *  # noqa
 
 from rope.base import fscommands
 

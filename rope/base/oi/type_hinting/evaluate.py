@@ -267,7 +267,7 @@ def led(self, left, parser):
 
 
 @method(symbol("["))
-def evaluate(self, pyobject):
+def evaluate(self, pyobject):  # noqa
     return utils.parametrize_type(
         self.first.evaluate(pyobject), *[i.evaluate(pyobject) for i in self.second]
     )
@@ -275,7 +275,7 @@ def evaluate(self, pyobject):
 
 # Anonymous Function Calls
 @method(symbol("("))
-def nud(self, parser):
+def nud(self, parser):  # noqa
     self.second = []
     if parser.token.name != ")":
         while 1:
@@ -291,7 +291,7 @@ def nud(self, parser):
 
 # Function Calls
 @method(symbol("("))
-def led(self, left, parser):
+def led(self, left, parser):  # noqa
     self.first = left
     self.second = []
     if parser.token.name != ")":
@@ -307,14 +307,14 @@ def led(self, left, parser):
 
 
 @method(symbol("("))
-def evaluate(self, pyobject):
+def evaluate(self, pyobject):  # noqa
     # TODO: Implement me
     raise NotImplementedError
 
 
 @method(symbol("or"))
 @method(symbol("|"))
-def evaluate(self, pyobject):
+def evaluate(self, pyobject):  # noqa
     # TODO: Implement me
     raise NotImplementedError
 
@@ -354,4 +354,4 @@ class Evaluator:
         return ast.evaluate(pyobject)
 
 
-evaluate = Evaluator()
+evaluate = Evaluator()  # noqa
