@@ -47,6 +47,7 @@ monitoring the progress of refactorings.
 """
 from rope.refactor.importutils import ImportOrganizer  # essential.
 from rope.refactor.topackage import ModuleToPackage  # essential.
+
 assert ImportOrganizer
 assert ModuleToPackage
 
