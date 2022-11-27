@@ -22,7 +22,6 @@ from typing import List
 import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import (
-    ast,
     pynames,
     pyobjects,
     codeanalyze,
