@@ -1,10 +1,10 @@
+import unittest
 from textwrap import dedent
 
-import unittest
+import pytest
 
-
-from rope.contrib.codeassist import code_assist
 from rope.base.oi.type_hinting import evaluate
+from rope.contrib.codeassist import code_assist
 from ropetest import testutils
 
 
@@ -276,8 +276,11 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
             "            i.is_a"
         )
         result = self._assist(code)
-        # Be sure, there isn't errors currently
-        # self.assert_completion_in_result('is_alive', 'attribute', result)
+        try:
+            # Be sure, there isn't errors currently
+            self.assert_completion_in_result('is_alive', 'attribute', result)
+        except AssertionError as e:
+            pytest.xfail("failing configuration (but should work)")
 
     def test_hint_nonexistent(self):
         code = (
