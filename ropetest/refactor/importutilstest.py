@@ -21,8 +21,10 @@ class ImportUtilsTest(unittest.TestCase):
         p1 = testutils.create_package(self.project, "p1")
         p2 = testutils.create_package(self.project, "p2", p1)
         p3 = testutils.create_package(self.project, "p3", p2)
-        m1 = testutils.create_module(self.project, "m1", p3)  # noqa
-        l = testutils.create_module(self.project, "l", p3)  # noqa
+        m1 = testutils.create_module(self.project, "m1", p3)
+        l = testutils.create_module(self.project, "l", p3)
+        self.assertTrue(m1 is not None)
+        self.assertTrue(l is not None)
 
     def tearDown(self):
         testutils.remove_project(self.project)

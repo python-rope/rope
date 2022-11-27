@@ -4,23 +4,12 @@ import unittest
 
 import rope.base.taskhandle
 import rope.refactor.introduce_parameter
-import ropetest.refactor.extracttest
-import ropetest.refactor.importutilstest
-import ropetest.refactor.inlinetest
-import ropetest.refactor.movetest
-import ropetest.refactor.multiprojecttest
-import ropetest.refactor.patchedasttest
-import ropetest.refactor.renametest
-import ropetest.refactor.restructuretest
-import ropetest.refactor.suitestest
-import ropetest.refactor.usefunctiontest
 from rope.base.exceptions import RefactoringError, InterruptedTaskError
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactory
 from rope.refactor.localtofield import LocalToField
 from rope.refactor.method_object import MethodObject
 from ropetest import testutils
-from ropetest.refactor import change_signature_test, similarfindertest
 
 
 class MethodObjectTest(unittest.TestCase):
@@ -1093,8 +1082,9 @@ class TaskHandleTest(unittest.TestCase):
         handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
-        jobs = handle.create_jobset()  # noqa
+        jobs = handle.create_jobset()
         self.assertEqual(1, observer.called)
+        self.assertTrue(jobs is not None)
 
     def test_calling_the_observer_when_starting_and_finishing_jobs(self):
         handle = rope.base.taskhandle.TaskHandle()

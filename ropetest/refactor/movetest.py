@@ -314,6 +314,7 @@ class MoveRefactoringTest(unittest.TestCase):
             mover = move.create_move(
                 self.project, self.mod1, code.index("CONSTANT") + 1
             )
+            self.assertTrue(mover is not None)
 
     def test_raising_exception_for_mov_glob_elemnts_to_the_same_module(self):
         self.mod1.write("def a_func():\n    pass\n")
