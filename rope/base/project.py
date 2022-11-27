@@ -416,9 +416,7 @@ class _DataFiles:
 
     def _can_compress(self):
         try:
-            import gzip
-
-            assert gzip
+            import gzip  # noqa
             return True
         except ImportError:
             return False
