@@ -335,7 +335,8 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_getting_primary_and_strings_at_the_end_of_line(self):
         code = "f('\\'')\n"
-        result = self._find_primary(code, len(code) - 1)  # noqa
+        result = self._find_primary(code, len(code) - 1)
+        self.assertTrue(result is not None)
 
     def test_getting_primary_and_not_crossing_newlines(self):
         code = "\na = (b + c)\n(4 + 1).x\n"
@@ -753,7 +754,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, "mod1")
         pkg1 = testutils.create_package(self.project, "pkg1")
         pkg2 = testutils.create_package(self.project, "pkg2", pkg1)
-        mod2 = testutils.create_module(self.project, "mod2", pkg2)  # noqa
+        mod2 = testutils.create_module(self.project, "mod2", pkg2)
         mod1.write("import pkg1.pkg2.mod2")
 
         mod1_scope = self.project.get_pymodule(mod1).get_scope()
@@ -761,6 +762,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         pkg2_pyobject = self.project.get_pymodule(pkg2)
         found_pyname = name_finder.get_pyname_at(mod1.read().index("pkg2") + 1)
         self.assertEqual(pkg2_pyobject, found_pyname.get_object())
+        self.assertTrue(mod2 is not None)
 
     def test_get_pyname_at_on_language_keywords(self):
         code = dedent("""\

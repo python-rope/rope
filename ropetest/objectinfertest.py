@@ -285,7 +285,8 @@ class ObjectInferTest(unittest.TestCase):
         """)
         mod = libutils.get_string_module(self.project, code)
 
-        a = mod["a"].get_object()  # noqa
+        a = mod["a"].get_object()
+        self.assertTrue(a is not None)
 
     def test_handling_generator_functions(self):
         code = dedent("""\

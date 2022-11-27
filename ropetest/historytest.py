@@ -373,7 +373,7 @@ class SavingHistoryTest(unittest.TestCase):
         self.assertFalse(myfile.exists())
 
     def test_writing_and_reading_history(self):
-        history_file = self.project.get_file("history.pickle")  # noqa
+        history_file = self.project.get_file("history.pickle")
         self.project.set("save_history", True)
         history = rope.base.history.History(self.project)
         myfile = self.project.get_file("myfile.txt")
@@ -383,9 +383,10 @@ class SavingHistoryTest(unittest.TestCase):
         history = rope.base.history.History(self.project)
         history.undo()
         self.assertFalse(myfile.exists())
+        self.assertTrue(history_file is not None)
 
     def test_writing_and_reading_history2(self):
-        history_file = self.project.get_file("history.pickle")  # noqa
+        history_file = self.project.get_file("history.pickle")
         self.project.set("save_history", True)
         history = rope.base.history.History(self.project)
         myfile = self.project.get_file("myfile.txt")
@@ -396,3 +397,4 @@ class SavingHistoryTest(unittest.TestCase):
         history = rope.base.history.History(self.project)
         history.redo()
         self.assertTrue(myfile.exists())
+        self.assertTrue(history_file is not None)
