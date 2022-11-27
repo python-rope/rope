@@ -485,8 +485,9 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod["C1"].get_object()
         a_var = pymod["a"].get_object()
-        b_var = pymod["b"].get_object()  # noqa
+        b_var = pymod["b"].get_object()
         self.assertEqual(c1_class, a_var.get_type())
+        self.assertTrue(b_var is not None)
 
     def test_enumerate_builtin_function(self):
         self.mod.write(dedent("""\

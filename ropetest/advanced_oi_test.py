@@ -1,12 +1,9 @@
 from textwrap import dedent
-
-from rope.base.builtins import Str
-
 import unittest
 
+from rope.base.builtins import Str
 import rope.base.libutils
 import rope.base.oi
-from rope.base.utils import pycompat
 from ropetest import testutils
 
 
@@ -1100,3 +1097,4 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         pymod = self.project.get_pymodule(self.mod)
         x_var = pymod["x"].pyobject.get()
+        self.assertTrue(x_var is not None)
