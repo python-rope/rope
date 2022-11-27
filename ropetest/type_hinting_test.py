@@ -278,6 +278,7 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
         result = self._assist(code)
         # Be sure, there isn't errors currently
         # self.assert_completion_in_result('is_alive', 'attribute', result)
+        self.assertTrue(result is not None)
 
     def test_hint_nonexistent(self):
         code = (
