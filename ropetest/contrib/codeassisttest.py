@@ -718,7 +718,8 @@ class CodeAssistTest(unittest.TestCase):
                 pass
             my_""")
         result = self._assist(code)
-        proposals = sorted_proposals(result, typepref=["function"])  # noqa
+        proposals = sorted_proposals(result, typepref=["function"])
+        self.assertTrue(proposals is not None)
 
     def test_get_pydoc_unicode(self):
         src = dedent('''\
@@ -824,7 +825,8 @@ class CodeAssistTest(unittest.TestCase):
             s = "hey"
             s.replace()
         """)
-        doc = get_doc(self.project, src, src.rindex("replace") + 1)  # noqa
+        doc = get_doc(self.project, src, src.rindex("replace") + 1)
+        self.assertTrue(doc is not None)
 
     def test_proposing_variables_defined_till_the_end_of_scope(self):
         code = dedent("""\
@@ -928,7 +930,8 @@ class CodeAssistTest(unittest.TestCase):
             except:
                 pass
         """)
-        result = self._assist(code, code.index("."), maxfixes=1)  # noqa
+        result = self._assist(code, code.index("."), maxfixes=1)
+        self.assertTrue(result is not None)
 
     def test_nested_blocks(self):
         code = dedent("""\
@@ -951,7 +954,8 @@ class CodeAssistTest(unittest.TestCase):
         code = dedent("""\
             f = 1
             f(p""")
-        result = self._assist(code)  # noqa
+        result = self._assist(code)
+        self.assertTrue(result is not None)
 
     def test_proposing_function_keywords_when_calling_extra_spaces(self):
         code = dedent("""\
@@ -1337,7 +1341,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         """)
         samplemod.write(code)
         package = testutils.create_package(self.project, "package")
-        nestedmod = testutils.create_module(self.project, "nestedmod", package)  # noqa
+        nestedmod = testutils.create_module(self.project, "nestedmod", package)
+        self.assertTrue(nestedmod is not None)
 
     def tearDown(self):
         testutils.remove_project(self.project)

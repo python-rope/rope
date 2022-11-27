@@ -1,9 +1,5 @@
 """Tests for autoimport utility functions, written in pytest"""
 
-from sys import platform
-
-import pytest
-
 from rope.contrib.autoimport import utils
 from rope.contrib.autoimport.defs import Package, PackageType, Source
 

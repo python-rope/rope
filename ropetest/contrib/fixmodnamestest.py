@@ -42,11 +42,12 @@ class FixModuleNamesTest(unittest.TestCase):
 
     def test_handling_nested_modules(self):
         pkg = create_package(self.project, "xkg")
-        mod = create_module(self.project, "xkg.xod")  # noqa
+        mod = create_module(self.project, "xkg.xod")
         self.project.do(FixModuleNames(self.project).get_changes(_fixer))
         self.assertFalse(pkg.exists())
         self.assertTrue(self.project.get_resource("_kg/__init__.py").exists())
         self.assertTrue(self.project.get_resource("_kg/_od.py").exists())
+        self.assertTrue(mod is not None)
 
 
 def _fixer(name):
