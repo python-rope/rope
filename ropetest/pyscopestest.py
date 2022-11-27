@@ -48,11 +48,12 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
 
         self.assertEqual(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]  # noqa
+        sample_func_scope = scope.get_scopes()[0]
         self.assertEqual(
             get_base_type("Type"),
             scope.get_scopes()[0]["SampleClass"].get_object().get_type(),
         )
+        self.assertTrue(sample_func_scope is not None)
 
     def test_list_comprehension_scope_inside_assignment(self):
         code = "a_var = [b_var + d_var for b_var, c_var in e_var]\n"
@@ -468,12 +469,13 @@ class PyCoreScopesTest(unittest.TestCase):
         """)
         scope = libutils.get_string_scope(self.project, code)
 
-        a_scope = scope["A"].get_object().get_scope()  # noqa
+        a_scope = scope["A"].get_object().get_scope()
         b_scope = scope["B"].get_object().get_scope()
         self.assertTrue("a" in b_scope.get_names())
         self.assertTrue("b" in b_scope.get_names())
         self.assertTrue("a" not in b_scope.get_defined_names())
         self.assertTrue("b" in b_scope.get_defined_names())
+        self.assertTrue(a_scope is not None)
 
     def test_getting_defined_names_for_modules(self):
         code = dedent("""\
