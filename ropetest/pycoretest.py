@@ -31,18 +31,19 @@ class PyCoreTest(unittest.TestCase):
 
     def test_nested_modules(self):
         pkg = testutils.create_package(self.project, "pkg")
-        mod = testutils.create_module(self.project, "mod", pkg)  # noqa
+        mod = testutils.create_module(self.project, "mod", pkg)
         package = self.project.get_module("pkg")
         self.assertEqual(get_base_type("Module"), package.get_type())
         self.assertEqual(1, len(package.get_attributes()))
         module = package["mod"].get_object()
         self.assertEqual(get_base_type("Module"), module.get_type())
-
+        self.assertTrue(mod is not None)
     def test_package(self):
         pkg = testutils.create_package(self.project, "pkg")
-        mod = testutils.create_module(self.project, "mod", pkg)  # noqa
+        mod = testutils.create_module(self.project, "mod", pkg)
         result = self.project.get_module("pkg")
         self.assertEqual(get_base_type("Module"), result.type)
+        self.assertTrue(mod is not None)
 
     def test_simple_class(self):
         mod = testutils.create_module(self.project, "mod")
@@ -101,7 +102,8 @@ class PyCoreTest(unittest.TestCase):
         """))
         mod_element = self.project.get_module("mod")
         sample_class = mod_element["SampleClass"].get_object()
-        var = sample_class["var"]  # noqa
+        var = sample_class["var"]
+        self.assertTrue(var is not None)
 
     def test_class_attributes_set_in_init(self):
         mod = testutils.create_module(self.project, "mod")
@@ -112,7 +114,8 @@ class PyCoreTest(unittest.TestCase):
         """))
         mod_element = self.project.get_module("mod")
         sample_class = mod_element["C"].get_object()
-        var = sample_class["var"]  # noqa
+        var = sample_class["var"]
+        self.assertTrue(var is not None)
 
     def test_class_attributes_set_in_init_overwriting_a_defined(self):
         mod = testutils.create_module(self.project, "mod")
@@ -174,7 +177,8 @@ class PyCoreTest(unittest.TestCase):
 
     def test_get_string_module_with_extra_spaces(self):
         code = "a = 10\n    "
-        mod = libutils.get_string_module(self.project, code)  # noqa
+        mod = libutils.get_string_module(self.project, code)
+        self.assertTrue(mod is not None)
 
     def test_parameter_info_for_functions(self):
         code = dedent("""\
@@ -264,9 +268,10 @@ class PyCoreTest(unittest.TestCase):
         self.assertEqual(self.project.get_resource("module.py"), new_module)
 
     def test_packaged_module_creation(self):
-        package = self.project.root.create_folder("package")  # noqa
+        package = self.project.root.create_folder("package")
         new_module = testutils.create_module(self.project, "package.module")
         self.assertEqual(self.project.get_resource("package/module.py"), new_module)
+        self.assertTrue(package is not None)
 
     def test_packaged_module_creation_with_nested_src(self):
         src = self.project.root.create_folder("src")
