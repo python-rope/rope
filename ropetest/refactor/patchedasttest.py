@@ -127,30 +127,32 @@ class PatchedASTTest(unittest.TestCase):
         source = "a = 10\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("a")  # noqa
+        start = source.index("a")
         checker.check_region("Assign", 0, len(source) - 1)
         checker.check_children("Assign", ["Name", " ", "=", " ", "Num"])
+        self.assertTrue(start is not None)
 
     @testutils.only_for_versions_higher("3.6")
     def test_ann_assign_node_without_target(self):
         source = "a: List[int]\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("a")  # noqa
+        start = source.index("a")
         checker.check_region("AnnAssign", 0, len(source) - 1)
         checker.check_children("AnnAssign", ["Name", "", ":", " ", "Subscript"])
+        self.assertTrue(start is not None)
 
     @testutils.only_for_versions_higher("3.6")
     def test_ann_assign_node_with_target(self):
         source = "a: int = 10\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("a")  # noqa
+        start = source.index("a")
         checker.check_region("AnnAssign", 0, len(source) - 1)
         checker.check_children(
             "AnnAssign", ["Name", "", ":", " ", "Name", " ", "=", " ", "Num"]
         )
-
+        self.assertTrue(start is not None)
     def test_add_node(self):
         source = "1 + 2\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -375,9 +377,10 @@ class PatchedASTTest(unittest.TestCase):
         source = "a += 1\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("a")  # noqa
+        start = source.index("a")
         checker.check_region("AugAssign", 0, len(source) - 1)
         checker.check_children("AugAssign", ["Name", " ", "+", "", "=", " ", "Num"])
+        self.assertTrue(start is not None)
 
     @testutils.only_for_versions_lower("3")
     def test_back_quotenode(self):
