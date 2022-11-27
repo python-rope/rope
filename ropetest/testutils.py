@@ -2,12 +2,12 @@ import os.path
 import shutil
 import sys
 import logging
-
-logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
 import unittest
 
 import rope.base.project
 from rope.contrib import generate
+
+logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
 
 
 def sample_project(root=None, foldername=None, **kwds):
@@ -51,7 +51,7 @@ def remove_recursively(path):
 
     # windows sometimes raises exceptions instead of removing files
     if os.name == "nt" or sys.platform == "cygwin":
-        for i in range(12):
+        for _i in range(12):
             try:
                 _remove_recursively(path)
             except OSError as e:
