@@ -1,4 +1,4 @@
-from rope.base.pynames import DefinedName
+#from rope.base.pynames import DefinedName
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -170,7 +170,7 @@ class PyClass(pyobjects.PyClass):
         return rope.base.pyscopes.ClassScope(self.pycore, self)
 
 
-class PyModule(pyobjects.PyModule):
+class PyModule(pyobjects.DummyPyModule):
     def __init__(self, pycore, source=None, resource=None, force_errors=False):
         ignore = pycore.project.prefs.get("ignore_syntax_errors", False)
         syntax_errors = force_errors or not ignore
@@ -236,7 +236,7 @@ class PyModule(pyobjects.PyModule):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class PyPackage(pyobjects.PyPackage):
+class PyPackage(pyobjects.DummyPyPackage):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
         init_dot_py = self._get_init_dot_py()
@@ -461,7 +461,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         pass
 
     def _For(self, node):
-        names = self._update_evaluated(
+        self._update_evaluated(
             node.target, node.iter, ".__iter__().next()"  # noqa
         )
         for child in node.body + node.orelse:

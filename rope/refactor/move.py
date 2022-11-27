@@ -34,8 +34,9 @@ def create_move(project, resource, offset=None):
     pyname = evaluate.eval_location(this_pymodule, offset)
     if pyname is not None:
         pyobject = pyname.get_object()
-        if isinstance(pyobject, pyobjects.PyModule) or isinstance(
-            pyobject, pyobjects.PyPackage
+        if (
+            isinstance(pyobject, pyobjects.DummyPyModule)
+            or isinstance(pyobject, pyobjects.DummyPyPackage)
         ):
             return MoveModule(project, pyobject.get_resource())
         if isinstance(pyobject, pyobjects.PyFunction) and isinstance(
@@ -44,7 +45,7 @@ def create_move(project, resource, offset=None):
             return MoveMethod(project, resource, offset)
         if (
             isinstance(pyobject, pyobjects.PyDefinedObject)
-            and isinstance(pyobject.parent, pyobjects.PyModule)
+            and isinstance(pyobject.parent, pyobjects.DummyPyModule)
             or isinstance(pyname, pynames.AssignedName)
         ):
             return MoveGlobal(project, resource, offset)
