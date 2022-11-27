@@ -16,7 +16,7 @@ def get_changelog(version):
     search_heading = f"# Release {version}"
     curdate = datetime.today().date().isoformat()
 
-    headings = re.findall("# Release \d+\.\d+\.\d+", s)
+    headings = re.findall(r"# Release \d+\.\d+\.\d+", s)
     version_heading_index = headings.index(search_heading)
     version_changelog = s[
         s.index(headings[version_heading_index]) : s.index(
@@ -32,7 +32,7 @@ def get_changelog(version):
 
 def remove_headings(version_changelog):
     # Remove Markdown-style headings as it matches Git comment syntax
-    version_changelog = re.sub("^#+\s+", "", version_changelog, flags=re.MULTILINE)
+    version_changelog = re.sub(r"^#+\s+", "", version_changelog, flags=re.MULTILINE)
     return version_changelog
 
 
