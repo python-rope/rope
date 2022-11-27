@@ -1564,7 +1564,6 @@ class PatchedASTTest(unittest.TestCase):
             ")",
         ])
 
-
     @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_mapping_match_as(self):
         source = dedent("""\
@@ -1593,8 +1592,6 @@ class PatchedASTTest(unittest.TestCase):
             "",
             "}",
         ])
-
-
 class _ResultChecker:
     def __init__(self, test_case, ast):
         self.test_case = test_case
