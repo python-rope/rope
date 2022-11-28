@@ -62,9 +62,7 @@ class _Generate:
             )
 
     def get_changes(self):
-        changes = change.ChangeSet(
-            f"Generate {self._get_element_kind()} <{self.name}>"
-        )
+        changes = change.ChangeSet(f"Generate {self._get_element_kind()} <{self.name}>")
         indents = self.info.get_scope_indents()
         blanks = self.info.get_blank_lines()
         base_definition = sourceutils.fix_indentation(self._get_element(), indents)

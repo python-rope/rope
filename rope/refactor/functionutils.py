@@ -98,9 +98,7 @@ class CallInfo:
         if self.args[start:]:
             params.extend(self.args[start:])
         if self.keywords:
-            params.extend(
-                [f"{name}={value}" for name, value in self.keywords]
-            )
+            params.extend([f"{name}={value}" for name, value in self.keywords])
         if self.args_arg is not None:
             params.append("*" + self.args_arg)
         if self.keywords_arg:
