@@ -1,0 +1,10 @@
+---
+name: Task
+description: Other development tasks that doesn't fit more specific issue categories
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what needs to be done?
