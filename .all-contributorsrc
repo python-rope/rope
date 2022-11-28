@@ -510,6 +510,15 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "edreamleo",
+      "name": "Edward K. Ream",
+      "avatar_url": "https://avatars.githubusercontent.com/u/592928?v=4",
+      "profile": "http://leoeditor.com/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
