@@ -1,10 +1,7 @@
 # this snippet was taken from this link
 # http://code.activestate.com/recipes/576694/
 
-try:
-    from collections.abc import MutableSet
-except ImportError:
-    from collections import MutableSet
+from collections.abc import MutableSet
 
 
 class OrderedSet(MutableSet):
