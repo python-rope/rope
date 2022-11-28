@@ -188,7 +188,7 @@ class _SocketReceiver(_MessageReceiver):
                     buf_digest = base64.b64decode(buf[:digest_end])
                     buf_data = buf[digest_end + 1 : -1]
                     decoded_buf_data = base64.b64decode(buf_data)
-                except:
+                except Exception:
                     # Corrupted data; the payload cannot be trusted and just has
                     # to be dropped. See CVE-2014-3539.
                     continue

@@ -1,5 +1,4 @@
 import unittest
-from textwrap import dedent
 from textwrap import dedent, indent
 
 import pytest
@@ -173,7 +172,8 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
                 def a_method(self):
                     self.a_attr.is_a""")
         offset = len(code)
-        code += dedent(f"""\
+        # Note: the leading blank lines are required.
+        code += dedent("""\
 
 
             class Other(object):

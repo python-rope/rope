@@ -1,6 +1,5 @@
 import bisect
 import difflib
-import sys
 import warnings
 
 import rope.base.libutils
