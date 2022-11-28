@@ -1,7 +1,6 @@
 from itertools import chain
 
 from rope.base import ast
-from rope.base.utils import pycompat
 
 
 def find_visible(node, lines):
