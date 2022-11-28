@@ -2,12 +2,9 @@
 name: Task
 description: Other development tasks that doesn't fit more specific issue categories
 
----
-
-**Description**
-
-Describe what needs to be done
-
-**Additional context**
-
-Add any other context about the problem here.
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what needs to be done?
