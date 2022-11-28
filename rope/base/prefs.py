@@ -257,7 +257,7 @@ class _RopeConfigSource(Source):
             }
         )
         with open(config.real_path) as f:
-            code = compile(f.read(),config.real_path, 'exec')
+            code = compile(f.read(), config.real_path, "exec")
             exec(code, self.run_globals)
         return True
 
