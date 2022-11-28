@@ -3,7 +3,6 @@ import sys
 from textwrap import dedent
 
 from rope.base import ast
-from rope.base.utils import pycompat
 from rope.refactor import patchedast
 from ropetest import testutils
 
@@ -586,7 +585,7 @@ class PatchedASTTest(unittest.TestCase):
             "Function",
             ["def", " ", "f", "", "(", "", "arguments", "", ")", "", ":", "\n    ", "Expr", "\n    ", "Pass"],
         )
-        expected_child = pycompat.ast_arg_type.__name__
+        expected_child = ast.arg.__name__
         checker.check_children(
             "arguments", [expected_child, "", ",", " ", "**", "", "p2"]
         )
@@ -838,7 +837,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             "Lambda", ["lambda", " ", "arguments", "", ":", " ", NameConstant]
         )
-        expected_child = pycompat.ast_arg_type.__name__
+        expected_child = ast.arg.__name__
         checker.check_children(
             "arguments",
             [expected_child, "", ",", " ", expected_child, "", "=", "", "Num", "", ",", " ", "*", "", "z"],

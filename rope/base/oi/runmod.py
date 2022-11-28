@@ -11,7 +11,6 @@ def __rope_start_everything():
     import inspect
     import types
     import threading
-    import rope.base.utils.pycompat as pycompat
     import base64
     import hashlib
     import hmac
@@ -231,7 +230,9 @@ def __rope_start_everything():
     if send_info != "-":
         data_sender = _FunctionCallDataSender(send_info, project_root)
     del sys.argv[1:4]
-    pycompat.execfile(file_to_run, run_globals)
+    with open(file_to_run) as f:
+        code = compile(f.read(), file_to_run, "exec")
+        exec(code, run_globals)
     if send_info != "-":
         data_sender.close()
 

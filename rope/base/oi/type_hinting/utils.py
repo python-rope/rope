@@ -8,7 +8,6 @@ import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
-from rope.base.utils import pycompat
 
 
 def get_super_func(pyfunc):
