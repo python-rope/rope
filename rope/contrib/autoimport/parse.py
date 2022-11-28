@@ -4,7 +4,6 @@ Functions to find importable names.
 Can extract names from source code of a python file, .so object, or builtin module.
 """
 
-import ast
 import inspect
 import logging
 import pathlib
@@ -21,6 +20,8 @@ from .defs import (
     PartialName,
     Source,
 )
+from rope.base import ast
+
 
 logger = logging.getLogger(__name__)
 

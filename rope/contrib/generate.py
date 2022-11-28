@@ -62,9 +62,7 @@ class _Generate:
             )
 
     def get_changes(self):
-        changes = change.ChangeSet(
-            "Generate {} <{}>".format(self._get_element_kind(), self.name)
-        )
+        changes = change.ChangeSet(f"Generate {self._get_element_kind()} <{self.name}>")
         indents = self.info.get_scope_indents()
         blanks = self.info.get_blank_lines()
         base_definition = sourceutils.fix_indentation(self._get_element(), indents)
@@ -140,7 +138,7 @@ class GenerateModule(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet("Generate Module <%s>" % self.name)
-        new_resource = self.project.get_file("{}/{}.py".format(package.path, self.name))
+        new_resource = self.project.get_file(f"{package.path}/{self.name}.py")
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 "Module <%s> already exists" % new_resource.path
@@ -160,7 +158,7 @@ class GeneratePackage(_Generate):
     def get_changes(self):
         package = self.info.get_package()
         changes = change.ChangeSet("Generate Package <%s>" % self.name)
-        new_resource = self.project.get_folder("{}/{}".format(package.path, self.name))
+        new_resource = self.project.get_folder(f"{package.path}/{self.name}")
         if new_resource.exists():
             raise exceptions.RefactoringError(
                 "Package <%s> already exists" % new_resource.path

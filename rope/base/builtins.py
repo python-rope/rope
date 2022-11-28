@@ -2,14 +2,14 @@
 import inspect
 import io
 
+import rope.base.evaluate
+from rope.base import ast, pynames, pyobjects, arguments, utils
+
+
 try:
     raw_input
 except NameError:
     raw_input = input
-
-import rope.base.evaluate
-from rope.base.utils import pycompat
-from rope.base import pynames, pyobjects, arguments, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -720,15 +720,11 @@ class Lambda(pyobjects.AbstractFunction):
         return "lambda"
 
     def get_param_names(self, special_args=True):
-        result = [
-            pycompat.get_ast_arg_arg(node)
-            for node in self.arguments.args
-            if isinstance(node, pycompat.ast_arg_type)
-        ]
+        result = [node.arg for node in self.arguments.args if isinstance(node, ast.arg)]
         if self.arguments.vararg:
-            result.append("*" + pycompat.get_ast_arg_arg(self.arguments.vararg))
+            result.append("*" + self.arguments.vararg.arg)
         if self.arguments.kwarg:
-            result.append("**" + pycompat.get_ast_arg_arg(self.arguments.kwarg))
+            result.append("**" + self.arguments.kwarg.arg)
         return result
 
     @property
@@ -869,4 +865,4 @@ _initial_builtins = {
     ),
 }
 
-builtins = BuiltinModule(pycompat.builtins.__name__, initial=_initial_builtins)
+builtins = BuiltinModule("builtins", initial=_initial_builtins)

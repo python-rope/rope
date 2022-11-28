@@ -1,10 +1,7 @@
 # this snippet was taken from this link
 # http://code.activestate.com/recipes/576694/
 
-try:
-    from collections.abc import MutableSet
-except ImportError:
-    from collections import MutableSet
+from collections.abc import MutableSet
 
 
 class OrderedSet(MutableSet):
@@ -60,8 +57,8 @@ class OrderedSet(MutableSet):
 
     def __repr__(self):
         if not self:
-            return "{}()".format(self.__class__.__name__)
-        return "{}({!r})".format(self.__class__.__name__, list(self))
+            return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({list(self)!r})"
 
     def __eq__(self, other):
         if isinstance(other, OrderedSet):

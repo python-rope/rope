@@ -55,7 +55,7 @@ class Resource:
         """Move resource to `new_location`"""
         self._perform_change(
             change.MoveResource(self, new_location),
-            "Moving <{}> to <{}>".format(self.path, new_location),
+            f"Moving <{self.path}> to <{new_location}>",
         )
 
     def remove(self):

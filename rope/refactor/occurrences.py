@@ -355,11 +355,7 @@ class _TextualFinder:
         return c.isalnum() or c == "_"
 
     def _fast_file_query(self, source):
-        try:
-            source.index(self.name)
-            return True
-        except ValueError:
-            return False
+        return self.name in source
 
     def _get_source(self, resource, pymodule):
         if resource is not None:

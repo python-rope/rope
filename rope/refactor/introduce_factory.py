@@ -117,7 +117,7 @@ class IntroduceFactory:
             )
         unindented_factory = (
             "@staticmethod\ndef %s(*args, **kwds):\n" % factory_name
-            + "{}return {}(*args, **kwds)\n".format(unit_indents, self.old_name)
+            + f"{unit_indents}return {self.old_name}(*args, **kwds)\n"
         )
         indents = self._get_scope_indents(lines, class_scope) + sourceutils.get_indent(
             self.project

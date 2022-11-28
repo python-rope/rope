@@ -87,4 +87,4 @@ class Error:
         self.error = error
 
     def __str__(self):
-        return "{}: {}".format(self.lineno, self.error)
+        return f"{self.lineno}: {self.error}"

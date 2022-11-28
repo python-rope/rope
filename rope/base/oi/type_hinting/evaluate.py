@@ -1,7 +1,6 @@
 # Based on super lightweight Simple Top-Down Parser from http://effbot.org/zone/simple-top-down-parsing.htm
 # and https://bitbucket.org/emacsway/sqlbuilder/src/default/sqlbuilder/smartsql/contrib/evaluate.py
 import re
-from rope.base.utils import pycompat
 from rope.base.oi.type_hinting import utils
 from rope.base import utils as base_utils
 
@@ -27,7 +26,7 @@ class SymbolBase:
 
     def __repr__(self):
         if self.name == "(name)":
-            return "({} {})".format(self.name[1:-1], self.value)
+            return f"({self.name[1:-1]} {self.value})"
         out = [repr(self.name), self.first, self.second, self.third]
         out = [str(i) for i in out if i]
         return "(" + " ".join(out) + ")"

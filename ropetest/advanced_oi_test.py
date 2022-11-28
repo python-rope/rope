@@ -6,7 +6,6 @@ import unittest
 
 import rope.base.libutils
 import rope.base.oi
-from rope.base.utils import pycompat
 from ropetest import testutils
 
 

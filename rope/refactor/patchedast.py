@@ -5,13 +5,8 @@ import warnings
 from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
-from rope.base.utils import pycompat
 
-
-try:
-    basestring
-except NameError:
-    basestring = (str, bytes)
+basestring = (str, bytes)
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
@@ -574,11 +569,11 @@ class _PatchingASTWalker:
         if node.vararg is not None:
             if args:
                 children.append(",")
-            children.extend(["*", pycompat.get_ast_arg_arg(node.vararg)])
+            children.extend(["*", node.vararg.arg])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(",")
-            children.extend(["**", pycompat.get_ast_arg_arg(node.kwarg)])
+            children.extend(["**", node.kwarg.arg])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
@@ -853,7 +848,7 @@ class _PatchingASTWalker:
 
         if is_async:
             children.extend(["async"])
-        for item in pycompat.get_ast_with_items(node):
+        for item in node.items:
             children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
                 children.extend(["as", item.optional_vars])
@@ -929,7 +924,7 @@ class _Source:
                     self._skip_comment()
         except (ValueError, TypeError) as e:
             raise MismatchedTokenError(
-                "Token <{}> at {} cannot be matched".format(token, self._get_location())
+                f"Token <{token}> at {self._get_location()} cannot be matched"
             )
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
@@ -943,8 +938,14 @@ class _Source:
         if _Source._string_pattern is None:
             string_pattern = codeanalyze.get_string_pattern()
             formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:{})|(?:{})".format(string_pattern, formatted_string_pattern)
-            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(original, original)
+            original = r"(?:{})|(?:{})".format(
+                string_pattern,
+                formatted_string_pattern,
+            )
+            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(
+                original,
+                original,
+            )
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
