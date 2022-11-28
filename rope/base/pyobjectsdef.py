@@ -538,14 +538,13 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _ImportFrom(self, node):
         level = 0
         # From walk
-        assert isinstance(node, ast.ImportFrom)
-        if node.module is None:
-            # In python < 2.7 ``node.module == ''`` for relative imports
-            # but for python 2.7 it is None. Generalizing it to ''.
-            node.module = ""
         if node.level:
             level = node.level
-        imported_module = pynames.ImportedModule(self.get_module(), node.module, level)
+        imported_module = pynames.ImportedModule(
+            self.get_module(),
+            node.module or "",
+            level,
+        )
         if self._is_ignored_import(imported_module):
             return
         if len(node.names) == 1 and node.names[0].name == "*":
