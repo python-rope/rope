@@ -5,7 +5,6 @@ from itertools import chain
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
-from rope.base.utils import pycompat
 from rope.base.utils.datastructures import OrderedSet
 from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefunction
 
@@ -948,15 +947,11 @@ class _FunctionInformationCollector:
 
 
 def _get_argnames(arguments):
-    result = [
-        pycompat.get_ast_arg_arg(node)
-        for node in arguments.args
-        if isinstance(node, pycompat.ast_arg_type)
-    ]
+    result = [node.arg for node in arguments.args if isinstance(node, ast.arg)]
     if arguments.vararg:
-        result.append(pycompat.get_ast_arg_arg(arguments.vararg))
+        result.append(vararg.arg)
     if arguments.kwarg:
-        result.append(pycompat.get_ast_arg_arg(arguments.kwarg))
+        result.append(arguments.kwarg.arg)
     return result
 
 

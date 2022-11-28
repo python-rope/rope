@@ -6,9 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from packaging.requirements import Requirement
 from pytoolconfig import PyToolConfig, UniversalKey, field
 from pytoolconfig.sources import Source
-
 from rope.base.resources import Folder
-from rope.base.utils import pycompat
 
 
 @dataclass
@@ -258,7 +256,9 @@ class _RopeConfigSource(Source):
                 "__file__": config.real_path,
             }
         )
-        pycompat.execfile(config.real_path, self.run_globals)
+        with open(config.real_path) as f:
+            code = compile(f.read(), config.real_path, "exec")
+            exec(code, self.run_globals)
         return True
 
     def parse(self) -> Optional[Dict]:
