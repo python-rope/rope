@@ -271,6 +271,22 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_method_args_and_kwargs(self):
+        code = dedent("""\
+            def a_func(a, *args, **kwargs):
+                print(a, args, kwargs)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+            def a_func(a, *args, **kwargs):
+                new_func(a, args, kwargs)
+
+            def new_func(a, args, kwargs):
+                print(a, args, kwargs)
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_method_with_self_as_argument(self):
         code = dedent("""\
             class AClass(object):

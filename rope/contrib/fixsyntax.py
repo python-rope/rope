@@ -33,7 +33,7 @@ class FixSyntax:
                 )
             except exceptions.ModuleSyntaxError as e:
                 if msg is None:
-                    msg = "{}:{} {}".format(e.filename, e.lineno, e.message_)
+                    msg = f"{e.filename}:{e.lineno} {e.message_}"
                 if tries < self.maxfixes:
                     tries += 1
                     self.commenter.comment(e.lineno)

@@ -107,9 +107,15 @@ class UseFunction:
         function_name = self.pyfunction.get_name()
         if import_:
             function_name = self._module_name() + "." + function_name
-        goal = "{}({})".format(function_name, ", ".join(("${%s}" % p) for p in params))
+        goal = "{}({})".format(
+            function_name,
+            ", ".join(("${%s}" % p) for p in params),
+        )
         if self._does_return() and not self._is_expression():
-            goal = "${{{}}} = {}".format(self._rope_result, goal)
+            goal = "${{{}}} = {}".format(
+                self._rope_result,
+                goal,
+            )
         return goal
 
     def _does_return(self):

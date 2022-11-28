@@ -16,11 +16,6 @@ def project():
 
 
 @pytest.fixture
-def mod(project):
-    return testutils.create_module(project, "mod")
-
-
-@pytest.fixture
 def mod1(project):
     testutils.create_package(project, "pkg1")
     return testutils.create_module(project, "pkg1.mod1")
