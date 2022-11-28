@@ -949,7 +949,7 @@ class _FunctionInformationCollector:
 def _get_argnames(arguments):
     result = [node.arg for node in arguments.args if isinstance(node, ast.arg)]
     if arguments.vararg:
-        result.append(vararg.arg)
+        result.append(arguments.vararg.arg)
     if arguments.kwarg:
         result.append(arguments.kwarg.arg)
     return result
