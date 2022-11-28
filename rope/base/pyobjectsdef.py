@@ -529,7 +529,6 @@ class _ScopeVisitor(_ExpressionVisitor):
 
     def _ImportFrom(self, node):
         level = 0
-        # From walk
         if node.level:
             level = node.level
         imported_module = pynames.ImportedModule(

@@ -522,7 +522,6 @@ class _PatchingASTWalker:
         children = ["from"]
         if node.level:
             children.append("." * node.level)
-        # see comment at rope.base.ast.walk
         children.extend([node.module or "", "import"])
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
