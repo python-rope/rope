@@ -1,8 +1,8 @@
 ---
 name: Task
-about: Other development tasks that doesn't fit more specific issue categories
+description: Other development tasks that doesn't fit more specific issue categories
 title: ''
-labels: 
+labels: ''
 assignees: ''
 
 ---
