@@ -614,11 +614,17 @@ class PyDocExtractor:
             return result
 
     def _get_class_docstring(self, pyclass):
+        def _get_class_header(pyclass):
+            class_name = pyclass.get_name()
+
+            supers = [super.get_name() for super in pyclass.get_superclasses()]
+            super_classes = ", ".join(supers)
+
+            return f"class {class_name}({super_classes}):\n\n"
+
         contents = self._trim_docstring(pyclass.get_doc(), 2)
-        supers = [super.get_name() for super in pyclass.get_superclasses()]
-        doc = (
-            "class {}({}):\n\n".format(pyclass.get_name(), ", ".join(supers)) + contents
-        )
+        doc = _get_class_header(pyclass)
+        doc += contents
 
         if "__init__" in pyclass:
             init = pyclass["__init__"].get_object()
