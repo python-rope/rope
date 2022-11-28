@@ -105,7 +105,7 @@ class Rename:
             resources = [self.resource]
         if resources is None:
             resources = self.project.get_python_files()
-        changes = ChangeSet("Renaming <{}> to <{}>".format(self.old_name, new_name))
+        changes = ChangeSet(f"Renaming <{self.old_name}> to <{new_name}>")
         finder = occurrences.create_finder(
             self.project,
             self.old_name,
@@ -189,9 +189,7 @@ class ChangeOccurrences:
         return scope.get_region()
 
     def get_changes(self, new_name, only_calls=False, reads=True, writes=True):
-        changes = ChangeSet(
-            "Changing <{}> occurrences to <{}>".format(self.old_name, new_name)
-        )
+        changes = ChangeSet(f"Changing <{self.old_name}> occurrences to <{new_name}>")
         scope_start, scope_end = self._get_scope_offset()
         finder = occurrences.create_finder(
             self.project,
