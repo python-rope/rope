@@ -10,8 +10,6 @@ import re
 import os
 import shutil
 import subprocess
-
-import rope.base.utils.pycompat as pycompat
 import typing
 
 

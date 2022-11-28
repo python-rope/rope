@@ -136,9 +136,7 @@ class Restructure:
                 stacklevel=2,
             )
             self.imports = imports
-        changes = change.ChangeSet(
-            "Restructuring <{}> to <{}>".format(self.pattern, self.goal)
-        )
+        changes = change.ChangeSet(f"Restructuring <{self.pattern}> to <{self.goal}>")
         if resources is not None:
             files = [
                 resource

@@ -1,4 +1,3 @@
-from rope.base.pynames import DefinedName
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -15,7 +14,6 @@ from rope.base import (
     arguments,
     utils,
 )
-from rope.base.utils import pycompat
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -79,16 +77,12 @@ class PyFunction(pyobjects.PyFunction):
 
     def get_param_names(self, special_args=True):
         # TODO: handle tuple parameters
-        result = [
-            pycompat.get_ast_arg_arg(node)
-            for node in self.arguments.args
-            if isinstance(node, pycompat.ast_arg_type)
-        ]
+        result = [node.arg for node in self.arguments.args if isinstance(node, ast.arg)]
         if special_args:
             if self.arguments.vararg:
-                result.append(pycompat.get_ast_arg_arg(self.arguments.vararg))
+                result.append(self.arguments.vararg.arg)
             if self.arguments.kwarg:
-                result.append(pycompat.get_ast_arg_arg(self.arguments.kwarg))
+                result.append(self.arguments.kwarg.arg)
         return result
 
     def get_kind(self):
@@ -461,9 +455,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         pass
 
     def _For(self, node):
-        names = self._update_evaluated(
-            node.target, node.iter, ".__iter__().next()"  # noqa
-        )
+        self._update_evaluated(node.target, node.iter, ".__iter__().next()")  # noqa
         for child in node.body + node.orelse:
             ast.walk(child, self)
 
@@ -496,7 +488,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         return result
 
     def _With(self, node):
-        for item in pycompat.get_ast_with_items(node):
+        for item in node.items:
             if item.optional_vars:
                 self._update_evaluated(
                     item.optional_vars, item.context_expr, ".__enter__()"
@@ -605,8 +597,8 @@ class _ClassVisitor(_ScopeVisitor):
         if len(node.args.args) > 0:
             first = node.args.args[0]
             new_visitor = None
-            if isinstance(first, pycompat.ast_arg_type):
-                new_visitor = _ClassInitVisitor(self, pycompat.get_ast_arg_arg(first))
+            if isinstance(first, ast.arg):
+                new_visitor = _ClassInitVisitor(self, first.arg)
             if new_visitor is not None:
                 for child in ast.get_child_nodes(node):
                     ast.walk(child, new_visitor)

@@ -58,16 +58,15 @@ about them, don't hesitate to create a Github ticket for it.
 .. _`good first issue`: https://github.com/python-rope/rope/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 .. _`unresolved issues list`: https://github.com/python-rope/rope/issues
 
-Write Plugins For Other IDEs
-----------------------------
+Write Text Editors or IDE plugins for Rope
+------------------------------------------
 
-See ropemacs_, ropevim_, eric4_ and ropeide_.
+See pylsp-rope_, ropemacs_, ropevim_, eric4_.
 
-
-.. _ropemacs: http://rope.sf.net/ropemacs.rst
-.. _ropevim: http://rope.sf.net/ropevim.rst
-.. _ropeide: http://rope.sf.net/ropeide.rst
-.. _eric4: http://www.die-offenbachs.de/eric/index.rst
+.. _pylsp-rope: https://github.com/python-rope/pylsp-rope/
+.. _ropemacs: https://github.com/python-rope/ropemacs/
+.. _ropevim: https://github.com/python-rope/ropevim/
+.. _eric4: http://eric-ide.python-projects.org/
 
 
 Rope Structure

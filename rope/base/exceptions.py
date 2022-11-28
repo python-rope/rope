@@ -47,7 +47,7 @@ class ModuleSyntaxError(RopeError):
         self.lineno = lineno
         self.message_ = message
         super().__init__(
-            "Syntax error in file <{}> line <{}>: {}".format(filename, lineno, message)
+            f"Syntax error in file <{filename}> line <{lineno}>: {message}"
         )
 
 
@@ -57,4 +57,4 @@ class ModuleDecodeError(RopeError):
     def __init__(self, filename, message):
         self.filename = filename
         self.message_ = message
-        super().__init__("Cannot decode file <{}>: {}".format(filename, message))
+        super().__init__(f"Cannot decode file <{filename}>: {message}")
