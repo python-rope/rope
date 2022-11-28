@@ -105,12 +105,8 @@ class EncapsulateField:
                 class_scope.get_start()
             )
         indents = sourceutils.get_indent(self.project) * " "
-        getter = "def {}(self):\n{}return self.{}".format(getter, indents, self.name)
-        setter = "def {}(self, value):\n{}self.{} = value".format(
-            setter,
-            indents,
-            self.name,
-        )
+        getter = f"def {getter}(self):\n{indents}return self.{self.name}"
+        setter = f"def {setter}(self, value):\n{indents}self.{self.name} = value"
         new_source = sourceutils.add_methods(pymodule, class_scope, [getter, setter])
         return new_source
 

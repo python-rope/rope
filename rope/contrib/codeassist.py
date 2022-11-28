@@ -238,7 +238,7 @@ class CompletionProposal:
         self.scope = self._get_scope(scope)
 
     def __str__(self):
-        return "{} ({}, {})".format(self.name, self.scope, self.type)
+        return f"{self.name} ({self.scope}, {self.type})"
 
     def __repr__(self):
         return str(self)

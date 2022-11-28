@@ -105,7 +105,7 @@ class ChangeSet(Change):
             else:
                 string_date = date.strftime("%d %b, %Y")
             string_time = date.strftime("%H:%M:%S")
-            string_time = "{} {} ".format(string_date, string_time)
+            string_time = f"{string_date} {string_time} "
             return self.description + " - " + string_time
         return self.description
 

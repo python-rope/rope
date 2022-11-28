@@ -26,7 +26,7 @@ class SymbolBase:
 
     def __repr__(self):
         if self.name == "(name)":
-            return "({} {})".format(self.name[1:-1], self.value)
+            return f"({self.name[1:-1]} {self.value})"
         out = [repr(self.name), self.first, self.second, self.third]
         out = [str(i) for i in out if i]
         return "(" + " ".join(out) + ")"

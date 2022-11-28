@@ -924,7 +924,7 @@ class _Source:
                     self._skip_comment()
         except (ValueError, TypeError) as e:
             raise MismatchedTokenError(
-                "Token <{}> at {} cannot be matched".format(token, self._get_location())
+                f"Token <{token}> at {self._get_location()} cannot be matched"
             )
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)

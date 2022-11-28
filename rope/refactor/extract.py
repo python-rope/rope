@@ -80,7 +80,7 @@ class _ExtractRefactoring:
         )
         info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet("Extract {} <{}>".format(info.kind, extracted_name))
+        changes = ChangeSet(f"Extract {info.kind} <{extracted_name}>")
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
