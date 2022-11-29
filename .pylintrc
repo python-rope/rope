@@ -1,11 +1,8 @@
-# A settings file for running pylint on Rope
+# A settings file for running pylint on Rope.
 
-# From the top-level Rope directory:  `python -m pylint rope`
+# Run pylint from the top-level Rope directory:  `python -m pylint rope`
 
-# Developed with Python 3.10.  `python -m pylint --version` reports:
-# pylint 2.14.4
-# astroid 2.11.6
-# Python 3.10.5 (tags/v3.10.5:f377153, Jun  6 2022, 16:14:13) [MSC v.1929 64 bit (AMD64)]
+# This file tested on pylint 2.14.4, Python 3.10.5, as reported by `python -m pylint --version`.
 
 [MASTER]
 
