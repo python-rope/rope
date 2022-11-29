@@ -114,7 +114,8 @@ class ImportedModule(PyName):
             pycore = self.importing_module.pycore
             if self.resource is not None:
                 self.pymodule.set(pycore.project.get_pymodule(self.resource))
-            elif self.module_name is not None:
+            else:
+                assert isinstance(self.module_name, str)
                 try:
                     if self.level == 0:
                         pymodule = pycore.project.get_module(
