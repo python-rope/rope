@@ -531,7 +531,11 @@ class _ScopeVisitor(_ExpressionVisitor):
         level = 0
         if node.level:
             level = node.level
-        imported_module = pynames.ImportedModule(self.get_module(), node.module, level)
+        imported_module = pynames.ImportedModule(
+            self.get_module(),
+            node.module or "",
+            level,
+        )
         if self._is_ignored_import(imported_module):
             return
         if len(node.names) == 1 and node.names[0].name == "*":
