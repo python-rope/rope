@@ -902,7 +902,9 @@ class _FunctionInformationCollector:
         elif isinstance(node, ast.Name):
             yield node.id
         else:
-            raise AssertionError(f"Unexpected node type in list comprehension target: {node!r}")
+            raise AssertionError(
+                f"Unexpected node type in list comprehension target: {node!r}"
+            )
 
     def _If(self, node):
         self._handle_conditional_node(node)

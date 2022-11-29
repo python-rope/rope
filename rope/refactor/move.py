@@ -706,7 +706,9 @@ class _MoveTools:
 
     def occurs_in_module(self, pymodule=None, resource=None, imports=True):
         finder = self._create_finder(imports)
-        for _occurrence in finder.find_occurrences(pymodule=pymodule, resource=resource):
+        for _occurrence in finder.find_occurrences(
+            pymodule=pymodule, resource=resource
+        ):
             return True
         return False
 
