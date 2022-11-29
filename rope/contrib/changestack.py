@@ -32,7 +32,7 @@ class ChangeStack:
         self.project.do(changes)
 
     def pop_all(self):
-        for i in range(len(self.stack)):
+        for _i in range(len(self.stack)):
             self.project.history.undo(drop=True)
 
     def merged(self):

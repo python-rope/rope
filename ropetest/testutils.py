@@ -51,7 +51,7 @@ def remove_recursively(path):
 
     # windows sometimes raises exceptions instead of removing files
     if os.name == "nt" or sys.platform == "cygwin":
-        for i in range(12):
+        for _i in range(12):
             try:
                 _remove_recursively(path)
             except OSError as e:

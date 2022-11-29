@@ -106,7 +106,7 @@ class History:
         return _FindChangeDependencies(change_list[index:])()
 
     def _perform_undos(self, count, task_handle):
-        for i in range(count):
+        for _i in range(count):
             self.current_change = self.undo_list[-1]
             try:
                 job_set = change.create_job_set(task_handle, self.current_change)
@@ -116,7 +116,7 @@ class History:
             self.redo_list.append(self.undo_list.pop())
 
     def _perform_redos(self, count, task_handle):
-        for i in range(count):
+        for _i in range(count):
             self.current_change = self.redo_list[-1]
             try:
                 job_set = change.create_job_set(task_handle, self.current_change)
