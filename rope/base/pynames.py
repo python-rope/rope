@@ -115,8 +115,9 @@ class ImportedModule(PyName):
         level=0,
         resource=None,
     ):
-        assert module_name is not None or resource is not None, \
-            "At least one of module_name or resource must be set"
+        assert (
+            module_name is not None or resource is not None
+        ), "At least one of module_name or resource must be set"
         self.importing_module = importing_module
         self.module_name = module_name
         self.level = level
