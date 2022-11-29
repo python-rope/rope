@@ -535,7 +535,7 @@ class _PatchingASTWalker:
     def _handle_function_def_node(self, node, is_async):
         children = []
         try:
-            decorators = getattr(node, "decorator_list")
+            decorators = node.decorator_list
         except AttributeError:
             decorators = getattr(node, "decorators", None)
         if decorators:
