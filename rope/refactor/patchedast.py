@@ -529,7 +529,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _alias(self, node):
-        children = [node.name]
+        children = node.name.split(".")
         if node.asname:
             children.extend(["as", node.asname])
         self._handle(node, children)

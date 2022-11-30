@@ -851,6 +851,15 @@ class PatchedASTTest(unittest.TestCase):
             "Import", ["import", " ", "alias", "", ",", " ", "alias"]
         )
 
+    def test_import_node_whitespace_around_dots(self):
+        source = "import a . b, b as c\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region("Import", 0, len(source) - 1)
+        checker.check_children(
+            "Import", ["import", " ", "alias", "", ",", " ", "alias"]
+        )
+
     def test_lambda_node(self):
         source = "lambda a, b=1, *z: None\n"
         ast_frag = patchedast.get_patched_ast(source, True)
