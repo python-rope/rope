@@ -521,14 +521,15 @@ class _PatchingASTWalker:
     def _ImportFrom(self, node):
         children = ["from"]
         if node.level:
-            children.append("." * node.level)
-        # see comment at rope.base.ast.walk
-        children.extend([node.module or "", "import"])
+            children.extend("." * node.level)
+        if node.module:
+            children.extend(node.module.split("."))
+        children.append("import")
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
 
     def _alias(self, node):
-        children = [node.name]
+        children = node.name.split(".")
         if node.asname:
             children.extend(["as", node.asname])
         self._handle(node, children)

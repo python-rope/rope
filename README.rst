@@ -42,7 +42,7 @@ releases.
 Getting Started
 ===============
 
-* `Documentatation <https://rope.readthedocs.io/en/latest/overview.html>`_
+* `Documentation <https://rope.readthedocs.io/en/latest/overview.html>`_
 * `How to use Rope in my IDE or Text editor? <https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F>`_
 * `Configuration <https://rope.readthedocs.io/en/latest/configuration.html>`_
 * `List of features <https://rope.readthedocs.io/en/latest/rope.html>`_
