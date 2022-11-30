@@ -910,7 +910,7 @@ class LocalToFieldTest(unittest.TestCase):
 
     # NOTE: This situation happens a lot and is normally not an error
     # @testutils.assert_raises(RefactoringError)
-    def test_not_rais_exception_when_there_is_a_field_with_the_same_name(self):
+    def test_not_raise_exception_when_there_is_a_field_with_the_same_name(self):
         code = dedent("""\
             class A(object):
                 def __init__(self):
