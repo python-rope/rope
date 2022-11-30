@@ -521,8 +521,10 @@ class _PatchingASTWalker:
     def _ImportFrom(self, node):
         children = ["from"]
         if node.level:
-            children.append("." * node.level)
-        children.extend([node.module or "", "import"])
+            children.extend("." * node.level)
+        if node.module:
+            children.extend(node.module.split("."))
+        children.append("import")
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
 

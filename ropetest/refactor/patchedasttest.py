@@ -723,7 +723,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("ImportFrom", 0, len(source) - 1)
         checker.check_children(
-            "ImportFrom", ["from", " ", "..", "", "x", " ", "import", " ", "alias"]
+            "ImportFrom", ["from", " ", ".", "", ".", "", "x", " ", "import", " ", "alias"]
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
@@ -734,7 +734,29 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("ImportFrom", 0, len(source) - 1)
         checker.check_children(
-            "ImportFrom", ["from", " ", ".", "", "", " ", "import", " ", "alias"]
+            "ImportFrom", ["from", " ", ".", " ", "import", " ", "alias"]
+        )
+        checker.check_children("alias", ["y", " ", "as", " ", "z"])
+
+    @testutils.only_for("2.5")
+    def test_from_node_whitespace_around_dots_1(self):
+        source = "from . . . import y as z\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region("ImportFrom", 0, len(source) - 1)
+        checker.check_children(
+            "ImportFrom", ["from", " ", ".", " ", ".", " ", ".", " ", "import", " ", "alias"]
+        )
+        checker.check_children("alias", ["y", " ", "as", " ", "z"])
+
+    @testutils.only_for("2.5")
+    def test_from_node_whitespace_around_dots_2(self):
+        source = "from . a . b import y as z\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region("ImportFrom", 0, len(source) - 1)
+        checker.check_children(
+            "ImportFrom", ["from", " ", ".", " ", "a", " . ", "b", " ", "import", " ", "alias"]
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
