@@ -402,7 +402,7 @@ class ObjectInferTest(unittest.TestCase):
         code = dedent("""\
             class MyError(Exception):
                 pass
-            try::w
+            try:
 
                 raise MyError()
             except MyError as e:
