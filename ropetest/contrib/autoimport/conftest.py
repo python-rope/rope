@@ -6,13 +6,6 @@ from ropetest import testutils
 
 
 @pytest.fixture
-def project():
-    project = testutils.sample_project()
-    yield project
-    testutils.remove_project(project)
-
-
-@pytest.fixture
 def mod1(project):
     mod1 = testutils.create_module(project, "mod1")
     yield mod1
@@ -21,11 +14,6 @@ def mod1(project):
 @pytest.fixture
 def mod1_path(mod1):
     yield pathlib.Path(mod1.real_path)
-
-
-@pytest.fixture
-def project_path(project):
-    yield pathlib.Path(project.address)
 
 
 @pytest.fixture
