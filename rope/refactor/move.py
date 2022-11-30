@@ -707,7 +707,8 @@ class _MoveTools:
     def occurs_in_module(self, pymodule=None, resource=None, imports=True):
         finder = self._create_finder(imports)
         occurrences = finder.find_occurrences(pymodule=pymodule, resource=resource)
-        return any(True for _ in occurrences)
+        sentinel = object()
+        return next(occurrences, sentinel) is not sentinel
 
     def _create_finder(self, imports):
         return occurrences.create_finder(
