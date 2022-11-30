@@ -272,7 +272,7 @@ class RenameRefactoringTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_rename_functions_parameters_and_occurences_in_other_modules(self):
+    def test_rename_functions_parameters_and_occurrences_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write(dedent("""\

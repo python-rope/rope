@@ -98,7 +98,7 @@ class _ExtractRefactoring:
 
     @classmethod
     def _get_kind(cls, kind):
-        raise NotImplementedError(f"You have to sublass {cls}")
+        raise NotImplementedError(f"You have to subclass {cls}")
 
 
 class ExtractMethod(_ExtractRefactoring):
@@ -222,13 +222,13 @@ class _ExtractInfo:
     def extracted(self):
         return self.source[self.region[0] : self.region[1]]
 
-    _cached_parsed_extraced = None
+    _cached_parsed_extracted = None
 
     @property
     def _parsed_extracted(self):
-        if self._cached_parsed_extraced is None:
-            self._cached_parsed_extraced = _parse_text(self.extracted)
-        return self._cached_parsed_extraced
+        if self._cached_parsed_extracted is None:
+            self._cached_parsed_extracted = _parse_text(self.extracted)
+        return self._cached_parsed_extracted
 
     _returned = None
 

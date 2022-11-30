@@ -403,7 +403,7 @@ class _DefinitionGenerator:
             or definition_info.keywords_arg is not None
         ):
             raise rope.base.exceptions.RefactoringError(
-                "Cannot inline functions with list and keyword arguements."
+                "Cannot inline functions with list and keyword arguments."
             )
         if self.pyfunction.get_kind() == "classmethod":
             paramdict[
