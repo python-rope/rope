@@ -55,8 +55,8 @@ class Worder:
     def get_primary_range(self, offset):
         return self._context_call("get_primary_range", offset)
 
-    def get_split_primary_before(self, offset):
-        return self._context_call("get_split_primary_before", offset)
+    def get_splitted_primary_before(self, offset):
+        return self._context_call("get_splitted_primary_before", offset)
 
     def get_word_range(self, offset):
         return self._context_call("get_word_range", offset)
@@ -250,7 +250,7 @@ class _RealFinder:
         start, end = self.get_primary_range(offset)
         return self.raw[start:end].strip()
 
-    def get_split_primary_before(self, offset):
+    def get_splitted_primary_before(self, offset):
         """returns expression, starting, starting_offset
 
         This function is used in `rope.codeassist.assist` function.

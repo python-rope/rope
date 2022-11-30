@@ -66,7 +66,7 @@ def starting_offset(source_code, offset):
 
     """
     word_finder = worder.Worder(source_code, True)
-    expression, starting, starting_offset = word_finder.get_split_primary_before(
+    expression, starting, starting_offset = word_finder.get_splitted_primary_before(
         offset
     )
     return starting_offset
@@ -361,7 +361,7 @@ def sorted_proposals(proposals, scopepref=None, typepref=None):
 def starting_expression(source_code, offset):
     """Return the expression to complete"""
     word_finder = worder.Worder(source_code, True)
-    expression, starting, starting_offset = word_finder.get_split_primary_before(
+    expression, starting, starting_offset = word_finder.get_splitted_primary_before(
         offset
     )
     if expression:
@@ -390,7 +390,7 @@ class _PythonCodeAssist:
             self.expression,
             self.starting,
             self.offset,
-        ) = self.word_finder.get_split_primary_before(offset)
+        ) = self.word_finder.get_splitted_primary_before(offset)
 
     keywords = keyword.kwlist
 
