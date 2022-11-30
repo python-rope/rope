@@ -835,7 +835,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code, code.index("a_v") + 3)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_in_uncomplete_try_blocks(self):
+    def test_completing_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 a_var = 10
@@ -843,7 +843,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_in_uncomplete_try_blocks_in_functions(self):
+    def test_completing_in_incomplete_try_blocks_in_functions(self):
         code = dedent("""\
             def a_func():
                 try:
@@ -895,7 +895,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code, code.rindex("a_") + 2)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_ifs_in_uncomplete_try_blocks(self):
+    def test_completing_ifs_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 if True:
@@ -904,7 +904,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_ifs_in_uncomplete_try_blocks2(self):
+    def test_completing_ifs_in_incomplete_try_blocks2(self):
         code = dedent("""\
             try:
                 if True:
@@ -913,7 +913,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_excepts_in_uncomplete_try_blocks(self):
+    def test_completing_excepts_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 pass
@@ -1415,7 +1415,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result("sample_func", "imported", result)
         self.assert_completion_in_result("sample_var", "imported", result)
 
-    def test_from_import_star_not_imporing_underlined(self):
+    def test_from_import_star_not_importing_underlined(self):
         code = dedent("""\
             from samplemod import *
             _under""")

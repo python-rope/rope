@@ -398,11 +398,12 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEqual(c1_class, a_var.get_type())
         self.assertEqual(c2_class, b_var.get_type())
 
-    def test_we_know_the_type_of_catched_exceptions(self):
+    def test_we_know_the_type_of_caught_exceptions(self):
         code = dedent("""\
             class MyError(Exception):
                 pass
-            try:
+            try::w
+
                 raise MyError()
             except MyError as e:
                 pass
@@ -412,7 +413,7 @@ class ObjectInferTest(unittest.TestCase):
         e_var = mod["e"].get_object()
         self.assertEqual(my_error, e_var.get_type())
 
-    def test_we_know_the_type_of_catched_multiple_excepts(self):
+    def test_we_know_the_type_of_caught_multiple_excepts(self):
         code = dedent("""\
             class MyError(Exception):
                 pass

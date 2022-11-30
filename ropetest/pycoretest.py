@@ -388,7 +388,7 @@ class PyCoreTest(unittest.TestCase):
         a_var = mod["a_var"]
         self.assertEqual((mod, 1), a_var.get_definition_location())
 
-    def test_get_pyname_definition_location_importes(self):
+    def test_get_pyname_definition_location_imported(self):
         testutils.create_module(self.project, "mod")
         code = "import mod\n"
         mod = libutils.get_string_module(self.project, code)
@@ -838,7 +838,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
             sample_class, mod.get_attributes()["SampleClass"].get_object()
         )
 
-    def test_from_import_star_not_imporing_underlined(self):
+    def test_from_import_star_not_importing_underlined(self):
         code = "from samplemod import *"
         mod = libutils.get_string_module(self.project, code)
         self.assertTrue("_underlined_func" not in mod.get_attributes())

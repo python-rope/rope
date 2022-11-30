@@ -711,7 +711,7 @@ The ``get_changes()`` method of refactoring classes return a
 calling ``Project.do()``.  But as explained above some IDEs need to
 perform the changes themselves.
 
-Every change to the file-system in rope is commited using an object that
+Every change to the file-system in rope is committed using an object that
 provides a ``rope.base.fscommands.FileSystemCommands`` interface.  As
 explained above in `rope.base.fscommands`_ section, rope uses this
 interface to handle different VCSs.
@@ -897,7 +897,7 @@ an example consider that we want to perform a rename refactoring:
                                                      projects)
 
 
-Here ``projects`` is the list of dependant projects.  It does not
+Here ``projects`` is the list of dependent projects.  It does not
 include the main project.  The first argument is the refactoring class
 (such as ``Rename``) or factory function (like ``create_move``).
 

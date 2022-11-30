@@ -133,14 +133,14 @@ class IsolatedHistoryTest(unittest.TestCase):
             self.history.undo(drop=True)
             self.history.redo()
 
-    def test_undoing_choosen_changes(self):
+    def test_undoing_chosen_changes(self):
         change = rope.base.change.ChangeContents(self.file1, "1")
         self.history.do(change)
         self.history.undo(change)
         self.assertEqual("", self.file1.read())
         self.assertFalse(self.history.undo_list)
 
-    def test_undoing_choosen_changes2(self):
+    def test_undoing_chosen_changes2(self):
         change1 = rope.base.change.ChangeContents(self.file1, "1")
         self.history.do(change1)
         self.history.do(rope.base.change.ChangeContents(self.file1, "2"))
@@ -148,7 +148,7 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEqual("", self.file1.read())
         self.assertFalse(self.history.undo_list)
 
-    def test_undoing_choosen_changes_not_undoing_others(self):
+    def test_undoing_chosen_changes_not_undoing_others(self):
         change1 = rope.base.change.ChangeContents(self.file1, "1")
         self.history.do(change1)
         self.history.do(rope.base.change.ChangeContents(self.file2, "2"))
@@ -226,7 +226,7 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEqual({change}, set(self.history.get_file_undo_list(self.file1)))
 
     # XXX: What happens for moves before the file is created?
-    def xxx_test_get_file_undo_list_and_moving_its_contining_folder(self):
+    def xxx_test_get_file_undo_list_and_moving_its_containing_folder(self):
         folder = self.project.root.create_folder("folder")
         old_file = folder.create_file("file3.txt")
         change1 = rope.base.change.MoveResource(folder, "new_folder")
@@ -256,7 +256,7 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEqual(0, len(self.history.undo_list))
         self.assertEqual(0, len(self.history.redo_list))
 
-    def test_redoing_choosen_changes_not_undoing_others(self):
+    def test_redoing_chosen_changes_not_undoing_others(self):
         change1 = rope.base.change.ChangeContents(self.file1, "1")
         change2 = rope.base.change.ChangeContents(self.file2, "2")
         self.history.do(change1)
