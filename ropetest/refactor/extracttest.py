@@ -457,7 +457,7 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
-    def test_extract_method_containing_uncomplete_lines(self):
+    def test_extract_method_containing_incomplete_lines(self):
         code = dedent("""\
             a_var = 20
             another_var = 30
@@ -467,7 +467,7 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
-    def test_extract_method_containing_uncomplete_lines2(self):
+    def test_extract_method_containing_incomplete_lines2(self):
         code = dedent("""\
             a_var = 20
             another_var = 30
@@ -477,7 +477,7 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
-    def test_extract_function_and_argument_as_paramenter(self):
+    def test_extract_function_and_argument_as_parameter(self):
         code = dedent("""\
             def a_func(arg):
                 print(arg)
@@ -1666,7 +1666,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_where_to_seach_when_extracting_global_names(self):
+    def test_where_to_search_when_extracting_global_names(self):
         code = dedent("""\
             def a():
                 return 1

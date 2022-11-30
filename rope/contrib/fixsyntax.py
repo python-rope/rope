@@ -62,7 +62,7 @@ class FixSyntax:
         new_code = pymodule.source_code
 
         def new_pyname():
-            newoffset = self.commenter.transfered_offset(offset)
+            newoffset = self.commenter.transferred_offset(offset)
             return rope.base.evaluate.eval_location(pymodule, newoffset)
 
         if new_code.startswith(self.code[: offset + 1]):
@@ -97,7 +97,7 @@ class _Commenter:
             self._set(line, self.lines[start])
         self._fix_incomplete_try_blocks(lineno, indents)
 
-    def transfered_offset(self, offset):
+    def transferred_offset(self, offset):
         lineno = self.code.count("\n", 0, offset)
         diff = sum(self.diffs[:lineno])
         return offset + diff

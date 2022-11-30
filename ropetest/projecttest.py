@@ -833,7 +833,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.project.validate()
         self.assertEqual(1, len(self.project.get_files()))
 
-    def test_clear_observered_resources_for_filtered_observers(self):
+    def test_clear_observed_resources_for_filtered_observers(self):
         sample_file = self.project.root.create_file("myfile.txt")
         sample_observer = _SampleObserver()
         filtered = FilteredResourceObserver(sample_observer)
