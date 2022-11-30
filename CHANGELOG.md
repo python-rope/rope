@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #533 Refactoring to Remove usage of unicode type
+- #559 Improve handling of whitespace in import and from-import statements
 
 # Release 1.5.1
 
