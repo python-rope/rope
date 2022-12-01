@@ -323,11 +323,11 @@ class _PyModule(PyDefinedObject, AbstractModule):
         return self.resource
 
 
-class DummyPyModule(_PyModule):
+class PlaceholderPyModule(_PyModule):
     """Only a placeholder"""
 
 
-class DummyPyPackage(_PyModule):
+class PlaceholderPyPackage(_PyModule):
     """Only a placeholder"""
 
 

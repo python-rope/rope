@@ -253,7 +253,7 @@ class SelfImportVisitor(ImportInfoVisitor):
             try:
                 result = pymodule[name].get_object()
                 if (
-                    isinstance(result, pyobjects.DummyPyModule)
+                    isinstance(result, pyobjects.PlaceholderPyModule)
                     and result.get_resource() == self.resource
                 ):
                     imported = name

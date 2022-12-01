@@ -164,7 +164,7 @@ class PyClass(pyobjects.PyClass):
         return rope.base.pyscopes.ClassScope(self.pycore, self)
 
 
-class PyModule(pyobjects.DummyPyModule):
+class PyModule(pyobjects.PlaceholderPyModule):
     def __init__(self, pycore, source=None, resource=None, force_errors=False):
         ignore = pycore.project.prefs.get("ignore_syntax_errors", False)
         syntax_errors = force_errors or not ignore
@@ -230,7 +230,7 @@ class PyModule(pyobjects.DummyPyModule):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class PyPackage(pyobjects.DummyPyPackage):
+class PyPackage(pyobjects.PlaceholderPyPackage):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
         init_dot_py = self._get_init_dot_py()

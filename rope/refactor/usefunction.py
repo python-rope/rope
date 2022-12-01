@@ -15,7 +15,7 @@ class UseFunction:
             raise exceptions.RefactoringError("Unresolvable name selected")
         self.pyfunction = pyname.get_object()
         if not isinstance(self.pyfunction, pyobjects.PyFunction) or not isinstance(
-            self.pyfunction.parent, pyobjects.DummyPyModule
+            self.pyfunction.parent, pyobjects.PlaceholderPyModule
         ):
             raise exceptions.RefactoringError(
                 "Use function works for global functions, only."

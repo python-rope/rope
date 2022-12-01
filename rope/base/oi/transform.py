@@ -271,7 +271,7 @@ class DOITextualToPyObject(TextualToPyObject):
                 result = self._function_to_pyobject(textual)
             else:
                 result = self._class_to_pyobject(textual)
-            if not isinstance(result, rope.base.pyobjects.DummyPyModule):
+            if not isinstance(result, rope.base.pyobjects.PlaceholderPyModule):
                 return result
 
     def _find_occurrence(self, name, source):

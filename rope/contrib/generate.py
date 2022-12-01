@@ -292,7 +292,7 @@ class _GenerationInfo:
         primary = self.primary
         if self.primary is None:
             return self.pycore.project.get_source_folders()[0]
-        if isinstance(primary.get_object(), pyobjects.DummyPyPackage):
+        if isinstance(primary.get_object(), pyobjects.PlaceholderPyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(
             "A module/package can be only created in a package."
