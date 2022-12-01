@@ -14,7 +14,7 @@ class LocalToField:
         pyname = evaluate.eval_location(this_pymodule, self.offset)
         if not self._is_a_method_local(pyname):
             raise exceptions.RefactoringError(
-                "Convert local variable to field should be performed on \n"
+                "Convert local variable to field should be performed on "
                 "a local variable of a method."
             )
 
