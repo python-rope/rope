@@ -85,32 +85,30 @@ class PyFunction(pyobjects.PyFunction):
                 result.append(self.arguments.kwarg.arg)
         return result
 
+    def get_kind(self):
+        """Get function type
 
-def get_kind(self):
-    """Get function type
+        It returns one of 'function', 'method', 'staticmethod' or
+        'classmethod' strs.
 
-    It returns one of 'function', 'method', 'staticmethod' or
-    'classmethod' strs.
+        """
+        scope = self.parent.get_scope()
+        if isinstance(self.parent, PyClass):
+            for decorator in self.decorators:
+                pyname = rope.base.evaluate.eval_node(scope, decorator)
+                if pyname == rope.base.builtins.builtins["staticmethod"]:
+                    return "staticmethod"
+                if pyname == rope.base.builtins.builtins["classmethod"]:
+                    return "classmethod"
+            return "method"
+        return "function"
 
-    """
-    scope = self.parent.get_scope()
-    if isinstance(self.parent, PyClass):
-        for decorator in self.decorators:
-            pyname = rope.base.evaluate.eval_node(scope, decorator)
-            if pyname == rope.base.builtins.builtins["staticmethod"]:
-                return "staticmethod"
-            if pyname == rope.base.builtins.builtins["classmethod"]:
-                return "classmethod"
-        return "method"
-    return "function"
-
-
-@property
-def decorators(self):
-    try:
-        return getattr(self.ast_node, "decorator_list")
-    except AttributeError:
-        return getattr(self.ast_node, "decorators", None)
+    @property
+    def decorators(self):
+        try:
+            return getattr(self.ast_node, "decorator_list")
+        except AttributeError:
+            return getattr(self.ast_node, "decorators", None)
 
 
 class PyComprehension(pyobjects.PyComprehension):
