@@ -9,6 +9,13 @@ class PyObject:
             type_ = self
         self.type = type_
 
+    @property
+    def decorators(self):
+        try:
+            return getattr(self.ast_node, "decorator_list")
+        except AttributeError:
+            return getattr(self.ast_node, "decorators", None)
+
     def get_attributes(self):
         if self.type is self:
             return {}
