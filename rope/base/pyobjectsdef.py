@@ -56,6 +56,31 @@ class PyFunction(pyobjects.PyFunction):
             self._handle_special_args(pyobjects)
         self.parameter_pyobjects.set(pyobjects)
 
+    @property
+    def decorators(self):
+        try:
+            return getattr(self.ast_node, "decorator_list")
+        except AttributeError:
+            return getattr(self.ast_node, "decorators", None)
+
+    def get_kind(self):
+        """Get function type
+
+        It returns one of 'function', 'method', 'staticmethod' or
+        'classmethod' strs.
+
+        """
+        scope = self.parent.get_scope()
+        if isinstance(self.parent, PyClass):
+            for decorator in self.decorators:
+                pyname = rope.base.evaluate.eval_node(scope, decorator)
+                if pyname == rope.base.builtins.builtins["staticmethod"]:
+                    return "staticmethod"
+                if pyname == rope.base.builtins.builtins["classmethod"]:
+                    return "classmethod"
+            return "method"
+        return "function"
+
     def get_parameters(self):
         if self.parameter_pynames is None:
             result = {}
@@ -84,33 +109,6 @@ class PyFunction(pyobjects.PyFunction):
             if self.arguments.kwarg:
                 result.append(self.arguments.kwarg.arg)
         return result
-
-
-def get_kind(self):
-    """Get function type
-
-    It returns one of 'function', 'method', 'staticmethod' or
-    'classmethod' strs.
-
-    """
-    scope = self.parent.get_scope()
-    if isinstance(self.parent, PyClass):
-        for decorator in self.decorators:
-            pyname = rope.base.evaluate.eval_node(scope, decorator)
-            if pyname == rope.base.builtins.builtins["staticmethod"]:
-                return "staticmethod"
-            if pyname == rope.base.builtins.builtins["classmethod"]:
-                return "classmethod"
-        return "method"
-    return "function"
-
-
-@property
-def decorators(self):
-    try:
-        return getattr(self.ast_node, "decorator_list")
-    except AttributeError:
-        return getattr(self.ast_node, "decorators", None)
 
 
 class PyComprehension(pyobjects.PyComprehension):
