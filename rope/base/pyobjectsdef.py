@@ -85,7 +85,6 @@ class PyFunction(pyobjects.PyFunction):
                 result.append(self.arguments.kwarg.arg)
         return result
 
-
     def get_kind(self):
         """Get function type
 
@@ -110,6 +109,7 @@ class PyFunction(pyobjects.PyFunction):
             return getattr(self.ast_node, "decorator_list")
         except AttributeError:
             return getattr(self.ast_node, "decorators", None)
+
 
 class PyComprehension(pyobjects.PyComprehension):
     def __init__(self, pycore, ast_node, parent):
