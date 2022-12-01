@@ -6,7 +6,6 @@ from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
 
-basestring = (str, bytes)
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
@@ -217,7 +216,7 @@ class _PatchingASTWalker:
         start = 0
         opens = 0
         for child in children:
-            if not isinstance(child, basestring):
+            if not isinstance(child, (str, bytes)):
                 continue
             if child == "" or child[0] in "'\"":
                 continue
@@ -379,7 +378,7 @@ class _PatchingASTWalker:
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
     def _Constant(self, node):
-        if isinstance(node.value, basestring):
+        if isinstance(node.value, (str, bytes)):
             self._handle(node, [self.String])
             return
 

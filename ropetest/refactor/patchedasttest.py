@@ -6,10 +6,6 @@ from rope.base import ast
 from rope.refactor import patchedast
 from ropetest import testutils
 
-try:
-    basestring
-except NameError:
-    basestring = (str, bytes)
 
 NameConstant = "Name" if sys.version_info <= (3, 8) else "NameConstant"
 Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
@@ -1669,7 +1665,7 @@ class _ResultChecker:
             if not isinstance(expected, (tuple, list)):
                 goals = [expected]
             for goal in goals:
-                if goal == "" or isinstance(child, basestring):
+                if goal == "" or isinstance(child, (str, bytes)):
                     self.test_case.assertEqual(goal, child)
                     break
             else:
