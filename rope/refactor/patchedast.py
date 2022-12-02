@@ -394,7 +394,7 @@ class _PatchingASTWalker:
             self._handle(node, ["..."])
             return
 
-        raise AssertionError(f"unknown node.value: {node.value!r}")
+        assert False
 
     def _Num(self, node):
         self._handle(node, [self.Number])
