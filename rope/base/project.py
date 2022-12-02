@@ -156,7 +156,7 @@ class _Project:
         return None
 
     def find_relative_module(self, modname, folder, level):
-        for _i in range(level - 1):
+        for i in range(level - 1):
             folder = folder.parent
         if modname == "":
             return folder

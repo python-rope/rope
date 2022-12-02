@@ -372,7 +372,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
                     result.append(arg)
                 else:
                     result.append("arg%d" % len(result))
-            for name, _value in keywords:
+            for name, value in keywords:
                 result.append(name)
         return result
 

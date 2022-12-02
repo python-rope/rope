@@ -19,7 +19,7 @@ class NumPyDocstringParamParser(docstrings.IParamParser):
         if not docstring:
             return []
         params = NumpyDocString(docstring)._parsed_data["Parameters"]
-        for p_name, p_type, _p_descr in params:
+        for p_name, p_type, p_descr in params:
             if p_name == param_name:
                 m = re.match("([^,]+(,[^,]+)*?)(,[ ]*optional)?$", p_type)
                 if m:

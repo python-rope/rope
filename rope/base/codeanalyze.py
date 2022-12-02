@@ -181,7 +181,7 @@ class LogicalLineFinder:
                 indents = count_line_indents(self.lines.get_line(lineno))
 
     def generate_starts(self, start_line=1, end_line=None):
-        for start, _end in self.generate_regions(start_line, end_line):
+        for start, end in self.generate_regions(start_line, end_line):
             yield start
 
     def generate_regions(self, start_line=1, end_line=None):

@@ -183,13 +183,13 @@ class _PatchingASTWalker:
         opens, closes = self._count_needed_parens(formats)
         old_end = self.source.offset
         new_end = None
-        for _i in range(closes):
+        for i in range(closes):
             new_end = self.source.consume(")")[1]
         if new_end is not None:
             if self.children:
                 children.append(self.source[old_end:new_end])
         new_start = start
-        for _i in range(opens):
+        for i in range(opens):
             new_start = self.source.rfind_token("(", 0, new_start)
         if new_start != start:
             if self.children:
