@@ -12,7 +12,7 @@ class PyObject:
     @property
     def decorators(self):
         try:
-            return getattr(self.ast_node, "decorator_list")
+            return self.ast_node.decorator_list
         except AttributeError:
             return getattr(self.ast_node, "decorators", None)
 
