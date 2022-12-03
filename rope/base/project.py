@@ -273,7 +273,7 @@ class Project(_Project):
 
     def _init_other_parts(self):
         # Forcing the creation of `self.pycore` to register observers
-        self.pycore
+        self.pycore  # pylint: disable=pointless-statement
 
     def is_ignored(self, resource):
         return self.ignored.does_match(resource)

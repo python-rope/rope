@@ -1,9 +1,5 @@
 """Tests for autoimport utility functions, written in pytest"""
 
-from sys import platform
-
-import pytest
-
 from rope.contrib.autoimport import utils
 from rope.contrib.autoimport.defs import Package, PackageType, Source
 
@@ -59,5 +55,5 @@ def test_get_package_tuple_typing(typing_path):
 def test_get_package_tuple_compiled(compiled_lib):
     lib_name, lib_path = compiled_lib
     assert Package(
-	lib_name, Source.STANDARD, lib_path, PackageType.COMPILED
+        lib_name, Source.STANDARD, lib_path, PackageType.COMPILED
     ) == utils.get_package_tuple(lib_path)

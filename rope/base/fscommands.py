@@ -103,7 +103,7 @@ class MercurialCommands:
                 traceback=False,
                 report_untrusted=False,
             )
-        except:
+        except Exception:
             self.ui = self.hg.ui.ui()
             self.ui.setconfig("ui", "interactive", "no")
             self.ui.setconfig("ui", "debug", "no")

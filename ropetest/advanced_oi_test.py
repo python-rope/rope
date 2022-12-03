@@ -1051,7 +1051,7 @@ class NewStaticOITest(unittest.TestCase):
             l = {}
             v = l["key"]
         """))
-        pymod1 = self.project.get_pymodule(mod1)  # noqa
+        pymod1 = self.project.get_pymodule(mod1)
         var = pymod1["v"].get_object()  # noqa
 
     def test_always_returning_containing_class_for_selfs(self):

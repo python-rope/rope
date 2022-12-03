@@ -574,7 +574,7 @@ class _GlobalImportFinder:
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body
-        for index, node in enumerate(nodes):
+        for node in nodes:
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 lines = self.pymodule.logical_lines
                 end_line = lines.logical_line_in(node.lineno)[1] + 1

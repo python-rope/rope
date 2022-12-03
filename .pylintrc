@@ -1,0 +1,211 @@
+# A settings file for running pylint on Rope.
+
+# Run pylint from the top-level Rope directory:  `python -m pylint rope`
+
+# This file tested on pylint 2.14.4, Python 3.10.5, as reported by `python -m pylint --version`.
+
+[MASTER]
+
+# Add <file or directory> to the black list. A base name, not a path.
+ignore=
+    .git
+    
+# Files or directories matching regex, in Windows or Posix format.
+ignore-paths=
+
+# Pickle collected data for later comparisons.
+persistent=yes
+
+[MESSAGES CONTROL]
+
+# Enable the message, report, category or checker with the given id(s).
+# enable=
+
+# Disable the message, report, category or checker with the given id(s).
+disable=
+
+    # Catagories to disable: expensive or make-work
+    # typecheck
+    
+        basic,  # Check on names. Unimportant.
+        classes,  # Unimportant.
+        design,  # Make work.
+        format,  # Use black
+        imports,  # Creates import graph.  Expensive?
+        similarities,  # Expensive.
+        typecheck,  # Unimportant
+        variables,  # Unimportant.
+
+    # Black. Suppress checks that conflict with Black's conventions.
+    
+        line-too-long,
+        
+    # Rope: Suppress checks that conflict with Rope's conventions.
+
+        bad-classmethod-argument,
+        eval-used,
+        function-redefined,
+        inconsistent-return-statements, 
+        invalid-name, 
+        no-else-return,
+        no-self-argument,
+        signature-differs,  # Maybe.
+        not-callable,  # Maybe.
+        unexpected-special-method-signature,
+        
+    # Rope: potentially serious warnings.
+    
+        arguments-differ,
+        dangerous-default-value,
+        modified-iterating-list,
+        used-before-assignment,
+        unsubscriptable-object,
+        unpacking-non-sequence,
+
+    # Rope: to be removed.
+    
+        duplicate-string-formatting-argument,
+        no-else-raise,  # Unnecessary "else" after "raise", remove the "else" and de-indent the code inside it.
+        reimported,
+        superfluous-parens,
+        unused-import,
+        unused-wildcard-import,
+        useless-super-delegation,
+        
+        useless-else-on-loop,  #Else clause on loop without a break statement, remove the else and de-indent all the code inside it.
+        unidiomatic-typecheck,
+        wildcard-import,
+        wrong-import-order,
+        
+    # Rope: Additional (temporary?) suppressions.
+    
+        abstract-method,
+        arguments-differ,
+        consider-merging-isinstance,
+        consider-using-enumerate,
+        deprecated-method,
+        implicit-str-concat,
+        logging-fstring-interpolation,
+        no-member,
+        no-staticmethod-decorator,  # Consider using a decorator instead of calling staticmethod.
+        non-parent-init-called,
+        raise-missing-from,
+        super-init-not-called,
+        unnecessary-lambda,
+        unsupported-assignment-operation,
+    
+    # Leo: Standard suppressions.
+        
+        arguments-renamed, # cursesGui2.py
+        assignment-from-no-return, # Causes problems when base class return None.
+        assignment-from-none, # Causes problems when base class return None.
+        attribute-defined-outside-init,
+        broad-except, # except Exception is justified if followed by g.es_exception.
+        c-extension-no-member,  # Too many errors re pyQt6.
+        condition-evals-to-constant,
+        consider-iterating-dictionary,
+        consider-using-from-import,
+        consider-using-f-string,  # complains about regex's!
+        consider-using-in,
+        consider-using-dict-comprehension,
+        consider-using-dict-items,
+        consider-using-generator,
+        consider-using-max-builtin,
+        consider-using-set-comprehension,
+        consider-using-ternary,
+        consider-using-with,
+        cyclic-import,
+        deprecated-module,
+        exec-used,
+        f-string-without-interpolation,  # Useful for concatenated f-strings.
+        global-statement, #  Assume we know what we are doing.
+        global-variable-not-assigned, # not helpful.
+        import-error,  # Ignore imports of optional packages.
+        import-outside-toplevel, # Requires substantial code changes.
+        keyword-arg-before-vararg, # See https://github.com/PyCQA/pylint/issues/2027
+        missing-docstring, # Instead, use Leo's find-missing-docstrings command.
+        no-else-break, # **Possible pylint bug**
+        protected-access,
+        redeclared-assigned-name,
+        redefined-argument-from-local, # I do this all the time.
+        redefined-builtin, # all, next, etc. so what?
+        redefined-outer-name,
+        too-few-public-methods,
+        trailing-whitespace,  # Too picky. No need to constantly do clean-all-lines.
+        unnecessary-comprehension,
+        unnecessary-dunder-call,  # pylint for python 3.10 only.
+        unnecessary-lambda-assignment,
+        unnecessary-pass, # Can be pedantic in some situations.
+        unspecified-encoding,  # Huh?
+        unused-argument,
+        unused-private-member, # too many false positives.
+        unused-variable, # way too many false positives, esp. tuple unpacking.
+        use-dict-literal,
+        use-list-literal,
+        use-maxsplit-arg, # What is this??
+        using-constant-test,
+
+    # Good warnings. Don't suppress these.
+
+        # bad-option-value, # obsolete pylint option.
+        # unrecognized-option,  # newer python.
+
+        # bad-builtin,
+        # bad-continuation,
+        # bad-option-value, # obsolete pylint option.
+        # chained-comparison,
+        # len-as-condition,
+        # import-error, # Warns when an import fails: useful now that we are only using python 3.
+        # literal-comparison,
+        # locally-disabled,
+        # multiple-statements,
+        # no-else-raise,
+        # no-init,
+        # no-value-for-parameter,
+        # not-an-iterable,
+        # old-style-class, # Probably not an issue.
+        # simplifiable-if-statement,
+        # singleton-comparison,
+        # superfluous-parens,
+        # trailing-comma-tuple,
+        # unsupported-assignment-operation,
+        # unsupported-delete-operation,
+        # unsubscriptable-object,
+        # useless-object-inheritance, # class x(object):
+        # useless-return,
+
+[REPORTS]
+
+# Set the output format.  Multiple values are allowed.
+output-format=text # colorized, text, parseable, msvs (visual studio)
+
+reports=no  # Display only messages.
+
+score=no  # Deactivate the evaluation score.
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+# notes=FIXME,XXX,TODO
+notes=
+
+# The following sections are all suppressed above.
+
+[BASIC]
+
+[CLASSES]
+
+[DESIGN]
+
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=10  # Apparently, this can't be suppressed!
+
+[FORMAT]
+
+[IMPORTS]
+
+[SIMILARITIES]
+
+[TYPECHECK]
+
+[VARIABLES]
