@@ -20,15 +20,15 @@ def indent_lines(source_code, amount):
         return source_code
     lines = source_code.splitlines(True)
     result = []
-    for l in lines:
-        if l.strip() == "":
+    for line in lines:
+        if line.strip() == "":
             result.append("\n")
             continue
         if amount < 0:
-            indents = codeanalyze.count_line_indents(l)
-            result.append(max(0, indents + amount) * " " + l.lstrip())
+            indents = codeanalyze.count_line_indents(line)
+            result.append(max(0, indents + amount) * " " + line.lstrip())
         else:
-            result.append(" " * amount + l)
+            result.append(" " * amount + line)
     return "".join(result)
 
 

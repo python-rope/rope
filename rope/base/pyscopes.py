@@ -328,14 +328,14 @@ class _HoldingScopeFinder:
             body_indents = self._get_scope_indents(scope) + 4
         else:
             body_indents = self._get_body_indents(scope)
-        for l in self.logical_lines.generate_starts(
+        for line_start in self.logical_lines.generate_starts(
             min(end + 1, self.lines.length()), self.lines.length() + 1
         ):
-            if not self._is_empty_line(l):
-                if self.get_indents(l) < body_indents:
+            if not self._is_empty_line(line_start):
+                if self.get_indents(line_start) < body_indents:
                     return end
                 else:
-                    end = l
+                    end = line_start
         return end
 
     @property
