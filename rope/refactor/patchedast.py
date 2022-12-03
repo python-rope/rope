@@ -536,7 +536,7 @@ class _PatchingASTWalker:
     def _handle_function_def_node(self, node, is_async):
         children = []
         try:
-            decorators = getattr(node, "decorator_list")
+            decorators = node.decorator_list
         except AttributeError:
             decorators = getattr(node, "decorators", None)
         if decorators:
@@ -922,7 +922,7 @@ class _Source:
                     break
                 else:
                     self._skip_comment()
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError) as e:  # noqa
             raise MismatchedTokenError(
                 f"Token <{token}> at {self._get_location()} cannot be matched"
             )
