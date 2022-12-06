@@ -22,12 +22,13 @@ def parse(source, filename="<string>"):
         raise error
 
 
-def walk(node, walker):
+def walk(node, walker) -> None:
     """Walk the syntax tree"""
     method_name = "_" + node.__class__.__name__
     method = getattr(walker, method_name, None)
     if method is not None:
-        return method(node)
+        method(node)
+        return
     for child in get_child_nodes(node):
         walk(child, walker)
 
