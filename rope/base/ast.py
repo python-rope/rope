@@ -19,7 +19,7 @@ def parse(source, filename="<string>"):
         v = sys.version_info
         print(
             f"\nSyntax error using Python {v.major}.{v.minor}.{v.micro}\n"
-            f"Is this version compatible with the code you are refactoring?\n"
+            "Is this version compatible with the code you are refactoring?\n"
         )
         error = SyntaxError()
         error.lineno = 1
