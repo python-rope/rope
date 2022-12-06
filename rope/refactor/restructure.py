@@ -1,6 +1,6 @@
 import warnings
 
-from rope.base import change, taskhandle, builtins, ast, codeanalyze
+from rope.base import astutils, change, taskhandle, builtins, codeanalyze
 from rope.base import libutils
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
@@ -310,7 +310,7 @@ class _ChangeComputer:
     def _get_nearest_roots(self, node):
         if node not in self._nearest_roots:
             result = []
-            for child in ast.get_child_nodes(node):
+            for child in astutils.get_child_nodes(node):
                 if child in self.matched_asts:
                     result.append(child)
                 else:

@@ -1,9 +1,10 @@
 """This module tries to support builtin types and functions."""
+import ast
 import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import ast, pynames, pyobjects, arguments, utils
+from rope.base import pynames, pyobjects, arguments, utils
 
 
 try:

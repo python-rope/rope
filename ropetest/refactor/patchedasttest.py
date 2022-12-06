@@ -1,8 +1,9 @@
+import ast
 import unittest
 import sys
 from textwrap import dedent
 
-from rope.base import ast
+from rope.base import astutils
 from rope.refactor import patchedast
 from ropetest import testutils
 
@@ -1651,7 +1652,7 @@ class _ResultChecker:
                 return self.result is not None
 
         search = Search()
-        ast.call_for_nodes(self.ast, search, recursive=True)
+        astutils.call_for_nodes(self.ast, search, recursive=True)
         return search.result
 
     def check_children(self, text, children):

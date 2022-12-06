@@ -1,6 +1,7 @@
+import ast
 from itertools import chain
 
-from rope.base import ast
+from rope.base import astutils
 
 
 def find_visible(node, lines):
@@ -71,7 +72,7 @@ class Suite:
         if self._children is None:
             walker = _SuiteWalker(self)
             for child in self.child_nodes:
-                ast.walk(child, walker)
+                astutils.walk(child, walker)
             self._children = walker.suites
         return self._children
 
