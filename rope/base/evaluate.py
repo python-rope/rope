@@ -1,3 +1,4 @@
+import ast
 from operator import itemgetter
 from typing import Optional, Tuple
 
@@ -5,7 +6,6 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
-    ast,
     astutils,
     exceptions,
     pyobjects,

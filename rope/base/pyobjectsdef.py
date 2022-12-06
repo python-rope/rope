@@ -1,3 +1,4 @@
+import ast
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -6,7 +7,6 @@ import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
     arguments,
-    ast,
     astutils,
     exceptions,
     fscommands,
@@ -177,7 +177,7 @@ class PyModule(pyobjects.PyModule):
                 raise
             else:
                 source = "\n"
-                node = ast.parse("\n")
+                node = astutils.parse("\n")
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
@@ -197,7 +197,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = astutils.parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
@@ -239,7 +239,7 @@ class PyPackage(pyobjects.PyPackage):
                 init_dot_py, force_errors=force_errors
             ).get_ast()
         else:
-            ast_node = ast.parse("\n")
+            ast_node = astutils.parse("\n")
         super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
