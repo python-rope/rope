@@ -1,8 +1,7 @@
 import os.path
 import shutil
 from textwrap import dedent
-
-import pytest
+import unittest
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
@@ -10,9 +9,6 @@ from rope.base.libutils import path_to_resource
 from rope.base.project import Project, NoProject, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
-
-
-import unittest
 
 
 class ProjectTest(unittest.TestCase):

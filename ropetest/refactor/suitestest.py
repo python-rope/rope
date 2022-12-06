@@ -1,8 +1,8 @@
+import ast
 from textwrap import dedent
 
 import unittest
 
-from rope.base import ast
 from rope.refactor import suites
 from ropetest import testutils
 

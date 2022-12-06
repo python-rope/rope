@@ -38,13 +38,15 @@ calling the `create_finder()` function.
 import ast
 import re
 
-from rope.base import codeanalyze
-from rope.base import evaluate
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    codeanalyze,
+    evaluate,
+    exceptions,
+    pynames,
+    pyobjects,
+    utils,
+    worder,
+)
 
 
 class Finder:
@@ -333,8 +335,8 @@ class _TextualFinder:
                     yield match.start("fstring") + occurrence_node.col_offset
 
     def _search_in_f_string(self, f_string):
-        tree = ast.parse(f_string)
-        for node in ast.walk(tree):
+        tree = ast.parse(f_string)  # not astutils.parse.
+        for node in ast.walk(tree):  # not astutils.walk.
             if isinstance(node, ast.Name) and node.id == self.name:
                 yield node
 

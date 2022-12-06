@@ -1,3 +1,4 @@
+import ast
 from operator import itemgetter
 from typing import Optional, Tuple
 
@@ -5,7 +6,6 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
-    ast,
     astutils,
     exceptions,
     pyobjects,
@@ -39,7 +39,7 @@ def eval_node(scope, node):
 
 def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
-    ast.walk(node, evaluator)
+    astutils.walk(node, evaluator)
     return evaluator.old_result, evaluator.result
 
 
