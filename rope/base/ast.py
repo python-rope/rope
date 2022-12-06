@@ -16,8 +16,6 @@ def parse(source, filename="<string>"):
     try:
         return ast.parse(source, filename="<unknown>")
     except (TypeError, ValueError) as e:
-        from leo.core import leoGlobals as g
-
         v = sys.version_info
         print(
             f"\nSyntax error using Python {v.major}.{v.minor}.{v.micro}\n"
