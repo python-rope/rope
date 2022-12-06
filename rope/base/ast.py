@@ -1,4 +1,5 @@
 import ast
+import sys
 from ast import *
 
 from rope.base import fscommands
@@ -15,6 +16,13 @@ def parse(source, filename="<string>"):
     try:
         return ast.parse(source, filename="<unknown>")
     except (TypeError, ValueError) as e:
+        from leo.core import leoGlobals as g
+
+        v = sys.version_info
+        print(
+            f"\nSyntax error using Python {v.major}.{v.minor}.{v.micro}\n"
+            f"Is this version compatible with the code you are refactoring?\n"
+        )
         error = SyntaxError()
         error.lineno = 1
         error.filename = filename
