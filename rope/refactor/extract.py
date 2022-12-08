@@ -1,8 +1,10 @@
+import ast
 import re
 from contextlib import contextmanager
 from itertools import chain
 
-from rope.base import ast, codeanalyze
+from rope.base import astutils, codeanalyze
+from rope.base.astwrapper import parse, walk
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
@@ -589,7 +591,7 @@ class _ExtractMethodParts:
         )
         body = self.info.source[self.info.scope_region[0] : self.info.scope_region[1]]
         node = _parse_text(body)
-        ast.walk(node, info_collector)
+        walk(node, info_collector)
         return info_collector
 
     def _get_function_definition(self):
@@ -755,7 +757,7 @@ class _ExtractMethodParts:
     def _get_globals_in_body(unindented_body):
         node = _parse_text(unindented_body)
         visitor = _GlobalFinder()
-        ast.walk(node, visitor)
+        walk(node, visitor)
         return visitor.globals_
 
 
@@ -822,12 +824,12 @@ class _FunctionInformationCollector:
             for name in _get_argnames(node.args):
                 self._written_variable(name, node.lineno)
             for child in node.body:
-                ast.walk(child, self)
+                walk(child, self)
         else:
             self._written_variable(node.name, node.lineno)
             visitor = _VariableReadsAndWritesFinder()
             for child in node.body:
-                ast.walk(child, visitor)
+                walk(child, visitor)
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
@@ -846,21 +848,21 @@ class _FunctionInformationCollector:
     def _MatchAs(self, node):
         self._written_variable(node.name, node.lineno)
         if node.pattern:
-            ast.walk(node.pattern, self)
+            walk(node.pattern, self)
 
     def _Assign(self, node):
-        ast.walk(node.value, self)
+        walk(node.value, self)
         for child in node.targets:
-            ast.walk(child, self)
+            walk(child, self)
 
     def _AugAssign(self, node):
-        ast.walk(node.value, self)
+        walk(node.value, self)
         if isinstance(node.target, ast.Name):
             target_id = node.target.id
             self._read_variable(target_id, node.target.lineno)
             self._written_variable(target_id, node.target.lineno)
         else:
-            ast.walk(node.target, self)
+            walk(node.target, self)
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
@@ -882,8 +884,8 @@ class _FunctionInformationCollector:
         written = OrderedSet(self.written)
         maybe_written = OrderedSet(self.maybe_written)
 
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+        for child in astutils.get_child_nodes(node):
+            walk(child, self)
 
         comp_names = list(
             chain.from_iterable(
@@ -914,18 +916,18 @@ class _FunctionInformationCollector:
     def _For(self, node):
         with self._handle_loop_context(node), self._handle_conditional_context(node):
             # iter has to be checked before the target variables
-            ast.walk(node.iter, self)
-            ast.walk(node.target, self)
+            walk(node.iter, self)
+            walk(node.target, self)
 
             for child in node.body:
-                ast.walk(child, self)
+                walk(child, self)
             for child in node.orelse:
-                ast.walk(child, self)
+                walk(child, self)
 
     def _handle_conditional_node(self, node):
         with self._handle_conditional_context(node):
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
+            for child in astutils.get_child_nodes(node):
+                walk(child, self)
 
     @contextmanager
     def _handle_conditional_context(self, node):
@@ -969,8 +971,8 @@ class _VariableReadsAndWritesFinder:
     def _FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+        for child in astutils.get_child_nodes(node):
+            walk(child, visitor)
         self.read.update(visitor.read - visitor.written)
 
     def _Class(self, node):
@@ -982,7 +984,7 @@ class _VariableReadsAndWritesFinder:
             return set(), set()
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
-        ast.walk(node, visitor)
+        walk(node, visitor)
         return visitor.read, visitor.written
 
     @staticmethod
@@ -991,7 +993,7 @@ class _VariableReadsAndWritesFinder:
             return set(), set()
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
-        ast.walk(node, visitor)
+        walk(node, visitor)
         return visitor.read
 
 
@@ -1002,7 +1004,7 @@ class _BaseErrorFinder:
             return False
         node = _parse_text(code)
         visitor = cls()
-        ast.walk(node, visitor)
+        walk(node, visitor)
         return visitor.error
 
 
@@ -1020,14 +1022,14 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
     def loop_encountered(self, node):
         self.loop_count += 1
         for child in node.body:
-            ast.walk(child, self)
+            walk(child, self)
         self.loop_count -= 1
         if node.orelse:
             if isinstance(node.orelse, (list, tuple)):
                 for node_ in node.orelse:
-                    ast.walk(node_, self)
+                    walk(node_, self)
             else:
-                ast.walk(node.orelse, self)
+                walk(node.orelse, self)
 
     def _Break(self, node):
         self.check_loop()
@@ -1078,13 +1080,13 @@ def _get_function_kind(scope):
 def _parse_text(body):
     body = sourceutils.fix_indentation(body, 0)
     try:
-        node = ast.parse(body)
+        node = parse(body)
     except SyntaxError:
         # needed to parse expression containing := operator
         try:
-            node = ast.parse("(" + body + ")")
+            node = parse("(" + body + ")")
         except SyntaxError:
-            node = ast.parse(
+            node = parse(
                 "async def __rope_placeholder__():\n"
                 + sourceutils.fix_indentation(body, 4)
             )

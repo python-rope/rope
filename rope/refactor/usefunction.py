@@ -1,5 +1,15 @@
-from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames, ast
+import ast
+from rope.base import (
+    astutils,
+    change,
+    evaluate,
+    exceptions,
+    pynames,
+    pyobjects,
+    taskhandle,
+)
 from rope.base import libutils
+from rope.base.astwrapper import walk
 from rope.refactor import restructure, sourceutils, similarfinder
 
 
@@ -197,6 +207,6 @@ class _ReturnOrYieldFinder:
     def start_walking(self, node):
         nodes = [node]
         if isinstance(node, ast.FunctionDef):
-            nodes = ast.get_child_nodes(node)
+            nodes = astutils.get_child_nodes(node)
         for child in nodes:
-            ast.walk(child, self)
+            walk(child, self)

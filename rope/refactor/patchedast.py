@@ -1,10 +1,12 @@
+import ast
 import collections
 import numbers
 import re
 import warnings
 from itertools import chain
 
-from rope.base import ast, codeanalyze, exceptions
+from rope.base import astutils, codeanalyze, exceptions
+from rope.base.astwrapper import parse
 
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
@@ -16,7 +18,7 @@ def get_patched_ast(source, sorted_children=False):
     Adds ``sorted_children`` field only if `sorted_children` is True.
 
     """
-    return patch_ast(ast.parse(source), source, sorted_children)
+    return patch_ast(parse(source), source, sorted_children)
 
 
 def patch_ast(node, source, sorted_children=False):
@@ -35,7 +37,7 @@ def patch_ast(node, source, sorted_children=False):
     if hasattr(node, "region"):
         return node
     walker = _PatchingASTWalker(source, children=sorted_children)
-    ast.call_for_nodes(node, walker)
+    astutils.call_for_nodes(node, walker)
     return node
 
 
@@ -90,7 +92,7 @@ class _PatchingASTWalker:
         )
         node.region = (self.source.offset, self.source.offset)
         if self.children:
-            node.sorted_children = ast.get_children(node)
+            node.sorted_children = astutils.get_children(node)
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         if hasattr(node, "region"):
@@ -115,7 +117,7 @@ class _PatchingASTWalker:
                 continue
             offset = self.source.offset
             if isinstance(child, ast.AST):
-                ast.call_for_nodes(child, self)
+                astutils.call_for_nodes(child, self)
                 token_start = child.region[0]
             else:
                 if child is self.String:

@@ -1,9 +1,10 @@
 """This module tries to support builtin types and functions."""
+import ast
 import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import ast, pynames, pyobjects, arguments, utils
+from rope.base import arguments, pynames, pyobjects, utils
 
 
 try:
@@ -39,7 +40,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         if self.pycore is not None:
             submodules = self.pycore._builtin_submodules(self.name)
             for name, module in submodules.items():
-                result[name] = rope.base.builtins.BuiltinName(module)
+                result[name] = BuiltinName(module)  # pylint: disable=no-member
         return result
 
     @property

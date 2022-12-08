@@ -1,7 +1,8 @@
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.pynames
-from rope.base import ast, exceptions, utils
+from rope.base import astutils, exceptions, utils
+from rope.base.astwrapper import walk
 from rope.refactor import patchedast
 
 
@@ -186,8 +187,8 @@ class ComprehensionScope(Scope):
     def _visit_comprehension(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for node in ast.get_child_nodes(self.pyobject.get_ast()):
-                ast.walk(node, new_visitor)
+            for node in astutils.get_child_nodes(self.pyobject.get_ast()):
+                walk(node, new_visitor)
             self.names = dict(self.parent.get_names())
             self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
@@ -218,8 +219,8 @@ class FunctionScope(Scope):
     def _visit_function(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for n in ast.get_child_nodes(self.pyobject.get_ast()):
-                ast.walk(n, new_visitor)
+            for n in astutils.get_child_nodes(self.pyobject.get_ast()):
+                walk(n, new_visitor)
             self.names = new_visitor.names
             self.names.update(self.pyobject.get_parameters())
             self.returned_asts = new_visitor.returned_asts

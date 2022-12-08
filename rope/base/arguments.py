@@ -1,5 +1,6 @@
-import rope.base.evaluate
-from rope.base import ast
+import ast
+
+from rope.base import builtins, evaluate, pyobjects
 
 
 class Arguments:
@@ -36,9 +37,10 @@ class Arguments:
     def get_instance_pyname(self):
         if self.args:
             return self._evaluate(self.args[0])
+        return None
 
     def _evaluate(self, ast_node):
-        return rope.base.evaluate.eval_node(self.scope, ast_node)
+        return evaluate.eval_node(self.scope, ast_node)
 
 
 def create_arguments(primary, pyfunction, call_node, scope):
@@ -99,13 +101,14 @@ def _is_method_call(primary, pyfunction):
         return False
     pyobject = primary.get_object()
     if (
-        isinstance(pyobject.get_type(), rope.base.pyobjects.PyClass)
-        and isinstance(pyfunction, rope.base.pyobjects.PyFunction)
-        and isinstance(pyfunction.parent, rope.base.pyobjects.PyClass)
+        isinstance(pyobject.get_type(), pyobjects.PyClass)
+        and isinstance(pyfunction, pyobjects.PyFunction)
+        and isinstance(pyfunction.parent, pyobjects.PyClass)
     ):
         return True
-    if isinstance(
-        pyobject.get_type(), rope.base.pyobjects.AbstractClass
-    ) and isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
+    if (
+        isinstance(pyobject.get_type(), pyobjects.AbstractClass)
+        and isinstance(pyfunction, builtins.BuiltinFunction)  # pylint: disable=no-member
+    ):
         return True
     return False

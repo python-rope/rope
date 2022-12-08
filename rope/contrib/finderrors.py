@@ -23,7 +23,10 @@ TODO:
 * ... ;-)
 
 """
-from rope.base import ast, evaluate, pyobjects
+import ast
+
+from rope.base import evaluate, pyobjects
+from rope.base.astwrapper import walk
 
 
 def find_errors(project, resource):
@@ -33,7 +36,7 @@ def find_errors(project, resource):
     """
     pymodule = project.get_pymodule(resource)
     finder = _BadAccessFinder(pymodule)
-    ast.walk(pymodule.get_ast(), finder)
+    walk(pymodule.get_ast(), finder)
     return finder.errors
 
 
@@ -60,7 +63,7 @@ class _BadAccessFinder:
             if pyname is not None and pyname.get_object() != pyobjects.get_unknown():
                 if node.attr not in pyname.get_object():
                     self._add_error(node, "Unresolved attribute")
-        ast.walk(node.value, self)
+        walk(node.value, self)
 
     def _add_error(self, node, msg):
         if isinstance(node, ast.Attribute):

@@ -2,16 +2,16 @@ from textwrap import dedent
 
 import unittest
 
-from rope.base import ast
+from rope.base import astwrapper
 from rope.refactor import suites
 from ropetest import testutils
 
 
 class SuiteTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self):  # pylint: disable=useless-super-delegation
         super().setUp()
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=useless-super-delegation
         super().tearDown()
 
     def test_trivial_case(self):
@@ -218,4 +218,4 @@ class SuiteTest(unittest.TestCase):
 
 
 def source_suite_tree(source):
-    return suites.ast_suite_tree(ast.parse(source))
+    return suites.ast_suite_tree(astwrapper.parse(source))

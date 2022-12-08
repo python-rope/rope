@@ -1,3 +1,4 @@
+import ast
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -5,15 +6,16 @@ import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
-    pynamesdef,
-    exceptions,
-    ast,
-    astutils,
-    pyobjects,
-    fscommands,
     arguments,
+    astutils,
+    builtins,
+    exceptions,
+    fscommands,
+    pynamesdef,
+    pyobjects,
     utils,
 )
+from rope.base.astwrapper import parse, walk
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -47,9 +49,9 @@ class PyFunction(pyobjects.PyFunction):
     def _handle_special_args(self, pyobjects):
         if len(pyobjects) == len(self.arguments.args):
             if self.arguments.vararg:
-                pyobjects.append(rope.base.builtins.get_list())
+                pyobjects.append(builtins.get_list())
             if self.arguments.kwarg:
-                pyobjects.append(rope.base.builtins.get_dict())
+                pyobjects.append(builtins.get_dict())
 
     def _set_parameter_pyobjects(self, pyobjects):
         if pyobjects is not None:
@@ -96,9 +98,9 @@ class PyFunction(pyobjects.PyFunction):
         if isinstance(self.parent, PyClass):
             for decorator in self.decorators:
                 pyname = rope.base.evaluate.eval_node(scope, decorator)
-                if pyname == rope.base.builtins.builtins["staticmethod"]:
+                if pyname == builtins.builtins["staticmethod"]:
                     return "staticmethod"
-                if pyname == rope.base.builtins.builtins["classmethod"]:
+                if pyname == builtins.builtins["classmethod"]:
                     return "classmethod"
             return "method"
         return "function"
@@ -177,7 +179,7 @@ class PyModule(pyobjects.PyModule):
                 raise
             else:
                 source = "\n"
-                node = ast.parse("\n")
+                node = parse("\n")
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
@@ -197,7 +199,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
@@ -239,7 +241,7 @@ class PyPackage(pyobjects.PyPackage):
                 init_dot_py, force_errors=force_errors
             ).get_ast()
         else:
-            ast_node = ast.parse("\n")
+            ast_node = parse("\n")
         super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
@@ -247,7 +249,7 @@ class PyPackage(pyobjects.PyPackage):
         modname = rope.base.libutils.modname(self.resource)
         extension_submodules = self.pycore._builtin_submodules(modname)
         for name, module in extension_submodules.items():
-            result[name] = rope.base.builtins.BuiltinName(module)
+            result[name] = builtins.BuiltinName(module)
         if self.resource is None:
             return result
         for name, resource in self._get_child_resources().items():
@@ -301,7 +303,7 @@ class _AnnAssignVisitor:
         self.assigned_ast = node.value
         self.type_hint = node.annotation
 
-        ast.walk(node.target, self)
+        walk(node.target, self)
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
@@ -356,8 +358,8 @@ class _ExpressionVisitor:
         self._GeneratorExp(node)
 
     def _NamedExpr(self, node):
-        ast.walk(node.target, _AssignVisitor(self))
-        ast.walk(node.value, self)
+        walk(node.target, _AssignVisitor(self))
+        walk(node.value, self)
 
 
 class _AssignVisitor:
@@ -368,8 +370,8 @@ class _AssignVisitor:
     def _Assign(self, node):
         self.assigned_ast = node.value
         for child_node in node.targets:
-            ast.walk(child_node, self)
-        ast.walk(node.value, _ExpressionVisitor(self.scope_visitor))
+            walk(child_node, self)
+        walk(node.value, _ExpressionVisitor(self.scope_visitor))
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
@@ -422,7 +424,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         for decorator in pyfunction.decorators:
             if isinstance(decorator, ast.Name) and decorator.id == "property":
                 if isinstance(self, _ClassVisitor):
-                    type_ = rope.base.builtins.Property(pyfunction)
+                    type_ = builtins.Property(pyfunction)
                     arg = pynamesdef.UnboundName(
                         rope.base.pyobjects.PyObject(self.owner_object)
                     )
@@ -446,10 +448,10 @@ class _ScopeVisitor(_ExpressionVisitor):
         return self._FunctionDef(node)
 
     def _Assign(self, node):
-        ast.walk(node, _AssignVisitor(self))
+        walk(node, _AssignVisitor(self))
 
     def _AnnAssign(self, node):
-        ast.walk(node, _AnnAssignVisitor(self))
+        walk(node, _AnnAssignVisitor(self))
 
     def _AugAssign(self, node):
         pass
@@ -457,7 +459,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _For(self, node):
         self._update_evaluated(node.target, node.iter, ".__iter__().next()")
         for child in node.body + node.orelse:
-            ast.walk(child, self)
+            walk(child, self)
 
     def _AsyncFor(self, node):
         return self._For(node)
@@ -494,7 +496,7 @@ class _ScopeVisitor(_ExpressionVisitor):
                     item.optional_vars, item.context_expr, ".__enter__()"
                 )
         for child in node.body:
-            ast.walk(child, self)
+            walk(child, self)
 
     def _AsyncWith(self, node):
         return self._With(node)
@@ -508,7 +510,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             self._update_evaluated(node.name, type_node, eval_type=True)
 
         for child in node.body:
-            ast.walk(child, self)
+            walk(child, self)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
@@ -571,8 +573,8 @@ class _ScopeVisitor(_ExpressionVisitor):
 
 class _ComprehensionVisitor(_ScopeVisitor):
     def _comprehension(self, node):
-        ast.walk(node.target, self)
-        ast.walk(node.iter, self)
+        walk(node.target, self)
+        walk(node.iter, self)
 
     def _Name(self, node):
         if isinstance(node.ctx, ast.Store):
@@ -599,8 +601,8 @@ class _ClassVisitor(_ScopeVisitor):
             if isinstance(first, ast.arg):
                 new_visitor = _ClassInitVisitor(self, first.arg)
             if new_visitor is not None:
-                for child in ast.get_child_nodes(node):
-                    ast.walk(child, new_visitor)
+                for child in astutils.get_child_nodes(node):
+                    walk(child, new_visitor)
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -642,8 +644,8 @@ class _ClassInitVisitor(_AssignVisitor):
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):
             return
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+        for child in astutils.get_child_nodes(node):
+            walk(child, self)
 
     def _Name(self, node):
         pass
