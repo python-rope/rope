@@ -2,6 +2,7 @@ import ast
 
 from rope.base.astwrapper import walk
 
+
 class _NodeNameCollector:
     def __init__(self, levels=None):
         self.names = []
@@ -45,6 +46,8 @@ class _NodeNameCollector:
 
     def _Slice(self, node):
         self._add_node(node)
+
+
 def get_child_nodes(node):
     if isinstance(node, ast.Module):
         return node.body
@@ -76,6 +79,8 @@ def get_name_levels(node):
     visitor = _NodeNameCollector()
     walk(node, visitor)
     return visitor.names
+
+
 def call_for_nodes(node, callback, recursive=False):
     """If callback returns `True` the child nodes are skipped"""
     result = callback(node)

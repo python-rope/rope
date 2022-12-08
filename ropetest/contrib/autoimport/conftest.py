@@ -1,8 +1,7 @@
 import pathlib
 
-from ropetest import testutils
-
 import pytest
+from ropetest import testutils
 
 
 @pytest.fixture

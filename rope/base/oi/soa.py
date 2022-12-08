@@ -88,7 +88,9 @@ class SOAVisitor:
                 if after != before:
                     self.follow(pyfunction)
         # XXX: Maybe we should not call every builtin function
-        if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):  # pylint: disable=no-member
+        if isinstance(
+            pyfunction, rope.base.builtins.BuiltinFunction
+        ):  # pylint: disable=no-member
             pyfunction.get_returned_object(args)
 
     def _parameter_objects(self, pyfunction):

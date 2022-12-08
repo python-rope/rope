@@ -31,5 +31,3 @@ def walk(node, walker) -> None:
         return
     for child in astutils.get_child_nodes(node):
         walk(child, walker)
-
-
