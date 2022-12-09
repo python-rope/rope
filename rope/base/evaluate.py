@@ -1,18 +1,18 @@
-import ast
 from operator import itemgetter
 from typing import Optional, Tuple
 
 import rope.base.builtins
 import rope.base.pynames
+import rope.base.pyobjects
 from rope.base import (
-    arguments,
+    ast,
     astutils,
     exceptions,
     pyobjects,
     pyobjectsdef,
+    arguments,
     worder,
 )
-from rope.base.astwrapper import parse, walk
 
 
 BadIdentifierError = exceptions.BadIdentifierError
@@ -39,7 +39,7 @@ def eval_node(scope, node):
 
 def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
-    walk(node, evaluator)
+    evaluator.visit(node)
     return evaluator.old_result, evaluator.result
 
 
@@ -50,7 +50,7 @@ def eval_str(holding_scope, name):
 def eval_str2(holding_scope, name):
     try:
         # parenthesizing for handling cases like 'a_var.\nattr'
-        node = parse("(%s)" % name)
+        node = ast.parse("(%s)" % name)
     except SyntaxError:
         raise BadIdentifierError("Not a resolvable python identifier selected.")
     return eval_node2(holding_scope, node)
@@ -158,7 +158,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator:
+class StatementEvaluator(ast.RopeNodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None

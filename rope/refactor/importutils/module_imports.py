@@ -1,8 +1,6 @@
-import ast
 from typing import Union, List
 
-from rope.base import astutils, exceptions, pynames, pynamesdef, utils
-from rope.base.astwrapper import walk
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
 
@@ -28,7 +26,7 @@ class ModuleImports:
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        walk(self.pymodule.get_ast(), visitor)
+        visitor.visit(self.pymodule.get_ast())
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
@@ -417,7 +415,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder:
+class _UnboundNameFinder(ast.RopeNodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -429,8 +427,8 @@ class _UnboundNameFinder:
             .pyobject
         )
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in astutils.get_child_nodes(node):
-            walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
 
     def _FunctionDef(self, node):
         self._visit_child_scope(node)
@@ -455,7 +453,7 @@ class _UnboundNameFinder:
             ):
                 self.add_unbound(primary)
         else:
-            walk(node, self)
+            self.visit(node)
 
     def _get_root(self):
         pass
@@ -556,7 +554,7 @@ class _GlobalImportFinder:
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module or "",  # see comment at rope.base.astwrapper.walk
+            node.module or "",  # see comment at rope.base.ast.walk
             level,
             self._get_names(node.names),
         )

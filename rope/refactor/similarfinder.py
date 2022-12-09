@@ -1,11 +1,8 @@
 """This module can be used for finding similar code"""
-import ast
 import re
 
 import rope.refactor.wildcards
-from rope.base import libutils
-from rope.base import astutils, builtins, codeanalyze, exceptions
-from rope.base.astwrapper import parse
+from rope.base import libutils, codeanalyze, exceptions, ast, builtins
 from rope.refactor import patchedast, wildcards
 
 from rope.refactor.patchedast import MismatchedTokenError
@@ -74,10 +71,10 @@ class RawSimilarFinder:
     def __init__(self, source, node=None, does_match=None):
         if node is None:
             try:
-                node = parse(source)
+                node = ast.parse(source)
             except SyntaxError:
                 # needed to parse expression containing := operator
-                node = parse("(" + source + ")")
+                node = ast.parse("(" + source + ")")
         if does_match is None:
             self.does_match = self._simple_does_match
         else:
@@ -121,7 +118,7 @@ class RawSimilarFinder:
 
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
-        node = parse(expression)
+        node = ast.parse(expression)
         # Getting Module.Stmt.nodes
         nodes = node.body
         if len(nodes) == 1 and isinstance(nodes[0], ast.Expr):
@@ -156,7 +153,7 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            astutils.call_for_nodes(self.body, self._check_node, recursive=True)
+            ast.call_for_nodes(self.body, self._check_node, recursive=True)
         return self.matches
 
     def _check_node(self, node):
@@ -171,7 +168,7 @@ class _ASTMatcher:
             self.matches.append(ExpressionMatch(node, mapping))
 
     def _check_statements(self, node):
-        for child in astutils.get_children(node):
+        for field, child in ast.iter_fields(node):
             if isinstance(child, (list, tuple)):
                 self.__check_stmt_list(child)
 
@@ -213,8 +210,11 @@ class _ASTMatcher:
 
     def _get_children(self, node):
         """Return not `ast.expr_context` children of `node`"""
-        children = astutils.get_children(node)
-        return [child for child in children if not isinstance(child, ast.expr_context)]
+        return [
+            child
+            for field, child in ast.iter_fields(node)
+            if not isinstance(child, ast.expr_context)
+        ]
 
     def _match_stmts(self, current_stmts, mapping):
         if len(current_stmts) != len(self.pattern):

@@ -1,15 +1,5 @@
-import ast
-from rope.base import (
-    astutils,
-    change,
-    evaluate,
-    exceptions,
-    pynames,
-    pyobjects,
-    taskhandle,
-)
+from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames, ast
 from rope.base import libutils
-from rope.base.astwrapper import walk
 from rope.refactor import restructure, sourceutils, similarfinder
 
 
@@ -183,7 +173,7 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder:
+class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
     def __init__(self):
         self.returns = 0
         self.named_expression = 0
@@ -207,6 +197,6 @@ class _ReturnOrYieldFinder:
     def start_walking(self, node):
         nodes = [node]
         if isinstance(node, ast.FunctionDef):
-            nodes = astutils.get_child_nodes(node)
+            nodes = list(ast.iter_child_nodes(node))
         for child in nodes:
-            walk(child, self)
+            self.visit(child)

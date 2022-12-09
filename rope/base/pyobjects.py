@@ -1,8 +1,6 @@
-import ast
 from typing import Optional
 
-from rope.base import astutils, exceptions, utils
-from rope.base.astwrapper import walk
+from rope.base import ast, exceptions, utils
 
 
 class PyObject:
@@ -245,8 +243,8 @@ class PyDefinedObject:
         if self.visitor_class is None:
             return {}
         new_visitor = self.visitor_class(self.pycore, self)
-        for child in astutils.get_child_nodes(self.ast_node):
-            walk(child, new_visitor)
+        for child in ast.iter_child_nodes(self.ast_node):
+            new_visitor.visit(child)
         self.defineds = new_visitor.defineds
         return new_visitor.names
 

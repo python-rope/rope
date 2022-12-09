@@ -1,9 +1,24 @@
-import ast
-
-from rope.base.astwrapper import walk
+from rope.base import ast
 
 
-class _NodeNameCollector:
+def get_name_levels(node):
+    """Return a list of ``(name, level)`` tuples for assigned names
+
+    The `level` is `None` for simple assignments and is a list of
+    numbers for tuple assignments for example in::
+
+      a, (b, c) = x
+
+    The levels for for `a` is ``[0]``, for `b` is ``[1, 0]`` and for
+    `c` is ``[1, 1]``.
+
+    """
+    visitor = _NodeNameCollector()
+    visitor.visit(node)
+    return visitor.names
+
+
+class _NodeNameCollector(ast.RopeNodeVisitor):
     def __init__(self, levels=None):
         self.names = []
         self.levels = levels
@@ -34,8 +49,8 @@ class _NodeNameCollector:
             new_levels.append(self.index)
         self.index += 1
         visitor = _NodeNameCollector(new_levels)
-        for child in get_child_nodes(node):
-            walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
         self.names.extend(visitor.names)
 
     def _Subscript(self, node):
@@ -46,55 +61,3 @@ class _NodeNameCollector:
 
     def _Slice(self, node):
         self._add_node(node)
-
-
-def get_child_nodes(node):
-    if isinstance(node, ast.Module):
-        return node.body
-    result = []
-    if node._fields is not None:
-        for name in node._fields:
-            child = getattr(node, name)
-            if isinstance(child, list):
-                for entry in child:
-                    if isinstance(entry, ast.AST):
-                        result.append(entry)
-            if isinstance(child, ast.AST):
-                result.append(child)
-    return result
-
-
-def get_name_levels(node):
-    """Return a list of ``(name, level)`` tuples for assigned names
-
-    The `level` is `None` for simple assignments and is a list of
-    numbers for tuple assignments for example in::
-
-      a, (b, c) = x
-
-    The levels for for `a` is ``[0]``, for `b` is ``[1, 0]`` and for
-    `c` is ``[1, 1]``.
-
-    """
-    visitor = _NodeNameCollector()
-    walk(node, visitor)
-    return visitor.names
-
-
-def call_for_nodes(node, callback, recursive=False):
-    """If callback returns `True` the child nodes are skipped"""
-    result = callback(node)
-    if recursive and not result:
-        for child in get_child_nodes(node):
-            call_for_nodes(child, callback, recursive)
-
-
-def get_children(node):
-    result = []
-    if node._fields is not None:
-        for name in node._fields:
-            if name in ["lineno", "col_offset"]:
-                continue
-            child = getattr(node, name)
-            result.append(child)
-    return result

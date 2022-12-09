@@ -1,14 +1,7 @@
-import ast
+import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
-from rope.base.astwrapper import walk
-from rope.base import (
-    arguments,
-    astutils,
-    builtins,
-    evaluate,
-    pyobjects,
-)
+from rope.base import pyobjects, evaluate, astutils, arguments
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -37,12 +30,14 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
                 pycore, pyfunction, return_true, return_false, new_followed_calls
             )
 
-        visitor = SOAVisitor(pycore, pydefined, _follow if followed_calls else None)
-        for child in astutils.get_child_nodes(pydefined.get_ast()):
-            walk(child, visitor)
+        if not followed_calls:
+            _follow = None
+        visitor = SOAVisitor(pycore, pydefined, _follow)
+        for child in rope.base.ast.iter_child_nodes(pydefined.get_ast()):
+            visitor.visit(child)
 
 
-class SOAVisitor:
+class SOAVisitor(rope.base.ast.RopeNodeVisitor):
     def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
@@ -56,8 +51,8 @@ class SOAVisitor:
         pass
 
     def _Call(self, node):
-        for child in astutils.get_child_nodes(node):
-            walk(child, self)
+        for child in rope.base.ast.iter_child_nodes(node):
+            self.visit(child)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
             return
@@ -94,7 +89,7 @@ class SOAVisitor:
                 if after != before:
                     self.follow(pyfunction)
         # XXX: Maybe we should not call every builtin function
-        if isinstance(pyfunction, builtins.BuiltinFunction):
+        if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
     def _parameter_objects(self, pyfunction):
@@ -104,23 +99,23 @@ class SOAVisitor:
         ]
 
     def _AnnAssign(self, node):
-        for child in astutils.get_child_nodes(node):
-            walk(child, self)
+        for child in rope.base.ast.iter_child_nodes(node):
+            self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
 
-        walk(node.target, visitor)
+        visitor.visit(node.target)
         nodes.extend(visitor.nodes)
 
         self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
 
     def _Assign(self, node):
-        for child in astutils.get_child_nodes(node):
-            walk(child, self)
+        for child in rope.base.ast.iter_child_nodes(node):
+            self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
         for child in node.targets:
-            walk(child, visitor)
+            visitor.visit(child)
             nodes.extend(visitor.nodes)
         self._evaluate_assign_value(node, nodes)
 
@@ -150,7 +145,7 @@ class _SOAAssignVisitor(astutils._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, ast.Subscript) and isinstance(
-            node.slice, (ast.Index, ast.expr)
+        if isinstance(node, rope.base.ast.Subscript) and isinstance(
+            node.slice, (rope.base.ast.Index, rope.base.ast.expr)
         ):
             self.nodes.append((node, levels))
