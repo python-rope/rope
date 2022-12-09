@@ -187,7 +187,7 @@ class ComprehensionScope(Scope):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for node in ast.iter_child_nodes(self.pyobject.get_ast()):
-                ast.walk_visitor(node, new_visitor)
+                new_visitor.visit(node)
             self.names = dict(self.parent.get_names())
             self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
@@ -219,7 +219,7 @@ class FunctionScope(Scope):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for n in ast.iter_child_nodes(self.pyobject.get_ast()):
-                ast.walk_visitor(n, new_visitor)
+                new_visitor.visit(n)
             self.names = new_visitor.names
             self.names.update(self.pyobject.get_parameters())
             self.returned_asts = new_visitor.returned_asts

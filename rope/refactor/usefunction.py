@@ -173,7 +173,7 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder:
+class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
     def __init__(self):
         self.returns = 0
         self.named_expression = 0
@@ -199,4 +199,4 @@ class _ReturnOrYieldFinder:
         if isinstance(node, ast.FunctionDef):
             nodes = list(ast.iter_child_nodes(node))
         for child in nodes:
-            ast.walk_visitor(child, self)
+            self.visit(child)

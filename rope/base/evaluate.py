@@ -39,7 +39,7 @@ def eval_node(scope, node):
 
 def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
-    ast.walk_visitor(node, evaluator)
+    evaluator.visit(node)
     return evaluator.old_result, evaluator.result
 
 
@@ -158,7 +158,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator:
+class StatementEvaluator(ast.RopeNodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None
