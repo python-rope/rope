@@ -356,7 +356,7 @@ class _ExpressionVisitor(ast.RopeNodeVisitor):
         self._GeneratorExp(node)
 
     def _NamedExpr(self, node):
-        _AssignVisitor(self).visit(node.target, )
+        _AssignVisitor(self).visit(node.target)
         self.visit(node.value)
 
 
@@ -369,7 +369,7 @@ class _AssignVisitor(ast.RopeNodeVisitor):
         self.assigned_ast = node.value
         for child_node in node.targets:
             self.visit(child_node)
-        _ExpressionVisitor(self.scope_visitor).visit(node.value, )
+        _ExpressionVisitor(self.scope_visitor).visit(node.value)
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)

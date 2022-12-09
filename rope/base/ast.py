@@ -33,6 +33,6 @@ def call_for_nodes(node, callback, recursive=False):
 class RopeNodeVisitor(ast.NodeVisitor):
     def visit(self, node):
         """Modified from ast.NodeVisitor to match rope's existing Visitor implementation"""
-        method = '_' + node.__class__.__name__
+        method = "_" + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
         return visitor(node)
