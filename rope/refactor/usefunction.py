@@ -197,6 +197,6 @@ class _ReturnOrYieldFinder:
     def start_walking(self, node):
         nodes = [node]
         if isinstance(node, ast.FunctionDef):
-            nodes = ast.get_child_nodes(node)
+            nodes = list(ast.iter_child_nodes(node))
         for child in nodes:
             ast.walk_visitor(child, self)

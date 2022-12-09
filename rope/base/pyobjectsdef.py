@@ -599,7 +599,7 @@ class _ClassVisitor(_ScopeVisitor):
             if isinstance(first, ast.arg):
                 new_visitor = _ClassInitVisitor(self, first.arg)
             if new_visitor is not None:
-                for child in ast.get_child_nodes(node):
+                for child in ast.iter_child_nodes(node):
                     ast.walk_visitor(child, new_visitor)
 
 
@@ -642,7 +642,7 @@ class _ClassInitVisitor(_AssignVisitor):
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):
             return
-        for child in ast.get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             ast.walk_visitor(child, self)
 
     def _Name(self, node):

@@ -49,7 +49,7 @@ class _NodeNameCollector:
             new_levels.append(self.index)
         self.index += 1
         visitor = _NodeNameCollector(new_levels)
-        for child in ast.get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             ast.walk_visitor(child, visitor)
         self.names.extend(visitor.names)
 

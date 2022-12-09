@@ -29,19 +29,15 @@ def walk_visitor(node, visitor) -> None:
     if method is not None:
         method(node)
         return
-    for child in get_child_nodes(node):
+    for child in ast.iter_child_nodes(node):
         walk_visitor(child, visitor)
-
-
-def get_child_nodes(node):
-    return list(ast.iter_child_nodes(node))
 
 
 def call_for_nodes(node, callback, recursive=False):
     """If callback returns `True` the child nodes are skipped"""
     result = callback(node)
     if recursive and not result:
-        for child in get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             call_for_nodes(child, callback, recursive)
 
 

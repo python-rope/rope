@@ -427,7 +427,7 @@ class _UnboundNameFinder:
             .pyobject
         )
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in ast.get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             ast.walk_visitor(child, visitor)
 
     def _FunctionDef(self, node):

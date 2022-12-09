@@ -882,7 +882,7 @@ class _FunctionInformationCollector:
         written = OrderedSet(self.written)
         maybe_written = OrderedSet(self.maybe_written)
 
-        for child in ast.get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             ast.walk_visitor(child, self)
 
         comp_names = list(
@@ -924,7 +924,7 @@ class _FunctionInformationCollector:
 
     def _handle_conditional_node(self, node):
         with self._handle_conditional_context(node):
-            for child in ast.get_child_nodes(node):
+            for child in ast.iter_child_nodes(node):
                 ast.walk_visitor(child, self)
 
     @contextmanager
@@ -969,7 +969,7 @@ class _VariableReadsAndWritesFinder:
     def _FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
-        for child in ast.get_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             ast.walk_visitor(child, visitor)
         self.read.update(visitor.read - visitor.written)
 
