@@ -13,7 +13,7 @@ def parse(source, filename="<string>"):
     if not source.endswith(b"\n"):
         source += b"\n"
     try:
-        return ast.parse(source, filename="<unknown>")
+        return ast.parse(source, filename=filename)
     except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1
