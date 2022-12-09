@@ -39,7 +39,7 @@ def eval_node(scope, node):
 
 def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
-    ast.walk(node, evaluator)
+    ast.walk_visitor(node, evaluator)
     return evaluator.old_result, evaluator.result
 
 

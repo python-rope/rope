@@ -301,7 +301,7 @@ class _AnnAssignVisitor:
         self.assigned_ast = node.value
         self.type_hint = node.annotation
 
-        ast.walk(node.target, self)
+        ast.walk_visitor(node.target, self)
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
@@ -356,8 +356,8 @@ class _ExpressionVisitor:
         self._GeneratorExp(node)
 
     def _NamedExpr(self, node):
-        ast.walk(node.target, _AssignVisitor(self))
-        ast.walk(node.value, self)
+        ast.walk_visitor(node.target, _AssignVisitor(self))
+        ast.walk_visitor(node.value, self)
 
 
 class _AssignVisitor:
@@ -368,8 +368,8 @@ class _AssignVisitor:
     def _Assign(self, node):
         self.assigned_ast = node.value
         for child_node in node.targets:
-            ast.walk(child_node, self)
-        ast.walk(node.value, _ExpressionVisitor(self.scope_visitor))
+            ast.walk_visitor(child_node, self)
+        ast.walk_visitor(node.value, _ExpressionVisitor(self.scope_visitor))
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
@@ -446,10 +446,10 @@ class _ScopeVisitor(_ExpressionVisitor):
         return self._FunctionDef(node)
 
     def _Assign(self, node):
-        ast.walk(node, _AssignVisitor(self))
+        ast.walk_visitor(node, _AssignVisitor(self))
 
     def _AnnAssign(self, node):
-        ast.walk(node, _AnnAssignVisitor(self))
+        ast.walk_visitor(node, _AnnAssignVisitor(self))
 
     def _AugAssign(self, node):
         pass
@@ -457,7 +457,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _For(self, node):
         self._update_evaluated(node.target, node.iter, ".__iter__().next()")
         for child in node.body + node.orelse:
-            ast.walk(child, self)
+            ast.walk_visitor(child, self)
 
     def _AsyncFor(self, node):
         return self._For(node)
@@ -494,7 +494,7 @@ class _ScopeVisitor(_ExpressionVisitor):
                     item.optional_vars, item.context_expr, ".__enter__()"
                 )
         for child in node.body:
-            ast.walk(child, self)
+            ast.walk_visitor(child, self)
 
     def _AsyncWith(self, node):
         return self._With(node)
@@ -508,7 +508,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             self._update_evaluated(node.name, type_node, eval_type=True)
 
         for child in node.body:
-            ast.walk(child, self)
+            ast.walk_visitor(child, self)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
@@ -571,8 +571,8 @@ class _ScopeVisitor(_ExpressionVisitor):
 
 class _ComprehensionVisitor(_ScopeVisitor):
     def _comprehension(self, node):
-        ast.walk(node.target, self)
-        ast.walk(node.iter, self)
+        ast.walk_visitor(node.target, self)
+        ast.walk_visitor(node.iter, self)
 
     def _Name(self, node):
         if isinstance(node.ctx, ast.Store):
@@ -600,7 +600,7 @@ class _ClassVisitor(_ScopeVisitor):
                 new_visitor = _ClassInitVisitor(self, first.arg)
             if new_visitor is not None:
                 for child in ast.get_child_nodes(node):
-                    ast.walk(child, new_visitor)
+                    ast.walk_visitor(child, new_visitor)
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -643,7 +643,7 @@ class _ClassInitVisitor(_AssignVisitor):
         if not isinstance(node.ctx, ast.Store):
             return
         for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+            ast.walk_visitor(child, self)
 
     def _Name(self, node):
         pass

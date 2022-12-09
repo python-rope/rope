@@ -33,7 +33,7 @@ def find_errors(project, resource):
     """
     pymodule = project.get_pymodule(resource)
     finder = _BadAccessFinder(pymodule)
-    ast.walk(pymodule.get_ast(), finder)
+    ast.walk_visitor(pymodule.get_ast(), finder)
     return finder.errors
 
 
@@ -60,7 +60,7 @@ class _BadAccessFinder:
             if pyname is not None and pyname.get_object() != pyobjects.get_unknown():
                 if node.attr not in pyname.get_object():
                     self._add_error(node, "Unresolved attribute")
-        ast.walk(node.value, self)
+        ast.walk_visitor(node.value, self)
 
     def _add_error(self, node, msg):
         if isinstance(node, ast.Attribute):

@@ -14,7 +14,7 @@ def get_name_levels(node):
 
     """
     visitor = _NodeNameCollector()
-    ast.walk(node, visitor)
+    ast.walk_visitor(node, visitor)
     return visitor.names
 
 
@@ -50,7 +50,7 @@ class _NodeNameCollector:
         self.index += 1
         visitor = _NodeNameCollector(new_levels)
         for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+            ast.walk_visitor(child, visitor)
         self.names.extend(visitor.names)
 
     def _Subscript(self, node):

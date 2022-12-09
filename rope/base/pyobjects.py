@@ -244,7 +244,7 @@ class PyDefinedObject:
             return {}
         new_visitor = self.visitor_class(self.pycore, self)
         for child in ast.get_child_nodes(self.ast_node):
-            ast.walk(child, new_visitor)
+            ast.walk_visitor(child, new_visitor)
         self.defineds = new_visitor.defineds
         return new_visitor.names
 

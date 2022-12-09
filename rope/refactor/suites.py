@@ -71,7 +71,7 @@ class Suite:
         if self._children is None:
             walker = _SuiteWalker(self)
             for child in self.child_nodes:
-                ast.walk(child, walker)
+                ast.walk_visitor(child, walker)
             self._children = walker.suites
         return self._children
 

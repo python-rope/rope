@@ -34,7 +34,7 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
             _follow = None
         visitor = SOAVisitor(pycore, pydefined, _follow)
         for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
-            rope.base.ast.walk(child, visitor)
+            rope.base.ast.walk_visitor(child, visitor)
 
 
 class SOAVisitor:
@@ -52,7 +52,7 @@ class SOAVisitor:
 
     def _Call(self, node):
         for child in rope.base.ast.get_child_nodes(node):
-            rope.base.ast.walk(child, self)
+            rope.base.ast.walk_visitor(child, self)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
             return
@@ -100,22 +100,22 @@ class SOAVisitor:
 
     def _AnnAssign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
-            rope.base.ast.walk(child, self)
+            rope.base.ast.walk_visitor(child, self)
         visitor = _SOAAssignVisitor()
         nodes = []
 
-        rope.base.ast.walk(node.target, visitor)
+        rope.base.ast.walk_visitor(node.target, visitor)
         nodes.extend(visitor.nodes)
 
         self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
 
     def _Assign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
-            rope.base.ast.walk(child, self)
+            rope.base.ast.walk_visitor(child, self)
         visitor = _SOAAssignVisitor()
         nodes = []
         for child in node.targets:
-            rope.base.ast.walk(child, visitor)
+            rope.base.ast.walk_visitor(child, visitor)
             nodes.extend(visitor.nodes)
         self._evaluate_assign_value(node, nodes)
 

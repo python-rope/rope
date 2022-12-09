@@ -22,7 +22,7 @@ def parse(source, filename="<string>"):
         raise error
 
 
-def walk(node, walker) -> None:
+def walk_visitor(node, walker) -> None:
     """Walk the syntax tree"""
     method_name = "_" + node.__class__.__name__
     method = getattr(walker, method_name, None)
@@ -30,7 +30,7 @@ def walk(node, walker) -> None:
         method(node)
         return
     for child in get_child_nodes(node):
-        walk(child, walker)
+        walk_visitor(child, walker)
 
 
 def get_child_nodes(node):

@@ -199,4 +199,4 @@ class _ReturnOrYieldFinder:
         if isinstance(node, ast.FunctionDef):
             nodes = ast.get_child_nodes(node)
         for child in nodes:
-            ast.walk(child, self)
+            ast.walk_visitor(child, self)
