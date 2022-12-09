@@ -1,10 +1,10 @@
 import ast
-from ast import *
+from ast import *  # noqa: F401,F403
 
 from rope.base import fscommands
 
 
-def parse(source, filename="<string>", *args, **kwargs):
+def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
