@@ -4,15 +4,17 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import builtins
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import pynamesdef
-from rope.base import pyobjects
-from rope.base import pyobjectsdef
-from rope.base import pyscopes
-from rope.base import worder
+from rope.base import (
+    builtins,
+    exceptions,
+    libutils,
+    pynames,
+    pynamesdef,
+    pyobjects,
+    pyobjectsdef,
+    pyscopes,
+    worder,
+)
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 

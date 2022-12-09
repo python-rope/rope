@@ -5,7 +5,7 @@ file.
 
 """
 
-from rope.base import resources, libutils
+from rope.base import libutils, resources
 
 
 class MultiProjectRefactoring:

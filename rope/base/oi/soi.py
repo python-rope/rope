@@ -7,7 +7,7 @@ package.
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import evaluate, utils, arguments
+from rope.base import arguments, evaluate, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 

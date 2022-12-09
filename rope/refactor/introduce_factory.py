@@ -1,7 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.base import libutils
-from rope.base import taskhandle, evaluate
+from rope.base import evaluate, libutils, taskhandle
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import rename, occurrences, sourceutils, importutils
 

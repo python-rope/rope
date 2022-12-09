@@ -3,9 +3,7 @@ import os.path
 
 import rope.base.project
 import rope.base.pycore
-from rope.base import pyobjectsdef
-from rope.base import utils
-from rope.base import taskhandle
+from rope.base import pyobjectsdef, taskhandle, utils
 
 
 def path_to_resource(project, path, type=None):

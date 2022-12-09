@@ -1,4 +1,9 @@
-from rope.base import pynames, evaluate, exceptions, worder
+from rope.base import (
+    evaluate,
+    exceptions,
+    pynames,
+    worder,
+)
 from rope.refactor.rename import Rename
 
 

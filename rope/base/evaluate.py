@@ -5,11 +5,11 @@ from typing import Optional, Tuple
 import rope.base.builtins
 import rope.base.pynames
 from rope.base import (
+    arguments,
     astutils,
     exceptions,
     pyobjects,
     pyobjectsdef,
-    arguments,
     worder,
 )
 from rope.base.astwrapper import parse, walk
