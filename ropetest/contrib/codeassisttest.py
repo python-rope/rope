@@ -1341,7 +1341,6 @@ class CodeAssistInProjectsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        # super(self.__class__, self).tearDown()
         super().tearDown()
 
     def _assist(self, code, resource=None, **kwds):
