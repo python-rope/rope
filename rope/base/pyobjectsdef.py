@@ -5,15 +5,16 @@ import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
-    pynamesdef,
-    exceptions,
+    arguments,
     ast,
     astutils,
-    pyobjects,
+    exceptions,
     fscommands,
-    arguments,
+    pynamesdef,
+    pyobjects,
     utils,
 )
+from rope.base.astwrapper import parse
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -197,7 +198,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
