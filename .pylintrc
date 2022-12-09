@@ -60,6 +60,7 @@ disable=
         modified-iterating-list,
         used-before-assignment,
         unsubscriptable-object,
+        use-sequence-for-iteration,
         unpacking-non-sequence,
 
     # Rope: to be removed.
