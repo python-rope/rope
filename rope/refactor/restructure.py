@@ -310,7 +310,7 @@ class _ChangeComputer:
     def _get_nearest_roots(self, node):
         if node not in self._nearest_roots:
             result = []
-            for child in ast.get_child_nodes(node):
+            for child in ast.iter_child_nodes(node):
                 if child in self.matched_asts:
                     result.append(child)
                 else:

@@ -26,7 +26,7 @@ class ModuleImports:
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        ast.walk(self.pymodule.get_ast(), visitor)
+        visitor.visit(self.pymodule.get_ast())
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
@@ -415,7 +415,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder:
+class _UnboundNameFinder(ast.RopeNodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -427,8 +427,8 @@ class _UnboundNameFinder:
             .pyobject
         )
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
 
     def _FunctionDef(self, node):
         self._visit_child_scope(node)
@@ -453,7 +453,7 @@ class _UnboundNameFinder:
             ):
                 self.add_unbound(primary)
         else:
-            ast.walk(node, self)
+            self.visit(node)
 
     def _get_root(self):
         pass
