@@ -8,12 +8,6 @@ from ropetest import testutils
 
 
 class SuiteTest(unittest.TestCase):
-    def setUp(self):  # pylint: disable=useless-super-delegation
-        super().setUp()
-
-    def tearDown(self):  # pylint: disable=useless-super-delegation
-        super().tearDown()
-
     def test_trivial_case(self):
         root = source_suite_tree("")
         self.assertEqual(1, root.get_start())

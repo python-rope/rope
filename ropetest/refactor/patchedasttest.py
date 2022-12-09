@@ -13,12 +13,6 @@ Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
 
 
 class PatchedASTTest(unittest.TestCase):
-    def setUp(self):  # pylint: disable=useless-super-delegation
-        super().setUp()
-
-    def tearDown(self):  # pylint: disable=useless-super-delegation
-        super().tearDown()
-
     def assert_single_case_match_block(self, checker, match_type):
         checker.check_children("Match", [
             "match",

@@ -70,8 +70,6 @@ disable=
         superfluous-parens,
         unused-import,
         unused-wildcard-import,
-        useless-super-delegation,
-        
         useless-else-on-loop,  #Else clause on loop without a break statement, remove the else and de-indent all the code inside it.
         unidiomatic-typecheck,
         wildcard-import,
@@ -93,7 +91,11 @@ disable=
         super-init-not-called,
         unnecessary-lambda,
         unsupported-assignment-operation,
-    
+        
+    # Rope: recently enabled checks.
+
+        # useless-super-delegation,
+
     # Leo: Standard suppressions.
         
         arguments-renamed, # cursesGui2.py
