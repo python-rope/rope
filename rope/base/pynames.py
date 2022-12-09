@@ -1,3 +1,4 @@
+# These imports are tricky. It's easy to cause circular imports.
 from __future__ import annotations
 
 import typing
@@ -7,6 +8,7 @@ from rope.base import exceptions, utils
 
 
 if typing.TYPE_CHECKING:
+    # pyobjectsdef appears only in annotations.
     from typing import Union
     from rope.base import pyobjectsdef
 
