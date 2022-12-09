@@ -1646,7 +1646,6 @@ class _ResultChecker:
                 return self.result is not None
 
         search = Search()
-        ### astutils.call_for_nodes(self.ast, search, recursive=True)
         call_for_nodes(self.ast, search, recursive=True)
         return search.result
 
