@@ -39,7 +39,3 @@ def call_for_nodes(node, callback, recursive=False):
     if recursive and not result:
         for child in ast.iter_child_nodes(node):
             call_for_nodes(child, callback, recursive)
-
-
-def get_children(node):
-    return [child for field, child in ast.iter_fields(node)]

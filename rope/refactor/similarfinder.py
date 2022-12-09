@@ -2,8 +2,7 @@
 import re
 
 import rope.refactor.wildcards
-from rope.base import libutils
-from rope.base import codeanalyze, exceptions, ast, builtins
+from rope.base import libutils, codeanalyze, exceptions, ast, builtins
 from rope.refactor import patchedast, wildcards
 
 from rope.refactor.patchedast import MismatchedTokenError
@@ -169,7 +168,7 @@ class _ASTMatcher:
             self.matches.append(ExpressionMatch(node, mapping))
 
     def _check_statements(self, node):
-        for child in ast.get_children(node):
+        for field, child in ast.iter_fields(node):
             if isinstance(child, (list, tuple)):
                 self.__check_stmt_list(child)
 
@@ -211,8 +210,11 @@ class _ASTMatcher:
 
     def _get_children(self, node):
         """Return not `ast.expr_context` children of `node`"""
-        children = ast.get_children(node)
-        return [child for child in children if not isinstance(child, ast.expr_context)]
+        return [
+            child
+            for field, child in ast.iter_fields(node)
+            if not isinstance(child, ast.expr_context)
+        ]
 
     def _match_stmts(self, current_stmts, mapping):
         if len(current_stmts) != len(self.pattern):

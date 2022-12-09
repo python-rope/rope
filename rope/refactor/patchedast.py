@@ -90,7 +90,7 @@ class _PatchingASTWalker:
         )
         node.region = (self.source.offset, self.source.offset)
         if self.children:
-            node.sorted_children = ast.get_children(node)
+            node.sorted_children = [child for field, child in ast.iter_fields(node)]
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         if hasattr(node, "region"):
