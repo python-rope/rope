@@ -4,7 +4,7 @@ from ast import *
 from rope.base import fscommands
 
 
-def parse(source, filename="<string>"):
+def parse(source, filename="<string>", *args, **kwargs):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
@@ -13,7 +13,7 @@ def parse(source, filename="<string>"):
     if not source.endswith(b"\n"):
         source += b"\n"
     try:
-        return ast.parse(source, filename=filename)
+        return ast.parse(source, filename=filename, *args, **kwargs)
     except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1
