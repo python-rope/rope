@@ -212,7 +212,7 @@ class Restructure:
 
             class _BuiltinsStub:
                 def get_attribute(self, name):
-                    return builtins.builtins[name]  # pylint: disable=no-member
+                    return builtins.builtins[name]
 
             pyobject = _BuiltinsStub()
         else:

@@ -108,6 +108,6 @@ def _is_method_call(primary, pyfunction):
         return True
     if isinstance(pyobject.get_type(), pyobjects.AbstractClass) and isinstance(
         pyfunction, builtins.BuiltinFunction
-    ):  # pylint: disable=no-member
+    ):
         return True
     return False

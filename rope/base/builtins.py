@@ -40,7 +40,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         if self.pycore is not None:
             submodules = self.pycore._builtin_submodules(self.name)
             for name, module in submodules.items():
-                result[name] = BuiltinName(module)  # pylint: disable=no-member
+                result[name] = BuiltinName(module)
         return result
 
     @property

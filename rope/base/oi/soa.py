@@ -2,7 +2,13 @@ import ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base.astwrapper import walk
-from rope.base import arguments, astutils, evaluate, pyobjects
+from rope.base import (
+    arguments,
+    astutils,
+    builtins,
+    evaluate,
+    pyobjects,
+)
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -88,9 +94,7 @@ class SOAVisitor:
                 if after != before:
                     self.follow(pyfunction)
         # XXX: Maybe we should not call every builtin function
-        if isinstance(
-            pyfunction, rope.base.builtins.BuiltinFunction
-        ):  # pylint: disable=no-member
+        if isinstance(pyfunction, builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
     def _parameter_objects(self, pyfunction):
