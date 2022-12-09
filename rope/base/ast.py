@@ -34,19 +34,7 @@ def walk_visitor(node, visitor) -> None:
 
 
 def get_child_nodes(node):
-    if isinstance(node, ast.Module):
-        return node.body
-    result = []
-    if node._fields is not None:
-        for name in node._fields:
-            child = getattr(node, name)
-            if isinstance(child, list):
-                for entry in child:
-                    if isinstance(entry, ast.AST):
-                        result.append(entry)
-            if isinstance(child, ast.AST):
-                result.append(child)
-    return result
+    return list(ast.iter_child_nodes(node))
 
 
 def call_for_nodes(node, callback, recursive=False):
@@ -58,11 +46,4 @@ def call_for_nodes(node, callback, recursive=False):
 
 
 def get_children(node):
-    result = []
-    if node._fields is not None:
-        for name in node._fields:
-            if name in ["lineno", "col_offset"]:
-                continue
-            child = getattr(node, name)
-            result.append(child)
-    return result
+    return [child for field, child in ast.iter_fields(node)]
