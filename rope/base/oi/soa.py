@@ -1,7 +1,13 @@
-import rope.base.ast
-import rope.base.oi.soi
-import rope.base.pynames
-from rope.base import pyobjects, evaluate, astutils, arguments
+import rope.base.ast  # Use fully qualified names for clarity.
+import rope.base.builtins  # Use fully qualified names for clarity.
+from rope.base import (
+    arguments,
+    astutils,
+    evaluate,
+    pynames,
+    pyobjects,
+)
+from rope.base.oi import soi
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -63,7 +69,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
             pyclass = pyfunction
             if "__init__" in pyfunction:
                 pyfunction = pyfunction["__init__"].get_object()
-            pyname = rope.base.pynames.UnboundName(pyobjects.PyObject(pyclass))
+            pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
             args = self._args_with_self(primary, pyname, pyfunction, node)
         elif "__call__" in pyfunction:
             pyfunction = pyfunction["__call__"].get_object()
@@ -123,13 +129,11 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         for subscript, levels in nodes:
             instance = evaluate.eval_node(self.scope, subscript.value)
             args_pynames = [evaluate.eval_node(self.scope, subscript.slice)]
-            value = rope.base.oi.soi._infer_assignment(
-                rope.base.pynames.AssignmentValue(
-                    node.value, levels, type_hint=type_hint
-                ),
+            value = soi._infer_assignment(
+                pynames.AssignmentValue(node.value, levels, type_hint=type_hint),
                 self.pymodule,
             )
-            args_pynames.append(rope.base.pynames.UnboundName(value))
+            args_pynames.append(pynames.UnboundName(value))
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
                 if "__setitem__" in pyobject:
