@@ -1,9 +1,6 @@
 import logging
+from typing import Union, Optional
 
-try:
-    from typing import Union, Optional
-except ImportError:
-    pass
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
