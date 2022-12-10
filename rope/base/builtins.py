@@ -3,7 +3,13 @@ import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import ast, pynames, pyobjects, arguments, utils
+from rope.base import (
+    arguments,
+    ast,
+    pynames,
+    pyobjects,
+    utils,
+)
 
 
 try:

@@ -118,9 +118,7 @@ class PyComprehension(pyobjects.PyComprehension):
         pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
 
     def _create_scope(self):
-        return pyscopes.ComprehensionScope(
-            self.pycore, self, _ComprehensionVisitor
-        )
+        return pyscopes.ComprehensionScope(self.pycore, self, _ComprehensionVisitor)
 
     def get_kind(self):
         return "Comprehension"
@@ -154,8 +152,7 @@ class PyClass(pyobjects.PyClass):
             base = evaluate.eval_node(self.parent.get_scope(), base_name)
             if (
                 base is not None
-                and base.get_object().get_type()
-                == pyobjects.get_base_type("Type")
+                and base.get_object().get_type() == pyobjects.get_base_type("Type")
             ):
                 result.append(base.get_object())
         return result
@@ -423,9 +420,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             if isinstance(decorator, ast.Name) and decorator.id == "property":
                 if isinstance(self, _ClassVisitor):
                     type_ = builtins.Property(pyfunction)
-                    arg = pynamesdef.UnboundName(
-                        pyobjects.PyObject(self.owner_object)
-                    )
+                    arg = pynamesdef.UnboundName(pyobjects.PyObject(self.owner_object))
 
                     def _eval(type_=type_, arg=arg):
                         return type_.get_property_object(
@@ -554,9 +549,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get("ignore_bad_imports", False):
             return False
-        return not isinstance(
-            imported_module.get_object(), pyobjects.AbstractModule
-        )
+        return not isinstance(imported_module.get_object(), pyobjects.AbstractModule)
 
     def _Global(self, node):
         module = self.get_module()
