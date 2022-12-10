@@ -5,12 +5,12 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
+    arguments,
     ast,
     nameanalyze,
     exceptions,
     pyobjects,
     pyobjectsdef,
-    arguments,
     worder,
 )
 

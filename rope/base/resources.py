@@ -30,9 +30,7 @@ import os
 import re
 import warnings
 
-from rope.base import change
-from rope.base import exceptions
-from rope.base import fscommands
+from rope.base import change, exceptions, fscommands
 from pathlib import Path
 
 

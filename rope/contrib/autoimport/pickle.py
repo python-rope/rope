@@ -12,14 +12,16 @@ sqlite-based storage backend (rope.contrib.autoimport.sqlite.AutoImport).
 
 import re
 
-from rope.base import builtins
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import resources
-from rope.base import resourceobserver
-from rope.base import taskhandle
+from rope.base import (
+    builtins,
+    exceptions,
+    libutils,
+    pynames,
+    pyobjects,
+    resourceobserver,
+    resources,
+    taskhandle,
+)
 from rope.refactor import importutils
 
 

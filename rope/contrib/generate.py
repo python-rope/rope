@@ -1,6 +1,13 @@
 import rope.base.evaluate
-from rope.base import libutils
-from rope.base import change, pyobjects, exceptions, pynames, worder, codeanalyze
+from rope.base import (
+    change,
+    codeanalyze,
+    exceptions,
+    libutils,
+    pynames,
+    pyobjects,
+    worder,
+)
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 

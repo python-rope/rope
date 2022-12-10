@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 
-from rope.base import utils, exceptions
+from rope.base import exceptions, utils
 
 
 class BaseJobSet(ABC):
