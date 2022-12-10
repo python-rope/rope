@@ -5,14 +5,14 @@ based on inputs.
 
 """
 from rope.base import (
-    pyobjects,
     codeanalyze,
-    exceptions,
-    pynames,
-    taskhandle,
     evaluate,
-    worder,
+    exceptions,
     libutils,
+    pynames,
+    pyobjects,
+    taskhandle,
+    worder,
 )
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
