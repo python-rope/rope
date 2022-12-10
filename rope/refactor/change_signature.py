@@ -1,12 +1,14 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import codeanalyze
-from rope.base import evaluate
-from rope.base import pyobjects
-from rope.base import taskhandle
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    codeanalyze,
+    evaluate,
+    pyobjects,
+    taskhandle,
+    utils,
+    worder,
+)
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, functionutils
 

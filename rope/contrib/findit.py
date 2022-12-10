@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.pyobjects
-from rope.base import taskhandle, exceptions, worder
+from rope.base import exceptions, taskhandle, worder
 from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 

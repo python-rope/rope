@@ -22,15 +22,14 @@ from typing import List
 import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import (
-    ast,
+    codeanalyze,
+    evaluate,
+    libutils,
     pynames,
     pyobjects,
-    codeanalyze,
     taskhandle,
-    evaluate,
-    worder,
     utils,
-    libutils,
+    worder,
 )
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import (

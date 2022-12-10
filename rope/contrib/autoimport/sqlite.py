@@ -8,7 +8,12 @@ from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, List, Optional, Set, Tuple, Iterator
 
-from rope.base import exceptions, libutils, resourceobserver, taskhandle
+from rope.base import (
+    exceptions,
+    libutils,
+    resourceobserver,
+    taskhandle,
+)
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport.defs import (

@@ -1,10 +1,12 @@
-from rope.base import evaluate
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import taskhandle
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    evaluate,
+    exceptions,
+    libutils,
+    pynames,
+    taskhandle,
+    utils,
+    worder,
+)
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 

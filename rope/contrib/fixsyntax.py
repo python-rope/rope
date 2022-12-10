@@ -1,9 +1,11 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    exceptions,
+    libutils,
+    utils,
+    worder,
+)
 from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder
 
 
