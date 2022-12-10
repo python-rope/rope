@@ -1,5 +1,13 @@
-from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames, ast
-from rope.base import libutils
+from rope.base import (
+    ast,
+    change,
+    evaluate,
+    exceptions,
+    libutils,
+    pynames,
+    pyobjects,
+    taskhandle,
+)
 from rope.refactor import restructure, sourceutils, similarfinder
 
 

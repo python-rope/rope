@@ -1,8 +1,8 @@
-import rope.base.change
+import rope.base.change  # Use fully qualified names for clarity.
 from rope.base import (
     codeanalyze,
-    exceptions,
     evaluate,
+    exceptions,
     worder,
 )
 from rope.refactor import functionutils, sourceutils, occurrences

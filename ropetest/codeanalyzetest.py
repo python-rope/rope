@@ -1,10 +1,13 @@
 from textwrap import dedent
-
 import unittest
 
 import rope.base.evaluate
-from rope.base import libutils
-from rope.base import exceptions, worder, codeanalyze
+from rope.base import (
+    codeanalyze,
+    exceptions,
+    libutils,
+    worder,
+)
 from rope.base.codeanalyze import SourceLinesAdapter, LogicalLineFinder, get_block_start
 from ropetest import testutils
 

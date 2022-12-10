@@ -1,6 +1,10 @@
-import rope.base.exceptions
-import rope.base.pyobjects
-from rope.base import evaluate, libutils, taskhandle
+from rope.base import (
+    evaluate,
+    exceptions,
+    libutils,
+    pyobjects,
+    taskhandle,
+)
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import rename, occurrences, sourceutils, importutils
 
@@ -13,9 +17,9 @@ class IntroduceFactory:
         this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         if self.old_pyname is None or not isinstance(
-            self.old_pyname.get_object(), rope.base.pyobjects.PyClass
+            self.old_pyname.get_object(), pyobjects.PyClass
         ):
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 "Introduce factory should be performed on a class."
             )
         self.old_name = self.old_pyname.get_object().get_name()
@@ -106,7 +110,7 @@ class IntroduceFactory:
         unit_indents = " " * sourceutils.get_indent(self.project)
         if global_:
             if self._get_scope_indents(lines, class_scope) > 0:
-                raise rope.base.exceptions.RefactoringError(
+                raise exceptions.RefactoringError(
                     "Cannot make global factory method for nested classes."
                 )
             return "\ndef {}(*args, **kwds):\n{}return {}(*args, **kwds)\n".format(

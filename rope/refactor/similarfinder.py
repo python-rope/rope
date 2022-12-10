@@ -1,10 +1,15 @@
 """This module can be used for finding similar code"""
 import re
 
-import rope.refactor.wildcards
-from rope.base import libutils, codeanalyze, exceptions, ast, builtins
-from rope.refactor import patchedast, wildcards
-
+import rope.base.builtins  # Use full qualification for clarity.
+import rope.refactor.wildcards  # Use full qualification for clarity.
+from rope.base import (
+    ast,
+    codeanalyze,
+    exceptions,
+    libutils,
+)
+from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
 
@@ -61,7 +66,7 @@ class SimilarFinder:
         if isinstance(arg, (tuple, list)):
             kind = arg[0]
             arg = arg[1]
-        suspect = wildcards.Suspect(self.pymodule, node, name)
+        suspect = rope.refactor.wildcards.Suspect(self.pymodule, node, name)
         return self.wildcards[kind].matches(suspect, arg)
 
 
@@ -361,7 +366,9 @@ def make_pattern(code, variables):
 
 def _pydefined_to_str(pydefined):
     address = []
-    if isinstance(pydefined, (builtins.BuiltinClass, builtins.BuiltinFunction)):
+    if isinstance(
+        pydefined, (rope.base.builtins.BuiltinClass, rope.base.builtins.BuiltinFunction)
+    ):
         return "__builtins__." + pydefined.get_name()
     else:
         while pydefined.parent is not None:

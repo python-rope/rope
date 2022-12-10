@@ -1,7 +1,7 @@
-import rope.base.codeanalyze
-import rope.base.evaluate
 from rope.base import (
+    codeanalyze,
     exceptions,
+    evaluate,
     libutils,
     utils,
     worder,
@@ -59,13 +59,13 @@ class FixSyntax:
             expression = expression.replace("\\\n", " ").replace("\n", " ")
             lineno = self.code.count("\n", 0, offset)
             scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-            return rope.base.evaluate.eval_str(scope, expression)
+            return evaluate.eval_str(scope, expression)
 
         new_code = pymodule.source_code
 
         def new_pyname():
             newoffset = self.commenter.transferred_offset(offset)
-            return rope.base.evaluate.eval_location(pymodule, newoffset)
+            return evaluate.eval_location(pymodule, newoffset)
 
         if new_code.startswith(self.code[: offset + 1]):
             return new_pyname()
@@ -131,9 +131,7 @@ class _Commenter:
         last_indents = indents
         while block_start > 0:
             block_start = (
-                rope.base.codeanalyze.get_block_start(
-                    ArrayLinesAdapter(self.lines), block_start
-                )
+                codeanalyze.get_block_start(ArrayLinesAdapter(self.lines), block_start)
                 - 1
             )
             if self.lines[block_start].strip().startswith("try:"):
@@ -188,4 +186,4 @@ def _logical_start(lines, lineno, check_prev=False):
 
 
 def _get_line_indents(line):
-    return rope.base.codeanalyze.count_line_indents(line)
+    return codeanalyze.count_line_indents(line)

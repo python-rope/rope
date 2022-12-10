@@ -1,9 +1,7 @@
 from textwrap import dedent
-
 import unittest
 
-import rope.base.project
-import rope.base.builtins
+import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 

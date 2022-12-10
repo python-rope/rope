@@ -1,7 +1,11 @@
-import rope.base.builtins
-import rope.base.codeanalyze
-import rope.base.pynames
-from rope.base import ast, exceptions, utils
+import rope.base.builtins  # Use full qualification for clarity.
+from rope.base import (
+    ast,
+    codeanalyze,
+    exceptions,
+    pynames,
+    utils,
+)
 from rope.refactor import patchedast
 
 
@@ -249,10 +253,7 @@ class FunctionScope(Scope):
 
     def invalidate_data(self):
         for pyname in self.get_names().values():
-            if isinstance(
-                pyname,
-                (rope.base.pynames.AssignedName, rope.base.pynames.EvaluatedName),
-            ):
+            if isinstance(pyname, (pynames.AssignedName, pynames.EvaluatedName)):
                 pyname.invalidate()
 
 
@@ -272,7 +273,7 @@ class _HoldingScopeFinder:
         self.pymodule = pymodule
 
     def get_indents(self, lineno):
-        return rope.base.codeanalyze.count_line_indents(self.lines.get_line(lineno))
+        return codeanalyze.count_line_indents(self.lines.get_line(lineno))
 
     def _get_scope_indents(self, scope):
         return self.get_indents(scope.get_start())

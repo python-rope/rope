@@ -2,10 +2,9 @@ import keyword
 import sys
 import warnings
 
-import rope.base.codeanalyze
-import rope.base.evaluate
 from rope.base import (
     builtins,
+    evaluate,
     exceptions,
     libutils,
     pynames,
@@ -178,7 +177,7 @@ def get_canonical_path(project, resource, offset):
     """
     # Retrieve the PyName.
     pymod = project.get_pymodule(resource)
-    pyname = rope.base.evaluate.eval_location(pymod, offset)
+    pyname = evaluate.eval_location(pymod, offset)
 
     # Now get the location of the definition and its containing scope.
     defmod, lineno = pyname.get_definition_location()
@@ -421,7 +420,7 @@ class _PythonCodeAssist:
 
     def _dotted_completions(self, module_scope, holding_scope):
         result = {}
-        found_pyname = rope.base.evaluate.eval_str(holding_scope, self.expression)
+        found_pyname = evaluate.eval_str(holding_scope, self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
             compl_scope = "attribute"
@@ -511,7 +510,7 @@ class _PythonCodeAssist:
             function_parens = word_finder.find_parens_start_from_inside(offset - 1)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
-                function_pyname = rope.base.evaluate.eval_str(scope, primary)
+                function_pyname = evaluate.eval_str(scope, primary)
             except exceptions.BadIdentifierError:
                 return {}
             if function_pyname is not None:

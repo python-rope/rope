@@ -4,14 +4,18 @@ For more information see the documentation in `rope.base.oi`
 package.
 
 """
-import rope.base.builtins
-import rope.base.pynames
-import rope.base.pyobjects
-from rope.base import arguments, evaluate, utils
+import rope.base.builtins  # Use full qualification for clarity.
+from rope.base import (
+    arguments,
+    evaluate,
+    pynames,
+    pyobjects,
+    utils,
+)
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 
-_ignore_inferred = utils.ignore_exception(rope.base.pyobjects.IsBeingInferredError)
+_ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 
 
 @_ignore_inferred
@@ -35,7 +39,7 @@ def infer_returned_object(pyfunction, args):
     ).make_return_provider()
     type_ = hint_return(pyfunction)
     if type_ is not None:
-        return rope.base.pyobjects.PyObject(type_)
+        return pyobjects.PyObject(type_)
 
 
 @_ignore_inferred
@@ -56,9 +60,9 @@ def _handle_first_parameter(pyobject, parameters):
     if not parameters:
         if not pyobject.get_param_names(special_args=False):
             return
-        parameters.append(rope.base.pyobjects.get_unknown())
+        parameters.append(pyobjects.get_unknown())
     if kind == "method":
-        parameters[0] = rope.base.pyobjects.PyObject(pyobject.parent)
+        parameters[0] = pyobjects.PyObject(pyobject.parent)
     if kind == "classmethod":
         parameters[0] = pyobject.parent
 
@@ -74,7 +78,7 @@ def infer_assigned_object(pyname):
             and result.get_name() == "NotImplementedType"
         ):
             break
-        elif result == rope.base.pyobjects.get_unknown():
+        elif result == pyobjects.get_unknown():
             break
         elif result is not None:
             return result
@@ -84,7 +88,7 @@ def infer_assigned_object(pyname):
     ).make_assignment_provider()
     hinting_result = hint_assignment(pyname)
     if hinting_result is not None:
-        return rope.base.pyobjects.PyObject(hinting_result)
+        return pyobjects.PyObject(hinting_result)
     return result
 
 
@@ -117,13 +121,13 @@ def _infer_returned(pyobject, args):
             if resulting_pyname is None:
                 continue
             pyobject = resulting_pyname.get_object()
-            if pyobject == rope.base.pyobjects.get_unknown():
+            if pyobject == pyobjects.get_unknown():
                 continue
             if not scope._is_generator():
                 return pyobject
             else:
                 return rope.base.builtins.get_generator(pyobject)
-        except rope.base.pyobjects.IsBeingInferredError:
+        except pyobjects.IsBeingInferredError:
             pass
 
 
@@ -134,9 +138,9 @@ def _parameter_objects(pyobject):
     for name in params:
         type_ = hint_param(pyobject, name)
         if type_ is not None:
-            result.append(rope.base.pyobjects.PyObject(type_))
+            result.append(pyobjects.PyObject(type_))
         else:
-            result.append(rope.base.pyobjects.get_unknown())
+            result.append(pyobjects.get_unknown())
     return result
 
 
@@ -185,9 +189,7 @@ def _follow_pyname(assignment, pymodule, lineno=None):
             isinstance(result.get_type(), rope.base.builtins.Property)
             and holding_scope.get_kind() == "Class"
         ):
-            arg = rope.base.pynames.UnboundName(
-                rope.base.pyobjects.PyObject(holding_scope.pyobject)
-            )
+            arg = pynames.UnboundName(pyobjects.PyObject(holding_scope.pyobject))
             return pyname, result.get_type().get_property_object(
                 arguments.ObjectArguments([arg])
             )
@@ -208,7 +210,7 @@ def _follow_evaluations(assignment, pyname, pyobject):
             if new_pyname is not None:
                 pyobject = new_pyname.get_object()
         if pyobject is not None and call:
-            if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
+            if isinstance(pyobject, pyobjects.AbstractFunction):
                 args = arguments.ObjectArguments([pyname])
                 pyobject = pyobject.get_returned_object(args)
             else:
@@ -216,7 +218,7 @@ def _follow_evaluations(assignment, pyname, pyobject):
         if pyobject is None:
             break
     if pyobject is not None and assignment.assign_type:
-        return rope.base.pyobjects.PyObject(pyobject)
+        return pyobjects.PyObject(pyobject)
     return pyobject
 
 
