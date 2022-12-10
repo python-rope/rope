@@ -1,7 +1,6 @@
-import rope.base.exceptions
-import rope.base.pyobjects
+# import rope.base.exceptions
 from rope.base.builtins import Lambda
-from rope.base import worder
+from rope.base import pyobjects, worder
 
 
 class DefinitionInfo:
@@ -136,29 +135,23 @@ class CallInfo:
     def _is_method_call(primary, pyname):
         return (
             primary is not None
-            and isinstance(primary.get_object().get_type(), rope.base.pyobjects.PyClass)
+            and isinstance(primary.get_object().get_type(), pyobjects.PyClass)
             and CallInfo._is_method(pyname)
         )
 
     @staticmethod
     def _is_class(pyname):
-        return pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyClass
-        )
+        return pyname is not None and isinstance(pyname.get_object(), pyobjects.PyClass)
 
     @staticmethod
     def _is_method(pyname):
-        if pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyFunction
-        ):
+        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
             return pyname.get_object().get_kind() == "method"
         return False
 
     @staticmethod
     def _is_classmethod(pyname):
-        if pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyFunction
-        ):
+        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
             return pyname.get_object().get_kind() == "classmethod"
         return False
 

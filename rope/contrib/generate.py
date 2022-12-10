@@ -1,6 +1,13 @@
-import rope.base.evaluate
-from rope.base import libutils
-from rope.base import change, pyobjects, exceptions, pynames, worder, codeanalyze
+from rope.base import (
+    change,
+    codeanalyze,
+    evaluate,
+    exceptions,
+    libutils,
+    pynames,
+    pyobjects,
+    worder,
+)
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
@@ -203,7 +210,7 @@ class _GenerationInfo:
         self.offset = offset
         self.goal_resource = goal_resource
         self.source_pymodule = self.pycore.project.get_pymodule(resource)
-        finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
+        finder = evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
         self._init_fields()
 
