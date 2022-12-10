@@ -1,12 +1,9 @@
 import sys
 from textwrap import dedent
-
-from rope.base.builtins import File, BuiltinClass
-
 import unittest
 
-from rope.base import exceptions
-from rope.base import libutils
+from rope.base import exceptions, libutils
+from rope.base.builtins import File, BuiltinClass
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pyobjects import get_base_type, AbstractFunction
 from rope.base.pynamesdef import AssignedName

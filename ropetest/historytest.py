@@ -1,8 +1,8 @@
 import unittest
 
-import rope.base.history
+import rope.base.change  # Use fully-qualified names for clarity.
+import rope.base.history  # Use fully-qualified names for clarity.
 from rope.base import exceptions
-import rope.base.change
 from ropetest import testutils
 
 
