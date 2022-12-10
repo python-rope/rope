@@ -1,4 +1,4 @@
-import rope.base.change  # Use full qualifications for clarity.
+import rope.base.change  # Use fully qualified names for clarity.
 from rope.base import (
     codeanalyze,
     evaluate,

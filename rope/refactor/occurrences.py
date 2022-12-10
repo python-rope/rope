@@ -48,6 +48,7 @@ from rope.base import (
     worder,
 )
 
+
 class Finder:
     """For finding occurrences of a name
 
