@@ -8,7 +8,7 @@ from rope.base import (
     pynamesdef,
     exceptions,
     ast,
-    astutils,
+    nameanalyze,
     pyobjects,
     fscommands,
     arguments,
@@ -313,7 +313,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = astutils.get_name_levels(node)
+        names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
@@ -381,7 +381,7 @@ class _AssignVisitor(ast.RopeNodeVisitor):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = astutils.get_name_levels(node)
+        names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
@@ -479,7 +479,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             assignment = pynamesdef.AssignmentValue(assigned, [], evaluation, eval_type)
             self._assigned(targets, assignment)
         else:
-            names = astutils.get_name_levels(targets)
+            names = nameanalyze.get_name_levels(targets)
             for name, levels in names:
                 assignment = pynamesdef.AssignmentValue(
                     assigned, levels, evaluation, eval_type

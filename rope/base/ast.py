@@ -1,11 +1,10 @@
 import ast
-from ast import *
+from ast import *  # noqa: F401,F403
 
 from rope.base import fscommands
 
 
-def parse(source, filename="<string>"):
-    # NOTE: the raw string should be given to `compile` function
+def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
     if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
     if b"\r" in source:
@@ -13,7 +12,7 @@ def parse(source, filename="<string>"):
     if not source.endswith(b"\n"):
         source += b"\n"
     try:
-        return ast.parse(source, filename="<unknown>")
+        return ast.parse(source, filename=filename, *args, **kwargs)
     except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1

@@ -1,7 +1,7 @@
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
-from rope.base import pyobjects, evaluate, astutils, arguments
+from rope.base import pyobjects, evaluate, nameanalyze, arguments
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -139,7 +139,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
                 # IDEA: handle `__setslice__`, too
 
 
-class _SOAAssignVisitor(astutils._NodeNameCollector):
+class _SOAAssignVisitor(nameanalyze._NodeNameCollector):
     def __init__(self):
         super().__init__()
         self.nodes = []
