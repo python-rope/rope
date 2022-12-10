@@ -1,7 +1,10 @@
-import rope.base.codeanalyze
-import rope.base.evaluate
-import rope.base.pyobjects
-from rope.base import taskhandle, exceptions, worder
+from rope.base import (
+    exceptions,
+    evaluate,
+    pyobjects,
+    taskhandle,
+    worder,
+)
 from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 
@@ -26,7 +29,7 @@ def find_occurrences(
     """
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.get_pymodule(resource)
-    primary, pyname = rope.base.evaluate.eval_location2(this_pymodule, offset)
+    primary, pyname = evaluate.eval_location2(this_pymodule, offset)
 
     def is_match(occurrence):
         return unsure
@@ -55,11 +58,11 @@ def find_implementations(
     """
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.get_pymodule(resource)
-    pyname = rope.base.evaluate.eval_location(this_pymodule, offset)
+    pyname = evaluate.eval_location(this_pymodule, offset)
     if pyname is not None:
         pyobject = pyname.get_object()
         if (
-            not isinstance(pyobject, rope.base.pyobjects.PyFunction)
+            not isinstance(pyobject, pyobjects.PyFunction)
             or pyobject.get_kind() != "method"
         ):
             raise exceptions.BadIdentifierError("Not a method!")
@@ -92,7 +95,7 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
     pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
-        name = rope.base.worder.Worder(code).get_word_at(offset)
+        name = worder.Worder(code).get_word_at(offset)
         if lineno is not None:
             start = module.lines.get_line_start(lineno)
 
