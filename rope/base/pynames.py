@@ -1,16 +1,17 @@
-# These imports are tricky. It's easy to cause circular imports.
-from __future__ import annotations
-
-import typing
+from typing import Any, Union, TYPE_CHECKING
 
 import rope.base.pyobjects
 from rope.base import exceptions, utils
 
 
-if typing.TYPE_CHECKING:
-    # pyobjectsdef appears only in annotations.
-    from typing import Union
+if TYPE_CHECKING:
     from rope.base import pyobjectsdef
+
+    PyModule = pyobjectsdef.PyModule
+    PyPackage = pyobjectsdef.PyPackage
+else:
+    PyModule = Any
+    PyPackage = Any
 
 
 class PyName:
@@ -109,10 +110,7 @@ class ParameterName(PyName):
 class ImportedModule(PyName):
     def __init__(
         self,
-        importing_module: Union[
-            pyobjectsdef.PyModule,
-            pyobjectsdef.PyPackage,
-        ],
+        importing_module: Union[PyModule, PyPackage],
         module_name=None,
         level=0,
         resource=None,
