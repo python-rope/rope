@@ -3,12 +3,18 @@ import shutil
 import sys
 import warnings
 
-import rope.base.fscommands
-import rope.base.resourceobserver as resourceobserver
-from rope.base import exceptions, history, pycore, taskhandle, utils
+import rope.base.fscommands  # Use full qualification for clarity.
+from rope.base import (
+    exceptions,
+    history,
+    pycore,
+    taskhandle,
+    utils,
+)
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
+import rope.base.resourceobserver as resourceobserver
 
 try:
     import cPickle as pickle
