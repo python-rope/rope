@@ -773,7 +773,7 @@ class PyCoreTest(unittest.TestCase):
 
 class PyCoreInProjectsTest(unittest.TestCase):
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")
@@ -796,7 +796,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(self.__class__, self).tearDown()
+        super().tearDown()
 
     def test_simple_import(self):
         code = "import samplemod\n"

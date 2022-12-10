@@ -1,8 +1,7 @@
 import os.path
 import shutil
 from textwrap import dedent
-
-import pytest
+import unittest
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
@@ -10,9 +9,6 @@ from rope.base.libutils import path_to_resource
 from rope.base.project import Project, NoProject, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
-
-
-import unittest
 
 
 class ProjectTest(unittest.TestCase):
@@ -1011,7 +1007,7 @@ class RopeFolderTest(unittest.TestCase):
     def test_getting_project_rope_folder(self):
         self.project = testutils.sample_project(ropefolder=".ropeproject")
         self.assertTrue(self.project.ropefolder.exists())
-        self.assertTrue(".ropeproject", self.project.ropefolder.path)
+        self.assertEqual(".ropeproject", self.project.ropefolder.path)
 
     def test_setting_ignored_resources(self):
         self.project = testutils.sample_project(ignored_resources=["myfile.txt"])
@@ -1063,7 +1059,7 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(fscommands=fscommands)
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertTrue("create_file ", fscommands.log)
+        self.assertEqual("create_file ", fscommands.log)
 
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
@@ -1079,7 +1075,7 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(fscommands=fscommands)
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertTrue("create_file ", fscommands.log)
+        self.assertEqual("create_file ", fscommands.log)
 
     def test_ignored_resources_and_prefixes(self):
         self.project = testutils.sample_project(ignored_resources=[".hg"])
