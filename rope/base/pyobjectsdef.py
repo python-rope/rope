@@ -1,25 +1,25 @@
+import rope.base.builtins
+import rope.base.codeanalyze
+import rope.base.evaluate
+import rope.base.libutils
+import rope.base.oi.soi
+import rope.base.pyscopes
 from rope.base import (
-    arguments,
-    ast,
-    astutils,
-    builtins,
-    codeanalyze,
-    evaluate,
-    exceptions,
-    fscommands,
-    libutils,
     pynamesdef,
+    exceptions,
+    ast,
+    nameanalyze,
     pyobjects,
-    pyscopes,
+    fscommands,
+    arguments,
     utils,
 )
-from rope.base.oi import soi
 
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
-        pyobjects.AbstractFunction.__init__(self)
-        pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        rope.base.pyobjects.AbstractFunction.__init__(self)
+        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.arguments = self.ast_node.args
         self.parameter_pyobjects = pynamesdef._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data()
@@ -34,22 +34,22 @@ class PyFunction(pyobjects.PyFunction):
         return {}
 
     def _create_scope(self):
-        return pyscopes.FunctionScope(self.pycore, self, _FunctionVisitor)
+        return rope.base.pyscopes.FunctionScope(self.pycore, self, _FunctionVisitor)
 
     def _infer_parameters(self):
-        pyobjects = soi.infer_parameter_objects(self)
+        pyobjects = rope.base.oi.soi.infer_parameter_objects(self)
         self._handle_special_args(pyobjects)
         return pyobjects
 
     def _infer_returned(self, args=None):
-        return soi.infer_returned_object(self, args)
+        return rope.base.oi.soi.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):
         if len(pyobjects) == len(self.arguments.args):
             if self.arguments.vararg:
-                pyobjects.append(builtins.get_list())
+                pyobjects.append(rope.base.builtins.get_list())
             if self.arguments.kwarg:
-                pyobjects.append(builtins.get_dict())
+                pyobjects.append(rope.base.builtins.get_dict())
 
     def _set_parameter_pyobjects(self, pyobjects):
         if pyobjects is not None:
@@ -95,10 +95,10 @@ class PyFunction(pyobjects.PyFunction):
         scope = self.parent.get_scope()
         if isinstance(self.parent, PyClass):
             for decorator in self.decorators:
-                pyname = evaluate.eval_node(scope, decorator)
-                if pyname == builtins.builtins["staticmethod"]:
+                pyname = rope.base.evaluate.eval_node(scope, decorator)
+                if pyname == rope.base.builtins.builtins["staticmethod"]:
                     return "staticmethod"
-                if pyname == builtins.builtins["classmethod"]:
+                if pyname == rope.base.builtins.builtins["classmethod"]:
                     return "classmethod"
             return "method"
         return "function"
@@ -114,11 +114,13 @@ class PyFunction(pyobjects.PyFunction):
 class PyComprehension(pyobjects.PyComprehension):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ComprehensionVisitor
-        pyobjects.PyObject.__init__(self, type_="Comp")
-        pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
+        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
 
     def _create_scope(self):
-        return pyscopes.ComprehensionScope(self.pycore, self, _ComprehensionVisitor)
+        return rope.base.pyscopes.ComprehensionScope(
+            self.pycore, self, _ComprehensionVisitor
+        )
 
     def get_kind(self):
         return "Comprehension"
@@ -127,8 +129,8 @@ class PyComprehension(pyobjects.PyComprehension):
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ClassVisitor
-        pyobjects.AbstractClass.__init__(self)
-        pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        rope.base.pyobjects.AbstractClass.__init__(self)
+        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
 
@@ -149,16 +151,17 @@ class PyClass(pyobjects.PyClass):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = evaluate.eval_node(self.parent.get_scope(), base_name)
+            base = rope.base.evaluate.eval_node(self.parent.get_scope(), base_name)
             if (
                 base is not None
-                and base.get_object().get_type() == pyobjects.get_base_type("Type")
+                and base.get_object().get_type()
+                == rope.base.pyobjects.get_base_type("Type")
             ):
                 result.append(base.get_object())
         return result
 
     def _create_scope(self):
-        return pyscopes.ClassScope(self.pycore, self)
+        return rope.base.pyscopes.ClassScope(self.pycore, self)
 
 
 class PyModule(pyobjects.PyModule):
@@ -209,22 +212,22 @@ class PyModule(pyobjects.PyModule):
         return result
 
     def _create_scope(self):
-        return pyscopes.GlobalScope(self.pycore, self)
+        return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
     @property
     @utils.saveit
     def lines(self):
         """A `SourceLinesAdapter`"""
-        return codeanalyze.SourceLinesAdapter(self.source_code)
+        return rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
 
     @property
     @utils.saveit
     def logical_lines(self):
         """A `LogicalLinesFinder`"""
-        return codeanalyze.CachingLogicalLineFinder(self.lines)
+        return rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
 
     def get_name(self):
-        return libutils.modname(self.resource) if self.resource else ""
+        return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
 class PyPackage(pyobjects.PyPackage):
@@ -241,10 +244,10 @@ class PyPackage(pyobjects.PyPackage):
 
     def _create_structural_attributes(self):
         result = {}
-        modname = libutils.modname(self.resource)
+        modname = rope.base.libutils.modname(self.resource)
         extension_submodules = self.pycore._builtin_submodules(modname)
         for name, module in extension_submodules.items():
-            result[name] = builtins.BuiltinName(module)
+            result[name] = rope.base.builtins.BuiltinName(module)
         if self.resource is None:
             return result
         for name, resource in self._get_child_resources().items():
@@ -285,7 +288,7 @@ class PyPackage(pyobjects.PyPackage):
         return self
 
     def get_name(self):
-        return libutils.modname(self.resource) if self.resource else ""
+        return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
 class _AnnAssignVisitor(ast.RopeNodeVisitor):
@@ -310,7 +313,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = astutils.get_name_levels(node)
+        names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
@@ -378,7 +381,7 @@ class _AssignVisitor(ast.RopeNodeVisitor):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = astutils.get_name_levels(node)
+        names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
@@ -419,8 +422,10 @@ class _ScopeVisitor(_ExpressionVisitor):
         for decorator in pyfunction.decorators:
             if isinstance(decorator, ast.Name) and decorator.id == "property":
                 if isinstance(self, _ClassVisitor):
-                    type_ = builtins.Property(pyfunction)
-                    arg = pynamesdef.UnboundName(pyobjects.PyObject(self.owner_object))
+                    type_ = rope.base.builtins.Property(pyfunction)
+                    arg = pynamesdef.UnboundName(
+                        rope.base.pyobjects.PyObject(self.owner_object)
+                    )
 
                     def _eval(type_=type_, arg=arg):
                         return type_.get_property_object(
@@ -474,7 +479,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             assignment = pynamesdef.AssignmentValue(assigned, [], evaluation, eval_type)
             self._assigned(targets, assignment)
         else:
-            names = astutils.get_name_levels(targets)
+            names = nameanalyze.get_name_levels(targets)
             for name, levels in names:
                 assignment = pynamesdef.AssignmentValue(
                     assigned, levels, evaluation, eval_type
@@ -549,7 +554,9 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get("ignore_bad_imports", False):
             return False
-        return not isinstance(imported_module.get_object(), pyobjects.AbstractModule)
+        return not isinstance(
+            imported_module.get_object(), rope.base.pyobjects.AbstractModule
+        )
 
     def _Global(self, node):
         module = self.get_module()

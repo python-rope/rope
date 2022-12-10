@@ -1,4 +1,3 @@
-# import rope.base.exceptions
 from rope.base.builtins import Lambda
 from rope.base import pyobjects, worder
 
