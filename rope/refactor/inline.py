@@ -32,14 +32,14 @@ from rope.base import (
     worder,
 )
 from rope.base.change import ChangeSet, ChangeContents
-import rope.refactor.functionutils
 from rope.refactor import (
+    change_signature,
+    functionutils,
+    importutils,
+    move,
     occurrences,
     rename,
     sourceutils,
-    importutils,
-    move,
-    change_signature,
 )
 
 
@@ -393,7 +393,7 @@ class _DefinitionGenerator:
             self.body = sourceutils.get_body(self.pyfunction)
 
     def _get_definition_info(self):
-        return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
+        return functionutils.DefinitionInfo.read(self.pyfunction)
 
     def _get_definition_params(self):
         definition_info = self.definition_info
@@ -421,13 +421,11 @@ class _DefinitionGenerator:
     def _calculate_header(self, primary, pyname, call):
         # A header is created which initializes parameters
         # to the values passed to the function.
-        call_info = rope.refactor.functionutils.CallInfo.read(
+        call_info = functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call
         )
         paramdict = self.definition_params
-        mapping = rope.refactor.functionutils.ArgumentMapping(
-            self.definition_info, call_info
-        )
+        mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
         for param_name, value in mapping.param_dict.items():
             paramdict[param_name] = value
         header = ""
