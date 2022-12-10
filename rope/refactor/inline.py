@@ -21,15 +21,15 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    codeanalyze,
+    evaluate,
     exceptions,
+    libutils,
     pynames,
     pyobjects,
-    codeanalyze,
     taskhandle,
-    evaluate,
-    worder,
     utils,
-    libutils,
+    worder,
 )
 from rope.base.change import ChangeSet, ChangeContents
 import rope.refactor.functionutils
