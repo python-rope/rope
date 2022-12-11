@@ -1,8 +1,9 @@
+import ast
 import re
 from contextlib import contextmanager
 from itertools import chain
 
-from rope.base import ast, codeanalyze
+from rope.base import codeanalyze, rast
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
@@ -514,7 +515,7 @@ class _ExceptionalConditionChecker:
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(ast.RopeNodeVisitor):
+class _ExtractMethodParts(rast.RopeNodeVisitor):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -777,7 +778,7 @@ class _ExtractVariableParts:
         return {}
 
 
-class _FunctionInformationCollector(ast.RopeNodeVisitor):
+class _FunctionInformationCollector(rast.RopeNodeVisitor):
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -955,7 +956,7 @@ def _get_argnames(arguments):
     return result
 
 
-class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
+class _VariableReadsAndWritesFinder(rast.RopeNodeVisitor):
     def __init__(self):
         self.written = set()
         self.read = set()
@@ -995,7 +996,7 @@ class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
         return visitor.read
 
 
-class _BaseErrorFinder(ast.RopeNodeVisitor):
+class _BaseErrorFinder(rast.RopeNodeVisitor):
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
@@ -1063,7 +1064,7 @@ class _AsyncStatementFinder(_BaseErrorFinder):
         pass
 
 
-class _GlobalFinder(ast.RopeNodeVisitor):
+class _GlobalFinder(rast.RopeNodeVisitor):
     def __init__(self):
         self.globals_ = OrderedSet()
 

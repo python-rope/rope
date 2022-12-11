@@ -35,9 +35,9 @@ calling the `create_finder()` function.
     arguments
 """
 
+import ast
 import re
 
-from rope.base import ast
 from rope.base import codeanalyze
 from rope.base import evaluate
 from rope.base import exceptions

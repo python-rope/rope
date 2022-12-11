@@ -1,5 +1,6 @@
+import ast
+
 import rope.base.evaluate
-from rope.base import ast
 
 
 class Arguments:

@@ -1,6 +1,7 @@
+import ast
 from typing import Optional
 
-from rope.base import ast, exceptions, utils
+from rope.base import exceptions, utils
 
 
 class PyObject:

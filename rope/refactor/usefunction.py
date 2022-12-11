@@ -1,11 +1,13 @@
+import ast
+
 from rope.base import (
-    ast,
     change,
     evaluate,
     exceptions,
     libutils,
     pynames,
     pyobjects,
+    rast,
     taskhandle,
 )
 from rope.refactor import restructure, sourceutils, similarfinder
@@ -181,7 +183,7 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
+class _ReturnOrYieldFinder(rast.RopeNodeVisitor):
     def __init__(self):
         self.returns = 0
         self.named_expression = 0

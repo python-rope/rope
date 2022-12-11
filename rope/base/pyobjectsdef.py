@@ -1,3 +1,5 @@
+import ast
+
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -7,7 +9,7 @@ import rope.base.pyscopes
 from rope.base import (
     pynamesdef,
     exceptions,
-    ast,
+    rast,
     nameanalyze,
     pyobjects,
     fscommands,
@@ -177,7 +179,7 @@ class PyModule(pyobjects.PyModule):
                 raise
             else:
                 source = "\n"
-                node = ast.parse("\n")
+                node = rast.parse("\n")
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
@@ -197,7 +199,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = rast.parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
@@ -239,7 +241,7 @@ class PyPackage(pyobjects.PyPackage):
                 init_dot_py, force_errors=force_errors
             ).get_ast()
         else:
-            ast_node = ast.parse("\n")
+            ast_node = rast.parse("\n")
         super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
@@ -291,7 +293,7 @@ class PyPackage(pyobjects.PyPackage):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class _AnnAssignVisitor(ast.RopeNodeVisitor):
+class _AnnAssignVisitor(rast.RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
@@ -333,7 +335,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         pass
 
 
-class _ExpressionVisitor(ast.RopeNodeVisitor):
+class _ExpressionVisitor(rast.RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
@@ -360,7 +362,7 @@ class _ExpressionVisitor(ast.RopeNodeVisitor):
         self.visit(node.value)
 
 
-class _AssignVisitor(ast.RopeNodeVisitor):
+class _AssignVisitor(rast.RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
