@@ -3,7 +3,7 @@ Some code extracted (or based on code) from:
 https://github.com/davidhalter/jedi/blob/b489019f5bd5750051122b94cc767df47751ecb7/jedi/evaluate/docstrings.py
 Thanks to @davidhalter for this utils under MIT License.
 """
-from ast import literal_eval
+import ast
 import re
 
 from rope.base.oi.type_hinting.providers import docstrings
@@ -27,7 +27,7 @@ class NumPyDocstringParamParser(docstrings.IParamParser):
                     p_type = m.group(1)
 
                 if p_type.startswith("{"):
-                    types = {type(x).__name__ for x in literal_eval(p_type)}
+                    types = {type(x).__name__ for x in ast.literal_eval(p_type)}
                     return list(types)
                 else:
                     return [p_type]
