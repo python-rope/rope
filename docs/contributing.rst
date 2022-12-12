@@ -117,8 +117,8 @@ Rope uses `pytest`_. To run the test::
     pytest -v
 
 Many of rope's tests are still written using
-`unittest.TestCase` style, but running the test suite using
-`unittest` is no longer supported.
+``unittest.TestCase`` style, but running the test suite using
+vanilla ``unittest`` is no longer supported.
 
 Make sure to have complete test suite passing and 
 add new tests for the changes you are providing with each new 
