@@ -418,7 +418,6 @@ class PatchedASTTest(unittest.TestCase):
             "Call", ["Name", "", "(", "", "Num", "", ",", " ", "*", "", "Name", "", ")"]
         )
 
-    @testutils.only_for("3.5")
     def test_call_func_and_star_argspython35(self):
         source = "f(1, *args)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -434,7 +433,6 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Call", ["Name", "", "(", "", "**", "", "Name", "", ")"])
 
-    @testutils.only_for("3.5")
     def test_call_func_and_only_dstar_args_python35(self):
         source = "f(**kwds)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -451,7 +449,6 @@ class PatchedASTTest(unittest.TestCase):
             ["Name", "", "(", "", "*", "", "Name", "", ",", " ", "**", "", "Name", "", ")"],
         )
 
-    @testutils.only_for("3.5")
     def test_call_func_and_both_varargs_and_kwargs_python35(self):
         source = "f(*args, **kwds)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -515,7 +512,6 @@ class PatchedASTTest(unittest.TestCase):
             ["@", "", "Name", "\n", "def", " ", "f", "", "(", "", "arguments", "", ")", "", ":", "\n    ", "Pass"],
         )
 
-    @testutils.only_for("2.6")
     def test_decorators_for_classes(self):
         source = dedent("""\
             @d
@@ -611,7 +607,6 @@ class PatchedASTTest(unittest.TestCase):
             ["{", "", "Num", "", ":", " ", "Num", "", ",", " ", "Num", "", ":", " ", "Num", "", "}"],
         )
 
-    @testutils.only_for("3.5")
     def test_dict_node_with_unpacking(self):
         source = "{**dict1, **dict2}\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -712,7 +707,6 @@ class PatchedASTTest(unittest.TestCase):
         )
         checker.check_children("alias", ["y"])
 
-    @testutils.only_for("2.5")
     def test_from_node(self):
         source = "from ..x import y as z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -723,7 +717,6 @@ class PatchedASTTest(unittest.TestCase):
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
-    @testutils.only_for("2.5")
     def test_from_node_relative_import(self):
         source = "from . import y as z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -734,7 +727,7 @@ class PatchedASTTest(unittest.TestCase):
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
-    @testutils.only_for("2.5")
+
     def test_from_node_whitespace_around_dots_1(self):
         source = "from . . . import y as z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -745,7 +738,7 @@ class PatchedASTTest(unittest.TestCase):
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
-    @testutils.only_for("2.5")
+
     def test_from_node_whitespace_around_dots_2(self):
         source = "from . a . b import y as z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1171,7 +1164,6 @@ class PatchedASTTest(unittest.TestCase):
             ["while", " ", NameConstant, "", ":", "\n    ", "Pass", "\n", "else", "", ":", "\n    ", "Pass"],
         )
 
-    @testutils.only_for("2.5")
     def test_with_node(self):
         source = dedent("""\
             from __future__ import with_statement
@@ -1185,7 +1177,6 @@ class PatchedASTTest(unittest.TestCase):
             ["with", " ", "Name", " ", "as", " ", "Name", "", ":", "\n    ", "Pass"],
         )
 
-    @testutils.only_for("3.5")
     def test_async_with_node(self):
         source = dedent("""\
             async def afunc():
@@ -1251,7 +1242,6 @@ class PatchedASTTest(unittest.TestCase):
             ["except", " ", "Name", " ", "as", " ", expected_child, "", ":", "\n    ", "Pass"],
         )
 
-    @testutils.only_for("2.5")
     def test_try_except_and_finally_node(self):
         source = dedent("""\
             try:
@@ -1297,7 +1287,6 @@ class PatchedASTTest(unittest.TestCase):
         source = "1;\n"
         patchedast.get_patched_ast(source, True)
 
-    @testutils.only_for("2.5")
     def test_if_exp_node(self):
         source = "1 if True else 2\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1342,7 +1331,6 @@ class PatchedASTTest(unittest.TestCase):
             ["Name", "", "(", "", "keyword", "", ",", " ", "*", "", "Name", "", ")"],
         )
 
-    @testutils.only_for("3.5")
     def test_starargs_before_keywords(self):
         source = "foo(*args, a=1)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1351,7 +1339,6 @@ class PatchedASTTest(unittest.TestCase):
             "Call", ["Name", "", "(", "*", "Starred", "", ",", " ", "keyword", "", ")"]
         )
 
-    @testutils.only_for("3.5")
     def test_starargs_in_keywords(self):
         source = "foo(a=1, *args, b=2)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1361,7 +1348,6 @@ class PatchedASTTest(unittest.TestCase):
             ["Name", "", "(", "", "keyword", "", ",", " *", "Starred", "", ",", " ", "keyword", "", ")"],
         )
 
-    @testutils.only_for("3.5")
     def test_starargs_in_positional(self):
         source = "foo(a, *b, c)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -1371,7 +1357,6 @@ class PatchedASTTest(unittest.TestCase):
             ["Name", "", "(", "", "Name", "", ",", " *", "Starred", "", ",", " ", "Name", "", ")"],
         )
 
-    @testutils.only_for("3.5")
     def test_starargs_after_keywords(self):
         source = "foo(a=1, *args)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
