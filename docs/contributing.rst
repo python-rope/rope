@@ -81,6 +81,14 @@ Rope package structure:
 Have a look at ``__init__.py`` of these packages or 
 :ref:`library:Using Rope As A Library` for more information.
 
+There's also some really good `tour of Rope's codebase`_ 
+by Austin Bingham (author of `Traad`_). 
+The first 10 minutes of the video talked about Rope in general, the rest are 
+more specific to Traad.
+
+.. _tour of Rope's codebase: https://youtu.be/NvV5OrVk24c
+.. _traad: https://github.com/abingham/traad/
+
 Source Repository
 =================
 
