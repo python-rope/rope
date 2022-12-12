@@ -81,6 +81,14 @@ Rope package structure:
 Have a look at ``__init__.py`` of these packages or 
 :ref:`library:Using Rope As A Library` for more information.
 
+There's also some really good `tour of Rope's codebase`_ 
+by Austin Bingham (author of `Traad`_). 
+The first 10 minutes of the video talked about Rope in general, the rest are 
+more specific to Traad.
+
+.. _tour of Rope's codebase: https://youtu.be/NvV5OrVk24c
+.. _traad: https://github.com/abingham/traad/
+
 Source Repository
 =================
 
@@ -105,19 +113,22 @@ Programming Style
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests when appropriate.
-* Rope test suite should pass after patching
+* Rope test suite should pass after patching.
 
 .. _`black codestyle`: https://github.com/psf/black
 
 Testing
 -------
 
-Rope uses `pytest`_ as a test runner per default (although the 
-tests are strictly unittest-based), so running::
+Rope uses `pytest`_. To run the test::
 
     pytest -v
 
-runs all tests. Make sure to have complete test suite passing and 
+Many of rope's tests are still written using
+``unittest.TestCase`` style, but running the test suite using
+vanilla ``unittest`` is no longer supported.
+
+Make sure to have complete test suite passing and 
 add new tests for the changes you are providing with each new 
 submission.
 
