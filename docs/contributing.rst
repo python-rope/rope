@@ -105,19 +105,22 @@ Programming Style
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests when appropriate.
-* Rope test suite should pass after patching
+* Rope test suite should pass after patching.
 
 .. _`black codestyle`: https://github.com/psf/black
 
 Testing
 -------
 
-Rope uses `pytest`_ as a test runner per default (although the 
-tests are strictly unittest-based), so running::
+Rope uses `pytest`_. To run the test::
 
     pytest -v
 
-runs all tests. Make sure to have complete test suite passing and 
+Many of rope's tests are still written using
+`unittest.TestCase` style, but running the test suite using
+`unittest` is no longer supported.
+
+Make sure to have complete test suite passing and 
 add new tests for the changes you are providing with each new 
 submission.
 
