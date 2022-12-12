@@ -1,4 +1,3 @@
-import sys
 from textwrap import dedent
 
 import unittest
@@ -305,7 +304,6 @@ class RenameRefactoringTest(unittest.TestCase):
         )
         self.assertEqual("is_replace = True\n'ali'.\\\nreplace\n", refactored)
 
-    @testutils.only_for("3.6")
     def test_renaming_occurrence_in_f_string(self):
         code = dedent("""\
             a_var = 20
@@ -318,7 +316,6 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.6")
     def test_renaming_occurrence_in_nested_f_string(self):
         code = dedent("""\
             a_var = 20
@@ -331,7 +328,6 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.6")
     def test_not_renaming_string_contents_in_f_string(self):
         refactored = self._local_rename(
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
@@ -444,7 +440,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_function(self):
         code = dedent("""\
             async def a_func():
@@ -459,7 +454,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_await(self):
         code = dedent("""\
             async def b_func():
@@ -878,7 +872,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_for_loop_variable(self):
         code = dedent("""\
             async def func():
@@ -895,7 +888,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_with_context_manager(self):
         code = dedent("""\
             def a_cm(): pass
@@ -908,7 +900,6 @@ class RenameRefactoringTest(unittest.TestCase):
                 async with another_cm() as x: pass""")
         self.assertEqual(refactored, expected)
 
-    @testutils.only_for("3.5")
     def test_renaming_async_with_as_variable(self):
         code = dedent("""\
             async def func():
@@ -1420,26 +1411,6 @@ class RenameRefactoringTest(unittest.TestCase):
             """),
             mod2.read(),
         )
-
-    # XXX: with variables should not leak
-    @testutils.only_for("2.5")
-    def xxx_test_with_statement_variables_should_not_leak(self):
-        code = dedent("""\
-            f = 1
-            with open("1.txt") as f:
-                print(f)
-        """)
-        if sys.version_info < (2, 6, 0):
-            code = "from __future__ import with_statement\n" + code
-        mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write(code)
-        self._rename(mod1, code.rindex("f"), "file")
-        expected = dedent("""\
-            f = 1
-            with open("1.txt") as file:
-                print(file)
-        """)
-        self.assertEqual(expected, mod1.read())
 
     def test_rename_in_list_comprehension(self):
         code = dedent("""\

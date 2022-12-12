@@ -569,7 +569,6 @@ class PyCoreTest(unittest.TestCase):
         c_class = pymod["C"].get_object()
         self.assertFalse("var1" in c_class)
 
-    @testutils.only_for("2.5")
     def test_with_statement_variables(self):
         code = dedent("""\
             import threading
@@ -579,77 +578,6 @@ class PyCoreTest(unittest.TestCase):
             code = "from __future__ import with_statement\n" + code
         pymod = libutils.get_string_module(self.project, code)
         self.assertTrue("var" in pymod)
-
-    @testutils.only_for("2.5")
-    def test_with_statement_variables_and_tuple_assignment(self):
-        code = dedent("""\
-            class A(object):
-                def __enter__(self):        return (1, 2)
-                def __exit__(self, type, value, tb):
-                    pass
-            with A() as (a, b):
-                pass
-        """)
-        if sys.version_info < (2, 6, 0):
-            code = "from __future__ import with_statement\n" + code
-        pymod = libutils.get_string_module(self.project, code)
-        self.assertTrue("a" in pymod)
-        self.assertTrue("b" in pymod)
-
-    @testutils.only_for("2.5")
-    def test_with_statement_variable_type(self):
-        code = dedent("""\
-            class A(object):
-                def __enter__(self):
-                    return self
-                def __exit__(self, type, value, tb):
-                    pass
-            with A() as var:
-                pass
-        """)
-        if sys.version_info < (2, 6, 0):
-            code = "from __future__ import with_statement\n" + code
-        pymod = libutils.get_string_module(self.project, code)
-        a_class = pymod["A"].get_object()
-        var = pymod["var"].get_object()
-        self.assertEqual(a_class, var.get_type())
-
-    @testutils.only_for("2.7")
-    def test_nested_with_statement_variable_type(self):
-        code = dedent("""\
-            class A(object):
-                def __enter__(self):
-                    return self
-                def __exit__(self, type, value, tb):
-                    pass
-            class B(object):
-                def __enter__(self):
-                    return self
-                def __exit__(self, type, value, tb):
-                    pass
-            with A() as var_a, B() as var_b:
-                pass
-        """)
-        if sys.version_info < (2, 6, 0):
-            code = "from __future__ import with_statement\n" + code
-        pymod = libutils.get_string_module(self.project, code)
-        a_class = pymod["A"].get_object()
-        var_a = pymod["var_a"].get_object()
-        self.assertEqual(a_class, var_a.get_type())
-
-        b_class = pymod["B"].get_object()
-        var_b = pymod["var_b"].get_object()
-        self.assertEqual(b_class, var_b.get_type())
-
-    @testutils.only_for("2.5")
-    def test_with_statement_with_no_vars(self):
-        code = dedent("""\
-            with open("file"):    pass
-        """)
-        if sys.version_info < (2, 6, 0):
-            code = "from __future__ import with_statement\n" + code
-        pymod = libutils.get_string_module(self.project, code)
-        pymod.get_attributes()
 
     def test_with_statement(self):
         code = dedent("""\
@@ -1131,7 +1059,6 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_scope = libutils.get_string_scope(self.project, mod2.read(), mod2)
         self.assertEqual(mod1_object, mod2_scope["mod1"].get_object())
 
-    @testutils.only_for("2.5")
     def test_new_style_relative_imports(self):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
@@ -1141,7 +1068,6 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_object = self.pycore.resource_to_pyobject(mod2)
         self.assertEqual(mod1_object, mod2_object["mod1"].get_object())
 
-    @testutils.only_for("2.5")
     def test_new_style_relative_imports2(self):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1")
