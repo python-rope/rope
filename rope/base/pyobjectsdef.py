@@ -108,7 +108,7 @@ class PyFunction(pyobjects.PyFunction):
         try:
             return self.ast_node.decorator_list
         except AttributeError:
-            return self.ast_node.decorators
+            return getattr(self.ast_node, "decorators", None)
 
 
 class PyComprehension(pyobjects.PyComprehension):
