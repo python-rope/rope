@@ -301,8 +301,7 @@ class _PatchingASTWalker:
     def _Assert(self, node):
         children = ["assert", node.test]
         if node.msg:
-            children.append(",")
-            children.append(node.msg)
+            children.extend((",", node.msg))
         self._handle(node, children)
 
     def _Assign(self, node):
@@ -320,8 +319,7 @@ class _PatchingASTWalker:
     def _AnnAssign(self, node):
         children = [node.target, ":", node.annotation]
         if node.value is not None:
-            children.append("=")
-            children.append(node.value)
+            children.extend(("=", node.value))
         self._handle(node, children)
 
     def _Repr(self, node):
@@ -353,8 +351,7 @@ class _PatchingASTWalker:
         children = []
         if getattr(node, "decorator_list", None):
             for decorator in node.decorator_list:
-                children.append("@")
-                children.append(decorator)
+                children.extend(("@", decorator))
         children.extend(["class", node.name])
         if node.bases:
             children.append("(")
@@ -365,8 +362,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _Compare(self, node):
-        children = []
-        children.append(node.left)
+        children = [node.left]
         for op, expr in zip(node.ops, node.comparators):
             children.extend(self._get_op(op))
             children.append(expr)
@@ -439,9 +435,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _FormattedValue(self, node):
-        children = []
-        children.append("{")
-        children.append(node.value)
+        children = ["{", node.value]
         if node.format_spec:
             children.append(":")
             for val in node.format_spec.values:
@@ -456,8 +450,7 @@ class _PatchingASTWalker:
         self._handle(node, ["continue"])
 
     def _Dict(self, node):
-        children = []
-        children.append("{")
+        children = ["{"]
         if node.keys:
             for index, (key, value) in enumerate(zip(node.keys, node.values)):
                 if key is None:
@@ -539,14 +532,12 @@ class _PatchingASTWalker:
             decorators = getattr(node, "decorators", None)
         if decorators:
             for decorator in decorators:
-                children.append("@")
-                children.append(decorator)
+                children.extend(("@", decorator))
         if is_async:
             children.extend(["async", "def"])
         else:
             children.extend(["def"])
-        children.extend([node.name, "(", node.args])
-        children.extend([")", ":"])
+        children.extend([node.name, "(", node.args, ")", ":"])
         children.extend(node.body)
         self._handle(node, children)
 
@@ -603,8 +594,7 @@ class _PatchingASTWalker:
         children = ["for", node.target, "in", node.iter]
         if node.ifs:
             for if_ in node.ifs:
-                children.append("if")
-                children.append(if_)
+                children.extend(("if", if_))
         self._handle(node, children)
 
     def _Global(self, node):
@@ -681,8 +671,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _DictComp(self, node):
-        children = ["{"]
-        children.extend([node.key, ":", node.value])
+        children = ["{", *[node.key, ":", node.value]]
         children.extend(node.generators)
         children.append("}")
         self._handle(node, children)
@@ -750,8 +739,7 @@ class _PatchingASTWalker:
         if node.upper:
             children.append(node.upper)
         if node.step:
-            children.append(":")
-            children.append(node.step)
+            children.extend((":", node.step))
         self._handle(node, children)
 
     def _TryFinally(self, node):
@@ -799,8 +787,7 @@ class _PatchingASTWalker:
         if node.type:
             children.append(node.type)
         if node.name:
-            children.append(self.semicolon_or_as_in_except)
-            children.append(node.name)
+            children.extend((self.semicolon_or_as_in_except, node.name))
         children.append(":")
         children.extend(node.body)
 
@@ -886,8 +873,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _MatchClass(self, node):
-        children = []
-        children.extend([node.cls, "("])
+        children = [node.cls, "("]
         children.extend(self._child_nodes(node.patterns, ","))
         children.extend(self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)))
         children.append(")")
@@ -897,8 +883,7 @@ class _PatchingASTWalker:
         self._handle(node, [node.value])
 
     def _MatchMapping(self, node):
-        children = []
-        children.append("{")
+        children = ["{"]
         for index, (key, value) in enumerate(zip(node.keys, node.patterns)):
             children.extend([key, ":", value])
             if index < len(node.keys) - 1:
