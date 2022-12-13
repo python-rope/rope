@@ -44,6 +44,8 @@ class IntroduceFactory:
         files in the project are searched.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         changes = ChangeSet("Introduce factory method <%s>" % factory_name)

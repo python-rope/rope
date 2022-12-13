@@ -28,7 +28,7 @@ class EncapsulateField:
         getter=None,
         setter=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Get the changes this refactoring makes
 
@@ -42,6 +42,8 @@ class EncapsulateField:
         files in the project are searched.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         changes = ChangeSet("Encapsulate field <%s>" % self.name)

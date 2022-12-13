@@ -95,7 +95,7 @@ class Restructure:
         checks=None,
         imports=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Get the changes needed by this restructuring
 
@@ -119,6 +119,8 @@ class Restructure:
         in restructuring pattern.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if checks is not None:
             warnings.warn(
                 "The use of checks parameter is deprecated; "
@@ -287,10 +289,10 @@ class _ChangeComputer:
         start, end = patchedast.node_region(node)
         main_text = self.source[start:end]
         collector = codeanalyze.ChangeCollector(main_text)
-        for node in self._get_nearest_roots(node):
-            sub_start, sub_end = patchedast.node_region(node)
+        for node_ in self._get_nearest_roots(node):
+            sub_start, sub_end = patchedast.node_region(node_)
             collector.add_change(
-                sub_start - start, sub_end - start, self._get_node_text(node)
+                sub_start - start, sub_end - start, self._get_node_text(node_)
             )
         result = collector.get_changed()
         if result is None:

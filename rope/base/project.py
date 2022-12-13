@@ -1,3 +1,4 @@
+import contextlib
 import os
 import shutil
 import sys
@@ -69,11 +70,9 @@ class _Project:
     def get_python_path_folders(self):
         result = []
         for src in self.prefs.get("python_path", []) + sys.path:
-            try:
+            with contextlib.suppress(exceptions.ResourceNotFoundError):
                 src_folder = get_no_project().get_resource(src)
                 result.append(src_folder)
-            except exceptions.ResourceNotFoundError:
-                pass
         return result
 
     # INFO: It was decided not to cache source folders, since:
@@ -111,12 +110,14 @@ class _Project:
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
+    def do(self, changes, task_handle=None):
         """Apply the changes in a `ChangeSet`
 
         Most of the time you call this function for committing the
         changes for a refactoring.
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         self.history.do(changes, task_handle=task_handle)
 
     def get_pymodule(self, resource, force_errors=False):
@@ -256,9 +257,8 @@ class Project(_Project):
         return os.path.join(self._address, *name.split("/"))
 
     def _init_ropefolder(self):
-        if self.ropefolder is not None:
-            if not self.ropefolder.exists():
-                self._create_recursively(self.ropefolder)
+        if self.ropefolder is not None and not self.ropefolder.exists():
+            self._create_recursively(self.ropefolder)
 
     def _create_recursively(self, folder):
         if folder.parent != self.root and not folder.parent.exists():
@@ -436,12 +436,9 @@ class _DataFiles:
 
     def _get_opener(self, compress):
         if compress:
-            try:
+            with contextlib.suppress(ImportError):
                 import gzip
-
                 return gzip.open
-            except ImportError:
-                pass
         return open
 
     def _get_file(self, name, compress):

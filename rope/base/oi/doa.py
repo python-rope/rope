@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import hashlib
 import hmac
 
@@ -122,7 +123,7 @@ class PythonFileRunner:
         """Stop the process"""
         if self.process.poll() is not None:
             return
-        try:
+        with contextlib.suppress(OSError):
             if hasattr(self.process, "terminate"):
                 self.process.terminate()
             elif os.name != "nt":
@@ -132,8 +133,6 @@ class PythonFileRunner:
 
                 handle = int(self.process._handle)
                 ctypes.windll.kernel32.TerminateProcess(handle, -1)
-        except OSError:
-            pass
 
     def add_finishing_observer(self, observer):
         """Notify this observer when execution finishes"""

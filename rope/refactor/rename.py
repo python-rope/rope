@@ -59,7 +59,7 @@ class Rename:
         unsure=None,
         docs=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Get the changes needed for this refactoring
 
@@ -82,6 +82,8 @@ class Rename:
           `resources` instead.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if unsure in (True, False):
             warnings.warn(
                 "unsure parameter should be a function that returns " "True or False",

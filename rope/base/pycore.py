@@ -1,4 +1,5 @@
 import bisect
+import contextlib
 import difflib
 import warnings
 
@@ -214,7 +215,8 @@ class PyCore:
             self, pymodule, should_analyze, search_subscopes, followed_calls
         )
 
-    def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
+    def get_classes(self, task_handle=None):
+
         warnings.warn(
             "`PyCore.get_classes()` is deprecated", DeprecationWarning, stacklevel=2
         )
@@ -295,7 +297,7 @@ class _ExtensionCache:
 def perform_soa_on_changed_scopes(project, resource, old_contents):
     pycore = project.pycore
     if resource.exists() and pycore.is_python_file(resource):
-        try:
+        with contextlib.suppress(exceptions.ModuleSyntaxError):
             new_contents = resource.read()
             # detecting changes in new_contents relative to old_contents
             detector = _TextChangeDetector(new_contents, old_contents)
@@ -311,8 +313,6 @@ def perform_soa_on_changed_scopes(project, resource, old_contents):
                 return detector.consume_changes(start, end)
 
             pycore.analyze_module(resource, should_analyze, search_subscopes)
-        except exceptions.ModuleSyntaxError:
-            pass
 
 
 class _TextChangeDetector:

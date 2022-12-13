@@ -25,13 +25,15 @@ class History:
                 for data in result[1]:
                     self._redo_list.append(to_change(data))
 
-    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
+    def do(self, changes, task_handle=None):
         """Perform the change and add it to the `self.undo_list`
 
         Note that uninteresting changes (changes to ignored files)
         will not be appended to `self.undo_list`.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         try:
             self.current_change = changes
             changes.do(change.create_job_set(task_handle, changes))
@@ -52,7 +54,7 @@ class History:
                 return True
         return False
 
-    def undo(self, change=None, drop=False, task_handle=taskhandle.NullTaskHandle()):
+    def undo(self, change=None, drop=False, task_handle=None):
         """Redo done changes from the history
 
         When `change` is `None`, the last done change will be undone.
@@ -65,6 +67,8 @@ class History:
         the redo list.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if not self._undo_list:
             raise exceptions.HistoryError("Undo list is empty")
         if change is None:

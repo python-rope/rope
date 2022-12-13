@@ -35,6 +35,8 @@ calling the `create_finder()` function.
     arguments
 """
 
+
+import contextlib
 import re
 
 from rope.base import ast
@@ -62,7 +64,9 @@ class Finder:
 
     """
 
-    def __init__(self, project, name, filters=[lambda o: True], docs=False):
+    def __init__(self, project, name, filters=None, docs=False):
+        if filters is None:
+            filters = [lambda o: True]
         self.project = project
         self.name = name
         self.docs = docs
@@ -143,17 +147,13 @@ class Occurrence:
 
     @utils.saveit
     def get_pyname(self):
-        try:
+        with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_pyname_at(self.offset)
-        except exceptions.BadIdentifierError:
-            pass
 
     @utils.saveit
     def get_primary_and_pyname(self):
-        try:
+        with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
-        except exceptions.BadIdentifierError:
-            pass
 
     @utils.saveit
     def is_in_import_statement(self):

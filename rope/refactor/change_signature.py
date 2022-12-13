@@ -53,8 +53,10 @@ class ChangeSignature:
         call_changer,
         in_hierarchy=None,
         resources=None,
-        handle=taskhandle.NullTaskHandle(),
+        handle=None,
     ):
+        if handle is None:
+            handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         changes = ChangeSet("Changing signature of <%s>" % self.name)
@@ -151,7 +153,7 @@ class ChangeSignature:
         changers,
         in_hierarchy=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Get changes caused by this refactoring
 
@@ -163,6 +165,8 @@ class ChangeSignature:
         in the project are searched.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self._definfo(), changers
         )
@@ -179,9 +183,8 @@ class _FunctionChangers:
         self.changed_definition_infos = self._get_changed_definition_infos()
 
     def _get_changed_definition_infos(self):
-        result = []
         definition_info = self.definition_info
-        result.append(definition_info)
+        result = [definition_info]
         for changer in self.changers:
             definition_info = copy.deepcopy(definition_info)
             changer.change_definition_info(definition_info)

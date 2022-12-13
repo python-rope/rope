@@ -132,7 +132,7 @@ class InlineMethod(_Inliner):
         remove=True,
         only_current=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Get the changes this refactoring makes
 
@@ -140,6 +140,8 @@ class InlineMethod(_Inliner):
         `only_current` is `True`, the the current occurrence will be
         inlined, only.
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         changes = ChangeSet("Inline method <%s>" % self.name)
         if resources is None:
             resources = self.project.get_python_files()
@@ -256,8 +258,10 @@ class InlineVariable(_Inliner):
         only_current=False,
         resources=None,
         docs=False,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             if rename._is_local(self.pyname):
                 resources = [self.resource]
@@ -414,8 +418,10 @@ class _DefinitionGenerator:
     def get_function_name(self):
         return self.pyfunction.get_name()
 
-    def get_definition(self, primary, pyname, call, host_vars=[], returns=False):
+    def get_definition(self, primary, pyname, call, host_vars=None, returns=False):
         # caching already calculated definitions
+        if host_vars is None:
+            host_vars = []
         return self._calculate_definition(primary, pyname, call, host_vars, returns)
 
     def _calculate_header(self, primary, pyname, call):
@@ -451,7 +457,7 @@ class _DefinitionGenerator:
 
         # If there is a name conflict, all variable names
         # inside the inlined function are renamed
-        if len(set(all_names).intersection(set(host_vars))) > 0:
+        if set(all_names).intersection(set(host_vars)):
 
             prefix = next(_DefinitionGenerator.unique_prefix)
             guest = libutils.get_string_module(self.project, source, self.resource)

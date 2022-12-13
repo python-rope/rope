@@ -76,7 +76,7 @@ class MoveMethod:
         dest_attr,
         new_name=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=None,
     ):
         """Return the changes needed for this refactoring
 
@@ -90,6 +90,8 @@ class MoveMethod:
           will be applied to all python files.
 
         """
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         changes = ChangeSet("Moving method <%s>" % self.method_name)
         if resources is None:
             resources = self.project.get_python_files()
@@ -299,8 +301,10 @@ class MoveGlobal:
         return isinstance(pyname, pynames.AssignedName)
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()
+        self, dest, resources=None, task_handle=None
     ):
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():
@@ -487,8 +491,10 @@ class MoveModule:
         self.import_tools = self.tools.import_tools
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()
+        self, dest, resources=None, task_handle=None
     ):
+        if task_handle is None:
+            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         if dest is None or not dest.is_folder():
