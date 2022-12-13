@@ -9,7 +9,7 @@ from rope.base import ast, codeanalyze, exceptions
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
-
+ 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
 
@@ -305,15 +305,11 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _Assign(self, node):
-        children = self._child_nodes(node.targets, "=")
-        children.append("=")
-        children.append(node.value)
+        children = [*self._child_nodes(node.targets, "="), "=", node.value]
         self._handle(node, children)
 
     def _AugAssign(self, node):
-        children = [node.target]
-        children.extend(self._get_op(node.op))
-        children.extend(["=", node.value])
+        children = [node.target, *self._get_op(node.op), "=", node.value]
         self._handle(node, children)
 
     def _AnnAssign(self, node):
@@ -354,18 +350,14 @@ class _PatchingASTWalker:
                 children.extend(("@", decorator))
         children.extend(["class", node.name])
         if node.bases:
-            children.append("(")
-            children.extend(self._child_nodes(node.bases, ","))
-            children.append(")")
-        children.append(":")
-        children.extend(node.body)
+            children.extend(["(", *self._child_nodes(node.bases, ","), ")"])
+        children.extend([":", *node.body])
         self._handle(node, children)
 
     def _Compare(self, node):
         children = [node.left]
         for op, expr in zip(node.ops, node.comparators):
-            children.extend(self._get_op(op))
-            children.append(expr)
+            children.extend([*self._get_op(op), expr])
         self._handle(node, children)
 
     def _Delete(self, node):
@@ -491,10 +483,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _handle_for_loop_node(self, node, is_async):
-        if is_async:
-            children = ["async", "for"]
-        else:
-            children = ["for"]
+        children = ["async", "for"] if is_async else ["for"]
         children.extend([node.target, "in", node.iter, ":"])
         children.extend(node.body)
         if node.orelse:
@@ -525,20 +514,15 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _handle_function_def_node(self, node, is_async):
-        children = []
         try:
             decorators = node.decorator_list
         except AttributeError:
             decorators = getattr(node, "decorators", None)
-        if decorators:
-            for decorator in decorators:
-                children.extend(("@", decorator))
-        if is_async:
-            children.extend(["async", "def"])
-        else:
-            children.extend(["def"])
-        children.extend([node.name, "(", node.args, ")", ":"])
-        children.extend(node.body)
+        children = []
+        for decorator in decorators:
+            children.extend(("@", decorator))
+        children.extend(["async", "def"]) if is_async else children.append("def")
+        children.extend([*[node.name, "(", node.args, ")", ":"], *node.body])
         self._handle(node, children)
 
     def _FunctionDef(self, node):
@@ -571,8 +555,8 @@ class _PatchingASTWalker:
         else:
             children.append(arg)
         if default is not None:
-            children.append("=")
-            children.append(default)
+            children.extend(["=", default])
+
 
     def _add_tuple_parameter(self, children, arg):
         children.append("(")
@@ -586,8 +570,7 @@ class _PatchingASTWalker:
         children.append(")")
 
     def _GeneratorExp(self, node):
-        children = [node.elt]
-        children.extend(node.generators)
+        children = [node.elt, *node.generators]
         self._handle(node, children, eat_parens=True)
 
     def _comprehension(self, node):
@@ -598,15 +581,11 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _Global(self, node):
-        children = self._child_nodes(node.names, ",")
-        children.insert(0, "global")
+        children = ["global", *self._child_nodes(node.names, ",")]
         self._handle(node, children)
 
     def _If(self, node):
-        if self._is_elif(node):
-            children = ["elif"]
-        else:
-            children = ["if"]
+        children = ["elif"] if self._is_elif(node) else ["if"]
         children.extend([node.test, ":"])
         children.extend(node.body)
         if node.orelse:
@@ -630,16 +609,11 @@ class _PatchingASTWalker:
         return self._handle(node, [node.body, "if", node.test, "else", node.orelse])
 
     def _Import(self, node):
-        children = ["import"]
-        children.extend(self._child_nodes(node.names, ","))
+        children = ["import", *self._child_nodes(node.names, ",")]
         self._handle(node, children)
 
     def _keyword(self, node):
-        children = []
-        if node.arg is None:
-            children.append(node.value)
-        else:
-            children.extend([node.arg, "=", node.value])
+        children = [node.value] if node.arg is None else [node.arg, "=", node.value]
         self._handle(node, children)
 
     def _Lambda(self, node):
@@ -649,9 +623,7 @@ class _PatchingASTWalker:
         self._handle(node, ["["] + self._child_nodes(node.elts, ",") + ["]"])
 
     def _ListComp(self, node):
-        children = ["[", node.elt]
-        children.extend(node.generators)
-        children.append("]")
+        children = ["[", node.elt, *node.generators, "]"]
         self._handle(node, children)
 
     def _Set(self, node):
@@ -665,15 +637,11 @@ class _PatchingASTWalker:
         self._handle(node, ["set(", ")"])
 
     def _SetComp(self, node):
-        children = ["{", node.elt]
-        children.extend(node.generators)
-        children.append("}")
+        children = ["{", node.elt, *node.generators, "}"]
         self._handle(node, children)
 
     def _DictComp(self, node):
-        children = ["{", *[node.key, ":", node.value]]
-        children.extend(node.generators)
-        children.append("}")
+        children = ["{", *[node.key, ":", node.value], *node.generators, "}"]
         self._handle(node, children)
 
     def _Module(self, node):
