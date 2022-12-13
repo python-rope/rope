@@ -144,13 +144,12 @@ class _PatchingASTWalker:
                     region = self.source.consume_exec_close_paren_or_space()
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
-                else:
-                    if hasattr(ast, "JoinedStr") and isinstance(
+                elif hasattr(ast, "JoinedStr") and isinstance(
                         node, (ast.JoinedStr, ast.FormattedValue)
                     ):
-                        region = self.source.consume_joined_string(child)
-                    else:
-                        region = self.source.consume(child)
+                    region = self.source.consume_joined_string(child)
+                else:
+                    region = self.source.consume(child)
                 child = self.source[region[0] : region[1]]
                 token_start = region[0]
             if not first_token:
