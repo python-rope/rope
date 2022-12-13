@@ -734,7 +734,6 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(code.index("afunc") + 1)
         self.assertEqual(afunc.get_object(), found_pyname.get_object())
 
-    @testutils.only_for("2.5")
     def test_relative_modules_after_from_statements(self):
         pkg1 = testutils.create_package(self.project, "pkg1")
         pkg2 = testutils.create_package(self.project, "pkg2", pkg1)

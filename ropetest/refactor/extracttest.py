@@ -110,7 +110,6 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.5")
     def test_extract_function_containing_dict_generalized_unpacking(self):
         code = dedent("""\
             def a_func(dict1):
