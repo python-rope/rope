@@ -184,9 +184,8 @@ class _PatchingASTWalker:
         new_end = None
         for i in range(closes):
             new_end = self.source.consume(")")[1]
-        if new_end is not None:
-            if self.children:
-                children.append(self.source[old_end:new_end])
+        if new_end is not None and self.children:
+            children.append(self.source[old_end:new_end])
         new_start = start
         for i in range(opens):
             new_start = self.source.rfind_token("(", 0, new_start)
