@@ -268,7 +268,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
             "JoinedStr",
-            ["rf'", "abc", "FormattedValue", '\' f"""xxx', "FormattedValue", " ", '"""',],
+            ["rf'", "abc", "FormattedValue", '\' f"""xxx', "FormattedValue", " ", '"""'],
         )
         checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
 
@@ -727,7 +727,6 @@ class PatchedASTTest(unittest.TestCase):
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
 
-
     def test_from_node_whitespace_around_dots_1(self):
         source = "from . . . import y as z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -737,7 +736,6 @@ class PatchedASTTest(unittest.TestCase):
             "ImportFrom", ["from", " ", ".", " ", ".", " ", ".", " ", "import", " ", "alias"]
         )
         checker.check_children("alias", ["y", " ", "as", " ", "z"])
-
 
     def test_from_node_whitespace_around_dots_2(self):
         source = "from . a . b import y as z\n"

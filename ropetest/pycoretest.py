@@ -579,7 +579,6 @@ class PyCoreTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, code)
         self.assertTrue("var" in pymod)
 
-
     def test_with_statement_variables_and_tuple_assignment(self):
         code = dedent("""\
             class A(object):
@@ -594,7 +593,6 @@ class PyCoreTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, code)
         self.assertTrue("a" in pymod)
         self.assertTrue("b" in pymod)
-
 
     def test_with_statement_variable_type(self):
         code = dedent("""\
@@ -612,7 +610,6 @@ class PyCoreTest(unittest.TestCase):
         a_class = pymod["A"].get_object()
         var = pymod["var"].get_object()
         self.assertEqual(a_class, var.get_type())
-
 
     def test_nested_with_statement_variable_type(self):
         code = dedent("""\
@@ -639,7 +636,6 @@ class PyCoreTest(unittest.TestCase):
         b_class = pymod["B"].get_object()
         var_b = pymod["var_b"].get_object()
         self.assertEqual(b_class, var_b.get_type())
-
 
     def test_with_statement_with_no_vars(self):
         code = dedent("""\
