@@ -222,6 +222,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher("3.8")
     def test_extract_function_with_posonlyargs(self):
         code = dedent("""\
             def a_func(a_var, /, b):
