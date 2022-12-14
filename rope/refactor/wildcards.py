@@ -1,4 +1,5 @@
-from rope.base import ast, evaluate, builtins, pyobjects
+import ast
+from rope.base import builtins, evaluate, pyobjects
 from rope.refactor import patchedast, occurrences
 
 

@@ -1,3 +1,4 @@
+import ast
 from operator import itemgetter
 from typing import Optional, Tuple
 
@@ -6,11 +7,11 @@ import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
     arguments,
-    ast,
     nameanalyze,
     exceptions,
     pyobjects,
     pyobjectsdef,
+    rast,
     worder,
 )
 
@@ -50,7 +51,7 @@ def eval_str(holding_scope, name):
 def eval_str2(holding_scope, name):
     try:
         # parenthesizing for handling cases like 'a_var.\nattr'
-        node = ast.parse("(%s)" % name)
+        node = rast.parse("(%s)" % name)
     except SyntaxError:
         raise BadIdentifierError("Not a resolvable python identifier selected.")
     return eval_node2(holding_scope, node)
@@ -158,7 +159,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator(ast.RopeNodeVisitor):
+class StatementEvaluator(rast.RopeNodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None

@@ -1,10 +1,11 @@
+import ast
 from typing import Union, List
 
 from rope.base import (
-    ast,
     exceptions,
     pynames,
     pynamesdef,
+    rast,
     utils,
 )
 from rope.refactor.importutils import actions, importinfo
@@ -421,7 +422,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder(ast.RopeNodeVisitor):
+class _UnboundNameFinder(rast.RopeNodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -560,7 +561,7 @@ class _GlobalImportFinder:
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module or "",  # see comment at rope.base.ast.walk
+            node.module or "",  ### Huh? see comment at rope.base.ast.walk
             level,
             self._get_names(node.names),
         )

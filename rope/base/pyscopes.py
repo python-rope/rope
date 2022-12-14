@@ -1,6 +1,7 @@
+import ast
+
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import (
-    ast,
     codeanalyze,
     exceptions,
     pynames,

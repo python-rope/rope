@@ -1,10 +1,11 @@
+import ast
 import collections
 import numbers
 import re
 import warnings
 from itertools import chain
 
-from rope.base import ast, codeanalyze, exceptions
+from rope.base import codeanalyze, exceptions, rast
 
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
@@ -35,7 +36,7 @@ def patch_ast(node, source, sorted_children=False):
     if hasattr(node, "region"):
         return node
     walker = _PatchingASTWalker(source, children=sorted_children)
-    ast.call_for_nodes(node, walker)
+    rast.call_for_nodes(node, walker)
     return node
 
 
@@ -115,7 +116,7 @@ class _PatchingASTWalker:
                 continue
             offset = self.source.offset
             if isinstance(child, ast.AST):
-                ast.call_for_nodes(child, self)
+                rast.call_for_nodes(child, self)
                 token_start = child.region[0]
             else:
                 if child is self.String:
