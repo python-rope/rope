@@ -212,6 +212,7 @@ class Project(_Project):
         """
         if projectroot != "/":
             projectroot = _realpath(projectroot).rstrip("/\\")
+        assert isinstance(projectroot, str)
         self._address = projectroot
         self._ropefolder_name = ropefolder
         if not os.path.exists(self._address):
