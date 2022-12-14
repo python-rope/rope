@@ -952,6 +952,8 @@ def _get_argnames(arguments):
         result.append(arguments.vararg.arg)
     if arguments.kwarg:
         result.append(arguments.kwarg.arg)
+    if arguments.kwonlyargs:
+        result.extend(node.arg for node in arguments.kwonlyargs)
     return result
 
 
