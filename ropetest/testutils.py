@@ -11,11 +11,12 @@ from rope.contrib import generate
 
 logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
 
+RUN_TMP_DIR = tempfile.mkdtemp(prefix="ropetest-run-")
 
-def sample_project(root=None, foldername=None, **kwds):
-    if root is None:
-        root = tempfile.mkdtemp(prefix="ropetest-")
-        root = os.path.join(root, foldername if foldername else "sample_project")
+
+def sample_project(foldername=None, **kwds):
+    root = tempfile.mkdtemp(prefix="project-", dir=RUN_TMP_DIR)
+    root = os.path.join(root, foldername if foldername else "sample_project")
     logging.debug("Using %s as root of the project.", root)
     # Using these prefs for faster tests
     prefs = {
