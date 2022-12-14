@@ -29,7 +29,6 @@ def sample_project(foldername=None, **kwds):
         "import_dynload_stdmods": False,
     }
     prefs.update(kwds)
-    remove_recursively(root)
     project = rope.base.project.Project(root, **prefs)
     return project
 
