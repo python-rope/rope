@@ -948,7 +948,7 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
 
 def _get_argnames(arguments):
     result = []
-    result.extend(node.arg for node in arguments.posonlyargs)
+    result.extend(node.arg for node in getattr(arguments, "posonlyargs", []))
     result.extend(node.arg for node in arguments.args if isinstance(node, ast.arg))
     if arguments.vararg:
         result.append(arguments.vararg.arg)
