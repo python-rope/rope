@@ -215,7 +215,7 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             self[key] = []
         getattr(self, key).append(value)
 
-    def get(self, key: str, default: Any = None):
+    def get(self, key: str, default: Any=None):
         """Get the value of the key preference"""
         return getattr(self, key, default)
 
