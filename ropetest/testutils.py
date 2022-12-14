@@ -1,26 +1,21 @@
+import logging
 import os.path
 import shutil
 import sys
-import logging
-
-logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
+import tempfile
 import unittest
 
 import rope.base.project
 from rope.contrib import generate
 
 
+logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
+
+
 def sample_project(root=None, foldername=None, **kwds):
     if root is None:
-        root = "sample_project"
-        if foldername:
-            root = foldername
-        # HACK: Using ``/dev/shm/`` for faster tests
-        if os.name == "posix":
-            if os.path.isdir("/dev/shm") and os.access("/dev/shm", os.W_OK):
-                root = "/dev/shm/" + root
-            elif os.path.isdir("/tmp") and os.access("/tmp", os.W_OK):
-                root = "/tmp/" + root
+        root = tempfile.mkdtemp(prefix="ropetest-")
+        root = os.path.join(root, foldername if foldername else "sample_project")
     logging.debug("Using %s as root of the project.", root)
     # Using these prefs for faster tests
     prefs = {
