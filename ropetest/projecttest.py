@@ -1,7 +1,7 @@
 import os.path
-import shutil
-from textwrap import dedent
+import tempfile
 import unittest
+from textwrap import dedent
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
@@ -222,17 +222,15 @@ class ProjectTest(unittest.TestCase):
         )
 
     def test_does_not_fail_for_permission_denied(self):
-        bad_dir = os.path.join(self.sample_folder, "bad_dir")
-        os.makedirs(bad_dir)
-        self.addCleanup(shutil.rmtree, bad_dir)
-        os.chmod(bad_dir, 0o000)
-        try:
-            parent = self.project.get_resource(self.sample_folder)
+        with tempfile.TemporaryDirectory(suffix="bad_dir") as bad_dir:
+            os.chmod(bad_dir, 0o000)
+            try:
+                parent = self.project.get_resource(self.sample_folder)
 
-            parent.get_children()
+                parent.get_children()
 
-        finally:
-            os.chmod(bad_dir, 0o755)
+            finally:
+                os.chmod(bad_dir, 0o755)
 
     def test_getting_files(self):
         files = self.project.root.get_files()
