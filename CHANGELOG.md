@@ -3,6 +3,7 @@
 - #533 Refactoring to Remove usage of unicode type
 - #559 Improve handling of whitespace in import and from-import statements
 - #581 Remove functions in rope.base.ast that has functionally identical implementation in stdlib's ast 
+- #589 Fix issue with `sample_project()` creating directories where it shouldn't when running tests
 
 # Release 1.5.1
 
