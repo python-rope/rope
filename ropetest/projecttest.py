@@ -1,4 +1,5 @@
 import os.path
+import pathlib
 import tempfile
 import unittest
 from textwrap import dedent
@@ -67,22 +68,23 @@ class ProjectTest(unittest.TestCase):
             self.project.root.create_file(self.sample_file)
 
     def test_making_root_folder_if_it_does_not_exist(self):
-        project = Project("sampleproject2")
-        try:
-            self.assertTrue(
-                os.path.exists("sampleproject2") and os.path.isdir("sampleproject2")
-            )
-        finally:
-            testutils.remove_project(project)
+        with tempfile.TemporaryDirectory(dir=testutils.RUN_TMP_DIR) as tmpdir:
+            project_root = pathlib.Path(tmpdir) / "sampleproject2"
+            assert not project_root.exists()
+
+            project = Project(project_root)
+
+            assert project_root.exists()
+            assert project_root.is_dir()
 
     def test_failure_when_project_root_exists_and_is_a_file(self):
-        project_root = "sampleproject2"
-        try:
-            open(project_root, "w").close()
+        with tempfile.TemporaryDirectory(dir=testutils.RUN_TMP_DIR) as tmpdir:
+            project_root = pathlib.Path(tmpdir) / "sampleproject2"
+            project_root.touch()
+            assert project_root.exists() and project_root.is_file()
+
             with self.assertRaises(RopeError):
                 Project(project_root)
-        finally:
-            testutils.remove_recursively(project_root)
 
     def test_creating_folders(self):
         folderName = "SampleFolder"
