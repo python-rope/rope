@@ -1,3 +1,5 @@
+### import ast
+
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -5,13 +7,15 @@ import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
-    pynamesdef,
-    exceptions,
-    ast,
-    nameanalyze,
-    pyobjects,
-    fscommands,
+    ast,  ###
     arguments,
+    exceptions,
+    fscommands,
+    nameanalyze,
+    pynames,  ###
+    pynamesdef,
+    pyobjects,
+    ### rast,
     utils,
 )
 
@@ -251,7 +255,8 @@ class PyPackage(pyobjects.PyPackage):
         if self.resource is None:
             return result
         for name, resource in self._get_child_resources().items():
-            result[name] = pynamesdef.ImportedModule(self, resource=resource)
+            ### result[name] = pynamesdef.ImportedModule(self, resource=resource)
+            result[name] = pynames.ImportedModule(self, resource=resource)
         return result
 
     def _create_concluded_attributes(self):
@@ -307,7 +312,8 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         self.scope_visitor._assigned(name, assignment)
 
     def _Name(self, node):
-        assignment = pynamesdef.AssignmentValue(
+        ### assignment = pynamesdef.AssignmentValue(
+        assignment = pynames.AssignmentValue(
             self.assigned_ast, assign_type=True, type_hint=self.type_hint
         )
         self._assigned(node.id, assignment)
@@ -317,7 +323,8 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
-                assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
+                ### assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
+                assignment = pynames.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
     def _Annotation(self, node):
@@ -377,7 +384,9 @@ class _AssignVisitor(ast.RopeNodeVisitor):
     def _Name(self, node):
         assignment = None
         if self.assigned_ast is not None:
-            assignment = pynamesdef.AssignmentValue(self.assigned_ast)
+            ### assignment = pynamesdef.AssignmentValue(self.assigned_ast)
+            assignment = pynames.AssignmentValue(self.assigned_ast)
+
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
@@ -385,7 +394,8 @@ class _AssignVisitor(ast.RopeNodeVisitor):
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
-                assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
+                ### assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
+                assignment = pynames.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
     def _Attribute(self, node):
@@ -414,7 +424,8 @@ class _ScopeVisitor(_ExpressionVisitor):
 
     def _ClassDef(self, node):
         pyclass = PyClass(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynamesdef.DefinedName(pyclass)
+        ### self.names[node.name] = pynamesdef.DefinedName(pyclass)
+        self.names[node.name] = pynames.DefinedName(pyclass)
         self.defineds.append(pyclass)
 
     def _FunctionDef(self, node):
@@ -423,7 +434,8 @@ class _ScopeVisitor(_ExpressionVisitor):
             if isinstance(decorator, ast.Name) and decorator.id == "property":
                 if isinstance(self, _ClassVisitor):
                     type_ = rope.base.builtins.Property(pyfunction)
-                    arg = pynamesdef.UnboundName(
+                    ### arg = pynamesdef.UnboundName(
+                    arg = pynames.UnboundName(
                         rope.base.pyobjects.PyObject(self.owner_object)
                     )
 
@@ -434,12 +446,14 @@ class _ScopeVisitor(_ExpressionVisitor):
 
                     lineno = utils.guess_def_lineno(self.get_module(), node)
 
-                    self.names[node.name] = pynamesdef.EvaluatedName(
+                    ### self.names[node.name] = pynamesdef.EvaluatedName(
+                    self.names[node.name] = pynames.EvaluatedName(
                         _eval, module=self.get_module(), lineno=lineno
                     )
                     break
         else:
-            self.names[node.name] = pynamesdef.DefinedName(pyfunction)
+            ### self.names[node.name] = pynamesdef.DefinedName(pyfunction)
+            self.names[node.name] = pynames.DefinedName(pyfunction)
         self.defineds.append(pyfunction)
 
     def _AsyncFunctionDef(self, node):
@@ -476,12 +490,14 @@ class _ScopeVisitor(_ExpressionVisitor):
     ):
         result = {}
         if isinstance(targets, str):
-            assignment = pynamesdef.AssignmentValue(assigned, [], evaluation, eval_type)
+            ### assignment = pynamesdef.AssignmentValue(assigned, [], evaluation, eval_type)
+            assignment = pynames.AssignmentValue(assigned, [], evaluation, eval_type)
             self._assigned(targets, assignment)
         else:
             names = nameanalyze.get_name_levels(targets)
             for name, levels in names:
-                assignment = pynamesdef.AssignmentValue(
+                ### assignment = pynamesdef.AssignmentValue(
+                assignment = pynames.AssignmentValue(
                     assigned, levels, evaluation, eval_type
                 )
                 self._assigned(name, assignment)
@@ -519,11 +535,13 @@ class _ScopeVisitor(_ExpressionVisitor):
             alias = import_pair.asname
             first_package = module_name.split(".")[0]
             if alias is not None:
-                imported = pynamesdef.ImportedModule(self.get_module(), module_name)
+                ### imported = pynamesdef.ImportedModule(self.get_module(), module_name)
+                imported = pynames.ImportedModule(self.get_module(), module_name)
                 if not self._is_ignored_import(imported):
                     self.names[alias] = imported
             else:
-                imported = pynamesdef.ImportedModule(self.get_module(), first_package)
+                ### imported = pynamesdef.ImportedModule(self.get_module(), first_package)
+                imported = pynames.ImportedModule(self.get_module(), first_package)
                 if not self._is_ignored_import(imported):
                     self.names[first_package] = imported
 
@@ -531,7 +549,8 @@ class _ScopeVisitor(_ExpressionVisitor):
         level = 0
         if node.level:
             level = node.level
-        imported_module = pynamesdef.ImportedModule(
+        ### imported_module = pynamesdef.ImportedModule(
+        imported_module = pynames.ImportedModule(
             self.get_module(),
             node.module or "",
             level,
@@ -547,7 +566,8 @@ class _ScopeVisitor(_ExpressionVisitor):
                 alias = imported_name.asname
                 if alias is not None:
                     imported = alias
-                self.names[imported] = pynamesdef.ImportedName(
+                ### self.names[imported] = pynamesdef.ImportedName(
+                self.names[imported] = pynames.ImportedName(
                     imported_module, imported_name.name
                 )
 
@@ -636,7 +656,8 @@ class _ClassInitVisitor(_AssignVisitor):
                 pyname = self.scope_visitor.names[node.attr]
                 if isinstance(pyname, pynamesdef.AssignedName):
                     pyname.assignments.append(
-                        pynamesdef.AssignmentValue(self.assigned_ast)
+                        ### pynamesdef.AssignmentValue(self.assigned_ast)
+                        pynames.AssignmentValue(self.assigned_ast)
                     )
 
     def _Tuple(self, node):
@@ -670,5 +691,6 @@ class StarImport:
         imported = self.imported_module.get_object()
         for name in imported:
             if not name.startswith("_"):
-                result[name] = pynamesdef.ImportedName(self.imported_module, name)
+                ### result[name] = pynamesdef.ImportedName(self.imported_module, name)
+                result[name] = pynames.ImportedName(self.imported_module, name)
         return result
