@@ -5,15 +5,14 @@ import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
-    ast,
-    arguments,
-    exceptions,
-    fscommands,
-    nameanalyze,
     pynames,
     pynamesdef,
+    exceptions,
+    ast,
+    nameanalyze,
     pyobjects,
-    # ### rast,
+    fscommands,
+    arguments,
     utils,
 )
 
