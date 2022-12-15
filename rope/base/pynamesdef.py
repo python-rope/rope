@@ -1,6 +1,7 @@
 import rope.base.oi.soi
-from rope.base import pynames
-from rope.base.pynames import *
+from rope.base import pynames, utils
+
+# from rope.base.pynames import *
 
 
 class AssignedName(pynames.AssignedName):
