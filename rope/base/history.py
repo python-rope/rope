@@ -15,7 +15,7 @@ class History:
 
     def _load_history(self):
         if self.save:
-            result = self.project.data_files.read_data("history", import_=True)
+            result = self.project.data_files.read_data("history")
             if result is not None:
                 to_change = change.DataToChange(self.project)
                 for data in result[0]:
