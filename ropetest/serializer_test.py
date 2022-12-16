@@ -19,6 +19,8 @@ from rope.base.serializer import python_to_json, json_to_python
         {"hello": "world"},
         {"hello": ("hello", 1)},
         {("hello", 1): "world"},
+        {"4": "hello"},
+        {4: "hello"},
     ],
 )
 def test_roundtrip(original_data):
@@ -43,6 +45,7 @@ def test_roundtrip(original_data):
         ((1, [2], "hello"), ["t", [1, ["l", [2]], "hello"]]),
         ([1, [2], "hello"], ["l", [1, ["l", [2]], "hello"]]),
         ({"hello": "world"}, {"hello": "world"}),
+        ({"hello": ("hello", 1)}, {"hello": ["t", ["hello", 1]]}),
     ],
 )
 def test_expected_encoded_simple(original_data, expected_encoded):
