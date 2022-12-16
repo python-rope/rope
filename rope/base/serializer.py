@@ -42,57 +42,59 @@ may or may not work:
 """
 
 
-def python_to_json(o):
+def python_to_json(o, version=1):
+    assert version in (1, 2)
     references = []
     return {
         "v": 1,
-        "data": _py2js(o, references),
+        "data": _py2js(o, references, version=version),
         "references": references,
     }
 
 
 def json_to_python(o):
-    assert o["v"] == 1
+    version = o["v"]
+    assert version in (1, 2)
     references = o["references"]
-    data = _js2py(o["data"], references)
+    data = _js2py(o["data"], references, version)
     return data
 
 
-def _py2js(o, references):
+def _py2js(o, references, version):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, tuple):
-        return {"$": "t", "items": [_py2js(item, references) for item in o]}
+        return {"$": "t", "items": [_py2js(item, references, version) for item in o]}
     elif isinstance(o, list):
-        return [_py2js(item, references) for item in o]
+        return [_py2js(item, references, version) for item in o]
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
             if k == "$":
                 raise ValueError('dict cannot contain reserved key "$"')
             if isinstance(k, str) and not k.isdigit():
-                result[k] = _py2js(v, references)
+                result[k] = _py2js(v, references, version)
             else:
                 assert isinstance(k, (str, int, list, tuple)) or k is None
                 refid = len(references)
-                references.append(_py2js(k, references))
-                result[str(refid)] = _py2js(v, references)
+                references.append(_py2js(k, references, version))
+                result[str(refid)] = _py2js(v, references, version)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
 
 
-def _js2py(o, references):
+def _js2py(o, references, version):
     assert not isinstance(o, tuple)
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, list):
-        return list(_js2py(item, references) for item in o)
+        return list(_js2py(item, references, version) for item in o)
     elif isinstance(o, dict):
         result = {}
         if "$" in o:
             if o["$"] == "t":
                 data = o["items"]
-                return tuple(_js2py(item, references) for item in data)
+                return tuple(_js2py(item, references, version) for item in data)
             raise TypeError(f'Unrecognized object of type: {o["$"]} {o}')
         else:
             for refid, v in o.items():
@@ -101,8 +103,8 @@ def _js2py(o, references):
                     refid = int(refid)
                     assert 0 <= refid < len(references)
                     k = references[refid]
-                    result[_js2py(k, references)] = _js2py(v, references)
+                    result[_js2py(k, references, version)] = _js2py(v, references, version)
                 else:
-                    result[refid] = _js2py(v, references)
+                    result[refid] = _js2py(v, references, version)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")

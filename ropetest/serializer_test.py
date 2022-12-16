@@ -5,6 +5,7 @@ import pytest
 from rope.base.serializer import python_to_json, json_to_python
 
 
+@pytest.mark.parametrize("version", [1, 2])
 @pytest.mark.parametrize(
     "original_data",
     [
@@ -23,8 +24,8 @@ from rope.base.serializer import python_to_json, json_to_python
         {4: "hello"},
     ],
 )
-def test_roundtrip(original_data):
-    encoded = python_to_json(original_data)
+def test_roundtrip(original_data, version):
+    encoded = python_to_json(original_data, version)
     serialized = json.dumps(encoded)
     decoded = json.loads(serialized)
     rehydrated_data = json_to_python(decoded)
