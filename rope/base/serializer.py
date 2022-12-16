@@ -64,7 +64,7 @@ def _py2js(o, references):
     elif isinstance(o, tuple):
         return {"$": "t", "items": [_py2js(item, references) for item in o]}
     elif isinstance(o, list):
-        return ["l", [_py2js(item, references) for item in o]]
+        return [_py2js(item, references) for item in o]
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
@@ -86,12 +86,7 @@ def _js2py(o, references):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, list):
-        typ, data = o
-        if typ == "t":
-            return tuple(_js2py(item, references) for item in data)
-        elif typ == "l":
-            return list(_js2py(item, references) for item in data)
-        assert False
+        return list(_js2py(item, references) for item in o)
     elif isinstance(o, dict):
         result = {}
         if "$" in o:
