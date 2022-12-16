@@ -230,7 +230,7 @@ class PyModule(pyobjects.PyModuleStub):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class PyPackage(pyobjects.PyPackage):
+class PyPackage(pyobjects.PyPackageStub):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
         init_dot_py = self._get_init_dot_py()

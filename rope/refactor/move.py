@@ -35,7 +35,7 @@ def create_move(project, resource, offset=None):
     if pyname is not None:
         pyobject = pyname.get_object()
         if isinstance(pyobject, pyobjects.PyModuleStub) or isinstance(
-            pyobject, pyobjects.PyPackage
+            pyobject, pyobjects.PyPackageStub
         ):
             return MoveModule(project, pyobject.get_resource())
         if isinstance(pyobject, pyobjects.PyFunctionStub) and isinstance(

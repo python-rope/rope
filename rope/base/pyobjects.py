@@ -320,7 +320,7 @@ class PyModuleStub(_PyModule):
     """Only a placeholder"""
 
 
-class PyPackage(_PyModule):
+class PyPackageStub(_PyModule):
     """Only a placeholder"""
 
 
