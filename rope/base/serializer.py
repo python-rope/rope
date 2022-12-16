@@ -19,8 +19,15 @@ In other words, this property always holds:
 Couple challenges in straight serialization that this module helps resolve:
 
 - json.dumps() maps both Python list and tuple to JSON array. This module
-  converts Python list `[1, 2, 3]` as-is and converts Python tuple `(1, 2, 3)`
-  to special object construct `{"$": "t", "items": [1, 2, 3]}`
+  provides two variants:
+
+  - In version=1, this module converts Python list `[1, 2, 3]` as-is and
+    converts Python tuple `(1, 2, 3)` to special object construct
+    `{"$": "t", "items": [1, 2, 3]}`
+
+  - In version=2, it is the other way around, this module converts Python tuple
+    `(1, 2, 3)` as-is and converts Python list `[1, 2, 3]` to special object
+    construct `{"$": "l", "items": [1, 2, 3]}`
 
 - Python dict keys can be a tuple/dict, but JSON Object keys must be strings
   This module replaces all `dict` keys with `refid` which can be resolved using
@@ -46,7 +53,7 @@ def python_to_json(o, version=1):
     assert version in (1, 2)
     references = []
     return {
-        "v": 1,
+        "v": version,
         "data": _py2js(o, references, version=version),
         "references": references,
     }
@@ -64,9 +71,15 @@ def _py2js(o, references, version):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, tuple):
-        return {"$": "t", "items": [_py2js(item, references, version) for item in o]}
+        if version == 1:
+            return {"$": "t", "items": [_py2js(item, references, version) for item in o]}
+        else:
+            return [_py2js(item, references, version) for item in o]
     elif isinstance(o, list):
-        return [_py2js(item, references, version) for item in o]
+        if version == 2:
+            return {"$": "l", "items": [_py2js(item, references, version) for item in o]}
+        else:
+            return [_py2js(item, references, version) for item in o]
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
@@ -88,13 +101,22 @@ def _js2py(o, references, version):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, list):
-        return list(_js2py(item, references, version) for item in o)
+        if version == 1:
+            return list(_js2py(item, references, version) for item in o)
+        elif version == 2:
+            return tuple(_js2py(item, references, version) for item in o)
+        assert False
     elif isinstance(o, dict):
         result = {}
         if "$" in o:
             if o["$"] == "t":
+                assert version == 1
                 data = o["items"]
                 return tuple(_js2py(item, references, version) for item in data)
+            elif o["$"] == "l":
+                assert version == 2
+                data = o["items"]
+                return list(_js2py(item, references, version) for item in data)
             raise TypeError(f'Unrecognized object of type: {o["$"]} {o}')
         else:
             for refid, v in o.items():

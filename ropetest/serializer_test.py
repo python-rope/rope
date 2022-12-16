@@ -16,7 +16,7 @@ from rope.base.serializer import python_to_json, json_to_python
         [],
         ("hello",),
         (1, [2], "hello"),
-        [1, [2], "hello"],
+        [1, (2,), "hello"],
         {"hello": "world"},
         {"hello": ("hello", 1)},
         {("hello", 1): "world"},
@@ -34,62 +34,80 @@ def test_roundtrip(original_data, version):
     assert rehydrated_data == original_data
 
 
-@pytest.mark.parametrize(
-    "original_data,expected_encoded",
-    [
+def expected_encoded_simple_data(version):
+    data = [
         (None, None),
         (4, 4),
         ("3", "3"),
-        ((), {"$": "t", "items": []}),
-        ([], []),
-        (("hello",), {"$": "t", "items": ["hello",]}),
-        ((1, [2], "hello"), {"$": "t", "items": [1, [2], "hello"]}),
-        ([1, [2], "hello"], [1, [2], "hello"]),
         ({"hello": "world"}, {"hello": "world"}),
-        ({"hello": ("hello", 1)}, {"hello": {"$": "t", "items": ["hello", 1]}}),
+    ]
+    return [[*d, version] for d in data]
+
+@pytest.mark.parametrize(
+    "original_data,expected_encoded,version",
+    [
+        *expected_encoded_simple_data(version=1),
+        *expected_encoded_simple_data(version=2),
+
+        ((), {"$": "t", "items": []}, 1),
+        ([], [], 1),
+        (("hello",), {"$": "t", "items": ["hello"]}, 1),
+        ((1, [2], "hello"), {"$": "t", "items": [1, [2], "hello"]}, 1),
+        ([1, (2,), "hello"], [1, {"$": "t", "items": [2]}, "hello"], 1),
+        ({"hello": ("hello", 1)}, {"hello": {"$": "t", "items": ["hello", 1]}}, 1),
+
+        ((), [], 2),
+        ([], {"$": "l", "items": []}, 2),
+        (("hello",), ["hello"], 2),
+        ((1, [2], "hello"), [1, {"$": "l", "items": [2]}, "hello"], 2),
+        ([1, (2,), "hello"], {"$": "l", "items": [1, [2], "hello"]}, 2),
+        ({"hello": ("hello", 1)}, {"hello": ["hello", 1]}, 2),
     ],
 )
-def test_expected_encoded_simple(original_data, expected_encoded):
-    encoded = python_to_json(original_data)
+def test_expected_encoded_simple(original_data, expected_encoded, version):
+    encoded = python_to_json(original_data, version)
     serialized = json.dumps(encoded)
     decoded = json.loads(serialized)
     rehydrated_data = json_to_python(decoded)
 
     assert encoded == decoded
-    assert encoded["v"] == 1
-    assert encoded["data"] == expected_encoded
+    assert encoded["v"] == version
+    assert encoded["data"] == expected_encoded, (original_data, version)
     assert encoded["references"] == []
     assert rehydrated_data == original_data
 
 
-
 @pytest.mark.parametrize(
-    "original_data,expected_encoded,expected_references",
+    "original_data,expected_encoded,expected_references,version",
     [
         (
             {("hello", 1): "world"},
             {"0": "world"},
             [{"$": "t", "items": ["hello", 1]}],
+            1,
         ),
         (
             {"4": "hello"},
             {"0": "hello"},
             ["4"],
+            1,
         ),
         (
             {4: "hello"},
             {"0": "hello"},
             [4],
+            1,
         ),
         (
             {None: "hello"},
             {"0": "hello"},
             [None],
+            1,
         ),
     ],
 )
-def test_expected_encoded_with_references(original_data, expected_encoded, expected_references):
-    encoded = python_to_json(original_data)
+def test_expected_encoded_with_references(original_data, expected_encoded, expected_references, version):
+    encoded = python_to_json(original_data, version)
     serialized = json.dumps(encoded)
     decoded = json.loads(serialized)
     rehydrated_data = json_to_python(decoded)
@@ -102,6 +120,7 @@ def test_expected_encoded_with_references(original_data, expected_encoded, expec
 
 
 
+@pytest.mark.parametrize("version", [1, 2])
 @pytest.mark.parametrize(
     "original_data,exctype",
     [
@@ -110,6 +129,6 @@ def test_expected_encoded_with_references(original_data, expected_encoded, expec
         ({"$": "hello"}, ValueError),
     ],
 )
-def test_rejects_unrecognized_object(original_data, exctype):
+def test_rejects_unrecognized_object(original_data, exctype, version):
     with pytest.raises(exctype):
-        python_to_json(original_data)
+        python_to_json(original_data, version)
