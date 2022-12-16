@@ -22,7 +22,6 @@ class UseFunction:
         if pyname is None:
             raise exceptions.RefactoringError("Unresolvable name selected")
         self.pyfunction = pyname.get_object()
-        # ### if not isinstance(self.pyfunction, pyobjects.PyFunction) or not isinstance(
         if not isinstance(self.pyfunction, pyobjects.PyFunctionStub) or not isinstance(
             self.pyfunction.parent, pyobjects.PyModule
         ):

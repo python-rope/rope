@@ -102,7 +102,6 @@ class ScopeNameFinder:
                 parameter_name = pyobject.get_parameters().get(keyword_name, None)
                 return (None, parameter_name)
             elif isinstance(pyobject, pyobjects.AbstractFunction):
-                # ### parameter_name = rope.base.pynames.ParameterName()
                 parameter_name = rope.base.pynames.ParameterNameStub()
                 return (None, parameter_name)
         # class body
@@ -368,7 +367,6 @@ def _get_evaluated_names(targets, assigned, module, evaluation, lineno):
     for name, levels in nameanalyze.get_name_levels(targets):
         assignment = rope.base.pynames.AssignmentValue(assigned, levels, evaluation)
         # XXX: this module should not access `rope.base.pynamesdef`!
-        # ### pyname = rope.base.pynamesdef.AssignedName(lineno, module)
         pyname = rope.base.pynames.AssignedName(lineno, module)
         pyname.assignments.append(assignment)
         result[name] = pyname

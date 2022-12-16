@@ -20,13 +20,12 @@ class PyName:
         """Return a (module, lineno) tuple"""
 
 
-class AssignedName(PyName):  # ### (pynames.AssignedName):
+class AssignedName(PyName):
     def __init__(self, lineno=None, module=None, pyobject=None):
         self.lineno = lineno
         self.module = module
         self.assignments = []
         self.pyobject = _Inferred(
-            # ### self._get_inferred, pynames._get_concluded_data(module)
             self._get_inferred,
             _get_concluded_data(module),
         )
@@ -139,7 +138,7 @@ class ParameterNameStub(PyName):
     """Only a placeholder"""
 
 
-class ParameterName(PyName):  # ### (pynames.ParameterName):
+class ParameterName(PyName):
     def __init__(self, pyfunction, index):
         self.pyfunction = pyfunction
         self.index = index

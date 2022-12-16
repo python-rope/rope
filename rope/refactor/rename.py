@@ -144,7 +144,6 @@ class Rename:
         pyname = self.old_pyname
         return (
             isinstance(pyname, pynames.DefinedName)
-            # ### and isinstance(pyname.get_object(), pyobjects.PyFunction)
             and isinstance(pyname.get_object(), pyobjects.PyFunctionStub)
             and isinstance(pyname.get_object().parent, pyobjects.PyClass)
         )

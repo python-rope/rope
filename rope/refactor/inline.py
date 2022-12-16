@@ -70,7 +70,6 @@ def create_inline(project, resource, offset):
         return InlineVariable(project, resource, offset)
     if isinstance(pyname, pynames.ParameterName):
         return InlineParameter(project, resource, offset)
-    # ### if isinstance(pyname.get_object(), pyobjects.PyFunction):
     if isinstance(pyname.get_object(), pyobjects.PyFunctionStub):
         return InlineMethod(project, resource, offset)
     else:

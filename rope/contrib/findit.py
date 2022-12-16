@@ -62,7 +62,6 @@ def find_implementations(
     if pyname is not None:
         pyobject = pyname.get_object()
         if (
-            # ### not isinstance(pyobject, pyobjects.PyFunction)
             not isinstance(pyobject, pyobjects.PyFunctionStub)
             or pyobject.get_kind() != "method"
         ):

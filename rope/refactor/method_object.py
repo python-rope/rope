@@ -16,7 +16,6 @@ class MethodObject:
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
-        # ### if pyname is None or not isinstance(pyname.get_object(), pyobjects.PyFunction):
         if pyname is None or not isinstance(
             pyname.get_object(), pyobjects.PyFunctionStub
         ):
