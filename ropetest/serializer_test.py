@@ -8,6 +8,7 @@ from rope.base.serializer import python_to_json, json_to_python
 @pytest.mark.parametrize(
     "original_data",
     [
+        None,
         4,
         "3",
     ],

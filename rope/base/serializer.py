@@ -55,13 +55,13 @@ def json_to_python(o):
 
 def _py2js(o, references):
     assert not isinstance(o, list)
-    if isinstance(o, (str, int)):
+    if isinstance(o, (str, int)) or o is None:
         return o
     assert False, o
 
 
 def _js2py(o, references):
     assert not isinstance(o, tuple)
-    if isinstance(o, (str, int)):
+    if isinstance(o, (str, int)) or o is None:
         return o
     assert False
