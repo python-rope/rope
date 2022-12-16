@@ -54,7 +54,7 @@ class MemoryDB(objectdb.FileDict):
 
     @property
     def compress(self):
-        return self.project.prefs.get("compress_objectdb", False)
+        return False
 
     @property
     def persist(self):

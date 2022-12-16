@@ -194,7 +194,7 @@ class History:
 
     @property
     def compress(self):
-        return self.project.prefs.get("compress_history", False)
+        return False
 
     def clear(self):
         """Forget all undo and redo information"""
