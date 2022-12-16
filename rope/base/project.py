@@ -384,29 +384,23 @@ class _DataFiles:
             return None
         file = self._get_file(name)
         if file.exists():
-            input = open(file.real_path, "rb")
-            try:
+            with open(file.real_path, "rb") as input_file:
                 result = []
                 try:
                     while True:
-                        result.append(pickle.load(input))
+                        result.append(pickle.load(input_file))
                 except EOFError:
                     pass
                 if len(result) == 1:
                     return result[0]
                 if len(result) > 1:
                     return result
-            finally:
-                input.close()
 
     def write_data(self, name, data):
         if self.project.ropefolder is not None:
             file = self._get_file(name)
-            output = open(file.real_path, "wb")
-            try:
-                pickle.dump(data, output, 2)
-            finally:
-                output.close()
+            with open(file.real_path, "wb") as output_file:
+                pickle.dump(data, output_file, 2)
 
     def add_write_hook(self, hook):
         self.hooks.append(hook)
