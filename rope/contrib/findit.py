@@ -118,7 +118,6 @@ class Location:
         self.lineno = occurrence.lineno
 
     def __repr__(self):
-        self.resource.project.get_pymodule(self.resource)
         return '<{}.{} "{}:{} ({}-{})" at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
