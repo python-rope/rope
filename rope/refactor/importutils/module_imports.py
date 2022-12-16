@@ -4,7 +4,7 @@ from rope.base import (
     ast,
     exceptions,
     pynames,
-    pynamesdef,
+    ### pynamesdef,
     utils,
 )
 from rope.refactor.importutils import actions, importinfo
@@ -37,7 +37,8 @@ class ModuleImports:
 
     def _get_all_star_list(self, pymodule):
         def _resolve_name(
-            name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+            # ### name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+            name: Union[pynames.AssignedName, pynames.ImportedName]
         ) -> List:
             while isinstance(name, pynames.ImportedName):
                 try:
@@ -46,7 +47,8 @@ class ModuleImports:
                     )
                 except exceptions.AttributeNotFoundError:
                     return []
-            assert isinstance(name, pynamesdef.AssignedName)
+            # ### assert isinstance(name, pynamesdef.AssignedName)
+            assert isinstance(name, pynames.AssignedName)
             return name.assignments
 
         result = set()

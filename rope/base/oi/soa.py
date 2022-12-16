@@ -75,7 +75,8 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         return arguments.MixedArguments(self_pyname, base_args, self.scope)
 
     def _call(self, pyfunction, args):
-        if isinstance(pyfunction, pyobjects.PyFunction):
+        # ### if isinstance(pyfunction, pyobjects.PyFunction):
+        if isinstance(pyfunction, pyobjects.PyFunctionStub):
             if self.follow is not None:
                 before = self._parameter_objects(pyfunction)
             self.pycore.object_info.function_called(

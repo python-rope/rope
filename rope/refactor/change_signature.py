@@ -22,7 +22,8 @@ class ChangeSignature:
         if (
             self.pyname is None
             or self.pyname.get_object() is None
-            or not isinstance(self.pyname.get_object(), pyobjects.PyFunction)
+            # ### or not isinstance(self.pyname.get_object(), pyobjects.PyFunction)
+            or not isinstance(self.pyname.get_object(), pyobjects.PyFunctionStub)
         ):
             raise rope.base.exceptions.RefactoringError(
                 "Change method signature should be performed on functions"
@@ -42,7 +43,8 @@ class ChangeSignature:
         self.others = None
         if (
             self.name == "__init__"
-            and isinstance(pyobject, pyobjects.PyFunction)
+            # ### and isinstance(pyobject, pyobjects.PyFunction)
+            and isinstance(pyobject, pyobjects.PyFunctionStub)
             and isinstance(pyobject.parent, pyobjects.PyClass)
         ):
             pyclass = pyobject.parent

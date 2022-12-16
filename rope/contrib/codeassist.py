@@ -8,7 +8,7 @@ from rope.base import (
     exceptions,
     libutils,
     pynames,
-    pynamesdef,
+    # ### pynamesdef,
     pyobjects,
     pyobjectsdef,
     pyscopes,
@@ -187,9 +187,11 @@ def get_canonical_path(project, resource, offset):
 
     # Start with the name of the object we're interested in.
     names = []
-    if isinstance(pyname, pynamesdef.ParameterName):
+    # ### if isinstance(pyname, pynamesdef.ParameterName):
+    if isinstance(pyname, pynames.ParameterName):
         names = [(worder.get_name_at(pymod.get_resource(), offset), "PARAMETER")]
-    elif isinstance(pyname, pynamesdef.AssignedName):
+    # ### elif isinstance(pyname, pynamesdef.AssignedName):
+    elif isinstance(pyname, pynames.AssignedName):
         names = [(worder.get_name_at(pymod.get_resource(), offset), "VARIABLE")]
 
     # Collect scope names.
@@ -424,7 +426,8 @@ class _PythonCodeAssist:
         if found_pyname is not None:
             element = found_pyname.get_object()
             compl_scope = "attribute"
-            if isinstance(element, (pyobjectsdef.PyModule, pyobjectsdef.PyPackage)):
+            # ### if isinstance(element, (pyobjectsdef.PyModule, pyobjectsdef.PyPackage)):
+            if isinstance(element, (pyobjects.PyModule, pyobjects.PyPackage)):
                 compl_scope = "imported"
             for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting):
@@ -606,7 +609,8 @@ class PyDocExtractor:
                 pyobject = pyobject["__call__"].get_object()
         except exceptions.AttributeNotFoundError:
             return None
-        if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
+        # ### if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
+        if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunctionStub):
             return
         if isinstance(pyobject, pyobjects.AbstractFunction):
             result = self._get_function_signature(pyobject, add_module=True)
@@ -644,7 +648,7 @@ class PyDocExtractor:
         )
 
     def _is_method(self, pyfunction):
-        return isinstance(pyfunction, pyobjects.PyFunction) and isinstance(
+        return isinstance(pyfunction, pyobjectsdef.PyFunction) and isinstance(
             pyfunction.parent, pyobjects.PyClass
         )
 
@@ -665,7 +669,8 @@ class PyDocExtractor:
 
     def _get_function_signature(self, pyfunction, add_module=False):
         location = self._location(pyfunction, add_module)
-        if isinstance(pyfunction, pyobjects.PyFunction):
+        # ### if isinstance(pyfunction, pyobjects.PyFunction):
+        if isinstance(pyfunction, pyobjects.PyFunctionStub):
             info = functionutils.DefinitionInfo.read(pyfunction)
             return location + info.to_string()
         else:
@@ -682,7 +687,8 @@ class PyDocExtractor:
             location.append(".")
             parent = parent.parent
         if add_module:
-            if isinstance(pyobject, pyobjects.PyFunction):
+            # ### if isinstance(pyobject, pyobjects.PyFunction):
+            if isinstance(pyobject, pyobjects.PyFunctionStub):
                 location.insert(0, self._get_module(pyobject))
             if isinstance(parent, builtins.BuiltinModule):
                 location.insert(0, parent.get_name() + ".")

@@ -4,7 +4,8 @@ from typing import Union, Optional
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
-from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
+from rope.base.pyobjects import PyClass, PyDefinedObject, PyObject  # ###
+from rope.base.pyobjects import PyFunctionStub  # ###
 
 
 def get_super_func(pyfunc):
@@ -18,7 +19,8 @@ def get_super_func(pyfunc):
         except AttributeNotFoundError:
             pass
         else:
-            if isinstance(superfunc, PyFunction):
+            # ### if isinstance(superfunc, PyFunction):
+            if isinstance(superfunc, PyFunctionStub):
                 return superfunc
 
 
@@ -48,7 +50,8 @@ def get_class_with_attr_name(pyname):
     pyobject = holding_scope.pyobject
     if isinstance(pyobject, PyClass):
         pyclass = pyobject
-    elif isinstance(pyobject, PyFunction) and isinstance(pyobject.parent, PyClass):
+    # ### elif isinstance(pyobject, PyFunction) and isinstance(pyobject.parent, PyClass):
+    elif isinstance(pyobject, PyFunctionStub) and isinstance(pyobject.parent, PyClass):
         pyclass = pyobject.parent
     else:
         return

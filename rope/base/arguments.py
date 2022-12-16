@@ -100,7 +100,8 @@ def _is_method_call(primary, pyfunction):
     pyobject = primary.get_object()
     if (
         isinstance(pyobject.get_type(), rope.base.pyobjects.PyClass)
-        and isinstance(pyfunction, rope.base.pyobjects.PyFunction)
+        # ### and isinstance(pyfunction, rope.base.pyobjects.PyFunction)
+        and isinstance(pyfunction, rope.base.pyobjects.PyFunctionStub)
         and isinstance(pyfunction.parent, rope.base.pyobjects.PyClass)
     ):
         return True

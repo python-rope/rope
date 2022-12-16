@@ -144,13 +144,19 @@ class CallInfo:
 
     @staticmethod
     def _is_method(pyname):
-        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
+        # ### if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
+        if pyname is not None and isinstance(
+            pyname.get_object(), pyobjects.PyFunctionStub
+        ):
             return pyname.get_object().get_kind() == "method"
         return False
 
     @staticmethod
     def _is_classmethod(pyname):
-        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
+        # ### if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
+        if pyname is not None and isinstance(
+            pyname.get_object(), pyobjects.PyFunctionStub
+        ):
             return pyname.get_object().get_kind() == "classmethod"
         return False
 

@@ -258,7 +258,7 @@ class PyDefinedObject:
         pass
 
 
-class PyFunction(PyDefinedObject, AbstractFunction):
+class PyFunctionStub(PyDefinedObject, AbstractFunction):
     """Only a placeholder"""
 
 

@@ -38,7 +38,8 @@ def create_move(project, resource, offset=None):
             pyobject, pyobjects.PyPackage
         ):
             return MoveModule(project, pyobject.get_resource())
-        if isinstance(pyobject, pyobjects.PyFunction) and isinstance(
+        # ### if isinstance(pyobject, pyobjects.PyFunction) and isinstance(
+        if isinstance(pyobject, pyobjects.PyFunctionStub) and isinstance(
             pyobject.parent, pyobjects.PyClass
         ):
             return MoveMethod(project, resource, offset)
