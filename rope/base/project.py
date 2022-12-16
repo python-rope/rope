@@ -379,12 +379,10 @@ class _DataFiles:
         self.project = project
         self.hooks = []
 
-    def read_data(self, name, import_=False):
+    def read_data(self, name):
         if self.project.ropefolder is None:
             return None
         file = self._get_file(name)
-        if import_:
-            self._import_old_files(name)
         if file.exists():
             input = open(file.real_path, "rb")
             try:
@@ -416,12 +414,6 @@ class _DataFiles:
     def write(self):
         for hook in self.hooks:
             hook()
-
-    def _import_old_files(self, name):
-        old = self._get_file(name + ".pickle")
-        new = self._get_file(name)
-        if old.exists() and not new.exists():
-            shutil.move(old.real_path, new.real_path)
 
     def _get_file(self, name):
         path = self.project.ropefolder.path + "/" + name
