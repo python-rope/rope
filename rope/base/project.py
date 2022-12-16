@@ -382,7 +382,6 @@ class _DataFiles:
     def read_data(self, name, compress=False, import_=False):
         if self.project.ropefolder is None:
             return None
-        compress = compress and self._can_compress()
         opener = self._get_opener(compress)
         file = self._get_file(name, compress)
         if not compress and import_:
@@ -405,7 +404,6 @@ class _DataFiles:
 
     def write_data(self, name, data, compress=False):
         if self.project.ropefolder is not None:
-            compress = compress and self._can_compress()
             file = self._get_file(name, compress)
             opener = self._get_opener(compress)
             output = opener(file.real_path, "wb")
@@ -420,14 +418,6 @@ class _DataFiles:
     def write(self):
         for hook in self.hooks:
             hook()
-
-    def _can_compress(self):
-        try:
-            import gzip  # noqa
-
-            return True
-        except ImportError:
-            return False
 
     def _import_old_files(self, name):
         old = self._get_file(name + ".pickle", False)
