@@ -1,4 +1,4 @@
-from rope.base import exceptions, change, taskhandle
+from rope.base import exceptions, change, taskhandle, utils
 
 
 class History:
@@ -193,6 +193,7 @@ class History:
         return self.project.prefs.get("save_history", False)
 
     @property
+    @utils.deprecated("compress_history is no longer supported")
     def compress(self):
         return False
 

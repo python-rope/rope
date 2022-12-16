@@ -1,4 +1,5 @@
 from rope.base.oi import objectdb
+from rope.base import utils
 
 
 class MemoryDB(objectdb.FileDict):
@@ -53,6 +54,7 @@ class MemoryDB(objectdb.FileDict):
             self.project.data_files.write_data("objectdb", self._files, self.compress)
 
     @property
+    @utils.deprecated("compress_objectdb is no longer supported")
     def compress(self):
         return False
 
