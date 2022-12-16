@@ -57,6 +57,8 @@ def _py2js(o, references):
     assert not isinstance(o, list)
     if isinstance(o, (str, int)) or o is None:
         return o
+    elif isinstance(o, tuple):
+        return [_py2js(item, references) for item in o]
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
 
 
@@ -64,4 +66,6 @@ def _js2py(o, references):
     assert not isinstance(o, tuple)
     if isinstance(o, (str, int)) or o is None:
         return o
+    elif isinstance(o, list):
+        return tuple(_js2py(item, references) for item in o)
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
