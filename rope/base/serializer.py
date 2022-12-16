@@ -60,6 +60,12 @@ def _py2js(o, references):
         return ["tuple", [_py2js(item, references) for item in o]]
     elif isinstance(o, list):
         return ["list", [_py2js(item, references) for item in o]]
+    elif isinstance(o, dict):
+        result = {}
+        for k, v in o.items():
+            assert isinstance(k, str)
+            result[_py2js(k, references)] = _py2js(v, references)
+        return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
 
 
@@ -74,4 +80,10 @@ def _js2py(o, references):
         elif typ == "list":
             return list(_js2py(item, references) for item in data)
         assert False
+    elif isinstance(o, dict):
+        result = {}
+        for k, v in o.items():
+            assert isinstance(k, str)
+            result[_js2py(k, references)] = _js2py(v, references)
+        return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
