@@ -1615,12 +1615,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_sorting_future_imports(self):
         self.mod.write(dedent("""\
             import os
-            from __future__ import devision
+            from __future__ import division
         """))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent("""\
-                from __future__ import devision
+                from __future__ import division
 
                 import os
             """),
