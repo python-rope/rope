@@ -119,7 +119,7 @@ class ScopeInfo(objectdb.ScopeInfo):
     def __getstate__(self):
         import json
         original_data = (self.call_info, self.per_name)
-        encoded = python_to_json(original_data)
+        encoded = python_to_json(original_data, version=2)
         serialized = json.dumps(encoded)
         decoded = json.loads(serialized)
         rehydrated_data = json_to_python(decoded)
