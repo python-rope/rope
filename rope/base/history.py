@@ -16,7 +16,7 @@ class History:
     def _load_history(self):
         if self.save:
             result = self.project.data_files.read_data(
-                "history", compress=self.compress, import_=True
+                "history", import_=True
             )
             if result is not None:
                 to_change = change.DataToChange(self.project)
@@ -152,7 +152,7 @@ class History:
             self._remove_extra_items()
             data.append([to_data(change_) for change_ in self.undo_list])
             data.append([to_data(change_) for change_ in self.redo_list])
-            self.project.data_files.write_data("history", data, compress=self.compress)
+            self.project.data_files.write_data("history", data)
 
     def get_file_undo_list(self, resource):
         return [

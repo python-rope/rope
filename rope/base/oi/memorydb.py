@@ -14,7 +14,7 @@ class MemoryDB(objectdb.FileDict):
         self._files = {}
         if self.persist:
             result = self.project.data_files.read_data(
-                "objectdb", compress=self.compress, import_=True
+                "objectdb", import_=True
             )
             if result is not None:
                 self._files = result
@@ -51,7 +51,7 @@ class MemoryDB(objectdb.FileDict):
 
     def write(self):
         if self.persist:
-            self.project.data_files.write_data("objectdb", self._files, self.compress)
+            self.project.data_files.write_data("objectdb", self._files)
 
     @property
     @utils.deprecated("compress_objectdb is no longer supported")

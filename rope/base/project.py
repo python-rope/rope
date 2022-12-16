@@ -379,11 +379,11 @@ class _DataFiles:
         self.project = project
         self.hooks = []
 
-    def read_data(self, name, compress=False, import_=False):
+    def read_data(self, name, import_=False):
         if self.project.ropefolder is None:
             return None
         file = self._get_file(name)
-        if not compress and import_:
+        if import_:
             self._import_old_files(name)
         if file.exists():
             input = open(file.real_path, "rb")
@@ -401,7 +401,7 @@ class _DataFiles:
             finally:
                 input.close()
 
-    def write_data(self, name, data, compress=False):
+    def write_data(self, name, data):
         if self.project.ropefolder is not None:
             file = self._get_file(name)
             output = open(file.real_path, "wb")
