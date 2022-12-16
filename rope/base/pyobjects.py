@@ -262,7 +262,7 @@ class PyFunctionStub(PyDefinedObject, AbstractFunction):
     """Only a placeholder"""
 
 
-class PyComprehension(PyDefinedObject, PyObject):
+class PyComprehensionBase(PyDefinedObject, PyObject):
     """Only a placeholder"""
 
     def get_name(self):

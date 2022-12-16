@@ -112,7 +112,7 @@ class PyFunction(pyobjects.PyFunctionStub):
             return getattr(self.ast_node, "decorators", None)
 
 
-class PyComprehension(pyobjects.PyComprehension):
+class PyComprehension(pyobjects.PyComprehensionBase):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ComprehensionVisitor
         rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
