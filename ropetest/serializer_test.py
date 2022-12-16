@@ -73,7 +73,7 @@ def test_expected_encoded_simple(original_data, expected_encoded, version):
     assert encoded == decoded
     assert encoded["v"] == version
     assert encoded["data"] == expected_encoded, (original_data, version)
-    assert encoded["references"] == []
+    assert "references" not in encoded
     assert rehydrated_data == original_data
 
 

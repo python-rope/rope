@@ -52,17 +52,20 @@ may or may not work:
 def python_to_json(o, version=1):
     assert version in (1, 2)
     references = []
-    return {
+    result = {
         "v": version,
         "data": _py2js(o, references, version=version),
         "references": references,
     }
+    if not result["references"]:
+        del result["references"]
+    return result
 
 
 def json_to_python(o):
     version = o["v"]
     assert version in (1, 2)
-    references = o["references"]
+    references = o.get("references", {})
     data = _js2py(o["data"], references, version)
     return data
 
