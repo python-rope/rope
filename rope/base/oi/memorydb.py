@@ -13,9 +13,7 @@ class MemoryDB(objectdb.FileDict):
     def _load_files(self):
         self._files = {}
         if self.persist:
-            result = self.project.data_files.read_data(
-                "objectdb", import_=True
-            )
+            result = self.project.data_files.read_data("objectdb", import_=True)
             if result is not None:
                 self._files = result
 
