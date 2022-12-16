@@ -39,13 +39,13 @@ def test_roundtrip(original_data):
         (None, None),
         (4, 4),
         ("3", "3"),
-        ((), ["t", []]),
+        ((), {"$": "t", "items": []}),
         ([], ["l", []]),
-        (("hello",), ["t", ["hello",]]),
-        ((1, [2], "hello"), ["t", [1, ["l", [2]], "hello"]]),
+        (("hello",), {"$": "t", "items": ["hello",]}),
+        ((1, [2], "hello"), {"$": "t", "items": [1, ["l", [2]], "hello"]}),
         ([1, [2], "hello"], ["l", [1, ["l", [2]], "hello"]]),
         ({"hello": "world"}, {"hello": "world"}),
-        ({"hello": ("hello", 1)}, {"hello": ["t", ["hello", 1]]}),
+        ({"hello": ("hello", 1)}, {"hello": {"$": "t", "items": ["hello", 1]}}),
     ],
 )
 def test_expected_encoded_simple(original_data, expected_encoded):
@@ -68,7 +68,7 @@ def test_expected_encoded_simple(original_data, expected_encoded):
         (
             {("hello", 1): "world"},
             {"0": "world"},
-            [["t", ["hello", 1]]],
+            [{"$": "t", "items": ["hello", 1]}],
         ),
         (
             {"4": "hello"},

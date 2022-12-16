@@ -62,7 +62,7 @@ def _py2js(o, references):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, tuple):
-        return ["t", [_py2js(item, references) for item in o]]
+        return {"$": "t", "items": [_py2js(item, references) for item in o]}
     elif isinstance(o, list):
         return ["l", [_py2js(item, references) for item in o]]
     elif isinstance(o, dict):
@@ -94,14 +94,20 @@ def _js2py(o, references):
         assert False
     elif isinstance(o, dict):
         result = {}
-        for refid, v in o.items():
-            assert isinstance(refid, str)
-            if refid.isdigit():
-                refid = int(refid)
-                assert 0 <= refid < len(references)
-                k = references[refid]
-                result[_js2py(k, references)] = _js2py(v, references)
-            else:
-                result[refid] = _js2py(v, references)
+        if "$" in o:
+            if o["$"] == "t":
+                data = o["items"]
+                return tuple(_js2py(item, references) for item in data)
+            raise TypeError(f'Unrecognized object of type: {o["$"]} {o}')
+        else:
+            for refid, v in o.items():
+                assert isinstance(refid, str)
+                if refid.isdigit():
+                    refid = int(refid)
+                    assert 0 <= refid < len(references)
+                    k = references[refid]
+                    result[_js2py(k, references)] = _js2py(v, references)
+                else:
+                    result[refid] = _js2py(v, references)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
