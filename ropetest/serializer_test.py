@@ -102,12 +102,13 @@ def test_expected_encoded_with_references(original_data, expected_encoded, expec
 
 
 @pytest.mark.parametrize(
-    "original_data",
+    "original_data,exctype",
     [
-        object(),
-        4.8,
+        (object(), TypeError),
+        (4.8, TypeError),
+        ({"$": "hello"}, ValueError),
     ],
 )
-def test_rejects_unrecognized_object(original_data):
-    with pytest.raises(TypeError):
+def test_rejects_unrecognized_object(original_data, exctype):
+    with pytest.raises(exctype):
         python_to_json(original_data)

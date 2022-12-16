@@ -68,6 +68,8 @@ def _py2js(o, references):
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
+            if k == "$":
+                raise ValueError('dict cannot contain reserved key "$"')
             if isinstance(k, str) and not k.isdigit():
                 result[k] = _py2js(v, references)
             else:
