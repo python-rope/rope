@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
+- #606 Deprecate compress_objectdb and compress_history
 
 # Release 1.6.0
 
