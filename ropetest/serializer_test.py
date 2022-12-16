@@ -17,6 +17,8 @@ from rope.base.serializer import python_to_json, json_to_python
         (1, [2], "hello"),
         [1, [2], "hello"],
         {"hello": "world"},
+        {"hello": ("hello", 1)},
+        {("hello", 1): "world"},
     ],
 )
 def test_roundtrip(original_data):

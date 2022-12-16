@@ -63,8 +63,9 @@ def _py2js(o, references):
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
-            assert isinstance(k, str)
-            result[_py2js(k, references)] = _py2js(v, references)
+            refid = len(references)
+            references.append(_py2js(k, references))
+            result[str(refid)] = _py2js(v, references)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
 
@@ -82,8 +83,11 @@ def _js2py(o, references):
         assert False
     elif isinstance(o, dict):
         result = {}
-        for k, v in o.items():
-            assert isinstance(k, str)
+        for refid, v in o.items():
+            assert isinstance(refid, str)
+            refid = int(refid)
+            assert 0 <= refid < len(references)
+            k = references[refid]
             result[_js2py(k, references)] = _js2py(v, references)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
