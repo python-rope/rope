@@ -42,6 +42,7 @@ def test_roundtrip(original_data):
         (("hello",), ["t", ["hello",]]),
         ((1, [2], "hello"), ["t", [1, ["l", [2]], "hello"]]),
         ([1, [2], "hello"], ["l", [1, ["l", [2]], "hello"]]),
+        ({"hello": "world"}, {"hello": "world"}),
     ],
 )
 def test_expected_encoded_simple(original_data, expected_encoded):
