@@ -19,8 +19,8 @@ In other words, this property always holds:
 Couple challenges in straight serialization that this module helps resolve:
 
 - json.dumps() maps both Python list and tuple to JSON array. This module
-  converts Python list `[1, 2, 3]` to `["l", [1, 2, 3]]` and Python tuple
-  `(1, 2, 3)` to `["t", [1, 2, 3]]`
+  converts Python list `[1, 2, 3]` as-is and converts Python tuple `(1, 2, 3)`
+  to special object construct `{"$": "t", "items": [1, 2, 3]}`
 
 - Python dict keys can be a tuple/dict, but JSON Object keys must be strings
   This module replaces all `dict` keys with `refid` which can be resolved using
