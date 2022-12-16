@@ -382,7 +382,7 @@ class _DataFiles:
     def read_data(self, name, compress=False, import_=False):
         if self.project.ropefolder is None:
             return None
-        file = self._get_file(name, compress)
+        file = self._get_file(name)
         if not compress and import_:
             self._import_old_files(name)
         if file.exists():
@@ -403,7 +403,7 @@ class _DataFiles:
 
     def write_data(self, name, data, compress=False):
         if self.project.ropefolder is not None:
-            file = self._get_file(name, compress)
+            file = self._get_file(name)
             output = open(file.real_path, "wb")
             try:
                 pickle.dump(data, output, 2)
@@ -418,15 +418,13 @@ class _DataFiles:
             hook()
 
     def _import_old_files(self, name):
-        old = self._get_file(name + ".pickle", False)
-        new = self._get_file(name, False)
+        old = self._get_file(name + ".pickle")
+        new = self._get_file(name)
         if old.exists() and not new.exists():
             shutil.move(old.real_path, new.real_path)
 
-    def _get_file(self, name, compress):
+    def _get_file(self, name):
         path = self.project.ropefolder.path + "/" + name
-        if compress:
-            path += ".gz"
         return self.project.get_file(path)
 
 
