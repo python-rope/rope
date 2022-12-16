@@ -379,16 +379,12 @@ class _DataFiles:
         self.project = project
         self.hooks = []
 
-    def read_data(self, name, compress=False, import_=False):
+    def read_data(self, name):
         if self.project.ropefolder is None:
             return None
-        compress = compress and self._can_compress()
-        opener = self._get_opener(compress)
-        file = self._get_file(name, compress)
-        if not compress and import_:
-            self._import_old_files(name)
+        file = self._get_file(name)
         if file.exists():
-            input = opener(file.real_path, "rb")
+            input = open(file.real_path, "rb")
             try:
                 result = []
                 try:
@@ -403,12 +399,10 @@ class _DataFiles:
             finally:
                 input.close()
 
-    def write_data(self, name, data, compress=False):
+    def write_data(self, name, data):
         if self.project.ropefolder is not None:
-            compress = compress and self._can_compress()
-            file = self._get_file(name, compress)
-            opener = self._get_opener(compress)
-            output = opener(file.real_path, "wb")
+            file = self._get_file(name)
+            output = open(file.real_path, "wb")
             try:
                 pickle.dump(data, output, 2)
             finally:
@@ -421,34 +415,8 @@ class _DataFiles:
         for hook in self.hooks:
             hook()
 
-    def _can_compress(self):
-        try:
-            import gzip  # noqa
-
-            return True
-        except ImportError:
-            return False
-
-    def _import_old_files(self, name):
-        old = self._get_file(name + ".pickle", False)
-        new = self._get_file(name, False)
-        if old.exists() and not new.exists():
-            shutil.move(old.real_path, new.real_path)
-
-    def _get_opener(self, compress):
-        if compress:
-            try:
-                import gzip
-
-                return gzip.open
-            except ImportError:
-                pass
-        return open
-
-    def _get_file(self, name, compress):
+    def _get_file(self, name):
         path = self.project.ropefolder.path + "/" + name
-        if compress:
-            path += ".gz"
         return self.project.get_file(path)
 
 

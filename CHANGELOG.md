@@ -1,5 +1,8 @@
 # **Upcoming release**
 
+- #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
+- #606 Deprecate compress_objectdb and compress_history
+- #607 Remove importing from legacy files with `.pickle` suffix
 
 # Release 1.6.0
 
