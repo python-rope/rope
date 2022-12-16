@@ -51,7 +51,7 @@ def test_expected_encoded_simple(original_data, expected_encoded):
     rehydrated_data = json_to_python(decoded)
 
     assert encoded == decoded
-    assert encoded["version"] == 1
+    assert encoded["v"] == 1
     assert encoded["data"] == expected_encoded and encoded["references"] == []
     assert rehydrated_data == original_data
 
