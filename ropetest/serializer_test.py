@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from rope.base.serializer import python_to_json, json_to_python
+from rope.base.serializer import python_to_json, json_to_python, _js2py
 
 
 @pytest.mark.parametrize("version", [1, 2])
@@ -132,3 +132,36 @@ def test_expected_encoded_with_references(original_data, expected_encoded, expec
 def test_rejects_unrecognized_object(original_data, exctype, version):
     with pytest.raises(exctype):
         python_to_json(original_data, version)
+
+
+def test_unexpected_version_python_to_json():
+    with pytest.raises(ValueError, match="Unexpected version"):
+        python_to_json({"hello": ["world"]}, version=-123456)
+
+
+def test_unexpected_version_json_to_python():
+    modified = python_to_json({"hello": ["world"]})
+    modified["v"] = -123456
+    assert isinstance(modified["data"]["hello"], list)
+
+    with pytest.raises(ValueError, match="Unexpected version"):
+        json_to_python(modified)
+
+    with pytest.raises(ValueError, match="Unexpected version"):
+        _js2py(modified["data"], {}, modified["v"])
+
+
+def test_unexpected_dollar_object_type():
+    modified = python_to_json({"hello": ["world"]})
+    modified["data"]["$"] = "unexpected"
+
+    with pytest.raises(TypeError, match="Unrecognized object of type"):
+        json_to_python(modified)
+
+
+def test_unexpected_object_type():
+    modified = python_to_json({"hello": ["world"]})
+    modified["data"]["hello"] = ()
+
+    with pytest.raises(TypeError, match='Object of type "tuple" is not allowed'):
+        json_to_python(modified)

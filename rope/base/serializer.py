@@ -50,7 +50,8 @@ may or may not work:
 
 
 def python_to_json(o, version=1):
-    assert version in (1, 2)
+    if version not in (1, 2):
+        raise ValueError(f'Unexpected version {version}')
     references = []
     result = {
         "v": version,
@@ -64,7 +65,8 @@ def python_to_json(o, version=1):
 
 def json_to_python(o):
     version = o["v"]
-    assert version in (1, 2)
+    if version not in (1, 2):
+        raise ValueError(f'Unexpected version {version}')
     references = o.get("references", {})
     data = _js2py(o["data"], references, version)
     return data
@@ -91,7 +93,8 @@ def _py2js(o, references, version):
             if isinstance(k, str) and not k.isdigit():
                 result[k] = _py2js(v, references, version)
             else:
-                assert isinstance(k, (str, int, list, tuple)) or k is None
+                assert isinstance(k, (str, int, tuple)) or k is None
+                assert not isinstance(k, list)
                 refid = len(references)
                 references.append(_py2js(k, references, version))
                 result[str(refid)] = _py2js(v, references, version)
@@ -100,7 +103,6 @@ def _py2js(o, references, version):
 
 
 def _js2py(o, references, version):
-    assert not isinstance(o, tuple)
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, list):
@@ -108,7 +110,7 @@ def _js2py(o, references, version):
             return list(_js2py(item, references, version) for item in o)
         elif version == 2:
             return tuple(_js2py(item, references, version) for item in o)
-        assert False
+        raise ValueError(f'Unexpected version {version}')
     elif isinstance(o, dict):
         result = {}
         if "$" in o:
@@ -132,4 +134,4 @@ def _js2py(o, references, version):
                 else:
                     result[refid] = _js2py(v, references, version)
         return result
-    raise TypeError(f"Object of type {type(o)} is not allowed {o}")
+    raise TypeError(f'Object of type "{type(o).__name__}" is not allowed {o}')
