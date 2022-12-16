@@ -21,3 +21,15 @@ def test_roundtrip(original_data):
 
     assert encoded == decoded
     assert rehydrated_data == original_data
+
+
+@pytest.mark.parametrize(
+    "original_data",
+    [
+        object(),
+        4.8,
+    ],
+)
+def test_rejects_unrecognized_object(original_data):
+    with pytest.raises(TypeError):
+        python_to_json(original_data)
