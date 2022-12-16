@@ -80,6 +80,11 @@ def test_expected_encoded_simple(original_data, expected_encoded):
             {"0": "hello"},
             [4],
         ),
+        (
+            {None: "hello"},
+            {"0": "hello"},
+            [None],
+        ),
     ],
 )
 def test_expected_encoded_with_references(original_data, expected_encoded, expected_references):

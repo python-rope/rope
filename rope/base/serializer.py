@@ -71,7 +71,7 @@ def _py2js(o, references):
             if isinstance(k, str) and not k.isdigit():
                 result[k] = _py2js(v, references)
             else:
-                assert isinstance(k, (str, int, list, tuple))
+                assert isinstance(k, (str, int, list, tuple)) or k is None
                 refid = len(references)
                 references.append(_py2js(k, references))
                 result[str(refid)] = _py2js(v, references)
