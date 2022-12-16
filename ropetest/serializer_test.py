@@ -63,6 +63,40 @@ def test_expected_encoded_simple(original_data, expected_encoded):
 
 
 @pytest.mark.parametrize(
+    "original_data,expected_encoded,expected_references",
+    [
+        (
+            {("hello", 1): "world"},
+            {"0": "world"},
+            [["t", ["hello", 1]]],
+        ),
+        (
+            {"4": "hello"},
+            {"0": "hello"},
+            ["4"],
+        ),
+        (
+            {4: "hello"},
+            {"0": "hello"},
+            [4],
+        ),
+    ],
+)
+def test_expected_encoded_with_references(original_data, expected_encoded, expected_references):
+    encoded = python_to_json(original_data)
+    serialized = json.dumps(encoded)
+    decoded = json.loads(serialized)
+    rehydrated_data = json_to_python(decoded)
+
+    assert encoded == decoded
+    assert encoded["v"] == 1
+    assert encoded["data"] == expected_encoded
+    assert encoded["references"] == expected_references
+    assert rehydrated_data == original_data
+
+
+
+@pytest.mark.parametrize(
     "original_data",
     [
         object(),
