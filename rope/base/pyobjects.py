@@ -316,7 +316,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         return self.resource
 
 
-class PyModule(_PyModule):
+class PyModuleStub(_PyModule):
     """Only a placeholder"""
 
 

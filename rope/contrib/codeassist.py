@@ -423,7 +423,7 @@ class _PythonCodeAssist:
         if found_pyname is not None:
             element = found_pyname.get_object()
             compl_scope = "attribute"
-            if isinstance(element, (pyobjects.PyModule, pyobjects.PyPackage)):
+            if isinstance(element, (pyobjects.PyModuleStub, pyobjects.PyPackage)):
                 compl_scope = "imported"
             for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting):

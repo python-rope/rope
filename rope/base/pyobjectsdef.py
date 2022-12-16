@@ -164,7 +164,7 @@ class PyClass(pyobjects.PyClass):
         return rope.base.pyscopes.ClassScope(self.pycore, self)
 
 
-class PyModule(pyobjects.PyModule):
+class PyModule(pyobjects.PyModuleStub):
     def __init__(self, pycore, source=None, resource=None, force_errors=False):
         ignore = pycore.project.prefs.get("ignore_syntax_errors", False)
         syntax_errors = force_errors or not ignore
