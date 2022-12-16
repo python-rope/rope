@@ -19,8 +19,8 @@ In other words, this property always holds:
 Couple challenges in straight serialization that this module helps resolve:
 
 - json.dumps() maps both Python list and tuple to JSON array. This module
-  converts Python list `[1, 2, 3]` to `["list", [1, 2, 3]]` and Python tuple
-  `(1, 2, 3)` to `["tuple", [1, 2, 3]]`
+  converts Python list `[1, 2, 3]` to `["l", [1, 2, 3]]` and Python tuple
+  `(1, 2, 3)` to `["t", [1, 2, 3]]`
 
 - Python Dictionary keys can be a tuple, but JSON Object keys must be strings
   This module replaces all `dict` keys with refid which can be resolved using
@@ -57,9 +57,9 @@ def _py2js(o, references):
     if isinstance(o, (str, int)) or o is None:
         return o
     elif isinstance(o, tuple):
-        return ["tuple", [_py2js(item, references) for item in o]]
+        return ["t", [_py2js(item, references) for item in o]]
     elif isinstance(o, list):
-        return ["list", [_py2js(item, references) for item in o]]
+        return ["l", [_py2js(item, references) for item in o]]
     elif isinstance(o, dict):
         result = {}
         for k, v in o.items():
@@ -76,9 +76,9 @@ def _js2py(o, references):
         return o
     elif isinstance(o, list):
         typ, data = o
-        if typ == "tuple":
+        if typ == "t":
             return tuple(_js2py(item, references) for item in data)
-        elif typ == "list":
+        elif typ == "l":
             return list(_js2py(item, references) for item in data)
         assert False
     elif isinstance(o, dict):

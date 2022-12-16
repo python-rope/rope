@@ -37,11 +37,11 @@ def test_roundtrip(original_data):
         (None, None),
         (4, 4),
         ("3", "3"),
-        ((), ["tuple", []]),
-        ([], ["list", []]),
-        (("hello",), ["tuple", ["hello",]]),
-        ((1, [2], "hello"), ["tuple", [1, ["list", [2]], "hello"]]),
-        ([1, [2], "hello"], ["list", [1, ["list", [2]], "hello"]]),
+        ((), ["t", []]),
+        ([], ["l", []]),
+        (("hello",), ["t", ["hello",]]),
+        ((1, [2], "hello"), ["t", [1, ["l", [2]], "hello"]]),
+        ([1, [2], "hello"], ["l", [1, ["l", [2]], "hello"]]),
     ],
 )
 def test_expected_encoded_simple(original_data, expected_encoded):
