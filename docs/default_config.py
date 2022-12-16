@@ -55,7 +55,6 @@ def set_prefs(prefs):
     # Should rope save object information or not.
     #
     #     prefs["save_objectdb"] = True
-    #     prefs["compress_objectdb"] = False
 
     # If `True`, rope analyzes each module when it is being saved.
     #
@@ -81,7 +80,6 @@ def set_prefs(prefs):
     # Shows whether to save history across sessions.
     #
     #     prefs["save_history"] = True
-    #     prefs["compress_history"] = False
 
     # Set the number spaces used for indenting.  According to
     # :PEP:`8`, it is best to use 4 spaces.  Since most of rope's
