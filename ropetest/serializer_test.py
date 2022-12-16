@@ -32,6 +32,32 @@ def test_roundtrip(original_data):
 
 
 @pytest.mark.parametrize(
+    "original_data,expected_encoded",
+    [
+        (None, None),
+        (4, 4),
+        ("3", "3"),
+        ((), ["tuple", []]),
+        ([], ["list", []]),
+        (("hello",), ["tuple", ["hello",]]),
+        ((1, [2], "hello"), ["tuple", [1, ["list", [2]], "hello"]]),
+        ([1, [2], "hello"], ["list", [1, ["list", [2]], "hello"]]),
+    ],
+)
+def test_expected_encoded_simple(original_data, expected_encoded):
+    encoded = python_to_json(original_data)
+    serialized = json.dumps(encoded)
+    decoded = json.loads(serialized)
+    rehydrated_data = json_to_python(decoded)
+
+    assert encoded == decoded
+    assert encoded["version"] == 1
+    assert encoded["data"] == expected_encoded and encoded["references"] == []
+    assert rehydrated_data == original_data
+
+
+
+@pytest.mark.parametrize(
     "original_data",
     [
         object(),
