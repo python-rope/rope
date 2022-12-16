@@ -147,3 +147,56 @@ class ObjectDBTest(unittest.TestCase):
         db.add_file_list_observer(observer)
         db.validate_files()
         self.assertEqual("removed invalid ", observer.log)
+
+    @_do_for_all_dbs
+    def test_legacy_serialization(self, db):
+        import pickle
+
+        db.add_callinfo("file", "key", (1, 2), 3)
+        db.add_pername("file", "key", "name", 1)
+        scope_info = db._get_scope_info("file", "key")
+
+        pickled_data = b'\x80\x04\x95D\x00\x00\x00\x00\x00\x00\x00\x8c\x15rope.base.oi.memorydb\x94\x8c\tScopeInfo\x94\x93\x94)\x81\x94}\x94K\x01K\x02\x86\x94K\x03s}\x94\x8c\x04name\x94K\x01s\x86\x94b.'  # noqa
+
+        assert pickle.loads(pickled_data).call_info == scope_info.call_info
+        assert pickle.loads(pickled_data).per_name == scope_info.per_name
+
+    @_do_for_all_dbs
+    def test_new_pickle_serialization(self, db):
+        import pickle
+
+        db.add_callinfo("file", "key", (1, 2), 3)
+        db.add_pername("file", "key", "name", 1)
+        scope_info = db._get_scope_info("file", "key")
+
+        serialized = pickle.dumps(scope_info)
+
+        rehydrated_data = pickle.loads(serialized)
+        assert rehydrated_data.call_info == scope_info.call_info
+        assert rehydrated_data.per_name == scope_info.per_name
+
+    @_do_for_all_dbs
+    def test_new_json_serialization(self, db):
+        import json
+        from rope.base.oi.memorydb import ScopeInfo
+
+        db.add_callinfo("file", "key", (1, 2), 3)
+        db.add_pername("file", "key", "name", 1)
+        scope_info = db._get_scope_info("file", "key")
+
+        data = {"inside": [scope_info], "other": scope_info, "things": [1, 2, 3]}
+
+        def object_hook(o):
+            if o.get("$") == "ScopeInfo":
+                new_o = ScopeInfo.__new__(ScopeInfo)
+                new_o.__setstate__(o)
+                return new_o
+            return o
+
+        serialized = json.dumps(data, default=lambda o: o.__getstate__())
+        rehydrated_data = json.loads(serialized, object_hook=object_hook)
+
+        rehydrated_scope_info = rehydrated_data["inside"][0]
+        assert isinstance(rehydrated_scope_info, ScopeInfo)
+        assert rehydrated_scope_info.call_info == scope_info.call_info
+        assert rehydrated_scope_info.per_name == scope_info.per_name

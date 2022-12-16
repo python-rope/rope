@@ -1,5 +1,7 @@
-from rope.base.oi import objectdb
+from rope.base.serializer import python_to_json, json_to_python
+
 from rope.base import utils
+from rope.base.oi import objectdb
 
 
 class MemoryDB(objectdb.FileDict):
@@ -115,7 +117,24 @@ class ScopeInfo(objectdb.ScopeInfo):
         self.call_info[parameters] = returned
 
     def __getstate__(self):
-        return (self.call_info, self.per_name)
+        import json
+        original_data = (self.call_info, self.per_name)
+        encoded = python_to_json(original_data)
+        serialized = json.dumps(encoded)
+        decoded = json.loads(serialized)
+        rehydrated_data = json_to_python(decoded)
+
+        assert encoded == decoded
+        assert rehydrated_data == original_data
+
+        encoded["$"] = "ScopeInfo"
+        return encoded
 
     def __setstate__(self, data):
-        self.call_info, self.per_name = data
+        if isinstance(data, tuple) and len(data) == 2:
+            # legacy pickle-based serialization
+            self.call_info, self.per_name = data
+        else:
+            # new serialization
+            assert data["$"] == "ScopeInfo"
+            self.call_info, self.per_name = json_to_python(data)
