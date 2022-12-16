@@ -53,7 +53,8 @@ def test_expected_encoded_simple(original_data, expected_encoded):
 
     assert encoded == decoded
     assert encoded["v"] == 1
-    assert encoded["data"] == expected_encoded and encoded["references"] == []
+    assert encoded["data"] == expected_encoded
+    assert encoded["references"] == []
     assert rehydrated_data == original_data
 
 
