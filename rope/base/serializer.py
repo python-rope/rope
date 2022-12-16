@@ -22,9 +22,14 @@ Couple challenges in straight serialization that this module helps resolve:
   converts Python list `[1, 2, 3]` to `["l", [1, 2, 3]]` and Python tuple
   `(1, 2, 3)` to `["t", [1, 2, 3]]`
 
-- Python Dictionary keys can be a tuple, but JSON Object keys must be strings
-  This module replaces all `dict` keys with refid which can be resolved using
-  the `encoded["references"][refid]` lookup table.
+- Python dict keys can be a tuple/dict, but JSON Object keys must be strings
+  This module replaces all `dict` keys with `refid` which can be resolved using
+  the `encoded["references"][refid]` lookup table. Except there's a small
+  optimisation, if the dict key is a string that isn't only numeric, which is
+  encoded directly into the object.
+
+- Python dict keys cannot be another dict because it is unhashable, therefore
+  there's no encoding for having objects as keys either.
 
 - There is currently no support for floating point numbers.
 
