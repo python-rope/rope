@@ -1,7 +1,7 @@
 from rope.base import (
     evaluate,
     exceptions,
-    pynames,
+    pynamesdef,
     worder,
 )
 from rope.refactor.rename import Rename
@@ -49,7 +49,7 @@ class LocalToField:
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         parent = holding_scope.parent
         return (
-            isinstance(pyname, pynames.AssignedName)
+            isinstance(pyname, pynamesdef.AssignedName)
             and pyname in holding_scope.get_names().values()
             and holding_scope.get_kind() == "Function"
             and parent is not None

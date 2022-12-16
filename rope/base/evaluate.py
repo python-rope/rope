@@ -9,6 +9,7 @@ from rope.base import (
     ast,
     nameanalyze,
     exceptions,
+    pynamesdef,
     pyobjects,
     pyobjectsdef,
     worder,
@@ -367,7 +368,7 @@ def _get_evaluated_names(targets, assigned, module, evaluation, lineno):
     for name, levels in nameanalyze.get_name_levels(targets):
         assignment = rope.base.pynames.AssignmentValue(assigned, levels, evaluation)
         # XXX: this module should not access `rope.base.pynamesdef`!
-        pyname = rope.base.pynames.AssignedName(lineno, module)
+        pyname = pynamesdef.AssignedName(lineno, module)
         pyname.assignments.append(assignment)
         result[name] = pyname
     return result

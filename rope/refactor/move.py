@@ -10,6 +10,7 @@ from rope.base import (
     exceptions,
     libutils,
     pynames,
+    pynamesdef,
     pyobjects,
     taskhandle,
     worder,
@@ -45,7 +46,7 @@ def create_move(project, resource, offset=None):
         if (
             isinstance(pyobject, pyobjects.PyDefinedObject)
             and isinstance(pyobject.parent, pyobjects.PyModuleStub)
-            or isinstance(pyname, pynames.AssignedName)
+            or isinstance(pyname, pynamesdef.AssignedName)
         ):
             return MoveGlobal(project, resource, offset)
     raise exceptions.RefactoringError(
@@ -296,7 +297,7 @@ class MoveGlobal:
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
     def _is_variable(self, pyname):
-        return isinstance(pyname, pynames.AssignedName)
+        return isinstance(pyname, pynamesdef.AssignedName)
 
     def get_changes(
         self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()

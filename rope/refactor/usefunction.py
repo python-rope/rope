@@ -4,7 +4,7 @@ from rope.base import (
     evaluate,
     exceptions,
     libutils,
-    pynames,
+    pynamesdef,
     pyobjects,
     taskhandle,
 )
@@ -144,7 +144,7 @@ def find_temps(project, code):
     result = []
     function_scope = pymodule.get_scope().get_scopes()[0]
     for name, pyname in function_scope.get_names().items():
-        if isinstance(pyname, pynames.AssignedName):
+        if isinstance(pyname, pynamesdef.AssignedName):
             result.append(name)
     return result
 

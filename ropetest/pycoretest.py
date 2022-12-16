@@ -5,8 +5,8 @@ import unittest
 from rope.base import exceptions, libutils
 from rope.base.builtins import File, BuiltinClass
 from rope.base.pycore import _TextChangeDetector
+from rope.base.pynamesdef import AssignedName
 from rope.base.pyobjects import get_base_type, AbstractFunction
-from rope.base.pynames import AssignedName
 from ropetest import testutils
 
 

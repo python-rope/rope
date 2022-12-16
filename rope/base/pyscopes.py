@@ -4,6 +4,7 @@ from rope.base import (
     codeanalyze,
     exceptions,
     pynames,
+    pynamesdef,
     utils,
 )
 from rope.refactor import patchedast
@@ -253,7 +254,7 @@ class FunctionScope(Scope):
 
     def invalidate_data(self):
         for pyname in self.get_names().values():
-            if isinstance(pyname, (pynames.AssignedName, pynames.EvaluatedName)):
+            if isinstance(pyname, (pynamesdef.AssignedName, pynames.EvaluatedName)):
                 pyname.invalidate()
 
 

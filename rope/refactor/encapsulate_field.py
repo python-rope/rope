@@ -2,7 +2,7 @@ from rope.base import (
     evaluate,
     exceptions,
     libutils,
-    pynames,
+    pynamesdef,
     taskhandle,
     utils,
     worder,
@@ -70,7 +70,7 @@ class EncapsulateField:
         return self.name
 
     def _is_an_attribute(self, pyname):
-        if pyname is not None and isinstance(pyname, pynames.AssignedName):
+        if pyname is not None and isinstance(pyname, pynamesdef.AssignedName):
             pymodule, lineno = self.pyname.get_definition_location()
             scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             if scope.get_kind() == "Class":

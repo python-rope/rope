@@ -26,6 +26,7 @@ from rope.base import (
     exceptions,
     libutils,
     pynames,
+    pynamesdef,
     pyobjects,
     taskhandle,
     utils,
@@ -66,9 +67,9 @@ def create_inline(project, resource, offset):
         raise exceptions.RefactoringError(message)
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()
-    if isinstance(pyname, pynames.AssignedName):
+    if isinstance(pyname, pynamesdef.AssignedName):
         return InlineVariable(project, resource, offset)
-    if isinstance(pyname, pynames.ParameterName):
+    if isinstance(pyname, pynamesdef.ParameterName):
         return InlineParameter(project, resource, offset)
     if isinstance(pyname.get_object(), pyobjects.PyFunctionStub):
         return InlineMethod(project, resource, offset)

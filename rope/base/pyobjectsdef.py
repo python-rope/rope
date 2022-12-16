@@ -6,6 +6,7 @@ import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
     pynames,
+    pynamesdef,
     exceptions,
     ast,
     nameanalyze,
@@ -61,7 +62,7 @@ class PyFunction(pyobjects.PyFunctionStub):
             result = {}
             for index, name in enumerate(self.get_param_names()):
                 # TODO: handle tuple parameters
-                result[name] = pynames.ParameterName(self, index)
+                result[name] = pynamesdef.ParameterName(self, index)
             self.parameter_pynames = result
         return self.parameter_pynames
 
@@ -465,8 +466,8 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _assigned(self, name, assignment):
         pyname = self.names.get(name, None)
         if pyname is None:
-            pyname = pynames.AssignedName(module=self.get_module())
-        if isinstance(pyname, pynames.AssignedName):
+            pyname = pynamesdef.AssignedName(module=self.get_module())
+        if isinstance(pyname, pynamesdef.AssignedName):
             if assignment is not None:
                 pyname.assignments.append(assignment)
             self.names[name] = pyname
@@ -565,7 +566,7 @@ class _ScopeVisitor(_ExpressionVisitor):
                 try:
                     pyname = module[name]
                 except exceptions.AttributeNotFoundError:
-                    pyname = pynames.AssignedName(node.lineno)
+                    pyname = pynamesdef.AssignedName(node.lineno)
             self.names[name] = pyname
 
 
@@ -579,7 +580,7 @@ class _ComprehensionVisitor(_ScopeVisitor):
             self.names[node.id] = self._get_pyobject(node)
 
     def _get_pyobject(self, node):
-        return pynames.AssignedName(lineno=node.lineno, module=self.get_module())
+        return pynamesdef.AssignedName(lineno=node.lineno, module=self.get_module())
 
 
 class _GlobalVisitor(_ScopeVisitor):
@@ -629,12 +630,12 @@ class _ClassInitVisitor(_AssignVisitor):
             return
         if isinstance(node.value, ast.Name) and node.value.id == self.self_name:
             if node.attr not in self.scope_visitor.names:
-                self.scope_visitor.names[node.attr] = pynames.AssignedName(
+                self.scope_visitor.names[node.attr] = pynamesdef.AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module()
                 )
             if self.assigned_ast is not None:
                 pyname = self.scope_visitor.names[node.attr]
-                if isinstance(pyname, pynames.AssignedName):
+                if isinstance(pyname, pynamesdef.AssignedName):
                     pyname.assignments.append(
                         pynames.AssignmentValue(self.assigned_ast)
                     )

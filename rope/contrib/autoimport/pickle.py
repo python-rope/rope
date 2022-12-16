@@ -17,6 +17,7 @@ from rope.base import (
     exceptions,
     libutils,
     pynames,
+    pynamesdef,
     pyobjects,
     resourceobserver,
     resources,
@@ -196,7 +197,7 @@ class AutoImport:
         for name, pyname in attributes.items():
             if not underlined and name.startswith("_"):
                 continue
-            if isinstance(pyname, (pynames.AssignedName, pynames.DefinedName)):
+            if isinstance(pyname, (pynamesdef.AssignedName, pynames.DefinedName)):
                 globals.append(name)
             if isinstance(pymodule, builtins.BuiltinModule):
                 globals.append(name)

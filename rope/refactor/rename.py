@@ -4,6 +4,7 @@ from rope.base import (
     exceptions,
     pyobjects,
     pynames,
+    pynamesdef,
     taskhandle,
     evaluate,
     worder,
@@ -257,5 +258,5 @@ def _is_local(pyname):
     return (
         scope.get_kind() == "Function"
         and pyname in scope.get_names().values()
-        and isinstance(pyname, pynames.AssignedName)
+        and isinstance(pyname, pynamesdef.AssignedName)
     )

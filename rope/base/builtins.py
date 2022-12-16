@@ -7,6 +7,7 @@ from rope.base import (
     arguments,
     ast,
     pynames,
+    pynamesdef,
     pyobjects,
     utils,
 )
@@ -172,7 +173,7 @@ class _CallContext:
         self.args = args
 
     def _get_scope_and_pyname(self, pyname):
-        if pyname is not None and isinstance(pyname, pynames.AssignedName):
+        if pyname is not None and isinstance(pyname, pynamesdef.AssignedName):
             pymodule, lineno = pyname.get_definition_location()
             if pymodule is None:
                 return None, None

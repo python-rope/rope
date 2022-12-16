@@ -8,6 +8,7 @@ from rope.base import (
     exceptions,
     libutils,
     pynames,
+    pynamesdef,
     pyobjects,
     pyobjectsdef,
     pyscopes,
@@ -186,9 +187,9 @@ def get_canonical_path(project, resource, offset):
 
     # Start with the name of the object we're interested in.
     names = []
-    if isinstance(pyname, pynames.ParameterName):
+    if isinstance(pyname, pynamesdef.ParameterName):
         names = [(worder.get_name_at(pymod.get_resource(), offset), "PARAMETER")]
-    elif isinstance(pyname, pynames.AssignedName):
+    elif isinstance(pyname, pynamesdef.AssignedName):
         names = [(worder.get_name_at(pymod.get_resource(), offset), "VARIABLE")]
 
     # Collect scope names.

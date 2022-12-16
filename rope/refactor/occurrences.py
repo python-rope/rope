@@ -42,6 +42,7 @@ from rope.base import codeanalyze
 from rope.base import evaluate
 from rope.base import exceptions
 from rope.base import pynames
+from rope.base import pynamesdef
 from rope.base import pyobjects
 from rope.base import utils
 from rope.base import worder
@@ -112,7 +113,7 @@ def create_finder(
         filters.append(NoImportsFilter())
     if not keywords:
         filters.append(NoKeywordsFilter())
-    if isinstance(instance, pynames.ParameterName):
+    if isinstance(instance, pynamesdef.ParameterName):
         for pyobject in instance.get_objects():
             try:
                 pynames_.add(pyobject[name])
