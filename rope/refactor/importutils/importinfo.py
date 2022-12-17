@@ -1,4 +1,6 @@
 from typing import List
+
+
 class ImportStatement:
     """Represent an import in a module
 

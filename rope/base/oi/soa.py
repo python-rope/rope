@@ -5,7 +5,9 @@ import rope.base.pynames
 from rope.base import pyobjects, evaluate, nameanalyze, arguments
 
 
-def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls: bool):
+def analyze_module(
+    pycore, pymodule, should_analyze, search_subscopes, followed_calls: bool
+):
     """Analyze `pymodule` for static object inference
 
     Analyzes scopes for collecting object information.  The analysis
@@ -15,7 +17,8 @@ def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_
     _analyze_node(pycore, pymodule, should_analyze, search_subscopes, followed_calls)
 
 
-def _analyze_node(pycore,
+def _analyze_node(
+    pycore,
     pydefined,
     should_analyze: Callable,
     search_subscopes: Callable,

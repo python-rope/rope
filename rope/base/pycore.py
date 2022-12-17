@@ -187,15 +187,15 @@ class PyCore:
     def analyze_module(
         self,
         resource,
-        should_analyze: Callable=lambda py: True,
-        search_subscopes: Callable=lambda py: True,
+        should_analyze: Callable = lambda py: True,
+        search_subscopes: Callable = lambda py: True,
         followed_calls=None,
     ):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to collect
         information about function calls.
-        
+
         `should_analyze` is a function that is called with a `PyDefinedObject`
         argument. If it returns `True` the element is analyzed. If it is `None`
         or returns `False` the element is not analyzed.
