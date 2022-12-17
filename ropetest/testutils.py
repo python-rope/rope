@@ -1,26 +1,23 @@
+import logging
 import os.path
 import shutil
 import sys
-import logging
-
-logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
+import tempfile
 import unittest
+from pathlib import Path
 
 import rope.base.project
 from rope.contrib import generate
 
 
-def sample_project(root=None, foldername=None, **kwds):
-    if root is None:
-        root = "sample_project"
-        if foldername:
-            root = foldername
-        # HACK: Using ``/dev/shm/`` for faster tests
-        if os.name == "posix":
-            if os.path.isdir("/dev/shm") and os.access("/dev/shm", os.W_OK):
-                root = "/dev/shm/" + root
-            elif os.path.isdir("/tmp") and os.access("/tmp", os.W_OK):
-                root = "/tmp/" + root
+logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
+
+RUN_TMP_DIR = tempfile.mkdtemp(prefix="ropetest-run-")
+
+
+def sample_project(foldername=None, **kwds):
+    root = Path(tempfile.mkdtemp(prefix="project-", dir=RUN_TMP_DIR))
+    root /= foldername if foldername else "sample_project"
     logging.debug("Using %s as root of the project.", root)
     # Using these prefs for faster tests
     prefs = {
@@ -32,7 +29,6 @@ def sample_project(root=None, foldername=None, **kwds):
         "import_dynload_stdmods": False,
     }
     prefs.update(kwds)
-    remove_recursively(root)
     project = rope.base.project.Project(root, **prefs)
     return project
 

@@ -110,7 +110,6 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.5")
     def test_extract_function_containing_dict_generalized_unpacking(self):
         code = dedent("""\
             def a_func(dict1):
@@ -202,6 +201,43 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func():
                 a_var = 10
                 return a_var
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_function_with_kwonlyargs(self):
+        code = dedent("""\
+            def a_func(b, *, a_var):
+                another_var = 20
+                third_var = a_var + another_var
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+            def a_func(b, *, a_var):
+                another_var = 20
+                new_func(a_var, another_var)
+
+            def new_func(a_var, another_var):
+                third_var = a_var + another_var
+        """)
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.8")
+    def test_extract_function_with_posonlyargs(self):
+        code = dedent("""\
+            def a_func(a_var, /, b):
+                another_var = 20
+                third_var = a_var + another_var
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+            def a_func(a_var, /, b):
+                another_var = 20
+                new_func(a_var, another_var)
+
+            def new_func(a_var, another_var):
+                third_var = a_var + another_var
         """)
         self.assertEqual(expected, refactored)
 

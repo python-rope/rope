@@ -923,7 +923,7 @@ class _Source:
                     break
                 else:
                     self._skip_comment()
-        except (ValueError, TypeError) as e:  # noqa
+        except (ValueError, TypeError):
             raise MismatchedTokenError(
                 f"Token <{token}> at {self._get_location()} cannot be matched"
             )

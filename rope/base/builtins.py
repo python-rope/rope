@@ -12,12 +12,6 @@ from rope.base import (
 )
 
 
-try:
-    raw_input
-except NameError:
-    raw_input = input
-
-
 class BuiltinModule(pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
         super().__init__()
@@ -866,9 +860,7 @@ _initial_builtins = {
     "object": BuiltinName(BuiltinObject()),
     "type": BuiltinName(BuiltinType()),
     "iter": BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter)),
-    "raw_input": BuiltinName(
-        BuiltinFunction(function=_input_function, builtin=raw_input)
-    ),
+    "input": BuiltinName(BuiltinFunction(function=_input_function, builtin=input)),
 }
 
 builtins = BuiltinModule("builtins", initial=_initial_builtins)

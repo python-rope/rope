@@ -948,11 +948,14 @@ class _FunctionInformationCollector(rast.RopeNodeVisitor):
 
 
 def _get_argnames(arguments):
-    result = [node.arg for node in arguments.args if isinstance(node, ast.arg)]
+    result = []
+    result.extend(node.arg for node in getattr(arguments, "posonlyargs", []))
+    result.extend(node.arg for node in arguments.args)
     if arguments.vararg:
         result.append(arguments.vararg.arg)
     if arguments.kwarg:
         result.append(arguments.kwarg.arg)
+    result.extend(node.arg for node in arguments.kwonlyargs)
     return result
 
 
