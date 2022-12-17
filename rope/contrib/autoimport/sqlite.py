@@ -438,7 +438,7 @@ class AutoImport:
 
         folders = self.project.get_python_path_folders()
         folder_paths = map(lambda folder: Path(folder.real_path), folders)
-        folder_paths = filter(filter_folders, folder_paths)
+        folder_paths = filter(filter_folders, folder_paths)  # type:ignore
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _get_available_packages(self) -> List[Package]:

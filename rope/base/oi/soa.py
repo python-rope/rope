@@ -1,10 +1,11 @@
+from typing import Callable
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import pyobjects, evaluate, nameanalyze, arguments
 
 
-def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
+def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls: bool):
     """Analyze `pymodule` for static object inference
 
     Analyzes scopes for collecting object information.  The analysis
@@ -14,7 +15,12 @@ def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_
     _analyze_node(pycore, pymodule, should_analyze, search_subscopes, followed_calls)
 
 
-def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_calls):
+def _analyze_node(pycore,
+    pydefined,
+    should_analyze: Callable,
+    search_subscopes: Callable,
+    followed_calls: bool,
+) -> None:
     if search_subscopes(pydefined):
         for scope in pydefined.get_scope().get_scopes():
             _analyze_node(

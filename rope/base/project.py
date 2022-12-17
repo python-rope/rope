@@ -16,9 +16,9 @@ from rope.base.resources import File, Folder, _ResourceMatcher
 import rope.base.resourceobserver as resourceobserver
 
 try:
-    import cPickle as pickle
+    import cPickle as pickle  # type:ignore
 except ImportError:
-    import pickle
+    import pickle  # type:ignore
 
 
 class _Project:

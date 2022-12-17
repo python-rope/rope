@@ -3,9 +3,9 @@ import hashlib
 import hmac
 
 try:
-    import cPickle as pickle
+    import cPickle as pickle  # type:ignore
 except ImportError:
-    import pickle
+    import pickle  # type:ignore
 import marshal
 import os
 import socket

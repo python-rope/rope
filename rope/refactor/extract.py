@@ -1,6 +1,7 @@
 import re
 from contextlib import contextmanager
 from itertools import chain
+from typing import Dict
 
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
@@ -35,7 +36,7 @@ from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefun
 # classes.
 class _ExtractRefactoring:
 
-    kind_prefixes = {}
+    kind_prefixes: Dict[str, str] = {}
 
     def __init__(self, project, resource, start_offset, end_offset, variable=False):
         self.project = project
