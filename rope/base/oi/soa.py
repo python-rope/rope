@@ -32,7 +32,7 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
             )
 
         visitor = SOAVisitor(pycore, pydefined, _follow if followed_calls else None)
-        for child in rope.base.ast.iter_child_nodes(pydefined.get_ast()):
+        for child in ast.iter_child_nodes(pydefined.get_ast()):
             visitor.visit(child)
 
 
