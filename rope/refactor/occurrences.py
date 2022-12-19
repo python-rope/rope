@@ -42,6 +42,7 @@ from rope.base import codeanalyze
 from rope.base import evaluate
 from rope.base import exceptions
 from rope.base import pynames
+from rope.base import pynamesdef
 from rope.base import pyobjects
 from rope.base import utils
 from rope.base import worder
@@ -194,9 +195,13 @@ def same_pyname(expected, pyname):
         return False
     if expected == pyname:
         return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and type(
-        pyname
-    ) not in (pynames.ImportedModule, pynames.ImportedName):
+    if not isinstance(
+        expected,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ) and not isinstance(
+        pyname,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ):
         return False
     return (
         expected.get_definition_location() == pyname.get_definition_location()

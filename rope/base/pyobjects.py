@@ -260,18 +260,18 @@ class PyDefinedObject:
 
 
 class PyFunction(PyDefinedObject, AbstractFunction):
-    """Only a placeholder"""
+    pass
 
 
 class PyComprehension(PyDefinedObject, PyObject):
-    """Only a placeholder"""
+    pass
 
     def get_name(self):
         return "<comprehension>"
 
 
 class PyClass(PyDefinedObject, AbstractClass):
-    """Only a placeholder"""
+    pass
 
 
 class _ConcludedData:
@@ -318,11 +318,11 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
 
 class PyModule(_PyModule):
-    """Only a placeholder"""
+    pass
 
 
 class PyPackage(_PyModule):
-    """Only a placeholder"""
+    pass
 
 
 class IsBeingInferredError(exceptions.RopeError):
