@@ -35,7 +35,7 @@ class DefinedName(PyName):
 
 
 class AssignedName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class UnboundName(PyName):
@@ -100,7 +100,7 @@ class EvaluatedName(PyName):
 
 
 class ParameterName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class ImportedModule(PyName):
