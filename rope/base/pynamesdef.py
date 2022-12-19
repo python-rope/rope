@@ -1,6 +1,10 @@
 import rope.base.oi.soi
-from rope.base import pynames
-from rope.base.pynames import *
+import rope.base.pyobjects
+from rope.base import pynames, utils
+
+
+class DefinedName(pynames.DefinedName):
+    pass
 
 
 class AssignedName(pynames.AssignedName):
@@ -35,6 +39,10 @@ class AssignedName(pynames.AssignedName):
         self.pyobject.set(None)
 
 
+class UnboundName(pynames.UnboundName):
+    pass
+
+
 class ParameterName(pynames.ParameterName):
     def __init__(self, pyfunction, index):
         self.pyfunction = pyfunction
@@ -52,6 +60,22 @@ class ParameterName(pynames.ParameterName):
 
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
+
+
+class AssignmentValue(pynames.AssignmentValue):
+    pass
+
+
+class EvaluatedName(pynames.EvaluatedName):
+    pass
+
+
+class ImportedModule(pynames.ImportedModule):
+    pass
+
+
+class ImportedName(pynames.ImportedName):
+    pass
 
 
 _Inferred = pynames._Inferred
