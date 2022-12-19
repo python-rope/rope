@@ -560,7 +560,7 @@ class _GlobalImportFinder:
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module or "",  # see comment at rope.base.ast.walk
+            node.module or "",
             level,
             self._get_names(node.names),
         )
