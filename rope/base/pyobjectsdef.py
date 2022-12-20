@@ -1,3 +1,5 @@
+import ast
+import rope.base.ast
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -7,7 +9,6 @@ import rope.base.pyscopes
 from rope.base import (
     pynamesdef,
     exceptions,
-    ast,
     nameanalyze,
     pyobjects,
     fscommands,
@@ -177,7 +178,7 @@ class PyModule(pyobjects.PyModule):
                 raise
             else:
                 source = "\n"
-                node = ast.parse("\n")
+                node = rope.base.ast.parse("\n")
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
@@ -197,7 +198,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = rope.base.ast.parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
@@ -239,7 +240,7 @@ class PyPackage(pyobjects.PyPackage):
                 init_dot_py, force_errors=force_errors
             ).get_ast()
         else:
-            ast_node = ast.parse("\n")
+            ast_node = rope.base.ast.parse("\n")
         super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
@@ -291,13 +292,13 @@ class PyPackage(pyobjects.PyPackage):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class _AnnAssignVisitor(ast.RopeNodeVisitor):
+class _AnnAssignVisitor(ast.NodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
         self.type_hint = None
 
-    def _AnnAssign(self, node):
+    def visit_AnnAssign(self, node):
         self.assigned_ast = node.value
         self.type_hint = node.annotation
 
@@ -306,13 +307,13 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         assignment = pynamesdef.AssignmentValue(
             self.assigned_ast, assign_type=True, type_hint=self.type_hint
         )
         self._assigned(node.id, assignment)
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
@@ -320,52 +321,52 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
                 assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
-    def _Annotation(self, node):
+    def visit_Annotation(self, node):
         pass
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         pass
 
-    def _Subscript(self, node):
+    def visit_Subscript(self, node):
         pass
 
-    def _Slice(self, node):
+    def visit_Slice(self, node):
         pass
 
 
-class _ExpressionVisitor(ast.RopeNodeVisitor):
+class _ExpressionVisitor(ast.NodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
-    def _GeneratorExp(self, node):
+    def visit_GeneratorExp(self, node):
         list_comp = PyComprehension(
             self.scope_visitor.pycore, node, self.scope_visitor.owner_object
         )
         self.scope_visitor.defineds.append(list_comp)
 
-    def _SetComp(self, node):
-        self._GeneratorExp(node)
+    def visit_SetComp(self, node):
+        self.visit_GeneratorExp(node)
 
-    def _ListComp(self, node):
-        self._GeneratorExp(node)
+    def visit_ListComp(self, node):
+        self.visit_GeneratorExp(node)
 
-    def _DictComp(self, node):
-        self._GeneratorExp(node)
+    def visit_DictComp(self, node):
+        self.visit_GeneratorExp(node)
 
-    def _NamedExpr(self, node):
+    def visit_NamedExpr(self, node):
         _AssignVisitor(self).visit(node.target)
         self.visit(node.value)
 
 
-class _AssignVisitor(ast.RopeNodeVisitor):
+class _AssignVisitor(ast.NodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
 
-    def _Assign(self, node):
+    def visit_Assign(self, node):
         self.assigned_ast = node.value
         for child_node in node.targets:
             self.visit(child_node)
@@ -374,13 +375,13 @@ class _AssignVisitor(ast.RopeNodeVisitor):
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         assignment = None
         if self.assigned_ast is not None:
             assignment = pynamesdef.AssignmentValue(self.assigned_ast)
         self._assigned(node.id, assignment)
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         names = nameanalyze.get_name_levels(node)
         for name, levels in names:
             assignment = None
@@ -388,13 +389,13 @@ class _AssignVisitor(ast.RopeNodeVisitor):
                 assignment = pynamesdef.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         pass
 
-    def _Subscript(self, node):
+    def visit_Subscript(self, node):
         pass
 
-    def _Slice(self, node):
+    def visit_Slice(self, node):
         pass
 
 
@@ -412,12 +413,12 @@ class _ScopeVisitor(_ExpressionVisitor):
         else:
             return None
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pyclass = PyClass(self.pycore, node, self.owner_object)
         self.names[node.name] = pynamesdef.DefinedName(pyclass)
         self.defineds.append(pyclass)
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
         for decorator in pyfunction.decorators:
             if isinstance(decorator, ast.Name) and decorator.id == "property":
@@ -442,25 +443,25 @@ class _ScopeVisitor(_ExpressionVisitor):
             self.names[node.name] = pynamesdef.DefinedName(pyfunction)
         self.defineds.append(pyfunction)
 
-    def _AsyncFunctionDef(self, node):
-        return self._FunctionDef(node)
+    def visit_AsyncFunctionDef(self, node):
+        return self.visit_FunctionDef(node)
 
-    def _Assign(self, node):
+    def visit_Assign(self, node):
         _AssignVisitor(self).visit(node)
 
-    def _AnnAssign(self, node):
+    def visit_AnnAssign(self, node):
         _AnnAssignVisitor(self).visit(node)
 
-    def _AugAssign(self, node):
+    def visit_AugAssign(self, node):
         pass
 
-    def _For(self, node):
+    def visit_For(self, node):
         self._update_evaluated(node.target, node.iter, ".__iter__().next()")
         for child in node.body + node.orelse:
             self.visit(child)
 
-    def _AsyncFor(self, node):
-        return self._For(node)
+    def visit_AsyncFor(self, node):
+        return self.visit_For(node)
 
     def _assigned(self, name, assignment):
         pyname = self.names.get(name, None)
@@ -487,7 +488,7 @@ class _ScopeVisitor(_ExpressionVisitor):
                 self._assigned(name, assignment)
         return result
 
-    def _With(self, node):
+    def visit_With(self, node):
         for item in node.items:
             if item.optional_vars:
                 self._update_evaluated(
@@ -496,8 +497,8 @@ class _ScopeVisitor(_ExpressionVisitor):
         for child in node.body:
             self.visit(child)
 
-    def _AsyncWith(self, node):
-        return self._With(node)
+    def visit_AsyncWith(self, node):
+        return self.visit_With(node)
 
     def _excepthandler(self, node):
         node_name_type = str
@@ -510,10 +511,10 @@ class _ScopeVisitor(_ExpressionVisitor):
         for child in node.body:
             self.visit(child)
 
-    def _ExceptHandler(self, node):
+    def visit_ExceptHandler(self, node):
         self._excepthandler(node)
 
-    def _Import(self, node):
+    def visit_Import(self, node):
         for import_pair in node.names:
             module_name = import_pair.name
             alias = import_pair.asname
@@ -527,7 +528,7 @@ class _ScopeVisitor(_ExpressionVisitor):
                 if not self._is_ignored_import(imported):
                     self.names[first_package] = imported
 
-    def _ImportFrom(self, node):
+    def visit_ImportFrom(self, node):
         level = 0
         if node.level:
             level = node.level
@@ -558,7 +559,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             imported_module.get_object(), rope.base.pyobjects.AbstractModule
         )
 
-    def _Global(self, node):
+    def visit_Global(self, node):
         module = self.get_module()
         for name in node.names:
             if module is not None:
@@ -570,11 +571,11 @@ class _ScopeVisitor(_ExpressionVisitor):
 
 
 class _ComprehensionVisitor(_ScopeVisitor):
-    def _comprehension(self, node):
+    def visit_comprehension(self, node):
         self.visit(node.target)
         self.visit(node.iter)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         if isinstance(node.ctx, ast.Store):
             self.names[node.id] = self._get_pyobject(node)
 
@@ -591,8 +592,8 @@ class _ClassVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
         super().__init__(pycore, owner_object)
 
-    def _FunctionDef(self, node):
-        _ScopeVisitor._FunctionDef(self, node)
+    def visit_FunctionDef(self, node):
+        _ScopeVisitor.visit_FunctionDef(self, node)
         if len(node.args.args) > 0:
             first = node.args.args[0]
             new_visitor = None
@@ -609,11 +610,11 @@ class _FunctionVisitor(_ScopeVisitor):
         self.returned_asts = []
         self.generator = False
 
-    def _Return(self, node):
+    def visit_Return(self, node):
         if node.value is not None:
             self.returned_asts.append(node.value)
 
-    def _Yield(self, node):
+    def visit_Yield(self, node):
         if node.value is not None:
             self.returned_asts.append(node.value)
         self.generator = True
@@ -624,7 +625,7 @@ class _ClassInitVisitor(_AssignVisitor):
         super().__init__(scope_visitor)
         self.self_name = self_name
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         if not isinstance(node.ctx, ast.Store):
             return
         if isinstance(node.value, ast.Name) and node.value.id == self.self_name:
@@ -639,25 +640,25 @@ class _ClassInitVisitor(_AssignVisitor):
                         pynamesdef.AssignmentValue(self.assigned_ast)
                     )
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):
             return
         for child in ast.iter_child_nodes(node):
             self.visit(child)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         pass
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pass
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pass
 
-    def _For(self, node):
+    def visit_For(self, node):
         pass
 
-    def _With(self, node):
+    def visit_With(self, node):
         pass
 
 

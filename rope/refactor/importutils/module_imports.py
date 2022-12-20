@@ -1,7 +1,7 @@
+import ast
 from typing import Union, List
 
 from rope.base import (
-    ast,
     exceptions,
     pynames,
     pynamesdef,
@@ -421,7 +421,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder(ast.RopeNodeVisitor):
+class _UnboundNameFinder(ast.NodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -436,17 +436,17 @@ class _UnboundNameFinder(ast.RopeNodeVisitor):
         for child in ast.iter_child_nodes(node):
             visitor.visit(child)
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         self._visit_child_scope(node)
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         self._visit_child_scope(node)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         if self._get_root()._is_node_interesting(node) and not self.is_bound(node.id):
             self.add_unbound(node.id)
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         result = []
         while isinstance(node, ast.Attribute):
             result.append(node.attr)

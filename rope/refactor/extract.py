@@ -1,8 +1,10 @@
+import ast
 import re
 from contextlib import contextmanager
 from itertools import chain
 
-from rope.base import ast, codeanalyze
+import rope.base
+from rope.base import codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
@@ -514,7 +516,7 @@ class _ExceptionalConditionChecker:
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(ast.RopeNodeVisitor):
+class _ExtractMethodParts(ast.NodeVisitor):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -777,7 +779,7 @@ class _ExtractVariableParts:
         return {}
 
 
-class _FunctionInformationCollector(ast.RopeNodeVisitor):
+class _FunctionInformationCollector(ast.NodeVisitor):
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -816,7 +818,7 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
         if self.end < lineno:
             self.postwritten.add(name)
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         if not self.is_global and self.host_function:
             self.host_function = False
             for name in _get_argnames(node.args):
@@ -831,29 +833,29 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
-    def _Global(self, node):
+    def visit_Global(self, node):
         self.globals_.add(*node.names)
 
-    def _AsyncFunctionDef(self, node):
-        self._FunctionDef(node)
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.AugStore)):
             self._written_variable(node.id, node.lineno)
         if not isinstance(node.ctx, ast.Store):
             self._read_variable(node.id, node.lineno)
 
-    def _MatchAs(self, node):
+    def visit_MatchAs(self, node):
         self._written_variable(node.name, node.lineno)
         if node.pattern:
             self.visit(node.pattern)
 
-    def _Assign(self, node):
+    def visit_Assign(self, node):
         self.visit(node.value)
         for child in node.targets:
             self.visit(child)
 
-    def _AugAssign(self, node):
+    def visit_AugAssign(self, node):
         self.visit(node.value)
         if isinstance(node.target, ast.Name):
             target_id = node.target.id
@@ -862,19 +864,19 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
         else:
             self.visit(node.target)
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
-    def _ListComp(self, node):
+    def visit_ListComp(self, node):
         self._comp_exp(node)
 
-    def _GeneratorExp(self, node):
+    def visit_GeneratorExp(self, node):
         self._comp_exp(node)
 
-    def _SetComp(self, node):
+    def visit_SetComp(self, node):
         self._comp_exp(node)
 
-    def _DictComp(self, node):
+    def visit_DictComp(self, node):
         self._comp_exp(node)
 
     def _comp_exp(self, node):
@@ -904,14 +906,14 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
         else:
             assert False, f"Unexpected node type in list comprehension target: {node!r}"
 
-    def _If(self, node):
+    def visit_If(self, node):
         self._handle_conditional_node(node)
 
-    def _While(self, node):
+    def visit_While(self, node):
         with self._handle_loop_context(node):
             self._handle_conditional_node(node)
 
-    def _For(self, node):
+    def visit_For(self, node):
         with self._handle_loop_context(node), self._handle_conditional_context(node):
             # iter has to be checked before the target variables
             self.visit(node.iter)
@@ -958,25 +960,25 @@ def _get_argnames(arguments):
     return result
 
 
-class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
+class _VariableReadsAndWritesFinder(ast.NodeVisitor):
     def __init__(self):
         self.written = set()
         self.read = set()
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.AugStore)):
             self.written.add(node.id)
         if not isinstance(node, ast.Store):
             self.read.add(node.id)
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
         for child in ast.iter_child_nodes(node):
             visitor.visit(child)
         self.read.update(visitor.read - visitor.written)
 
-    def _Class(self, node):
+    def visit_Class(self, node):
         self.written.add(node.name)
 
     @staticmethod
@@ -998,7 +1000,7 @@ class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
         return visitor.read
 
 
-class _BaseErrorFinder(ast.RopeNodeVisitor):
+class _BaseErrorFinder(ast.NodeVisitor):
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
@@ -1014,10 +1016,10 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
         self.error = False
         self.loop_count = 0
 
-    def _For(self, node):
+    def visit_For(self, node):
         self.loop_encountered(node)
 
-    def _While(self, node):
+    def visit_While(self, node):
         self.loop_encountered(node)
 
     def loop_encountered(self, node):
@@ -1032,20 +1034,20 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
             else:
                 self.visit(node.orelse)
 
-    def _Break(self, node):
+    def visit_Break(self, node):
         self.check_loop()
 
-    def _Continue(self, node):
+    def visit_Continue(self, node):
         self.check_loop()
 
     def check_loop(self):
         if self.loop_count < 1:
             self.error = True
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pass
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pass
 
 
@@ -1053,24 +1055,24 @@ class _AsyncStatementFinder(_BaseErrorFinder):
     def __init__(self):
         self.error = False
 
-    def _AsyncFor(self, node):
+    def visit_AsyncFor(self, node):
         self.error = True
 
-    def _AsyncWith(self, node):
+    def visit_AsyncWith(self, node):
         self.error = True
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pass
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pass
 
 
-class _GlobalFinder(ast.RopeNodeVisitor):
+class _GlobalFinder(ast.NodeVisitor):
     def __init__(self):
         self.globals_ = OrderedSet()
 
-    def _Global(self, node):
+    def visit_Global(self, node):
         self.globals_.add(*node.names)
 
 
@@ -1081,13 +1083,13 @@ def _get_function_kind(scope):
 def _parse_text(body):
     body = sourceutils.fix_indentation(body, 0)
     try:
-        node = ast.parse(body)
+        node = rope.base.ast.parse(body)
     except SyntaxError:
         # needed to parse expression containing := operator
         try:
-            node = ast.parse("(" + body + ")")
+            node = rope.base.ast.parse("(" + body + ")")
         except SyntaxError:
-            node = ast.parse(
+            node = rope.base.ast.parse(
                 "async def __rope_placeholder__():\n"
                 + sourceutils.fix_indentation(body, 4)
             )

@@ -1,8 +1,7 @@
 from textwrap import dedent
-
 import unittest
 
-from rope.base import ast
+import rope.base
 from rope.refactor import suites
 from ropetest import testutils
 
@@ -218,4 +217,4 @@ class SuiteTest(unittest.TestCase):
 
 
 def source_suite_tree(source):
-    return suites.ast_suite_tree(ast.parse(source))
+    return suites.ast_suite_tree(rope.base.ast.parse(source))

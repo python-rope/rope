@@ -1,3 +1,5 @@
+import ast
+
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
@@ -31,25 +33,25 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
             )
 
         visitor = SOAVisitor(pycore, pydefined, _follow if followed_calls else None)
-        for child in rope.base.ast.iter_child_nodes(pydefined.get_ast()):
+        for child in ast.iter_child_nodes(pydefined.get_ast()):
             visitor.visit(child)
 
 
-class SOAVisitor(rope.base.ast.RopeNodeVisitor):
+class SOAVisitor(ast.NodeVisitor):
     def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
         self.scope = pydefined.get_scope()
         self.follow = follow_callback
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pass
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pass
 
-    def _Call(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+    def visit_Call(self, node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
@@ -96,8 +98,8 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
             for i in range(len(pyfunction.get_param_names(False)))
         ]
 
-    def _AnnAssign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+    def visit_AnnAssign(self, node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -107,8 +109,8 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
 
         self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
 
-    def _Assign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+    def visit_Assign(self, node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -143,7 +145,7 @@ class _SOAAssignVisitor(nameanalyze._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, rope.base.ast.Subscript) and isinstance(
-            node.slice, (rope.base.ast.Index, rope.base.ast.expr)
+        if isinstance(node, ast.Subscript) and isinstance(
+            node.slice, (ast.Index, ast.expr)
         ):
             self.nodes.append((node, levels))

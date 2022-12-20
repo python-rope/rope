@@ -1,12 +1,13 @@
+import ast
 from operator import itemgetter
 from typing import Optional, Tuple
 
+import rope.base
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
     arguments,
-    ast,
     nameanalyze,
     exceptions,
     pyobjects,
@@ -50,7 +51,7 @@ def eval_str(holding_scope, name):
 def eval_str2(holding_scope, name):
     try:
         # parenthesizing for handling cases like 'a_var.\nattr'
-        node = ast.parse("(%s)" % name)
+        node = rope.base.ast.parse("(%s)" % name)
     except SyntaxError:
         raise BadIdentifierError("Not a resolvable python identifier selected.")
     return eval_node2(holding_scope, node)
@@ -158,16 +159,16 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator(ast.RopeNodeVisitor):
+class StatementEvaluator(ast.NodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None
         self.old_result = None
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         self.result = self.scope.lookup(node.id)
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         pyname = eval_node(self.scope, node.value)
         if pyname is None:
             pyname = rope.base.pynames.UnboundName()
@@ -178,7 +179,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             except exceptions.AttributeNotFoundError:
                 self.result = None
 
-    def _Call(self, node):
+    def visit_Call(self, node):
         primary, pyobject = self._get_primary_and_object_for_node(node.func)
         if pyobject is None:
             return
@@ -207,16 +208,16 @@ class StatementEvaluator(ast.RopeNodeVisitor):
                 pyobject=_get_returned(pyfunction)
             )
 
-    def _Str(self, node):
+    def visit_Str(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_str()
         )
 
-    def _Num(self, node):
+    def visit_Num(self, node):
         type_name = type(node.n).__name__
         self.result = self._get_builtin_name(type_name)
 
-    def _Constant(self, node):
+    def visit_Constant(self, node):
         type_name = type(node.n).__name__
         try:
             self.result = self._get_builtin_name(type_name)
@@ -228,29 +229,29 @@ class StatementEvaluator(ast.RopeNodeVisitor):
         pytype = rope.base.builtins.builtins[type_name].get_object()
         return rope.base.pynames.UnboundName(rope.base.pyobjects.PyObject(pytype))
 
-    def _BinOp(self, node):
+    def visit_BinOp(self, node):
         self.result = rope.base.pynames.UnboundName(
             self._get_object_for_node(node.left)
         )
 
-    def _BoolOp(self, node):
+    def visit_BoolOp(self, node):
         pyobject = self._get_object_for_node(node.values[0])
         if pyobject is None:
             pyobject = self._get_object_for_node(node.values[1])
         self.result = rope.base.pynames.UnboundName(pyobject)
 
-    def _Repr(self, node):
+    def visit_Repr(self, node):
         self.result = self._get_builtin_name("str")
 
-    def _UnaryOp(self, node):
+    def visit_UnaryOp(self, node):
         self.result = rope.base.pynames.UnboundName(
             self._get_object_for_node(node.operand)
         )
 
-    def _Compare(self, node):
+    def visit_Compare(self, node):
         self.result = self._get_builtin_name("bool")
 
-    def _Dict(self, node):
+    def visit_Dict(self, node):
         keys = None
         values = None
         if node.keys and node.keys[0]:
@@ -265,7 +266,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             pyobject=rope.base.builtins.get_dict(keys, values)
         )
 
-    def _List(self, node):
+    def visit_List(self, node):
         holding = None
         if node.elts:
             holding = self._get_object_for_node(node.elts[0])
@@ -273,13 +274,13 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             pyobject=rope.base.builtins.get_list(holding)
         )
 
-    def _ListComp(self, node):
+    def visit_ListComp(self, node):
         pyobject = self._what_does_comprehension_hold(node)
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_list(pyobject)
         )
 
-    def _GeneratorExp(self, node):
+    def visit_GeneratorExp(self, node):
         pyobject = self._what_does_comprehension_hold(node)
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_iterator(pyobject)
@@ -301,7 +302,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             names.update(new_names)
         return rope.base.pyscopes.TemporaryScope(scope.pycore, scope, names)
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         objects = []
         if len(node.elts) < 4:
             for stmt in node.elts:
@@ -327,7 +328,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             pyobject = pyname.get_object()
         return primary, pyobject
 
-    def _Subscript(self, node):
+    def visit_Subscript(self, node):
         if isinstance(node.slice, ast.Index):
             self._call_function(node.value, "__getitem__", [node.slice.value])
         elif isinstance(node.slice, ast.Slice):
@@ -335,7 +336,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
         elif isinstance(node.slice, ast.expr):
             self._call_function(node.value, "__getitem__", [node.value])
 
-    def _Slice(self, node):
+    def visit_Slice(self, node):
         self.result = self._get_builtin_name("slice")
 
     def _call_function(self, node, function_name, other_args=None):
@@ -356,7 +357,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
                 pyobject=called.get_returned_object(arguments_)
             )
 
-    def _Lambda(self, node):
+    def visit_Lambda(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.Lambda(node, self.scope)
         )

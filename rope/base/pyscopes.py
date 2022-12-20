@@ -1,6 +1,6 @@
+import ast
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import (
-    ast,
     codeanalyze,
     exceptions,
     pynames,
@@ -181,13 +181,13 @@ class ComprehensionScope(Scope):
 
     def _get_names(self):
         if self.names is None:
-            self._visit_comprehension()
+            self.visit_comprehension()
         return self.names
 
     def get_names(self):
         return self._get_names()
 
-    def _visit_comprehension(self):
+    def visit_comprehension(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for node in ast.iter_child_nodes(self.pyobject.get_ast()):

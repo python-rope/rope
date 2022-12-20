@@ -1,5 +1,5 @@
+import ast
 from rope.base import (
-    ast,
     change,
     evaluate,
     exceptions,
@@ -181,25 +181,25 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
+class _ReturnOrYieldFinder(ast.NodeVisitor):
     def __init__(self):
         self.returns = 0
         self.named_expression = 0
         self.yields = 0
 
-    def _Return(self, node):
+    def visit_Return(self, node):
         self.returns += 1
 
-    def _NamedExpr(self, node):
+    def visit_NamedExpr(self, node):
         self.named_expression += 1
 
-    def _Yield(self, node):
+    def visit_Yield(self, node):
         self.yields += 1
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         pass
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         pass
 
     def start_walking(self, node):

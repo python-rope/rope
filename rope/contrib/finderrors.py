@@ -1,3 +1,4 @@
+import ast
 """Finding bad name and attribute accesses
 
 `find_errors` function can be used to find possible bad name and
@@ -23,7 +24,7 @@ TODO:
 * ... ;-)
 
 """
-from rope.base import ast, evaluate, pyobjects
+from rope.base import evaluate, pyobjects
 
 
 def find_errors(project, resource):
@@ -37,13 +38,13 @@ def find_errors(project, resource):
     return finder.errors
 
 
-class _BadAccessFinder(ast.RopeNodeVisitor):
+class _BadAccessFinder(ast.NodeVisitor):
     def __init__(self, pymodule):
         self.pymodule = pymodule
         self.scope = pymodule.get_scope()
         self.errors = []
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.Param)):
             return
         scope = self.scope.get_inner_scope_for_line(node.lineno)
@@ -53,7 +54,7 @@ class _BadAccessFinder(ast.RopeNodeVisitor):
         elif self._is_defined_after(scope, pyname, node.lineno):
             self._add_error(node, "Defined later")
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         if not isinstance(node.ctx, ast.Store):
             scope = self.scope.get_inner_scope_for_line(node.lineno)
             pyname = evaluate.eval_node(scope, node.value)

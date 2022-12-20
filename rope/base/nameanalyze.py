@@ -1,4 +1,4 @@
-from rope.base import ast
+import ast
 
 
 def get_name_levels(node):
@@ -18,7 +18,7 @@ def get_name_levels(node):
     return visitor.names
 
 
-class _NodeNameCollector(ast.RopeNodeVisitor):
+class _NodeNameCollector(ast.NodeVisitor):
     def __init__(self, levels=None):
         self.names = []
         self.levels = levels
@@ -36,13 +36,13 @@ class _NodeNameCollector(ast.RopeNodeVisitor):
         if hasattr(node, "id"):
             self.names.append((node.id, levels))
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         self._add_node(node)
 
-    def _ExceptHandler(self, node):
+    def visit_ExceptHandler(self, node):
         self.names.append((node.name, []))
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         new_levels = []
         if self.levels is not None:
             new_levels = list(self.levels)
@@ -53,11 +53,11 @@ class _NodeNameCollector(ast.RopeNodeVisitor):
             visitor.visit(child)
         self.names.extend(visitor.names)
 
-    def _Subscript(self, node):
+    def visit_Subscript(self, node):
         self._add_node(node)
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         self._add_node(node)
 
-    def _Slice(self, node):
+    def visit_Slice(self, node):
         self._add_node(node)

@@ -1,10 +1,12 @@
+import ast
 import collections
 import numbers
 import re
 import warnings
 from itertools import chain
 
-from rope.base import ast, codeanalyze, exceptions
+import rope.base
+from rope.base import codeanalyze, exceptions
 
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
@@ -16,7 +18,7 @@ def get_patched_ast(source, sorted_children=False):
     Adds ``sorted_children`` field only if `sorted_children` is True.
 
     """
-    return patch_ast(ast.parse(source), source, sorted_children)
+    return patch_ast(rope.base.ast.parse(source), source, sorted_children)
 
 
 def patch_ast(node, source, sorted_children=False):
@@ -35,7 +37,7 @@ def patch_ast(node, source, sorted_children=False):
     if hasattr(node, "region"):
         return node
     walker = _PatchingASTWalker(source, children=sorted_children)
-    ast.call_for_nodes(node, walker)
+    rope.base.ast.call_for_nodes(node, walker)
     return node
 
 
@@ -80,10 +82,15 @@ class _PatchingASTWalker:
     empty_tuple = object()
 
     def __call__(self, node):
-        method = getattr(self, "_" + node.__class__.__name__, None)
+        method = getattr(self, "visit_" + node.__class__.__name__, None)
         if method is not None:
             return method(node)
         # ???: Unknown node; what should we do here?
+        print("")
+        print(
+            f"_PatchingASTWalker.__call__. Missing visitor! {node.__class__.__name__}"
+        )
+        print("")
         warnings.warn(
             "Unknown node type <%s>; please report!" % node.__class__.__name__,
             RuntimeWarning,
@@ -115,7 +122,7 @@ class _PatchingASTWalker:
                 continue
             offset = self.source.offset
             if isinstance(child, ast.AST):
-                ast.call_for_nodes(child, self)
+                rope.base.ast.call_for_nodes(child, self)
                 token_start = child.region[0]
             else:
                 if child is self.String:
@@ -297,49 +304,49 @@ class _PatchingASTWalker:
     def _get_op(self, node):
         return self._operators[node.__class__.__name__].split(" ")
 
-    def _Attribute(self, node):
+    def visit_Attribute(self, node):
         self._handle(node, [node.value, ".", node.attr])
 
-    def _Assert(self, node):
+    def visit_Assert(self, node):
         children = ["assert", node.test]
         if node.msg:
             children.append(",")
             children.append(node.msg)
         self._handle(node, children)
 
-    def _Assign(self, node):
+    def visit_Assign(self, node):
         children = self._child_nodes(node.targets, "=")
         children.append("=")
         children.append(node.value)
         self._handle(node, children)
 
-    def _AugAssign(self, node):
+    def visit_AugAssign(self, node):
         children = [node.target]
         children.extend(self._get_op(node.op))
         children.extend(["=", node.value])
         self._handle(node, children)
 
-    def _AnnAssign(self, node):
+    def visit_AnnAssign(self, node):
         children = [node.target, ":", node.annotation]
         if node.value is not None:
             children.append("=")
             children.append(node.value)
         self._handle(node, children)
 
-    def _Repr(self, node):
+    def visit_Repr(self, node):
         self._handle(node, ["`", node.value, "`"])
 
-    def _BinOp(self, node):
+    def visit_BinOp(self, node):
         children = [node.left] + self._get_op(node.op) + [node.right]
         self._handle(node, children)
 
-    def _BoolOp(self, node):
+    def visit_BoolOp(self, node):
         self._handle(node, self._child_nodes(node.values, self._get_op(node.op)[0]))
 
-    def _Break(self, node):
+    def visit_Break(self, node):
         self._handle(node, ["break"])
 
-    def _Call(self, node):
+    def visit_Call(self, node):
         def _arg_sort_key(node):
             if isinstance(node, ast.keyword):
                 return (node.value.lineno, node.value.col_offset)
@@ -351,7 +358,7 @@ class _PatchingASTWalker:
         children.append(")")
         self._handle(node, children)
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         children = []
         if getattr(node, "decorator_list", None):
             for decorator in node.decorator_list:
@@ -366,7 +373,7 @@ class _PatchingASTWalker:
         children.extend(node.body)
         self._handle(node, children)
 
-    def _Compare(self, node):
+    def visit_Compare(self, node):
         children = []
         children.append(node.left)
         for op, expr in zip(node.ops, node.comparators):
@@ -374,10 +381,10 @@ class _PatchingASTWalker:
             children.append(expr)
         self._handle(node, children)
 
-    def _Delete(self, node):
+    def visit_Delete(self, node):
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
-    def _Constant(self, node):
+    def visit_Constant(self, node):
         if isinstance(node.value, (str, bytes)):
             self._handle(node, [self.String])
             return
@@ -396,16 +403,16 @@ class _PatchingASTWalker:
 
         assert False
 
-    def _Num(self, node):
+    def visit_Num(self, node):
         self._handle(node, [self.Number])
 
-    def _Str(self, node):
+    def visit_Str(self, node):
         self._handle(node, [self.String])
 
-    def _Bytes(self, node):
+    def visit_Bytes(self, node):
         self._handle(node, [self.String])
 
-    def _JoinedStr(self, node):
+    def visit_JoinedStr(self, node):
         def start_quote_char():
             possible_quotes = [
                 (self.source.source.find(q, start, end), q) for q in QUOTE_CHARS
@@ -440,7 +447,7 @@ class _PatchingASTWalker:
         children.append(end_quote_char())
         self._handle(node, children)
 
-    def _FormattedValue(self, node):
+    def visit_FormattedValue(self, node):
         children = []
         children.append("{")
         children.append(node.value)
@@ -454,10 +461,10 @@ class _PatchingASTWalker:
         children.append("}")
         self._handle(node, children)
 
-    def _Continue(self, node):
+    def visit_Continue(self, node):
         self._handle(node, ["continue"])
 
-    def _Dict(self, node):
+    def visit_Dict(self, node):
         children = []
         children.append("{")
         if node.keys:
@@ -472,17 +479,17 @@ class _PatchingASTWalker:
         children.append("}")
         self._handle(node, children)
 
-    def _Ellipsis(self, node):
+    def visit_Ellipsis(self, node):
         self._handle(node, ["..."])
 
-    def _Expr(self, node):
+    def visit_Expr(self, node):
         self._handle(node, [node.value])
 
-    def _NamedExpr(self, node):
+    def visit_NamedExpr(self, node):
         children = [node.target, ":=", node.value]
         self._handle(node, children)
 
-    def _Exec(self, node):
+    def visit_Exec(self, node):
         children = ["exec", self.exec_open_paren_or_space, node.body]
         if node.globals:
             children.extend([self.exec_in_or_comma, node.globals])
@@ -491,7 +498,7 @@ class _PatchingASTWalker:
         children.append(self.exec_close_paren_or_space)
         self._handle(node, children)
 
-    def _ExtSlice(self, node):
+    def visit_ExtSlice(self, node):
         children = []
         for index, dim in enumerate(node.dims):
             if index > 0:
@@ -511,13 +518,13 @@ class _PatchingASTWalker:
             children.extend(node.orelse)
         self._handle(node, children)
 
-    def _For(self, node):
+    def visit_For(self, node):
         self._handle_for_loop_node(node, is_async=False)
 
-    def _AsyncFor(self, node):
+    def visit_AsyncFor(self, node):
         self._handle_for_loop_node(node, is_async=True)
 
-    def _ImportFrom(self, node):
+    def visit_ImportFrom(self, node):
         children = ["from"]
         if node.level:
             children.extend("." * node.level)
@@ -527,7 +534,7 @@ class _PatchingASTWalker:
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
 
-    def _alias(self, node):
+    def visit_alias(self, node):
         children = node.name.split(".")
         if node.asname:
             children.extend(["as", node.asname])
@@ -552,13 +559,13 @@ class _PatchingASTWalker:
         children.extend(node.body)
         self._handle(node, children)
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         self._handle_function_def_node(node, is_async=False)
 
-    def _AsyncFunctionDef(self, node):
+    def visit_AsyncFunctionDef(self, node):
         self._handle_function_def_node(node, is_async=True)
 
-    def _arguments(self, node):
+    def visit_arguments(self, node):
         children = []
         args = list(node.args)
         defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
@@ -596,12 +603,12 @@ class _PatchingASTWalker:
                 children.append(token)
         children.append(")")
 
-    def _GeneratorExp(self, node):
+    def visit_GeneratorExp(self, node):
         children = [node.elt]
         children.extend(node.generators)
         self._handle(node, children, eat_parens=True)
 
-    def _comprehension(self, node):
+    def visit_comprehension(self, node):
         children = ["for", node.target, "in", node.iter]
         if node.ifs:
             for if_ in node.ifs:
@@ -609,12 +616,12 @@ class _PatchingASTWalker:
                 children.append(if_)
         self._handle(node, children)
 
-    def _Global(self, node):
+    def visit_Global(self, node):
         children = self._child_nodes(node.names, ",")
         children.insert(0, "global")
         self._handle(node, children)
 
-    def _If(self, node):
+    def visit_If(self, node):
         if self._is_elif(node):
             children = ["elif"]
         else:
@@ -638,15 +645,15 @@ class _PatchingASTWalker:
         alt_word = self.source[offset - 5 : offset - 1]
         return "elif" in (word, alt_word)
 
-    def _IfExp(self, node):
+    def visit_IfExp(self, node):
         return self._handle(node, [node.body, "if", node.test, "else", node.orelse])
 
-    def _Import(self, node):
+    def visit_Import(self, node):
         children = ["import"]
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
 
-    def _keyword(self, node):
+    def visit_keyword(self, node):
         children = []
         if node.arg is None:
             children.append(node.value)
@@ -654,19 +661,19 @@ class _PatchingASTWalker:
             children.extend([node.arg, "=", node.value])
         self._handle(node, children)
 
-    def _Lambda(self, node):
+    def visit_Lambda(self, node):
         self._handle(node, ["lambda", node.args, ":", node.body])
 
-    def _List(self, node):
+    def visit_List(self, node):
         self._handle(node, ["["] + self._child_nodes(node.elts, ",") + ["]"])
 
-    def _ListComp(self, node):
+    def visit_ListComp(self, node):
         children = ["[", node.elt]
         children.extend(node.generators)
         children.append("]")
         self._handle(node, children)
 
-    def _Set(self, node):
+    def visit_Set(self, node):
         if node.elts:
             self._handle(node, ["{"] + self._child_nodes(node.elts, ",") + ["}"])
             return
@@ -676,35 +683,35 @@ class _PatchingASTWalker:
         )
         self._handle(node, ["set(", ")"])
 
-    def _SetComp(self, node):
+    def visit_SetComp(self, node):
         children = ["{", node.elt]
         children.extend(node.generators)
         children.append("}")
         self._handle(node, children)
 
-    def _DictComp(self, node):
+    def visit_DictComp(self, node):
         children = ["{"]
         children.extend([node.key, ":", node.value])
         children.extend(node.generators)
         children.append("}")
         self._handle(node, children)
 
-    def _Module(self, node):
+    def visit_Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 
-    def _Name(self, node):
+    def visit_Name(self, node):
         self._handle(node, [node.id])
 
-    def _NameConstant(self, node):
+    def visit_NameConstant(self, node):
         self._handle(node, [str(node.value)])
 
-    def _arg(self, node):
+    def visit_arg(self, node):
         self._handle(node, [node.arg])
 
-    def _Pass(self, node):
+    def visit_Pass(self, node):
         self._handle(node, ["pass"])
 
-    def _Print(self, node):
+    def visit_Print(self, node):
         children = ["print"]
         if node.dest:
             children.extend([">>", node.dest])
@@ -715,7 +722,7 @@ class _PatchingASTWalker:
             children.append(",")
         self._handle(node, children)
 
-    def _Raise(self, node):
+    def visit_Raise(self, node):
         children = ["raise"]
         if node.exc:
             children.append(node.exc)
@@ -723,13 +730,13 @@ class _PatchingASTWalker:
             children.append(node.cause)
         self._handle(node, children)
 
-    def _Return(self, node):
+    def visit_Return(self, node):
         children = ["return"]
         if node.value:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Sliceobj(self, node):
+    def visit_Sliceobj(self, node):
         children = []
         for index, slice in enumerate(node.nodes):
             if index > 0:
@@ -738,13 +745,13 @@ class _PatchingASTWalker:
                 children.append(slice)
         self._handle(node, children)
 
-    def _Index(self, node):
+    def visit_Index(self, node):
         self._handle(node, [node.value])
 
-    def _Subscript(self, node):
+    def visit_Subscript(self, node):
         self._handle(node, [node.value, "[", node.slice, "]"])
 
-    def _Slice(self, node):
+    def visit_Slice(self, node):
         children = []
         if node.lower:
             children.append(node.lower)
@@ -756,7 +763,7 @@ class _PatchingASTWalker:
             children.append(node.step)
         self._handle(node, children)
 
-    def _TryFinally(self, node):
+    def visit_TryFinally(self, node):
         # @todo fixme
         is_there_except_handler = False
         not_empty_body = True
@@ -777,7 +784,7 @@ class _PatchingASTWalker:
         children.extend(node.finalbody)
         self._handle(node, children)
 
-    def _TryExcept(self, node):
+    def visit_TryExcept(self, node):
         children = ["try", ":"]
         children.extend(node.body)
         children.extend(node.handlers)
@@ -786,13 +793,13 @@ class _PatchingASTWalker:
             children.extend(node.orelse)
         self._handle(node, children)
 
-    def _Try(self, node):
+    def visit_Try(self, node):
         if len(node.finalbody):
-            self._TryFinally(node)
+            self.visit_TryFinally(node)
         else:
-            self._TryExcept(node)
+            self.visit_TryExcept(node)
 
-    def _ExceptHandler(self, node):
+    def visit_ExceptHandler(self, node):
         self._excepthandler(node)
 
     def _excepthandler(self, node):
@@ -808,34 +815,34 @@ class _PatchingASTWalker:
 
         self._handle(node, children)
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         if node.elts:
             self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
         else:
             self._handle(node, [self.empty_tuple])
 
-    def _UnaryOp(self, node):
+    def visit_UnaryOp(self, node):
         children = self._get_op(node.op)
         children.append(node.operand)
         self._handle(node, children)
 
-    def _Await(self, node):
+    def visit_Await(self, node):
         children = ["await"]
         if node.value:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Yield(self, node):
+    def visit_Yield(self, node):
         children = ["yield"]
         if node.value:
             children.append(node.value)
         self._handle(node, children)
 
-    def _YieldFrom(self, node):
+    def visit_YieldFrom(self, node):
         children = ["yield", "from", node.value]
         self._handle(node, children)
 
-    def _While(self, node):
+    def visit_While(self, node):
         children = ["while", node.test, ":"]
         children.extend(node.body)
         if node.orelse:
@@ -856,21 +863,21 @@ class _PatchingASTWalker:
         children.extend(node.body)
         self._handle(node, children)
 
-    def _With(self, node):
+    def visit_With(self, node):
         self._handle_with_node(node, is_async=False)
 
-    def _AsyncWith(self, node):
+    def visit_AsyncWith(self, node):
         self._handle_with_node(node, is_async=True)
 
-    def _Starred(self, node):
+    def visit_Starred(self, node):
         self._handle(node, [node.value])
 
-    def _Match(self, node):
+    def visit_Match(self, node):
         children = ["match", node.subject, ":"]
         children.extend(node.cases)
         self._handle(node, children)
 
-    def _match_case(self, node):
+    def visit_match_case(self, node):
         children = ["case", node.pattern]
         if node.guard:
             children.extend(["if", node.guard])
@@ -878,7 +885,7 @@ class _PatchingASTWalker:
         children.extend(node.body)
         self._handle(node, children)
 
-    def _MatchAs(self, node):
+    def visit_MatchAs(self, node):
         if node.pattern:
             children = [node.pattern, "as", node.name]
         elif node.name is None:
@@ -887,7 +894,7 @@ class _PatchingASTWalker:
             children = [node.name]
         self._handle(node, children)
 
-    def _MatchClass(self, node):
+    def visit_MatchClass(self, node):
         children = []
         children.extend([node.cls, "("])
         children.extend(self._child_nodes(node.patterns, ","))
@@ -895,10 +902,10 @@ class _PatchingASTWalker:
         children.append(")")
         self._handle(node, children)
 
-    def _MatchValue(self, node):
+    def visit_MatchValue(self, node):
         self._handle(node, [node.value])
 
-    def _MatchMapping(self, node):
+    def visit_MatchMapping(self, node):
         children = []
         children.append("{")
         for index, (key, value) in enumerate(zip(node.keys, node.patterns)):

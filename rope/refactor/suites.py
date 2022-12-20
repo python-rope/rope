@@ -1,6 +1,5 @@
+import ast
 from itertools import chain
-
-from rope.base import ast
 
 
 def find_visible(node, lines):
@@ -98,33 +97,33 @@ class Suite:
         return self.parent._get_level() + 1
 
 
-class _SuiteWalker(ast.RopeNodeVisitor):
+class _SuiteWalker(ast.NodeVisitor):
     def __init__(self, suite):
         self.suite = suite
         self.suites = []
 
-    def _If(self, node):
+    def visit_If(self, node):
         self._add_if_like_node(node)
 
-    def _For(self, node):
+    def visit_For(self, node):
         self._add_if_like_node(node)
 
-    def _While(self, node):
+    def visit_While(self, node):
         self._add_if_like_node(node)
 
-    def _With(self, node):
+    def visit_With(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
 
-    def _AsyncWith(self, node):
+    def visit_AsyncWith(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
 
-    def _Match(self, node):
+    def visit_Match(self, node):
         case_bodies = list(
             chain.from_iterable([[case.pattern] + case.body for case in node.cases])
         )
         self.suites.append(Suite(case_bodies, node.lineno, self.suite))
 
-    def _TryFinally(self, node):
+    def visit_TryFinally(self, node):
         proceed_to_except_handler = False
         if len(node.finalbody) == 1:
             try:
@@ -134,18 +133,18 @@ class _SuiteWalker(ast.RopeNodeVisitor):
             except IndexError:
                 pass
         if proceed_to_except_handler:
-            self._TryExcept(node)
+            self.visit_TryExcept(node)
         else:
             self.suites.append(Suite(node.body, node.lineno, self.suite))
         self.suites.append(Suite(node.finalbody, node.lineno, self.suite))
 
-    def _Try(self, node):
+    def visit_Try(self, node):
         if len(node.finalbody) == 1:
-            self._TryFinally(node)
+            self.visit_TryFinally(node)
         else:
-            self._TryExcept(node)
+            self.visit_TryExcept(node)
 
-    def _TryExcept(self, node):
+    def visit_TryExcept(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
         for handler in node.handlers:
             self.suites.append(Suite(handler.body, node.lineno, self.suite))
@@ -157,11 +156,11 @@ class _SuiteWalker(ast.RopeNodeVisitor):
         if node.orelse:
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
-    def _FunctionDef(self, node):
+    def visit_FunctionDef(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
 
-    def _AsyncFunctionDef(self, node):
+    def visit_AsyncFunctionDef(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))
 
-    def _ClassDef(self, node):
+    def visit_ClassDef(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite, ignored=True))

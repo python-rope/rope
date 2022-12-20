@@ -363,16 +363,16 @@ class _ComplexExpressionVisitor:
     def __init__(self):
         self.is_complex_expression = False
 
-    def _Set(self, node):
+    def visit_Set(self, node):
         self.is_complex_expression = True
 
-    def _List(self, node):
+    def visit_List(self, node):
         self.is_complex_expression = True
 
-    def _Tuple(self, node):
+    def visit_Tuple(self, node):
         self.is_complex_expression = True
 
-    def _Dict(self, node):
+    def visit_Dict(self, node):
         self.is_complex_expression = True
 
 
