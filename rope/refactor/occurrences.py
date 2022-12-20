@@ -42,7 +42,6 @@ from rope.base import codeanalyze
 from rope.base import evaluate
 from rope.base import exceptions
 from rope.base import pynames
-from rope.base import pynamesdef
 from rope.base import pyobjects
 from rope.base import utils
 from rope.base import worder
