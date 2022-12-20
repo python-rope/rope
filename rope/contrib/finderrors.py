@@ -1,4 +1,5 @@
 import ast
+
 """Finding bad name and attribute accesses
 
 `find_errors` function can be used to find possible bad name and
