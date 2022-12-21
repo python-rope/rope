@@ -500,7 +500,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def visit_AsyncWith(self, node):
         return self.visit_With(node)
 
-    def _excepthandler(self, node):
+    def visit_excepthandler(self, node):
         node_name_type = str
         if node.name is not None and isinstance(node.name, node_name_type):
             type_node = node.type
@@ -512,7 +512,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             self.visit(child)
 
     def visit_ExceptHandler(self, node):
-        self._excepthandler(node)
+        self.visit_excepthandler(node)
 
     def visit_Import(self, node):
         for import_pair in node.names:

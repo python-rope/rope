@@ -800,9 +800,9 @@ class _PatchingASTWalker:
             self.visit_TryExcept(node)
 
     def visit_ExceptHandler(self, node):
-        self._excepthandler(node)
+        self.visit_excepthandler(node)
 
-    def _excepthandler(self, node):
+    def visit_excepthandler(self, node):
         # self._handle(node, [self.semicolon_or_as_in_except])
         children = ["except"]
         if node.type:
