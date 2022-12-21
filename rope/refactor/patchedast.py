@@ -523,11 +523,7 @@ class _PatchingASTWalker:
 
     def _handle_function_def_node(self, node, is_async):
         children = []
-        try:
-            decorators = node.decorator_list
-        except AttributeError:
-            decorators = getattr(node, "decorators", [])
-        for decorator in decorators:
+        for decorator in node.decorator_list:
             children.extend(("@", decorator))
         children.extend(["async", "def"] if is_async else ["def"])
         children.append(node.name)
