@@ -629,7 +629,7 @@ class _PatchingASTWalker:
         self._handle(node, ["lambda", node.args, ":", node.body])
 
     def _List(self, node):
-        self._handle(node, ["["] + self._child_nodes(node.elts, ",") + ["]"])
+        self._handle(node, ["[", *self._child_nodes(node.elts, ","), "]"])
 
     def _ListComp(self, node):
         children = ["[", node.elt, *node.generators, "]"]
@@ -637,7 +637,7 @@ class _PatchingASTWalker:
 
     def _Set(self, node):
         if node.elts:
-            self._handle(node, ["{"] + self._child_nodes(node.elts, ",") + ["}"])
+            self._handle(node, ["{", *self._child_nodes(node.elts, ","), "}"])
             return
         # Python doesn't have empty set literals
         warnings.warn(
