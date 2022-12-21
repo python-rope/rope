@@ -194,9 +194,13 @@ def same_pyname(expected, pyname):
         return False
     if expected == pyname:
         return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and type(
-        pyname
-    ) not in (pynames.ImportedModule, pynames.ImportedName):
+    if not isinstance(
+        expected,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ) and not isinstance(
+        pyname,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ):
         return False
     return (
         expected.get_definition_location() == pyname.get_definition_location()
