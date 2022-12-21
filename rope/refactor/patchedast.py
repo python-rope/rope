@@ -582,9 +582,8 @@ class _PatchingASTWalker:
 
     def _comprehension(self, node):
         children = ["for", node.target, "in", node.iter]
-        if node.ifs:
-            for if_ in node.ifs:
-                children.extend(["if", if_])
+        for if_ in node.ifs:
+            children.extend(["if", if_])
         self._handle(node, children)
 
     def _Global(self, node):
