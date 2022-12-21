@@ -9,7 +9,7 @@ from rope.base import ast, codeanalyze, exceptions
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
- 
+
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
 
@@ -144,12 +144,13 @@ class _PatchingASTWalker:
                     region = self.source.consume_exec_close_paren_or_space()
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
-                elif hasattr(ast, "JoinedStr") and isinstance(
+                else:
+                    if hasattr(ast, "JoinedStr") and isinstance(
                         node, (ast.JoinedStr, ast.FormattedValue)
                     ):
-                    region = self.source.consume_joined_string(child)
-                else:
-                    region = self.source.consume(child)
+                        region = self.source.consume_joined_string(child)
+                    else:
+                        region = self.source.consume(child)
                 child = self.source[region[0] : region[1]]
                 token_start = region[0]
             if not first_token:
@@ -301,7 +302,8 @@ class _PatchingASTWalker:
     def _Assert(self, node):
         children = ["assert", node.test]
         if node.msg:
-            children.extend((",", node.msg))
+            children.append(",")
+            children.append(node.msg)
         self._handle(node, children)
 
     def _Assign(self, node):
@@ -315,7 +317,8 @@ class _PatchingASTWalker:
     def _AnnAssign(self, node):
         children = [node.target, ":", node.annotation]
         if node.value is not None:
-            children.extend(("=", node.value))
+            children.append("=")
+            children.append(node.value)
         self._handle(node, children)
 
     def _Repr(self, node):
@@ -350,14 +353,19 @@ class _PatchingASTWalker:
                 children.extend(("@", decorator))
         children.extend(["class", node.name])
         if node.bases:
-            children.extend(["(", *self._child_nodes(node.bases, ","), ")"])
-        children.extend([":", *node.body])
+            children.append("(")
+            children.extend(self._child_nodes(node.bases, ","))
+            children.append(")")
+        children.append(":")
+        children.extend(node.body)
         self._handle(node, children)
 
     def _Compare(self, node):
-        children = [node.left]
+        children = []
+        children.append(node.left)
         for op, expr in zip(node.ops, node.comparators):
-            children.extend([*self._get_op(op), expr])
+            children.extend(self._get_op(op))
+            children.append(expr)
         self._handle(node, children)
 
     def _Delete(self, node):
@@ -427,7 +435,9 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _FormattedValue(self, node):
-        children = ["{", node.value]
+        children = []
+        children.append("{")
+        children.append(node.value)
         if node.format_spec:
             children.append(":")
             for val in node.format_spec.values:
@@ -442,7 +452,8 @@ class _PatchingASTWalker:
         self._handle(node, ["continue"])
 
     def _Dict(self, node):
-        children = ["{"]
+        children = []
+        children.append("{")
         if node.keys:
             for index, (key, value) in enumerate(zip(node.keys, node.values)):
                 if key is None:
@@ -514,15 +525,18 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _handle_function_def_node(self, node, is_async):
+        children = []
         try:
             decorators = node.decorator_list
         except AttributeError:
-            decorators = getattr(node, "decorators", None)
-        children = []
+            decorators = getattr(node, "decorators", [])
         for decorator in decorators:
             children.extend(("@", decorator))
-        children.extend(["async", "def"]) if is_async else children.append("def")
-        children.extend([*[node.name, "(", node.args, ")", ":"], *node.body])
+        children.extend(["async", "def"] if is_async else ["def"])
+        children.append(node.name)
+        children.extend(["(", node.args, ")"])
+        children.append(":")
+        children.extend(node.body)
         self._handle(node, children)
 
     def _FunctionDef(self, node):
@@ -555,8 +569,8 @@ class _PatchingASTWalker:
         else:
             children.append(arg)
         if default is not None:
-            children.extend(["=", default])
-
+            children.append("=")
+            children.append(default)
 
     def _add_tuple_parameter(self, children, arg):
         children.append("(")
@@ -577,7 +591,7 @@ class _PatchingASTWalker:
         children = ["for", node.target, "in", node.iter]
         if node.ifs:
             for if_ in node.ifs:
-                children.extend(("if", if_))
+                children.extend(["if", if_])
         self._handle(node, children)
 
     def _Global(self, node):
@@ -613,7 +627,10 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _keyword(self, node):
-        children = [node.value] if node.arg is None else [node.arg, "=", node.value]
+        if node.arg is None:
+            children = [node.value]
+        else:
+            children = [node.arg, "=", node.value]
         self._handle(node, children)
 
     def _Lambda(self, node):
@@ -707,7 +724,8 @@ class _PatchingASTWalker:
         if node.upper:
             children.append(node.upper)
         if node.step:
-            children.extend((":", node.step))
+            children.append(":")
+            children.append(node.step)
         self._handle(node, children)
 
     def _TryFinally(self, node):
@@ -755,7 +773,8 @@ class _PatchingASTWalker:
         if node.type:
             children.append(node.type)
         if node.name:
-            children.extend((self.semicolon_or_as_in_except, node.name))
+            children.append(self.semicolon_or_as_in_except)
+            children.append(node.name)
         children.append(":")
         children.extend(node.body)
 
@@ -841,17 +860,21 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _MatchClass(self, node):
-        children = [node.cls, "("]
-        children.extend(self._child_nodes(node.patterns, ","))
-        children.extend(self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)))
-        children.append(")")
+        children = [
+            node.cls,
+            "(",
+            *self._child_nodes(node.patterns, ","),
+            *self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)),
+            ")",
+        ]
         self._handle(node, children)
 
     def _MatchValue(self, node):
         self._handle(node, [node.value])
 
     def _MatchMapping(self, node):
-        children = ["{"]
+        children = []
+        children.append("{")
         for index, (key, value) in enumerate(zip(node.keys, node.patterns)):
             children.extend([key, ":", value])
             if index < len(node.keys) - 1:
