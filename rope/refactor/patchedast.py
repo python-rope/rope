@@ -639,17 +639,6 @@ class _PatchingASTWalker:
     def _Pass(self, node):
         self._handle(node, ["pass"])
 
-    def _Print(self, node):
-        children = ["print"]
-        if node.dest:
-            children.extend([">>", node.dest])
-            if node.values:
-                children.append(",")
-        children.extend(self._child_nodes(node.values, ","))
-        if not node.nl:
-            children.append(",")
-        self._handle(node, children)
-
     def _Raise(self, node):
         children = ["raise"]
         if node.exc:

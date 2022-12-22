@@ -955,24 +955,6 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("BoolOp", ["UnaryOp", " ", "or", " ", NameConstant])
 
     @testutils.only_for_versions_lower("3")
-    def test_print_node(self):
-        source = "print >>out, 1,\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Print", 0, len(source) - 1)
-        checker.check_children(
-            "Print", ["print", " ", ">>", "", "Name", "", ",", " ", "Num", "", ","]
-        )
-
-    @testutils.only_for_versions_lower("3")
-    def test_printnl_node(self):
-        source = "print 1\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Print", 0, len(source) - 1)
-        checker.check_children("Print", ["print", " ", "Num"])
-
-    @testutils.only_for_versions_lower("3")
     def test_raise_node_for_python2(self):
         source = "raise x, y, z\n"
         ast_frag = patchedast.get_patched_ast(source, True)
