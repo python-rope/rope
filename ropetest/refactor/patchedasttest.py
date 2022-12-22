@@ -1,5 +1,6 @@
-import unittest
+import itertools
 import sys
+import unittest
 from textwrap import dedent
 
 from rope.base import ast
@@ -37,6 +38,19 @@ class PatchedASTTest(unittest.TestCase):
             "\n        ",
             "Expr",
         ])
+
+    def test_operator_support_completeness(self):
+        ast_ops = {
+            n.__name__
+            for n in itertools.chain(
+                ast.boolop.__subclasses__(),
+                ast.cmpop.__subclasses__(),
+                ast.operator.__subclasses__(),
+                ast.unaryop.__subclasses__(),
+            )
+        }
+        supported_ops = set(patchedast._PatchingASTWalker._operators)
+        assert ast_ops == supported_ops
 
     def test_bytes_string(self):
         source = '1 + b"("\n'
