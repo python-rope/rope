@@ -97,6 +97,3 @@ This program is under the terms of LGPL v3+ (GNU Lesser General Public License).
 Have a look at `COPYING`_ for more information.
 
 .. _`COPYING`: COPYING
-
-
-
