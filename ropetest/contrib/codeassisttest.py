@@ -1192,7 +1192,8 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code2)
         for expected in ("open",):
             self.assert_completion_in_result(
-                expected, "builtin", result, type="function")
+                expected, "builtin", result, type="function"
+            )
 
     def test_attribute_function_completion_proposal(self):
         code = dedent("""\
