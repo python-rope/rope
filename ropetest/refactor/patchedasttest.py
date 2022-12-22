@@ -94,13 +94,14 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("Num", start, start + 3)
 
     def test_octal_integer_literals_and_region(self):
-        source = "a = -0125e1\n"
+        source = "a = -0o1251\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        start = source.index("-0125e1") + 1
+        start = source.index("-0o1251") + 1
         end = start + 6
         # Python 3 parses as UnaryOp(op=USub(), operand=Num(n=10))
         checker.check_region("Num", start, end)
+        checker.check_children("Num", ["0o1251"])
 
     def test_integer_literals_and_sorted_children(self):
         source = "a = 10\n"
