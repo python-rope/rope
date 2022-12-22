@@ -4,6 +4,7 @@
 - #606 Deprecate compress_objectdb and compress_history
 - #607 Remove importing from legacy files with `.pickle` suffix
 - #625 Remove support for deprecated ast nodes
+- #616, #621 Remove `file` builtins
 
 # Release 1.6.0
 
