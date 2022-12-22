@@ -11,7 +11,7 @@ Welcome to rope's documentation!
    :caption: Contents:
 
    overview
-   rope 
+   rope
    library
    configuration
    contributing

@@ -15,7 +15,7 @@
 .. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
    :target: https://badge.fury.io/py/rope
    :alt: Latest version
-   
+
 .. |Download count badge| image:: https://img.shields.io/pypi/dm/rope.svg
    :alt: Download count
 
@@ -97,6 +97,3 @@ This program is under the terms of LGPL v3+ (GNU Lesser General Public License).
 Have a look at `COPYING`_ for more information.
 
 .. _`COPYING`: COPYING
-
-   
-   

@@ -87,7 +87,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 Also special thank you to rope's early and pre-Github users and contributors,
-while we hadn't been able to track all of them in all-contributors format, it 
+while we hadn't been able to track all of them in all-contributors format, it
 doesn't make their contributions less important:
 
 * Alexander Solovyov <piranha@piranha.org.ua>

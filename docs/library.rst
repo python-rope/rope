@@ -865,7 +865,7 @@ AutoImport can search for a name from both modules and statements you can import
   autoimport.close()
   project.close()
 
-It provides two new search methods: 
+It provides two new search methods:
  -  search_full() - returns a list of mostly unsorted tuples. This has itemkind and source information.
  -  search() - simpler wrapper around search_full with a basic sorting algorithm
 
