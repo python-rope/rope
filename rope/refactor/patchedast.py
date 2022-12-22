@@ -126,9 +126,6 @@ class _PatchingASTWalker:
                     region = self.source.consume_number()
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
-                elif child == "!=":
-                    # INFO: This has been added to handle deprecated ``<>``
-                    region = self.source.consume_not_equal()
                 elif child == self.semicolon_or_as_in_except:
                     # INFO: This has been added to handle deprecated
                     # semicolon in except
@@ -925,12 +922,6 @@ class _Source:
     def consume_empty_tuple(self):
         return self._consume_pattern(re.compile(r"\(\s*\)"))
 
-    def consume_not_equal(self):
-        if _Source._not_equals_pattern is None:
-            _Source._not_equals_pattern = re.compile(r"<>|!=")
-        repattern = _Source._not_equals_pattern
-        return self._consume_pattern(repattern)
-
     def consume_except_as_or_semicolon(self):
         repattern = re.compile(r"as|,")
         return self._consume_pattern(repattern)
@@ -1019,4 +1010,3 @@ class _Source:
 
     _string_pattern = None
     _number_pattern = None
-    _not_equals_pattern = None

@@ -1272,13 +1272,6 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("Module", ["", "Expr", "\n", "Expr", "\n"])
 
-    @testutils.only_for_versions_lower("3")
-    def test_how_to_handle_old_not_equals(self):
-        source = "1 <> 2\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_children("Compare", ["Num", " ", "<>", " ", "Num"])
-
     def test_semicolon(self):
         source = "1;\n"
         patchedast.get_patched_ast(source, True)
