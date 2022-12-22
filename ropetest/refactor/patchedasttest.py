@@ -369,14 +369,6 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("AugAssign", 0, len(source) - 1)
         checker.check_children("AugAssign", ["Name", " ", "+", "", "=", " ", "Num"])
 
-    @testutils.only_for_versions_lower("3")
-    def test_back_quotenode(self):
-        source = "`1`\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Repr", 0, len(source) - 1)
-        checker.check_children("Repr", ["`", "", "Num", "", "`"])
-
     def test_bitand(self):
         source = "1 & 2\n"
         ast_frag = patchedast.get_patched_ast(source, True)

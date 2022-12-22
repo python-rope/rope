@@ -298,9 +298,6 @@ class _PatchingASTWalker:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Repr(self, node):
-        self._handle(node, ["`", node.value, "`"])
-
     def _BinOp(self, node):
         children = [node.left] + self._get_op(node.op) + [node.right]
         self._handle(node, children)
