@@ -348,6 +348,52 @@ consider we want to move ``attr`` to ``A``.  We can do that by renaming
 You can move the definition of ``attr`` manually.
 
 
+Moving Global Classes/Functions/Variables
+-----------------------------------------
+
+You can move global classes/function/variables to another module by using the
+Move refactoring on a global object:
+
+For instance, in this refactoring, if you are moving ``twice()`` to
+``pkg1.mod2``:
+
+.. code-block:: python
+
+    # pkg1/mod1.py
+    def twice(a):
+        return a * 2
+
+    print(twice(4))
+
+.. code-block:: python
+
+    # pkg1/mod3.py
+    import pkg1.mod1
+    pkg1.mod1.twice(13)
+
+
+When asked for the destination module, put in ``pkg1.mod2``. Rope will update
+all the imports.
+
+.. code-block:: python
+
+    # pkg1/mod1.py
+    import pkg1.mod2
+    print(pkg1.mod2.twice(4))
+
+.. code-block:: python
+
+    # pkg1/mod2.py
+    def twice(a):
+        return a * 2
+
+.. code-block:: python
+
+    # pkg1/mod3.py
+    import pkg1.mod2
+    pkg1.mod2.twice(13)
+
+
 Extract Method
 --------------
 
