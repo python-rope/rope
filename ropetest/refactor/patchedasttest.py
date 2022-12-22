@@ -79,14 +79,6 @@ class PatchedASTTest(unittest.TestCase):
         start = source.index("0x1")
         checker.check_region("Num", start, start + 3)
 
-    @testutils.only_for_versions_lower("3")
-    def test_long_literals_and_region(self):
-        source = "a = 0x1L\n"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        start = source.index("0x1L")
-        checker.check_region("Num", start, start + 4)
-
     def test_octal_integer_literals_and_region(self):
         source = "a = -0125e1\n"
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -300,14 +292,6 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("JoinedStr", ['f"', "abc", "FormattedValue", "", '"'])
         checker.check_children("FormattedValue", ["{", "", "BinOp", "", "}"])
-
-    @testutils.only_for_versions_lower("3")
-    def test_long_integer_literals(self):
-        source = "0x1L + a"
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_children("BinOp", ["Num", " ", "+", " ", "Name"])
-        checker.check_children("Num", ["0x1L"])
 
     def test_complex_number_literals(self):
         source = "1.0e2j + a"
