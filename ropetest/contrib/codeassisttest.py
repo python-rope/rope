@@ -1154,7 +1154,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("GlobalClass", "global", result, type="class")
 
     def test_builtin_class_completion_proposal(self):
-        for varname in ("object", "dict", "file"):
+        for varname in ("object", "dict"):
             result = self._assist(varname[0])
             self.assert_completion_in_result(varname, "builtin", result, type="class")
 
@@ -1185,6 +1185,12 @@ class CodeAssistTest(unittest.TestCase):
         code = "a"
         result = self._assist(code)
         for expected in ("all", "any", "abs"):
+            self.assert_completion_in_result(
+                expected, "builtin", result, type="function"
+            )
+        code2 = "o"
+        result = self._assist(code2)
+        for expected in ("open",):
             self.assert_completion_in_result(
                 expected, "builtin", result, type="function"
             )
