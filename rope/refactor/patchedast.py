@@ -641,6 +641,7 @@ class _PatchingASTWalker:
         if node.exc:
             children.append(node.exc)
         if node.cause:
+            children.append("from")
             children.append(node.cause)
         self._handle(node, children)
 

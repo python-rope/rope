@@ -946,24 +946,26 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("Expr", ["BoolOp"])
         checker.check_children("BoolOp", ["UnaryOp", " ", "or", " ", NameConstant])
 
-    @testutils.only_for_versions_lower("3")
-    def test_raise_node_for_python2(self):
-        source = "raise x, y, z\n"
+    def test_raise_node_bare(self):
+        source = "raise\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("Raise", 0, len(source) - 1)
-        checker.check_children(
-            "Raise", ["raise", " ", "Name", "", ",", " ", "Name", "", ",", " ", "Name"]
-        )
+        checker.check_children("Raise", ["raise"])
 
-    # @#testutils.only_for('3')
-    @unittest.skipIf(sys.version < "3", "This is wrong")
     def test_raise_node_for_python3(self):
         source = "raise x(y)\n"
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("Raise", 0, len(source) - 1)
         checker.check_children("Raise", ["raise", " ", "Call"])
+
+    def test_raise_node_for_python3_with_cause(self):
+        source = "raise x(y) from e\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region("Raise", 0, len(source) - 1)
+        checker.check_children("Raise", ["raise", " ", "Call", " ", "from", " ", "Name"])
 
     def test_return_node(self):
         source = dedent("""\
