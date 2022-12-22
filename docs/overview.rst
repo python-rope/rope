@@ -43,7 +43,7 @@ Rope is a library that is used in many IDE and Text Editors to perform
 refactoring on Python code. This page documents the details of the refactoring
 operations but you would need consult the documentation for your IDE/Text
 Editor client integration for the specific key bindings that are used by
-those IDE/Text Editors. 
+those IDE/Text Editors.
 
 Refactorings
 ============
@@ -425,7 +425,7 @@ Extracting ``2 * 3`` will result in:
 Extract Regular Method into staticmethod/classmethod
 ----------------------------------------------------
 
-If you prefix the extracted method name with `@` or `$`, the generated 
+If you prefix the extracted method name with `@` or `$`, the generated
 method will be created as a `classmethod` and `staticmethod` respectively.
 For instance in:
 
@@ -436,7 +436,7 @@ For instance in:
       def f(self, a):
           b = a * 2
 
-if you select ``a * 2`` for method extraction and name the method 
+if you select ``a * 2`` for method extraction and name the method
 ``@new_method``, you'll get:
 
 .. code-block:: python
@@ -480,7 +480,7 @@ if you extract ``a * 2`` as a method you'll get:
       @staticmethod
       def twice(a):
           return a * 2
-          
+
 
 Inline Method Refactoring
 -------------------------
@@ -879,7 +879,7 @@ will match (for instance, if ``exact`` is specified , ``${name}``
 matches ``name`` and ``x.name`` but not ``var`` nor ``(1 + 2)`` while
 a normal ``${name}`` can match all of them).
 
-For performing this refactoring using rope library see 
+For performing this refactoring using rope library see
 :ref:`library:Restructuring`.
 
 
@@ -930,7 +930,7 @@ Restructurings come to rescue::
   goal:
    ${inst}.f1(${p1})
    ${inst}.f2(${p2})
-  
+
   args:
    inst: type=mod.A
 

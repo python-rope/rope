@@ -15,7 +15,7 @@
 .. |Latest version badge| image:: https://badge.fury.io/py/rope.svg
    :target: https://badge.fury.io/py/rope
    :alt: Latest version
-   
+
 .. |Download count badge| image:: https://img.shields.io/pypi/dm/rope.svg
    :alt: Download count
 
@@ -98,5 +98,5 @@ Have a look at `COPYING`_ for more information.
 
 .. _`COPYING`: COPYING
 
-   
-   
+
+

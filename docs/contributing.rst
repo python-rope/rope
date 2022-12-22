@@ -43,7 +43,7 @@ Here is a list of suggestions.
 Issues
 ------
 
-If this is your first time contributing in rope and you don't know where to start, 
+If this is your first time contributing in rope and you don't know where to start,
 tickets labeled `good first issue`_ is a good place start.
 
 The `unresolved issues list`_ in Github is the latest todo list.
@@ -78,12 +78,12 @@ Rope package structure:
 * `rope.refactor`: refactorings and tools used in them
 * `rope.contrib`: IDE helpers
 
-Have a look at ``__init__.py`` of these packages or 
+Have a look at ``__init__.py`` of these packages or
 :ref:`library:Using Rope As A Library` for more information.
 
-There's also some really good `tour of Rope's codebase`_ 
-by Austin Bingham (author of `Traad`_). 
-The first 10 minutes of the video talked about Rope in general, the rest are 
+There's also some really good `tour of Rope's codebase`_
+by Austin Bingham (author of `Traad`_).
+The first 10 minutes of the video talked about Rope in general, the rest are
 more specific to Traad.
 
 .. _tour of Rope's codebase: https://youtu.be/NvV5OrVk24c
@@ -128,8 +128,8 @@ Many of rope's tests are still written using
 ``unittest.TestCase`` style, but running the test suite using
 vanilla ``unittest`` is no longer supported.
 
-Make sure to have complete test suite passing and 
-add new tests for the changes you are providing with each new 
+Make sure to have complete test suite passing and
+add new tests for the changes you are providing with each new
 submission.
 
 All required packages for development could be installed with::
