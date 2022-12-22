@@ -318,6 +318,16 @@ class MoveGlobal:
         resources=None,
         task_handle=taskhandle.NullTaskHandle(),
     ):
+        """Return the changes needed for this refactoring
+
+        Parameters:
+
+        - `dest`: the Resource or dotted moddule name of the move destination
+        - `resources` can be a list of `rope.base.resources.File` to
+          apply this refactoring on.  If `None`, the restructuring
+          will be applied to all python files.
+
+        """
         if isinstance(dest, str):
             dest = self.project.find_module(dest)
         if resources is None:
