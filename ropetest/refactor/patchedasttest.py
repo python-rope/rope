@@ -1199,25 +1199,6 @@ class PatchedASTTest(unittest.TestCase):
         expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
-    @testutils.only_for_versions_lower("3")
-    def test_try_except_node(self):
-        source = dedent("""\
-            try:
-                pass
-            except Exception, e:
-                pass
-        """)
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_children(
-            "TryExcept",
-            ["try", "", ":", "\n    ", "Pass", "\n", ("excepthandler", "ExceptHandler")],
-        )
-        checker.check_children(
-            ("excepthandler", "ExceptHandler"),
-            ["except", " ", "Name", "", ",", " ", "Name", "", ":", "\n    ", "Pass"],
-        )
-
     def test_try_except_node__with_as_syntax(self):
         source = dedent("""\
             try:

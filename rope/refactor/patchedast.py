@@ -72,7 +72,6 @@ class _PatchingASTWalker:
 
     Number = object()
     String = object()
-    semicolon_or_as_in_except = object()
     exec_open_paren_or_space = object()
     exec_close_paren_or_space = object()
     exec_in_or_comma = object()
@@ -126,10 +125,6 @@ class _PatchingASTWalker:
                     region = self.source.consume_number()
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
-                elif child == self.semicolon_or_as_in_except:
-                    # INFO: This has been added to handle deprecated
-                    # semicolon in except
-                    region = self.source.consume_except_as_or_semicolon()
                 elif child == self.exec_open_paren_or_space:
                     # These three cases handle the differences between
                     # the deprecated exec statement and the exec
@@ -757,12 +752,11 @@ class _PatchingASTWalker:
         self._excepthandler(node)
 
     def _excepthandler(self, node):
-        # self._handle(node, [self.semicolon_or_as_in_except])
         children = ["except"]
         if node.type:
             children.append(node.type)
         if node.name:
-            children.append(self.semicolon_or_as_in_except)
+            children.append("as")
             children.append(node.name)
         children.append(":")
         children.extend(node.body)
@@ -921,10 +915,6 @@ class _Source:
 
     def consume_empty_tuple(self):
         return self._consume_pattern(re.compile(r"\(\s*\)"))
-
-    def consume_except_as_or_semicolon(self):
-        repattern = re.compile(r"as|,")
-        return self._consume_pattern(repattern)
 
     def consume_exec_open_paren_or_space(self):
         repattern = re.compile(r"\(|")
