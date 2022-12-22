@@ -72,10 +72,6 @@ class _PatchingASTWalker:
 
     Number = object()
     String = object()
-    semicolon_or_as_in_except = object()
-    exec_open_paren_or_space = object()
-    exec_close_paren_or_space = object()
-    exec_in_or_comma = object()
     with_or_comma_context_manager = object()
     empty_tuple = object()
 
@@ -126,22 +122,6 @@ class _PatchingASTWalker:
                     region = self.source.consume_number()
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
-                elif child == "!=":
-                    # INFO: This has been added to handle deprecated ``<>``
-                    region = self.source.consume_not_equal()
-                elif child == self.semicolon_or_as_in_except:
-                    # INFO: This has been added to handle deprecated
-                    # semicolon in except
-                    region = self.source.consume_except_as_or_semicolon()
-                elif child == self.exec_open_paren_or_space:
-                    # These three cases handle the differences between
-                    # the deprecated exec statement and the exec
-                    # function.
-                    region = self.source.consume_exec_open_paren_or_space()
-                elif child == self.exec_in_or_comma:
-                    region = self.source.consume_exec_in_or_comma()
-                elif child == self.exec_close_paren_or_space:
-                    region = self.source.consume_exec_close_paren_or_space()
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
                 elif isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
@@ -318,9 +298,6 @@ class _PatchingASTWalker:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Repr(self, node):
-        self._handle(node, ["`", node.value, "`"])
-
     def _BinOp(self, node):
         children = [node.left] + self._get_op(node.op) + [node.right]
         self._handle(node, children)
@@ -471,15 +448,6 @@ class _PatchingASTWalker:
 
     def _NamedExpr(self, node):
         children = [node.target, ":=", node.value]
-        self._handle(node, children)
-
-    def _Exec(self, node):
-        children = ["exec", self.exec_open_paren_or_space, node.body]
-        if node.globals:
-            children.extend([self.exec_in_or_comma, node.globals])
-        if node.locals:
-            children.extend([",", node.locals])
-        children.append(self.exec_close_paren_or_space)
         self._handle(node, children)
 
     def _ExtSlice(self, node):
@@ -668,22 +636,12 @@ class _PatchingASTWalker:
     def _Pass(self, node):
         self._handle(node, ["pass"])
 
-    def _Print(self, node):
-        children = ["print"]
-        if node.dest:
-            children.extend([">>", node.dest])
-            if node.values:
-                children.append(",")
-        children.extend(self._child_nodes(node.values, ","))
-        if not node.nl:
-            children.append(",")
-        self._handle(node, children)
-
     def _Raise(self, node):
         children = ["raise"]
         if node.exc:
             children.append(node.exc)
         if node.cause:
+            children.append("from")
             children.append(node.cause)
         self._handle(node, children)
 
@@ -691,15 +649,6 @@ class _PatchingASTWalker:
         children = ["return"]
         if node.value:
             children.append(node.value)
-        self._handle(node, children)
-
-    def _Sliceobj(self, node):
-        children = []
-        for index, slice in enumerate(node.nodes):
-            if index > 0:
-                children.append(":")
-            if slice:
-                children.append(slice)
         self._handle(node, children)
 
     def _Index(self, node):
@@ -760,12 +709,11 @@ class _PatchingASTWalker:
         self._excepthandler(node)
 
     def _excepthandler(self, node):
-        # self._handle(node, [self.semicolon_or_as_in_except])
         children = ["except"]
         if node.type:
             children.append(node.type)
         if node.name:
-            children.append(self.semicolon_or_as_in_except)
+            children.append("as")
             children.append(node.name)
         children.append(":")
         children.extend(node.body)
@@ -925,28 +873,6 @@ class _Source:
     def consume_empty_tuple(self):
         return self._consume_pattern(re.compile(r"\(\s*\)"))
 
-    def consume_not_equal(self):
-        if _Source._not_equals_pattern is None:
-            _Source._not_equals_pattern = re.compile(r"<>|!=")
-        repattern = _Source._not_equals_pattern
-        return self._consume_pattern(repattern)
-
-    def consume_except_as_or_semicolon(self):
-        repattern = re.compile(r"as|,")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_open_paren_or_space(self):
-        repattern = re.compile(r"\(|")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_in_or_comma(self):
-        repattern = re.compile(r"in|,")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_close_paren_or_space(self):
-        repattern = re.compile(r"\)|")
-        return self._consume_pattern(repattern)
-
     def consume_with_or_comma_context_manager(self):
         repattern = re.compile(r"with|,")
         return self._consume_pattern(repattern)
@@ -1014,9 +940,8 @@ class _Source:
 
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
-        integer = r"\-?(0x[\da-fA-F]+|\d+)[lL]?"
+        integer = r"\-?(0x[\da-fA-F]+|\d+)"
         return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
 
     _string_pattern = None
     _number_pattern = None
-    _not_equals_pattern = None
