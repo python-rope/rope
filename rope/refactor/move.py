@@ -4,6 +4,9 @@
 based on inputs.
 
 """
+from __future__ import annotations
+
+import typing
 from typing import Union
 
 from rope.base import (
@@ -13,7 +16,6 @@ from rope.base import (
     libutils,
     pynames,
     pyobjects,
-    resources,
     taskhandle,
     worder,
 )
@@ -22,6 +24,13 @@ from rope.refactor import importutils, rename, occurrences, sourceutils, functio
 from rope.refactor.importutils.module_imports import (
     get_first_decorator_or_function_start_line,
 )
+
+
+if typing.TYPE_CHECKING:
+    from rope.base import (
+        project,
+        resources,
+    )
 
 
 def create_move(project, resource, offset=None):
