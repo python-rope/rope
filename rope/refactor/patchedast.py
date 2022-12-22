@@ -651,15 +651,6 @@ class _PatchingASTWalker:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Sliceobj(self, node):
-        children = []
-        for index, slice in enumerate(node.nodes):
-            if index > 0:
-                children.append(":")
-            if slice:
-                children.append(slice)
-        self._handle(node, children)
-
     def _Index(self, node):
         self._handle(node, [node.value])
 
