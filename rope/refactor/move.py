@@ -4,6 +4,11 @@
 based on inputs.
 
 """
+from __future__ import annotations
+
+import typing
+from typing import Union
+
 from rope.base import (
     codeanalyze,
     evaluate,
@@ -19,6 +24,13 @@ from rope.refactor import importutils, rename, occurrences, sourceutils, functio
 from rope.refactor.importutils.module_imports import (
     get_first_decorator_or_function_start_line,
 )
+
+
+if typing.TYPE_CHECKING:
+    from rope.base import (
+        project,
+        resources,
+    )
 
 
 def create_move(project, resource, offset=None):
@@ -231,6 +243,8 @@ class MoveMethod:
 class MoveGlobal:
     """For moving global function and classes"""
 
+    project: project.Project
+
     def __init__(self, project, resource, offset):
         self.project = project
         this_pymodule = self.project.get_pymodule(resource)
@@ -299,8 +313,23 @@ class MoveGlobal:
         return isinstance(pyname, pynames.AssignedName)
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()
+        self,
+        dest: Union[None, str, resources.Resource],
+        resources=None,
+        task_handle=taskhandle.NullTaskHandle(),
     ):
+        """Return the changes needed for this refactoring
+
+        Parameters:
+
+        - `dest`: the Resource or dotted moddule name of the move destination
+        - `resources` can be a list of `rope.base.resources.File` to
+          apply this refactoring on.  If `None`, the restructuring
+          will be applied to all python files.
+
+        """
+        if isinstance(dest, str):
+            dest = self.project.find_module(dest)
         if resources is None:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():

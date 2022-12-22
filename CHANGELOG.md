@@ -6,6 +6,7 @@
 - #625 Remove support for deprecated ast nodes
 - #616, #621 Remove `file` builtins
 - #626 Install pre-commit hooks on rope repository
+- #548 Implement MoveGlobal using string as destination module names
 
 # Release 1.6.0
 

@@ -1,6 +1,7 @@
 import os
 import sys
 import warnings
+from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
 from rope.base import (
@@ -141,7 +142,7 @@ class _Project:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None):
+    def find_module(self, modname, folder=None) -> Optional[File]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
