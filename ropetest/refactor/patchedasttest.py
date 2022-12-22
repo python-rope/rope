@@ -621,36 +621,6 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("BinOp", 0, len(source) - 1)
         checker.check_children("BinOp", ["Num", " ", "/", " ", "Num"])
 
-    @testutils.only_for_versions_lower("3")
-    def test_simple_exec_node(self):
-        source = 'exec ""\n'
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Exec", 0, len(source) - 1)
-        checker.check_children("Exec", ["exec", "", "", " ", "Str", "", ""])
-
-    @testutils.only_for_versions_lower("3")
-    def test_exec_node(self):
-        source = 'exec "" in locals(), globals()\n'
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Exec", 0, len(source) - 1)
-        checker.check_children(
-            "Exec",
-            ["exec", "", "", " ", "Str", " ", "in", " ", "Call", "", ",", " ", "Call", "", ""],
-        )
-
-    @testutils.only_for_versions_lower("3")
-    def test_exec_node_with_parens(self):
-        source = 'exec("", locals(), globals())\n'
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Exec", 0, len(source) - 1)
-        checker.check_children(
-            "Exec",
-            ["exec", "", "(", "", "Str", "", ",", " ", "Call", "", ",", " ", "Call", "", ")"],
-        )
-
     def test_for_node(self):
         source = dedent("""\
             for i in range(1):
@@ -1199,7 +1169,7 @@ class PatchedASTTest(unittest.TestCase):
         expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
-    def test_try_except_node__with_as_syntax(self):
+    def test_try_except_node(self):
         source = dedent("""\
             try:
                 pass
