@@ -1,8 +1,8 @@
 import os.path
-import shutil
+import pathlib
+import tempfile
+import unittest
 from textwrap import dedent
-
-import pytest
 
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
@@ -10,9 +10,6 @@ from rope.base.libutils import path_to_resource
 from rope.base.project import Project, NoProject, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
-
-
-import unittest
 
 
 class ProjectTest(unittest.TestCase):
@@ -71,22 +68,23 @@ class ProjectTest(unittest.TestCase):
             self.project.root.create_file(self.sample_file)
 
     def test_making_root_folder_if_it_does_not_exist(self):
-        project = Project("sampleproject2")
-        try:
-            self.assertTrue(
-                os.path.exists("sampleproject2") and os.path.isdir("sampleproject2")
-            )
-        finally:
-            testutils.remove_project(project)
+        with tempfile.TemporaryDirectory(dir=testutils.RUN_TMP_DIR) as tmpdir:
+            project_root = pathlib.Path(tmpdir) / "sampleproject2"
+            assert not project_root.exists()
+
+            project = Project(project_root)
+
+            assert project_root.exists()
+            assert project_root.is_dir()
 
     def test_failure_when_project_root_exists_and_is_a_file(self):
-        project_root = "sampleproject2"
-        try:
-            open(project_root, "w").close()
+        with tempfile.TemporaryDirectory(dir=testutils.RUN_TMP_DIR) as tmpdir:
+            project_root = pathlib.Path(tmpdir) / "sampleproject2"
+            project_root.touch()
+            assert project_root.exists() and project_root.is_file()
+
             with self.assertRaises(RopeError):
                 Project(project_root)
-        finally:
-            testutils.remove_recursively(project_root)
 
     def test_creating_folders(self):
         folderName = "SampleFolder"
@@ -226,17 +224,15 @@ class ProjectTest(unittest.TestCase):
         )
 
     def test_does_not_fail_for_permission_denied(self):
-        bad_dir = os.path.join(self.sample_folder, "bad_dir")
-        os.makedirs(bad_dir)
-        self.addCleanup(shutil.rmtree, bad_dir)
-        os.chmod(bad_dir, 0o000)
-        try:
-            parent = self.project.get_resource(self.sample_folder)
+        with tempfile.TemporaryDirectory(suffix="bad_dir") as bad_dir:
+            os.chmod(bad_dir, 0o000)
+            try:
+                parent = self.project.get_resource(self.sample_folder)
 
-            parent.get_children()
+                parent.get_children()
 
-        finally:
-            os.chmod(bad_dir, 0o755)
+            finally:
+                os.chmod(bad_dir, 0o755)
 
     def test_getting_files(self):
         files = self.project.root.get_files()
@@ -833,7 +829,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.project.validate()
         self.assertEqual(1, len(self.project.get_files()))
 
-    def test_clear_observered_resources_for_filtered_observers(self):
+    def test_clear_observed_resources_for_filtered_observers(self):
         sample_file = self.project.root.create_file("myfile.txt")
         sample_observer = _SampleObserver()
         filtered = FilteredResourceObserver(sample_observer)
@@ -1009,9 +1005,9 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue(self.project.ropefolder is None)
 
     def test_getting_project_rope_folder(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         self.assertTrue(self.project.ropefolder.exists())
-        self.assertTrue(".ropeproject", self.project.ropefolder.path)
+        self.assertEqual(".ropeproject", self.project.ropefolder.path)
 
     def test_setting_ignored_resources(self):
         self.project = testutils.sample_project(ignored_resources=["myfile.txt"])
@@ -1063,7 +1059,7 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(fscommands=fscommands)
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertTrue("create_file ", fscommands.log)
+        self.assertEqual("create_file ", fscommands.log)
 
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
@@ -1079,7 +1075,7 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(fscommands=fscommands)
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertTrue("create_file ", fscommands.log)
+        self.assertEqual("create_file ", fscommands.log)
 
     def test_ignored_resources_and_prefixes(self):
         self.project = testutils.sample_project(ignored_resources=[".hg"])
@@ -1087,7 +1083,7 @@ class RopeFolderTest(unittest.TestCase):
         self.assertFalse(self.project.is_ignored(myfile))
 
     def test_loading_config_dot_py(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         config = self.project.get_file(".ropeproject/config.py")
         if not config.exists():
             config.create()
@@ -1098,13 +1094,13 @@ class RopeFolderTest(unittest.TestCase):
                 project.root.create_file("loaded")
         """))
         self.project.close()
-        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        self.project = Project(self.project.address)
         self.assertTrue(self.project.get_file("loaded").exists())
         myfile = self.project.get_file("myfile.txt")
         self.assertTrue(self.project.is_ignored(myfile))
 
     def test_loading_pyproject(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         config = self.project.get_file("pyproject.toml")
         if not config.exists():
             config.create()
@@ -1113,23 +1109,23 @@ class RopeFolderTest(unittest.TestCase):
             ignored_resources=["pyproject.py"]
         """))
         self.project.close()
-        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        self.project = Project(self.project.address)
         myfile = self.project.get_file("pyproject.py")
         self.assertTrue(self.project.is_ignored(myfile))
 
     def test_loading_pyproject_empty_file(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         config = self.project.get_file("pyproject.toml")
         if not config.exists():
             config.create()
         config.write("")
         self.project.close()
-        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        self.project = Project(self.project.address)
         myfile = self.project.get_file("pyproject.py")
         self.assertFalse(self.project.is_ignored(myfile))
 
     def test_loading_pyproject_no_tool_section(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         config = self.project.get_file("pyproject.toml")
         if not config.exists():
             config.create()
@@ -1138,12 +1134,12 @@ class RopeFolderTest(unittest.TestCase):
             name = 'testproject'
         """))
         self.project.close()
-        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        self.project = Project(self.project.address)
         myfile = self.project.get_file("pyproject.py")
         self.assertFalse(self.project.is_ignored(myfile))
 
     def test_loading_pyproject_no_tool_rope_section(self):
-        self.project = testutils.sample_project(ropefolder=".ropeproject")
+        self.project = testutils.sample_project()
         config = self.project.get_file("pyproject.toml")
         if not config.exists():
             config.create()
@@ -1152,7 +1148,7 @@ class RopeFolderTest(unittest.TestCase):
             name = 'testproject'
         """))
         self.project.close()
-        self.project = Project(self.project.address, ropefolder=".ropeproject")
+        self.project = Project(self.project.address)
         myfile = self.project.get_file("pyproject.py")
         self.assertFalse(self.project.is_ignored(myfile))
 

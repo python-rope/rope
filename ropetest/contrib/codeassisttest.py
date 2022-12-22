@@ -835,7 +835,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code, code.index("a_v") + 3)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_in_uncomplete_try_blocks(self):
+    def test_completing_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 a_var = 10
@@ -843,7 +843,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_in_uncomplete_try_blocks_in_functions(self):
+    def test_completing_in_incomplete_try_blocks_in_functions(self):
         code = dedent("""\
             def a_func():
                 try:
@@ -895,7 +895,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code, code.rindex("a_") + 2)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_ifs_in_uncomplete_try_blocks(self):
+    def test_completing_ifs_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 if True:
@@ -904,7 +904,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_ifs_in_uncomplete_try_blocks2(self):
+    def test_completing_ifs_in_incomplete_try_blocks2(self):
         code = dedent("""\
             try:
                 if True:
@@ -913,7 +913,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result("a_var", "global", result)
 
-    def test_completing_excepts_in_uncomplete_try_blocks(self):
+    def test_completing_excepts_in_incomplete_try_blocks(self):
         code = dedent("""\
             try:
                 pass
@@ -1154,7 +1154,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result("GlobalClass", "global", result, type="class")
 
     def test_builtin_class_completion_proposal(self):
-        for varname in ("object", "dict", "file"):
+        for varname in ("object", "dict"):
             result = self._assist(varname[0])
             self.assert_completion_in_result(varname, "builtin", result, type="class")
 
@@ -1185,6 +1185,12 @@ class CodeAssistTest(unittest.TestCase):
         code = "a"
         result = self._assist(code)
         for expected in ("all", "any", "abs"):
+            self.assert_completion_in_result(
+                expected, "builtin", result, type="function"
+            )
+        code2 = "o"
+        result = self._assist(code2)
+        for expected in ("open",):
             self.assert_completion_in_result(
                 expected, "builtin", result, type="function"
             )
@@ -1341,7 +1347,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(self.__class__, self).tearDown()
+        super().tearDown()
 
     def _assist(self, code, resource=None, **kwds):
         return code_assist(self.project, code, len(code), resource, **kwds)
@@ -1415,7 +1421,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result("sample_func", "imported", result)
         self.assert_completion_in_result("sample_var", "imported", result)
 
-    def test_from_import_star_not_imporing_underlined(self):
+    def test_from_import_star_not_importing_underlined(self):
         code = dedent("""\
             from samplemod import *
             _under""")

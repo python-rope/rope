@@ -1,11 +1,15 @@
 """This module can be used for finding similar code"""
 import re
 
-import rope.refactor.wildcards
-from rope.base import libutils
-from rope.base import codeanalyze, exceptions, ast, builtins
-from rope.refactor import patchedast, wildcards
-
+import rope.base.builtins  # Use full qualification for clarity.
+import rope.refactor.wildcards  # Use full qualification for clarity.
+from rope.base import (
+    ast,
+    codeanalyze,
+    exceptions,
+    libutils,
+)
+from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
 
@@ -62,7 +66,7 @@ class SimilarFinder:
         if isinstance(arg, (tuple, list)):
             kind = arg[0]
             arg = arg[1]
-        suspect = wildcards.Suspect(self.pymodule, node, name)
+        suspect = rope.refactor.wildcards.Suspect(self.pymodule, node, name)
         return self.wildcards[kind].matches(suspect, arg)
 
 
@@ -169,7 +173,7 @@ class _ASTMatcher:
             self.matches.append(ExpressionMatch(node, mapping))
 
     def _check_statements(self, node):
-        for child in ast.get_children(node):
+        for field, child in ast.iter_fields(node):
             if isinstance(child, (list, tuple)):
                 self.__check_stmt_list(child)
 
@@ -211,8 +215,11 @@ class _ASTMatcher:
 
     def _get_children(self, node):
         """Return not `ast.expr_context` children of `node`"""
-        children = ast.get_children(node)
-        return [child for child in children if not isinstance(child, ast.expr_context)]
+        return [
+            child
+            for field, child in ast.iter_fields(node)
+            if not isinstance(child, ast.expr_context)
+        ]
 
     def _match_stmts(self, current_stmts, mapping):
         if len(current_stmts) != len(self.pattern):
@@ -359,7 +366,9 @@ def make_pattern(code, variables):
 
 def _pydefined_to_str(pydefined):
     address = []
-    if isinstance(pydefined, (builtins.BuiltinClass, builtins.BuiltinFunction)):
+    if isinstance(
+        pydefined, (rope.base.builtins.BuiltinClass, rope.base.builtins.BuiltinFunction)
+    ):
         return "__builtins__." + pydefined.get_name()
     else:
         while pydefined.parent is not None:

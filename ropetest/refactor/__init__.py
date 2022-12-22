@@ -517,7 +517,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self._introduce_factory(mod, mod.read().index("a_class") + 1, "create")
         self.assertEqual(expected, mod.read())
 
-    def test_changing_occurrs_in_the_same_module_with_conflict_ranges(self):
+    def test_changing_occurs_in_the_same_module_with_conflict_ranges(self):
         mod = testutils.create_module(self.project, "mod")
         code = dedent("""\
             class C(object):
@@ -908,9 +908,9 @@ class LocalToFieldTest(unittest.TestCase):
                 self.mod, self.mod.read().index("var") + 1
             )
 
-    # NOTE: This situation happens alot and is normally not an error
+    # NOTE: This situation happens a lot and is normally not an error
     # @testutils.assert_raises(RefactoringError)
-    def test_not_rais_exception_when_there_is_a_field_with_the_same_name(self):
+    def test_not_raise_exception_when_there_is_a_field_with_the_same_name(self):
         code = dedent("""\
             class A(object):
                 def __init__(self):

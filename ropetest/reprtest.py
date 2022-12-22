@@ -1,10 +1,14 @@
 import pathlib
 import tempfile
+from textwrap import dedent
+from unittest.mock import MagicMock
 
 import pytest
 
 from rope.base import libutils, resources, pyobjectsdef
 from rope.base.project import Project
+from rope.contrib import findit
+from rope.refactor import occurrences
 from ropetest import testutils
 
 
@@ -13,11 +17,6 @@ def project():
     proj = testutils.sample_project()
     yield proj
     testutils.remove_project(proj)
-
-
-@pytest.fixture
-def mod(project):
-    return testutils.create_module(project, "mod")
 
 
 @pytest.fixture
@@ -127,4 +126,27 @@ def test_repr_pyobjectsdef_pycomprehension_without_associated_resource(project):
     assert isinstance(obj, pyobjectsdef.PyComprehension)
     assert repr(obj).startswith(
         '<rope.base.pyobjectsdef.PyComprehension "::<comprehension>" at 0x'
+    )
+
+
+def test_repr_findit_location(project, mod1):
+    code = dedent("""\
+        a = 10
+        b = 20
+        c = 30
+    """)
+    mod1.write(code)
+
+    occurrence = MagicMock(
+        occurrences.Occurrence,
+        resource=project.get_resource("pkg1/mod1.py"),
+        lineno=2,
+    )
+    occurrence.get_word_range.return_value = (11, 13)
+    occurrence.is_unsure.return_value = True
+
+    obj = findit.Location(occurrence=occurrence)
+
+    assert repr(obj).startswith(
+        '<rope.contrib.findit.Location "pkg1/mod1.py:2 (11-13)" at 0x'
     )

@@ -243,8 +243,8 @@ class PyDefinedObject:
         if self.visitor_class is None:
             return {}
         new_visitor = self.visitor_class(self.pycore, self)
-        for child in ast.get_child_nodes(self.ast_node):
-            ast.walk(child, new_visitor)
+        for child in ast.iter_child_nodes(self.ast_node):
+            new_visitor.visit(child)
         self.defineds = new_visitor.defineds
         return new_visitor.names
 
@@ -259,18 +259,18 @@ class PyDefinedObject:
 
 
 class PyFunction(PyDefinedObject, AbstractFunction):
-    """Only a placeholder"""
+    pass
 
 
 class PyComprehension(PyDefinedObject, PyObject):
-    """Only a placeholder"""
+    pass
 
     def get_name(self):
         return "<comprehension>"
 
 
 class PyClass(PyDefinedObject, AbstractClass):
-    """Only a placeholder"""
+    pass
 
 
 class _ConcludedData:
@@ -317,11 +317,11 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
 
 class PyModule(_PyModule):
-    """Only a placeholder"""
+    pass
 
 
 class PyPackage(_PyModule):
-    """Only a placeholder"""
+    pass
 
 
 class IsBeingInferredError(exceptions.RopeError):

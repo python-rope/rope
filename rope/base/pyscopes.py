@@ -1,7 +1,11 @@
-import rope.base.builtins
-import rope.base.codeanalyze
-import rope.base.pynames
-from rope.base import ast, exceptions, utils
+import rope.base.builtins  # Use full qualification for clarity.
+from rope.base import (
+    ast,
+    codeanalyze,
+    exceptions,
+    pynames,
+    utils,
+)
 from rope.refactor import patchedast
 
 
@@ -186,8 +190,8 @@ class ComprehensionScope(Scope):
     def _visit_comprehension(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for node in ast.get_child_nodes(self.pyobject.get_ast()):
-                ast.walk(node, new_visitor)
+            for node in ast.iter_child_nodes(self.pyobject.get_ast()):
+                new_visitor.visit(node)
             self.names = dict(self.parent.get_names())
             self.names.update(new_visitor.names)
             self.defineds = new_visitor.defineds
@@ -218,8 +222,8 @@ class FunctionScope(Scope):
     def _visit_function(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for n in ast.get_child_nodes(self.pyobject.get_ast()):
-                ast.walk(n, new_visitor)
+            for n in ast.iter_child_nodes(self.pyobject.get_ast()):
+                new_visitor.visit(n)
             self.names = new_visitor.names
             self.names.update(self.pyobject.get_parameters())
             self.returned_asts = new_visitor.returned_asts
@@ -249,10 +253,7 @@ class FunctionScope(Scope):
 
     def invalidate_data(self):
         for pyname in self.get_names().values():
-            if isinstance(
-                pyname,
-                (rope.base.pynames.AssignedName, rope.base.pynames.EvaluatedName),
-            ):
+            if isinstance(pyname, (pynames.AssignedName, pynames.EvaluatedName)):
                 pyname.invalidate()
 
 
@@ -272,7 +273,7 @@ class _HoldingScopeFinder:
         self.pymodule = pymodule
 
     def get_indents(self, lineno):
-        return rope.base.codeanalyze.count_line_indents(self.lines.get_line(lineno))
+        return codeanalyze.count_line_indents(self.lines.get_line(lineno))
 
     def _get_scope_indents(self, scope):
         return self.get_indents(scope.get_start())
@@ -328,14 +329,14 @@ class _HoldingScopeFinder:
             body_indents = self._get_scope_indents(scope) + 4
         else:
             body_indents = self._get_body_indents(scope)
-        for l in self.logical_lines.generate_starts(
+        for line_start in self.logical_lines.generate_starts(
             min(end + 1, self.lines.length()), self.lines.length() + 1
         ):
-            if not self._is_empty_line(l):
-                if self.get_indents(l) < body_indents:
+            if not self._is_empty_line(line_start):
+                if self.get_indents(line_start) < body_indents:
                     return end
                 else:
-                    end = l
+                    end = line_start
         return end
 
     @property

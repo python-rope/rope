@@ -1,5 +1,13 @@
+from __future__ import annotations
+import typing
+
 import rope.base.pyobjects
 from rope.base import exceptions, utils
+
+
+if typing.TYPE_CHECKING:
+    from typing import Union
+    from rope.base import pyobjectsdef
 
 
 class PyName:
@@ -27,7 +35,7 @@ class DefinedName(PyName):
 
 
 class AssignedName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class UnboundName(PyName):
@@ -92,11 +100,23 @@ class EvaluatedName(PyName):
 
 
 class ParameterName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class ImportedModule(PyName):
-    def __init__(self, importing_module, module_name=None, level=0, resource=None):
+    def __init__(
+        self,
+        importing_module: Union[
+            pyobjectsdef.PyModule,
+            pyobjectsdef.PyPackage,
+        ],
+        module_name=None,
+        level=0,
+        resource=None,
+    ):
+        assert (
+            module_name is not None or resource is not None
+        ), "At least one of module_name or resource must be set"
         self.importing_module = importing_module
         self.module_name = module_name
         self.level = level
@@ -114,7 +134,7 @@ class ImportedModule(PyName):
             pycore = self.importing_module.pycore
             if self.resource is not None:
                 self.pymodule.set(pycore.project.get_pymodule(self.resource))
-            elif self.module_name is not None:
+            else:
                 try:
                     if self.level == 0:
                         pymodule = pycore.project.get_module(

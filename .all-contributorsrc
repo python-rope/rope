@@ -50,10 +50,10 @@
       ]
     },
     {
-      "login": "gwelymernans",
+      "login": "bwendling",
       "name": "Bill Wendling",
       "avatar_url": "https://avatars.githubusercontent.com/u/5993918?v=4",
-      "profile": "https://github.com/gwelymernans",
+      "profile": "https://github.com/bwendling",
       "contributions": [
         "code",
         "doc"
@@ -168,7 +168,7 @@
       ]
     },
     {
-      "login": "rubendibattista",
+      "login": "rdbisme",
       "name": "Ruben Di Battista",
       "avatar_url": "https://avatars.githubusercontent.com/u/8077364?v=4",
       "profile": "http://rdb.is/",
@@ -492,10 +492,10 @@
       ]
     },
     {
-      "login": "bageljrkhanofemus",
-      "name": "Bagel Jr",
+      "login": "bagel897",
+      "name": "Ellen Agarwal",
       "avatar_url": "https://avatars.githubusercontent.com/u/57874654?v=4",
-      "profile": "https://github.com/bageljrkhanofemus",
+      "profile": "https://github.com/bagel897",
       "contributions": [
         "test",
         "code"
@@ -508,6 +508,15 @@
       "profile": "https://github.com/thomkeh",
       "contributions": [
         "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "edreamleo",
+      "name": "Edward K. Ream",
+      "avatar_url": "https://avatars.githubusercontent.com/u/592928?v=4",
+      "profile": "http://leoeditor.com/",
+      "contributions": [
         "code"
       ]
     }

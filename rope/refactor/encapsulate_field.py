@@ -1,10 +1,12 @@
-from rope.base import evaluate
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import taskhandle
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    evaluate,
+    exceptions,
+    libutils,
+    pynames,
+    taskhandle,
+    utils,
+    worder,
+)
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -105,12 +107,8 @@ class EncapsulateField:
                 class_scope.get_start()
             )
         indents = sourceutils.get_indent(self.project) * " "
-        getter = "def {}(self):\n{}return self.{}".format(getter, indents, self.name)
-        setter = "def {}(self, value):\n{}self.{} = value".format(
-            setter,
-            indents,
-            self.name,
-        )
+        getter = f"def {getter}(self):\n{indents}return self.{self.name}"
+        setter = f"def {setter}(self, value):\n{indents}self.{self.name} = value"
         new_source = sourceutils.add_methods(pymodule, class_scope, [getter, setter])
         return new_source
 

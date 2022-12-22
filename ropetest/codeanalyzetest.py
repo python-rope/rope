@@ -1,10 +1,13 @@
 from textwrap import dedent
-
 import unittest
 
 import rope.base.evaluate
-from rope.base import libutils
-from rope.base import exceptions, worder, codeanalyze
+from rope.base import (
+    codeanalyze,
+    exceptions,
+    libutils,
+    worder,
+)
 from rope.base.codeanalyze import SourceLinesAdapter, LogicalLineFinder, get_block_start
 from ropetest import testutils
 
@@ -219,31 +222,31 @@ class WordRangeFinderTest(unittest.TestCase):
         code = "A()"
         self.assertEqual("A()", self._find_primary(code, 2))
 
-    def test_splitted_statement(self):
+    def test_split_statement(self):
         word_finder = worder.Worder("an_object.an_attr")
         self.assertEqual(
             ("an_object", "an_at", 10), word_finder.get_splitted_primary_before(15)
         )
 
-    def test_empty_splitted_statement(self):
+    def test_empty_split_statement(self):
         word_finder = worder.Worder("an_attr")
         self.assertEqual(("", "an_at", 0), word_finder.get_splitted_primary_before(5))
 
-    def test_empty_splitted_statement2(self):
+    def test_empty_split_statement2(self):
         word_finder = worder.Worder("an_object.")
         self.assertEqual(
             ("an_object", "", 10), word_finder.get_splitted_primary_before(10)
         )
 
-    def test_empty_splitted_statement3(self):
+    def test_empty_split_statement3(self):
         word_finder = worder.Worder("")
         self.assertEqual(("", "", 0), word_finder.get_splitted_primary_before(0))
 
-    def test_empty_splitted_statement4(self):
+    def test_empty_split_statement4(self):
         word_finder = worder.Worder("a_var = ")
         self.assertEqual(("", "", 8), word_finder.get_splitted_primary_before(8))
 
-    def test_empty_splitted_statement5(self):
+    def test_empty_split_statement5(self):
         word_finder = worder.Worder("a.")
         self.assertEqual(("a", "", 2), word_finder.get_splitted_primary_before(2))
 
@@ -731,7 +734,6 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(code.index("afunc") + 1)
         self.assertEqual(afunc.get_object(), found_pyname.get_object())
 
-    @testutils.only_for("2.5")
     def test_relative_modules_after_from_statements(self):
         pkg1 = testutils.create_package(self.project, "pkg1")
         pkg2 = testutils.create_package(self.project, "pkg2", pkg1)

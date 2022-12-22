@@ -1,7 +1,6 @@
 from itertools import chain
 
 from rope.base import ast
-from rope.base.utils import pycompat
 
 
 def find_visible(node, lines):
@@ -72,7 +71,7 @@ class Suite:
         if self._children is None:
             walker = _SuiteWalker(self)
             for child in self.child_nodes:
-                ast.walk(child, walker)
+                walker.visit(child)
             self._children = walker.suites
         return self._children
 
@@ -99,7 +98,7 @@ class Suite:
         return self.parent._get_level() + 1
 
 
-class _SuiteWalker:
+class _SuiteWalker(ast.RopeNodeVisitor):
     def __init__(self, suite):
         self.suite = suite
         self.suites = []

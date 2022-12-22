@@ -136,9 +136,7 @@ class Restructure:
                 stacklevel=2,
             )
             self.imports = imports
-        changes = change.ChangeSet(
-            "Restructuring <{}> to <{}>".format(self.pattern, self.goal)
-        )
+        changes = change.ChangeSet(f"Restructuring <{self.pattern}> to <{self.goal}>")
         if resources is not None:
             files = [
                 resource
@@ -312,7 +310,7 @@ class _ChangeComputer:
     def _get_nearest_roots(self, node):
         if node not in self._nearest_roots:
             result = []
-            for child in ast.get_child_nodes(node):
+            for child in ast.iter_child_nodes(node):
                 if child in self.matched_asts:
                     result.append(child)
                 else:

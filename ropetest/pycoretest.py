@@ -1,12 +1,9 @@
 import sys
 from textwrap import dedent
-
-from rope.base.builtins import File, BuiltinClass
-
 import unittest
 
-from rope.base import exceptions
-from rope.base import libutils
+from rope.base import exceptions, libutils
+from rope.base.builtins import File, BuiltinClass
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pyobjects import get_base_type, AbstractFunction
 from rope.base.pynamesdef import AssignedName
@@ -388,7 +385,7 @@ class PyCoreTest(unittest.TestCase):
         a_var = mod["a_var"]
         self.assertEqual((mod, 1), a_var.get_definition_location())
 
-    def test_get_pyname_definition_location_importes(self):
+    def test_get_pyname_definition_location_imported(self):
         testutils.create_module(self.project, "mod")
         code = "import mod\n"
         mod = libutils.get_string_module(self.project, code)
@@ -572,7 +569,6 @@ class PyCoreTest(unittest.TestCase):
         c_class = pymod["C"].get_object()
         self.assertFalse("var1" in c_class)
 
-    @testutils.only_for("2.5")
     def test_with_statement_variables(self):
         code = dedent("""\
             import threading
@@ -583,7 +579,6 @@ class PyCoreTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, code)
         self.assertTrue("var" in pymod)
 
-    @testutils.only_for("2.5")
     def test_with_statement_variables_and_tuple_assignment(self):
         code = dedent("""\
             class A(object):
@@ -599,7 +594,6 @@ class PyCoreTest(unittest.TestCase):
         self.assertTrue("a" in pymod)
         self.assertTrue("b" in pymod)
 
-    @testutils.only_for("2.5")
     def test_with_statement_variable_type(self):
         code = dedent("""\
             class A(object):
@@ -617,7 +611,6 @@ class PyCoreTest(unittest.TestCase):
         var = pymod["var"].get_object()
         self.assertEqual(a_class, var.get_type())
 
-    @testutils.only_for("2.7")
     def test_nested_with_statement_variable_type(self):
         code = dedent("""\
             class A(object):
@@ -644,7 +637,6 @@ class PyCoreTest(unittest.TestCase):
         var_b = pymod["var_b"].get_object()
         self.assertEqual(b_class, var_b.get_type())
 
-    @testutils.only_for("2.5")
     def test_with_statement_with_no_vars(self):
         code = dedent("""\
             with open("file"):    pass
@@ -776,7 +768,7 @@ class PyCoreTest(unittest.TestCase):
 
 class PyCoreInProjectsTest(unittest.TestCase):
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super().setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, "samplemod")
@@ -799,7 +791,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_project(self.project)
-        super(self.__class__, self).tearDown()
+        super().tearDown()
 
     def test_simple_import(self):
         code = "import samplemod\n"
@@ -838,7 +830,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
             sample_class, mod.get_attributes()["SampleClass"].get_object()
         )
 
-    def test_from_import_star_not_imporing_underlined(self):
+    def test_from_import_star_not_importing_underlined(self):
         code = "from samplemod import *"
         mod = libutils.get_string_module(self.project, code)
         self.assertTrue("_underlined_func" not in mod.get_attributes())
@@ -1134,7 +1126,6 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_scope = libutils.get_string_scope(self.project, mod2.read(), mod2)
         self.assertEqual(mod1_object, mod2_scope["mod1"].get_object())
 
-    @testutils.only_for("2.5")
     def test_new_style_relative_imports(self):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1", pkg)
@@ -1144,7 +1135,6 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_object = self.pycore.resource_to_pyobject(mod2)
         self.assertEqual(mod1_object, mod2_object["mod1"].get_object())
 
-    @testutils.only_for("2.5")
     def test_new_style_relative_imports2(self):
         pkg = testutils.create_package(self.project, "pkg")
         mod1 = testutils.create_module(self.project, "mod1")

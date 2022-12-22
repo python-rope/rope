@@ -10,8 +10,6 @@ import re
 import os
 import shutil
 import subprocess
-
-import rope.base.utils.pycompat as pycompat
 import typing
 
 
@@ -105,7 +103,7 @@ class MercurialCommands:
                 traceback=False,
                 report_untrusted=False,
             )
-        except:
+        except Exception:
             self.ui = self.hg.ui.ui()
             self.ui.setconfig("ui", "interactive", "no")
             self.ui.setconfig("ui", "debug", "no")

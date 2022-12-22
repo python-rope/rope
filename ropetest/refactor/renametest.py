@@ -272,7 +272,7 @@ class RenameRefactoringTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    def test_rename_functions_parameters_and_occurences_in_other_modules(self):
+    def test_rename_functions_parameters_and_occurrences_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod2 = testutils.create_module(self.project, "mod2")
         mod1.write(dedent("""\
@@ -305,7 +305,6 @@ class RenameRefactoringTest(unittest.TestCase):
         )
         self.assertEqual("is_replace = True\n'ali'.\\\nreplace\n", refactored)
 
-    @testutils.only_for("3.6")
     def test_renaming_occurrence_in_f_string(self):
         code = dedent("""\
             a_var = 20
@@ -318,7 +317,6 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.6")
     def test_renaming_occurrence_in_nested_f_string(self):
         code = dedent("""\
             a_var = 20
@@ -331,7 +329,6 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
-    @testutils.only_for("3.6")
     def test_not_renaming_string_contents_in_f_string(self):
         refactored = self._local_rename(
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
@@ -444,7 +441,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_function(self):
         code = dedent("""\
             async def a_func():
@@ -459,7 +455,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_await(self):
         code = dedent("""\
             async def b_func():
@@ -878,7 +873,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_for_loop_variable(self):
         code = dedent("""\
             async def func():
@@ -895,7 +889,6 @@ class RenameRefactoringTest(unittest.TestCase):
             refactored,
         )
 
-    @testutils.only_for("3.5")
     def test_renaming_async_with_context_manager(self):
         code = dedent("""\
             def a_cm(): pass
@@ -908,7 +901,6 @@ class RenameRefactoringTest(unittest.TestCase):
                 async with another_cm() as x: pass""")
         self.assertEqual(refactored, expected)
 
-    @testutils.only_for("3.5")
     def test_renaming_async_with_as_variable(self):
         code = dedent("""\
             async def func():
@@ -1422,7 +1414,6 @@ class RenameRefactoringTest(unittest.TestCase):
         )
 
     # XXX: with variables should not leak
-    @testutils.only_for("2.5")
     def xxx_test_with_statement_variables_should_not_leak(self):
         code = dedent("""\
             f = 1

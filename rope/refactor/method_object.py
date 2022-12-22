@@ -1,7 +1,13 @@
 import warnings
 
-from rope.base import libutils
-from rope.base import pyobjects, exceptions, change, evaluate, codeanalyze
+from rope.base import (
+    change,
+    codeanalyze,
+    evaluate,
+    exceptions,
+    libutils,
+    pyobjects,
+)
 from rope.refactor import sourceutils, occurrences, rename
 
 
@@ -88,9 +94,9 @@ class MethodObject:
             if arg == "self":
                 new_name = "host"
             header += ", %s" % new_name
-            body += indents * 2 + "self.{} = {}\n".format(arg, new_name)
+            body += indents * 2 + f"self.{arg} = {new_name}\n"
         header += "):"
-        return "{}\n{}\n".format(header, body)
+        return f"{header}\n{body}\n"
 
     def _get_parameter_names(self):
         return self.pyfunction.get_param_names()

@@ -19,27 +19,27 @@
 import re
 from typing import List
 
-import rope.base.exceptions
-import rope.refactor.functionutils
+import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
-    ast,
+    codeanalyze,
+    evaluate,
+    exceptions,
+    libutils,
     pynames,
     pyobjects,
-    codeanalyze,
     taskhandle,
-    evaluate,
-    worder,
     utils,
-    libutils,
+    worder,
 )
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import (
+    change_signature,
+    functionutils,
+    importutils,
+    move,
     occurrences,
     rename,
     sourceutils,
-    importutils,
-    move,
-    change_signature,
 )
 
 
@@ -63,7 +63,7 @@ def create_inline(project, resource, offset):
         "a method, local variable or parameter."
     )
     if pyname is None:
-        raise rope.base.exceptions.RefactoringError(message)
+        raise exceptions.RefactoringError(message)
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()
     if isinstance(pyname, pynames.AssignedName):
@@ -73,7 +73,7 @@ def create_inline(project, resource, offset):
     if isinstance(pyname.get_object(), pyobjects.PyFunction):
         return InlineMethod(project, resource, offset)
     else:
-        raise rope.base.exceptions.RefactoringError(message)
+        raise exceptions.RefactoringError(message)
 
 
 class _Inliner:
@@ -246,7 +246,7 @@ class InlineVariable(_Inliner):
 
     def _check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 "Local variable should be assigned once for inlining."
             )
 
@@ -393,7 +393,7 @@ class _DefinitionGenerator:
             self.body = sourceutils.get_body(self.pyfunction)
 
     def _get_definition_info(self):
-        return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
+        return functionutils.DefinitionInfo.read(self.pyfunction)
 
     def _get_definition_params(self):
         definition_info = self.definition_info
@@ -402,8 +402,8 @@ class _DefinitionGenerator:
             definition_info.args_arg is not None
             or definition_info.keywords_arg is not None
         ):
-            raise rope.base.exceptions.RefactoringError(
-                "Cannot inline functions with list and keyword arguements."
+            raise exceptions.RefactoringError(
+                "Cannot inline functions with list and keyword arguments."
             )
         if self.pyfunction.get_kind() == "classmethod":
             paramdict[
@@ -421,13 +421,11 @@ class _DefinitionGenerator:
     def _calculate_header(self, primary, pyname, call):
         # A header is created which initializes parameters
         # to the values passed to the function.
-        call_info = rope.refactor.functionutils.CallInfo.read(
+        call_info = functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call
         )
         paramdict = self.definition_params
-        mapping = rope.refactor.functionutils.ArgumentMapping(
-            self.definition_info, call_info
-        )
+        mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
         for param_name, value in mapping.param_dict.items():
             paramdict[param_name] = value
         header = ""
@@ -508,7 +506,7 @@ class _DefinitionGenerator:
         logical_lines = codeanalyze.LogicalLineFinder(lines)
         lineno = logical_lines.logical_line_in(lineno)[1]
         if source[lines.get_line_end(lineno) : len(source)].strip() != "":
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 "Cannot inline functions with statements " + "after return statement."
             )
 
@@ -543,7 +541,7 @@ class _InlineFunctionCallsForModuleHandle:
 
     def occurred_inside_skip(self, change_collector, occurrence):
         if not occurrence.is_defined():
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 "Cannot inline functions that reference themselves"
             )
 
@@ -554,7 +552,7 @@ class _InlineFunctionCallsForModuleHandle:
             return
         # the function is referenced outside an import statement
         if not occurrence.is_called():
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 "Reference to inlining function other than function call"
                 " in <file: %s, offset: %d>" % (self.resource.path, start)
             )
@@ -656,7 +654,7 @@ def _getvardef(pymodule, pyname):
         [lines.get_line(n) for n in range(start, end + 1)],
     )
     if assignment.levels:
-        raise rope.base.exceptions.RefactoringError("Cannot inline tuple assignments.")
+        raise exceptions.RefactoringError("Cannot inline tuple assignments.")
     definition = definition_with_assignment[
         definition_with_assignment.index("=") + 1 :
     ].strip()

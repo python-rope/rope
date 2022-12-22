@@ -327,7 +327,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 self.project, self.mod1, code.index("CONSTANT") + 1
             )
 
-    def test_raising_exception_for_mov_glob_elemnts_to_the_same_module(self):
+    def test_raising_exception_for_moving_glob_elements_to_the_same_module(self):
         self.mod1.write("def a_func():\n    pass\n")
         with self.assertRaises(exceptions.RefactoringError):
             self._move(self.mod1, self.mod1.read().index("a_func"), self.mod1)
@@ -820,7 +820,7 @@ class MoveRefactoringTest(unittest.TestCase):
             mover.get_new_method("new_method"),
         )
 
-    def test_moving_methods_getting_new_method_passing_simple_paremters(self):
+    def test_moving_methods_getting_new_method_passing_simple_parameters(self):
         code = dedent("""\
             class A(object):
                 def a_method(self, p):
@@ -1196,7 +1196,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod2.write(code2)
         mover = move.create_move(self.project, self.mod2, code2.index("f()") + 1)
         self.project.do(mover.get_changes(self.mod1))
-        expected = "%s\n%s" % (code1, code2)
+        expected = f"{code1}\n{code2}"
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_decorated_function(self):

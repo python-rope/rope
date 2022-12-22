@@ -5,7 +5,6 @@ from itertools import chain
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
-from rope.base.utils import pycompat
 from rope.base.utils.datastructures import OrderedSet
 from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefunction
 
@@ -81,7 +80,7 @@ class _ExtractRefactoring:
         )
         info.kind = self._get_kind(kind)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet("Extract {} <{}>".format(info.kind, extracted_name))
+        changes = ChangeSet(f"Extract {info.kind} <{extracted_name}>")
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
@@ -99,7 +98,7 @@ class _ExtractRefactoring:
 
     @classmethod
     def _get_kind(cls, kind):
-        raise NotImplementedError(f"You have to sublass {cls}")
+        raise NotImplementedError(f"You have to subclass {cls}")
 
 
 class ExtractMethod(_ExtractRefactoring):
@@ -223,13 +222,13 @@ class _ExtractInfo:
     def extracted(self):
         return self.source[self.region[0] : self.region[1]]
 
-    _cached_parsed_extraced = None
+    _cached_parsed_extracted = None
 
     @property
     def _parsed_extracted(self):
-        if self._cached_parsed_extraced is None:
-            self._cached_parsed_extraced = _parse_text(self.extracted)
-        return self._cached_parsed_extraced
+        if self._cached_parsed_extracted is None:
+            self._cached_parsed_extracted = _parse_text(self.extracted)
+        return self._cached_parsed_extracted
 
     _returned = None
 
@@ -515,7 +514,7 @@ class _ExceptionalConditionChecker:
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts:
+class _ExtractMethodParts(ast.RopeNodeVisitor):
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
@@ -590,7 +589,7 @@ class _ExtractMethodParts:
         )
         body = self.info.source[self.info.scope_region[0] : self.info.scope_region[1]]
         node = _parse_text(body)
-        ast.walk(node, info_collector)
+        info_collector.visit(node)
         return info_collector
 
     def _get_function_definition(self):
@@ -756,7 +755,7 @@ class _ExtractMethodParts:
     def _get_globals_in_body(unindented_body):
         node = _parse_text(unindented_body)
         visitor = _GlobalFinder()
-        ast.walk(node, visitor)
+        visitor.visit(node)
         return visitor.globals_
 
 
@@ -778,7 +777,7 @@ class _ExtractVariableParts:
         return {}
 
 
-class _FunctionInformationCollector:
+class _FunctionInformationCollector(ast.RopeNodeVisitor):
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -823,12 +822,12 @@ class _FunctionInformationCollector:
             for name in _get_argnames(node.args):
                 self._written_variable(name, node.lineno)
             for child in node.body:
-                ast.walk(child, self)
+                self.visit(child)
         else:
             self._written_variable(node.name, node.lineno)
             visitor = _VariableReadsAndWritesFinder()
             for child in node.body:
-                ast.walk(child, visitor)
+                visitor.visit(child)
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
@@ -847,21 +846,21 @@ class _FunctionInformationCollector:
     def _MatchAs(self, node):
         self._written_variable(node.name, node.lineno)
         if node.pattern:
-            ast.walk(node.pattern, self)
+            self.visit(node.pattern)
 
     def _Assign(self, node):
-        ast.walk(node.value, self)
+        self.visit(node.value)
         for child in node.targets:
-            ast.walk(child, self)
+            self.visit(child)
 
     def _AugAssign(self, node):
-        ast.walk(node.value, self)
+        self.visit(node.value)
         if isinstance(node.target, ast.Name):
             target_id = node.target.id
             self._read_variable(target_id, node.target.lineno)
             self._written_variable(target_id, node.target.lineno)
         else:
-            ast.walk(node.target, self)
+            self.visit(node.target)
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
@@ -883,8 +882,8 @@ class _FunctionInformationCollector:
         written = OrderedSet(self.written)
         maybe_written = OrderedSet(self.maybe_written)
 
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
 
         comp_names = list(
             chain.from_iterable(
@@ -903,7 +902,7 @@ class _FunctionInformationCollector:
         elif isinstance(node, ast.Name):
             yield node.id
         else:
-            assert False, "Unexpected node type in list comprehension target: %s" % node
+            assert False, f"Unexpected node type in list comprehension target: {node!r}"
 
     def _If(self, node):
         self._handle_conditional_node(node)
@@ -915,18 +914,18 @@ class _FunctionInformationCollector:
     def _For(self, node):
         with self._handle_loop_context(node), self._handle_conditional_context(node):
             # iter has to be checked before the target variables
-            ast.walk(node.iter, self)
-            ast.walk(node.target, self)
+            self.visit(node.iter)
+            self.visit(node.target)
 
             for child in node.body:
-                ast.walk(child, self)
+                self.visit(child)
             for child in node.orelse:
-                ast.walk(child, self)
+                self.visit(child)
 
     def _handle_conditional_node(self, node):
         with self._handle_conditional_context(node):
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
+            for child in ast.iter_child_nodes(node):
+                self.visit(child)
 
     @contextmanager
     def _handle_conditional_context(self, node):
@@ -948,19 +947,18 @@ class _FunctionInformationCollector:
 
 
 def _get_argnames(arguments):
-    result = [
-        pycompat.get_ast_arg_arg(node)
-        for node in arguments.args
-        if isinstance(node, pycompat.ast_arg_type)
-    ]
+    result = []
+    result.extend(node.arg for node in getattr(arguments, "posonlyargs", []))
+    result.extend(node.arg for node in arguments.args)
     if arguments.vararg:
-        result.append(pycompat.get_ast_arg_arg(arguments.vararg))
+        result.append(arguments.vararg.arg)
     if arguments.kwarg:
-        result.append(pycompat.get_ast_arg_arg(arguments.kwarg))
+        result.append(arguments.kwarg.arg)
+    result.extend(node.arg for node in arguments.kwonlyargs)
     return result
 
 
-class _VariableReadsAndWritesFinder:
+class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
     def __init__(self):
         self.written = set()
         self.read = set()
@@ -974,8 +972,8 @@ class _VariableReadsAndWritesFinder:
     def _FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
         self.read.update(visitor.read - visitor.written)
 
     def _Class(self, node):
@@ -987,7 +985,7 @@ class _VariableReadsAndWritesFinder:
             return set(), set()
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
-        ast.walk(node, visitor)
+        visitor.visit(node)
         return visitor.read, visitor.written
 
     @staticmethod
@@ -996,18 +994,18 @@ class _VariableReadsAndWritesFinder:
             return set(), set()
         node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
-        ast.walk(node, visitor)
+        visitor.visit(node)
         return visitor.read
 
 
-class _BaseErrorFinder:
+class _BaseErrorFinder(ast.RopeNodeVisitor):
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
             return False
         node = _parse_text(code)
         visitor = cls()
-        ast.walk(node, visitor)
+        visitor.visit(node)
         return visitor.error
 
 
@@ -1025,14 +1023,14 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
     def loop_encountered(self, node):
         self.loop_count += 1
         for child in node.body:
-            ast.walk(child, self)
+            self.visit(child)
         self.loop_count -= 1
         if node.orelse:
             if isinstance(node.orelse, (list, tuple)):
                 for node_ in node.orelse:
-                    ast.walk(node_, self)
+                    self.visit(node_)
             else:
-                ast.walk(node.orelse, self)
+                self.visit(node.orelse)
 
     def _Break(self, node):
         self.check_loop()
@@ -1068,7 +1066,7 @@ class _AsyncStatementFinder(_BaseErrorFinder):
         pass
 
 
-class _GlobalFinder:
+class _GlobalFinder(ast.RopeNodeVisitor):
     def __init__(self):
         self.globals_ = OrderedSet()
 

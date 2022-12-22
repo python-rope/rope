@@ -5,13 +5,7 @@ import warnings
 from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
-from rope.base.utils import pycompat
 
-
-try:
-    basestring
-except NameError:
-    basestring = (str, bytes)
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
@@ -78,10 +72,6 @@ class _PatchingASTWalker:
 
     Number = object()
     String = object()
-    semicolon_or_as_in_except = object()
-    exec_open_paren_or_space = object()
-    exec_close_paren_or_space = object()
-    exec_in_or_comma = object()
     with_or_comma_context_manager = object()
     empty_tuple = object()
 
@@ -96,7 +86,7 @@ class _PatchingASTWalker:
         )
         node.region = (self.source.offset, self.source.offset)
         if self.children:
-            node.sorted_children = ast.get_children(node)
+            node.sorted_children = [child for field, child in ast.iter_fields(node)]
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         if hasattr(node, "region"):
@@ -132,31 +122,12 @@ class _PatchingASTWalker:
                     region = self.source.consume_number()
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
-                elif child == "!=":
-                    # INFO: This has been added to handle deprecated ``<>``
-                    region = self.source.consume_not_equal()
-                elif child == self.semicolon_or_as_in_except:
-                    # INFO: This has been added to handle deprecated
-                    # semicolon in except
-                    region = self.source.consume_except_as_or_semicolon()
-                elif child == self.exec_open_paren_or_space:
-                    # These three cases handle the differences between
-                    # the deprecated exec statement and the exec
-                    # function.
-                    region = self.source.consume_exec_open_paren_or_space()
-                elif child == self.exec_in_or_comma:
-                    region = self.source.consume_exec_in_or_comma()
-                elif child == self.exec_close_paren_or_space:
-                    region = self.source.consume_exec_close_paren_or_space()
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
+                elif isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
+                    region = self.source.consume_joined_string(child)
                 else:
-                    if hasattr(ast, "JoinedStr") and isinstance(
-                        node, (ast.JoinedStr, ast.FormattedValue)
-                    ):
-                        region = self.source.consume_joined_string(child)
-                    else:
-                        region = self.source.consume(child)
+                    region = self.source.consume(child)
                 child = self.source[region[0] : region[1]]
                 token_start = region[0]
             if not first_token:
@@ -191,9 +162,8 @@ class _PatchingASTWalker:
         new_end = None
         for i in range(closes):
             new_end = self.source.consume(")")[1]
-        if new_end is not None:
-            if self.children:
-                children.append(self.source[old_end:new_end])
+        if new_end is not None and self.children:
+            children.append(self.source[old_end:new_end])
         new_start = start
         for i in range(opens):
             new_start = self.source.rfind_token("(", 0, new_start)
@@ -222,7 +192,7 @@ class _PatchingASTWalker:
         start = 0
         opens = 0
         for child in children:
-            if not isinstance(child, basestring):
+            if not isinstance(child, (str, bytes)):
                 continue
             if child == "" or child[0] in "'\"":
                 continue
@@ -314,15 +284,11 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _Assign(self, node):
-        children = self._child_nodes(node.targets, "=")
-        children.append("=")
-        children.append(node.value)
+        children = [*self._child_nodes(node.targets, "="), "=", node.value]
         self._handle(node, children)
 
     def _AugAssign(self, node):
-        children = [node.target]
-        children.extend(self._get_op(node.op))
-        children.extend(["=", node.value])
+        children = [node.target, *self._get_op(node.op), "=", node.value]
         self._handle(node, children)
 
     def _AnnAssign(self, node):
@@ -331,9 +297,6 @@ class _PatchingASTWalker:
             children.append("=")
             children.append(node.value)
         self._handle(node, children)
-
-    def _Repr(self, node):
-        self._handle(node, ["`", node.value, "`"])
 
     def _BinOp(self, node):
         children = [node.left] + self._get_op(node.op) + [node.right]
@@ -361,8 +324,7 @@ class _PatchingASTWalker:
         children = []
         if getattr(node, "decorator_list", None):
             for decorator in node.decorator_list:
-                children.append("@")
-                children.append(decorator)
+                children.extend(("@", decorator))
         children.extend(["class", node.name])
         if node.bases:
             children.append("(")
@@ -384,7 +346,7 @@ class _PatchingASTWalker:
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
     def _Constant(self, node):
-        if isinstance(node.value, basestring):
+        if isinstance(node.value, (str, bytes)):
             self._handle(node, [self.String])
             return
 
@@ -488,15 +450,6 @@ class _PatchingASTWalker:
         children = [node.target, ":=", node.value]
         self._handle(node, children)
 
-    def _Exec(self, node):
-        children = ["exec", self.exec_open_paren_or_space, node.body]
-        if node.globals:
-            children.extend([self.exec_in_or_comma, node.globals])
-        if node.locals:
-            children.extend([",", node.locals])
-        children.append(self.exec_close_paren_or_space)
-        self._handle(node, children)
-
     def _ExtSlice(self, node):
         children = []
         for index, dim in enumerate(node.dims):
@@ -506,10 +459,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _handle_for_loop_node(self, node, is_async):
-        if is_async:
-            children = ["async", "for"]
-        else:
-            children = ["for"]
+        children = ["async", "for"] if is_async else ["for"]
         children.extend([node.target, "in", node.iter, ":"])
         children.extend(node.body)
         if node.orelse:
@@ -526,34 +476,27 @@ class _PatchingASTWalker:
     def _ImportFrom(self, node):
         children = ["from"]
         if node.level:
-            children.append("." * node.level)
-        # see comment at rope.base.ast.walk
-        children.extend([node.module or "", "import"])
+            children.extend("." * node.level)
+        if node.module:
+            children.extend(node.module.split("."))
+        children.append("import")
         children.extend(self._child_nodes(node.names, ","))
         self._handle(node, children)
 
     def _alias(self, node):
-        children = [node.name]
+        children = node.name.split(".")
         if node.asname:
             children.extend(["as", node.asname])
         self._handle(node, children)
 
     def _handle_function_def_node(self, node, is_async):
         children = []
-        try:
-            decorators = getattr(node, "decorator_list")
-        except AttributeError:
-            decorators = getattr(node, "decorators", None)
-        if decorators:
-            for decorator in decorators:
-                children.append("@")
-                children.append(decorator)
-        if is_async:
-            children.extend(["async", "def"])
-        else:
-            children.extend(["def"])
-        children.extend([node.name, "(", node.args])
-        children.extend([")", ":"])
+        for decorator in node.decorator_list:
+            children.extend(("@", decorator))
+        children.extend(["async", "def"] if is_async else ["def"])
+        children.append(node.name)
+        children.extend(["(", node.args, ")"])
+        children.append(":")
         children.extend(node.body)
         self._handle(node, children)
 
@@ -574,11 +517,11 @@ class _PatchingASTWalker:
         if node.vararg is not None:
             if args:
                 children.append(",")
-            children.extend(["*", pycompat.get_ast_arg_arg(node.vararg)])
+            children.extend(["*", node.vararg.arg])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(",")
-            children.extend(["**", pycompat.get_ast_arg_arg(node.kwarg)])
+            children.extend(["**", node.kwarg.arg])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
@@ -602,28 +545,21 @@ class _PatchingASTWalker:
         children.append(")")
 
     def _GeneratorExp(self, node):
-        children = [node.elt]
-        children.extend(node.generators)
+        children = [node.elt, *node.generators]
         self._handle(node, children, eat_parens=True)
 
     def _comprehension(self, node):
         children = ["for", node.target, "in", node.iter]
-        if node.ifs:
-            for if_ in node.ifs:
-                children.append("if")
-                children.append(if_)
+        for if_ in node.ifs:
+            children.extend(["if", if_])
         self._handle(node, children)
 
     def _Global(self, node):
-        children = self._child_nodes(node.names, ",")
-        children.insert(0, "global")
+        children = ["global", *self._child_nodes(node.names, ",")]
         self._handle(node, children)
 
     def _If(self, node):
-        if self._is_elif(node):
-            children = ["elif"]
-        else:
-            children = ["if"]
+        children = ["elif"] if self._is_elif(node) else ["if"]
         children.extend([node.test, ":"])
         children.extend(node.body)
         if node.orelse:
@@ -647,33 +583,29 @@ class _PatchingASTWalker:
         return self._handle(node, [node.body, "if", node.test, "else", node.orelse])
 
     def _Import(self, node):
-        children = ["import"]
-        children.extend(self._child_nodes(node.names, ","))
+        children = ["import", *self._child_nodes(node.names, ",")]
         self._handle(node, children)
 
     def _keyword(self, node):
-        children = []
         if node.arg is None:
-            children.append(node.value)
+            children = [node.value]
         else:
-            children.extend([node.arg, "=", node.value])
+            children = [node.arg, "=", node.value]
         self._handle(node, children)
 
     def _Lambda(self, node):
         self._handle(node, ["lambda", node.args, ":", node.body])
 
     def _List(self, node):
-        self._handle(node, ["["] + self._child_nodes(node.elts, ",") + ["]"])
+        self._handle(node, ["[", *self._child_nodes(node.elts, ","), "]"])
 
     def _ListComp(self, node):
-        children = ["[", node.elt]
-        children.extend(node.generators)
-        children.append("]")
+        children = ["[", node.elt, *node.generators, "]"]
         self._handle(node, children)
 
     def _Set(self, node):
         if node.elts:
-            self._handle(node, ["{"] + self._child_nodes(node.elts, ",") + ["}"])
+            self._handle(node, ["{", *self._child_nodes(node.elts, ","), "}"])
             return
         # Python doesn't have empty set literals
         warnings.warn(
@@ -682,16 +614,11 @@ class _PatchingASTWalker:
         self._handle(node, ["set(", ")"])
 
     def _SetComp(self, node):
-        children = ["{", node.elt]
-        children.extend(node.generators)
-        children.append("}")
+        children = ["{", node.elt, *node.generators, "}"]
         self._handle(node, children)
 
     def _DictComp(self, node):
-        children = ["{"]
-        children.extend([node.key, ":", node.value])
-        children.extend(node.generators)
-        children.append("}")
+        children = ["{", *[node.key, ":", node.value], *node.generators, "}"]
         self._handle(node, children)
 
     def _Module(self, node):
@@ -709,22 +636,12 @@ class _PatchingASTWalker:
     def _Pass(self, node):
         self._handle(node, ["pass"])
 
-    def _Print(self, node):
-        children = ["print"]
-        if node.dest:
-            children.extend([">>", node.dest])
-            if node.values:
-                children.append(",")
-        children.extend(self._child_nodes(node.values, ","))
-        if not node.nl:
-            children.append(",")
-        self._handle(node, children)
-
     def _Raise(self, node):
         children = ["raise"]
         if node.exc:
             children.append(node.exc)
         if node.cause:
+            children.append("from")
             children.append(node.cause)
         self._handle(node, children)
 
@@ -732,15 +649,6 @@ class _PatchingASTWalker:
         children = ["return"]
         if node.value:
             children.append(node.value)
-        self._handle(node, children)
-
-    def _Sliceobj(self, node):
-        children = []
-        for index, slice in enumerate(node.nodes):
-            if index > 0:
-                children.append(":")
-            if slice:
-                children.append(slice)
         self._handle(node, children)
 
     def _Index(self, node):
@@ -801,12 +709,11 @@ class _PatchingASTWalker:
         self._excepthandler(node)
 
     def _excepthandler(self, node):
-        # self._handle(node, [self.semicolon_or_as_in_except])
         children = ["except"]
         if node.type:
             children.append(node.type)
         if node.name:
-            children.append(self.semicolon_or_as_in_except)
+            children.append("as")
             children.append(node.name)
         children.append(":")
         children.extend(node.body)
@@ -853,7 +760,7 @@ class _PatchingASTWalker:
 
         if is_async:
             children.extend(["async"])
-        for item in pycompat.get_ast_with_items(node):
+        for item in node.items:
             children.extend([self.with_or_comma_context_manager, item.context_expr])
             if item.optional_vars:
                 children.extend(["as", item.optional_vars])
@@ -893,11 +800,13 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _MatchClass(self, node):
-        children = []
-        children.extend([node.cls, "("])
-        children.extend(self._child_nodes(node.patterns, ","))
-        children.extend(self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)))
-        children.append(")")
+        children = [
+            node.cls,
+            "(",
+            *self._child_nodes(node.patterns, ","),
+            *self._flatten_keywords(zip(node.kwd_attrs, node.kwd_patterns)),
+            ")",
+        ]
         self._handle(node, children)
 
     def _MatchValue(self, node):
@@ -927,9 +836,9 @@ class _Source:
                     break
                 else:
                     self._skip_comment()
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             raise MismatchedTokenError(
-                "Token <{}> at {} cannot be matched".format(token, self._get_location())
+                f"Token <{token}> at {self._get_location()} cannot be matched"
             )
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
@@ -943,8 +852,14 @@ class _Source:
         if _Source._string_pattern is None:
             string_pattern = codeanalyze.get_string_pattern()
             formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:{})|(?:{})".format(string_pattern, formatted_string_pattern)
-            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(original, original)
+            original = r"(?:{})|(?:{})".format(
+                string_pattern,
+                formatted_string_pattern,
+            )
+            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(
+                original,
+                original,
+            )
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern, end)
@@ -957,28 +872,6 @@ class _Source:
 
     def consume_empty_tuple(self):
         return self._consume_pattern(re.compile(r"\(\s*\)"))
-
-    def consume_not_equal(self):
-        if _Source._not_equals_pattern is None:
-            _Source._not_equals_pattern = re.compile(r"<>|!=")
-        repattern = _Source._not_equals_pattern
-        return self._consume_pattern(repattern)
-
-    def consume_except_as_or_semicolon(self):
-        repattern = re.compile(r"as|,")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_open_paren_or_space(self):
-        repattern = re.compile(r"\(|")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_in_or_comma(self):
-        repattern = re.compile(r"in|,")
-        return self._consume_pattern(repattern)
-
-    def consume_exec_close_paren_or_space(self):
-        repattern = re.compile(r"\)|")
-        return self._consume_pattern(repattern)
 
     def consume_with_or_comma_context_manager(self):
         repattern = re.compile(r"with|,")
@@ -1047,9 +940,8 @@ class _Source:
 
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
-        integer = r"\-?(0x[\da-fA-F]+|\d+)[lL]?"
+        integer = r"\-?(0x[\da-fA-F]+|\d+)"
         return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
 
     _string_pattern = None
     _number_pattern = None
-    _not_equals_pattern = None

@@ -13,7 +13,7 @@ Will be used if [tool.rope] is configured.
 .. code-block:: toml 
    
     [tool.rope]
-    compress_objectdb = true
+    split_imports = true
 
 config.py 
 ---------

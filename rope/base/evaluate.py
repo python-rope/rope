@@ -5,12 +5,12 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
+    arguments,
     ast,
-    astutils,
+    nameanalyze,
     exceptions,
     pyobjects,
     pyobjectsdef,
-    arguments,
     worder,
 )
 
@@ -39,7 +39,7 @@ def eval_node(scope, node):
 
 def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
-    ast.walk(node, evaluator)
+    evaluator.visit(node)
     return evaluator.old_result, evaluator.result
 
 
@@ -158,7 +158,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator:
+class StatementEvaluator(ast.RopeNodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None
@@ -364,7 +364,7 @@ class StatementEvaluator:
 
 def _get_evaluated_names(targets, assigned, module, evaluation, lineno):
     result = {}
-    for name, levels in astutils.get_name_levels(targets):
+    for name, levels in nameanalyze.get_name_levels(targets):
         assignment = rope.base.pynames.AssignmentValue(assigned, levels, evaluation)
         # XXX: this module should not access `rope.base.pynamesdef`!
         pyname = rope.base.pynamesdef.AssignedName(lineno, module)

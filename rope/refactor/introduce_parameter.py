@@ -1,5 +1,10 @@
-import rope.base.change
-from rope.base import exceptions, evaluate, worder, codeanalyze
+import rope.base.change  # Use fully qualified names for clarity.
+from rope.base import (
+    codeanalyze,
+    evaluate,
+    exceptions,
+    worder,
+)
 from rope.refactor import functionutils, sourceutils, occurrences
 
 

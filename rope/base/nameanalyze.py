@@ -14,11 +14,11 @@ def get_name_levels(node):
 
     """
     visitor = _NodeNameCollector()
-    ast.walk(node, visitor)
+    visitor.visit(node)
     return visitor.names
 
 
-class _NodeNameCollector:
+class _NodeNameCollector(ast.RopeNodeVisitor):
     def __init__(self, levels=None):
         self.names = []
         self.levels = levels
@@ -49,8 +49,8 @@ class _NodeNameCollector:
             new_levels.append(self.index)
         self.index += 1
         visitor = _NodeNameCollector(new_levels)
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
         self.names.extend(visitor.names)
 
     def _Subscript(self, node):

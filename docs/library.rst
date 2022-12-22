@@ -501,7 +501,7 @@ might want to do something like:
           percent = jobset.get_percent_done()
           if percent is not None:
               text += ' ... %s percent done' % percent
-          print text
+          print(text)
 
   handle.add_observer(update_progress)
 
@@ -631,7 +631,7 @@ Using rename refactoring:
   >>> from rope.contrib import generate
   >>> pkg = generate.create_package(project, 'pkg')
   >>> mod2 = generate.create_module(project, 'mod2', pkg)
-  >>> mod2.write('import mod1\nprint mod1.a_var\n')
+  >>> mod2.write('import mod1\nprint(mod1.a_var)\n')
 
   # We can use `Project.find_module` for finding modules, too
   >>> assert mod2 == project.find_module('pkg.mod2')
@@ -643,7 +643,7 @@ Using rename refactoring:
   >>> mod1.read()
   u'new_var = 10\n'
   >>> mod2.read()
-  u'import mod1\nprint mod1.new_var\n'
+  u'import mod1\nprint(mod1.new_var)\n'
 
   # Undoing rename refactoring
   >>> project.history.undo()
@@ -651,7 +651,7 @@ Using rename refactoring:
   >>> mod1.read()
   u'a_var = 10\n'
   >>> mod2.read()
-  u'import mod1\nprint mod1.a_var\n'
+  u'import mod1\nprint(mod1.a_var)\n'
 
   # Cleaning up
   >>> pkg.remove()
@@ -711,7 +711,7 @@ The ``get_changes()`` method of refactoring classes return a
 calling ``Project.do()``.  But as explained above some IDEs need to
 perform the changes themselves.
 
-Every change to the file-system in rope is commited using an object that
+Every change to the file-system in rope is committed using an object that
 provides a ``rope.base.fscommands.FileSystemCommands`` interface.  As
 explained above in `rope.base.fscommands`_ section, rope uses this
 interface to handle different VCSs.
@@ -897,7 +897,7 @@ an example consider that we want to perform a rename refactoring:
                                                      projects)
 
 
-Here ``projects`` is the list of dependant projects.  It does not
+Here ``projects`` is the list of dependent projects.  It does not
 include the main project.  The first argument is the refactoring class
 (such as ``Rename``) or factory function (like ``create_move``).
 

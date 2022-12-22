@@ -2,7 +2,7 @@
 import os
 import re
 
-import rope.base.builtins
+import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import exceptions
 
 

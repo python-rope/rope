@@ -1,5 +1,13 @@
-from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames, ast
-from rope.base import libutils
+from rope.base import (
+    ast,
+    change,
+    evaluate,
+    exceptions,
+    libutils,
+    pynames,
+    pyobjects,
+    taskhandle,
+)
 from rope.refactor import restructure, sourceutils, similarfinder
 
 
@@ -107,9 +115,15 @@ class UseFunction:
         function_name = self.pyfunction.get_name()
         if import_:
             function_name = self._module_name() + "." + function_name
-        goal = "{}({})".format(function_name, ", ".join(("${%s}" % p) for p in params))
+        goal = "{}({})".format(
+            function_name,
+            ", ".join(("${%s}" % p) for p in params),
+        )
         if self._does_return() and not self._is_expression():
-            goal = "${{{}}} = {}".format(self._rope_result, goal)
+            goal = "${{{}}} = {}".format(
+                self._rope_result,
+                goal,
+            )
         return goal
 
     def _does_return(self):
@@ -167,7 +181,7 @@ def _named_expr_count(node):
     return visitor.named_expression
 
 
-class _ReturnOrYieldFinder:
+class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
     def __init__(self):
         self.returns = 0
         self.named_expression = 0
@@ -191,6 +205,6 @@ class _ReturnOrYieldFinder:
     def start_walking(self, node):
         nodes = [node]
         if isinstance(node, ast.FunctionDef):
-            nodes = ast.get_child_nodes(node)
+            nodes = list(ast.iter_child_nodes(node))
         for child in nodes:
-            ast.walk(child, self)
+            self.visit(child)

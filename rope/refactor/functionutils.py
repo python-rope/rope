@@ -1,7 +1,5 @@
-import rope.base.exceptions
-import rope.base.pyobjects
 from rope.base.builtins import Lambda
-from rope.base import worder
+from rope.base import pyobjects, worder
 
 
 class DefinitionInfo:
@@ -15,13 +13,13 @@ class DefinitionInfo:
         self.keywords_arg = keywords_arg
 
     def to_string(self):
-        return "{}({})".format(self.function_name, self.arguments_to_string())
+        return f"{self.function_name}({self.arguments_to_string()})"
 
     def arguments_to_string(self, from_index=0):
         params = []
         for arg, default in self.args_with_defaults:
             if default is not None:
-                params.append("{}={}".format(arg, default))
+                params.append(f"{arg}={default}")
             else:
                 params.append(arg)
         if self.args_arg is not None:
@@ -98,9 +96,7 @@ class CallInfo:
         if self.args[start:]:
             params.extend(self.args[start:])
         if self.keywords:
-            params.extend(
-                ["{}={}".format(name, value) for name, value in self.keywords]
-            )
+            params.extend([f"{name}={value}" for name, value in self.keywords])
         if self.args_arg is not None:
             params.append("*" + self.args_arg)
         if self.keywords_arg:
@@ -138,29 +134,23 @@ class CallInfo:
     def _is_method_call(primary, pyname):
         return (
             primary is not None
-            and isinstance(primary.get_object().get_type(), rope.base.pyobjects.PyClass)
+            and isinstance(primary.get_object().get_type(), pyobjects.PyClass)
             and CallInfo._is_method(pyname)
         )
 
     @staticmethod
     def _is_class(pyname):
-        return pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyClass
-        )
+        return pyname is not None and isinstance(pyname.get_object(), pyobjects.PyClass)
 
     @staticmethod
     def _is_method(pyname):
-        if pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyFunction
-        ):
+        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
             return pyname.get_object().get_kind() == "method"
         return False
 
     @staticmethod
     def _is_classmethod(pyname):
-        if pyname is not None and isinstance(
-            pyname.get_object(), rope.base.pyobjects.PyFunction
-        ):
+        if pyname is not None and isinstance(pyname.get_object(), pyobjects.PyFunction):
             return pyname.get_object().get_kind() == "classmethod"
         return False
 

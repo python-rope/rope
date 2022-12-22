@@ -1,6 +1,12 @@
 from typing import Union, List
 
-from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.base import (
+    ast,
+    exceptions,
+    pynames,
+    pynamesdef,
+    utils,
+)
 from rope.refactor.importutils import actions, importinfo
 
 
@@ -26,7 +32,7 @@ class ModuleImports:
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        ast.walk(self.pymodule.get_ast(), visitor)
+        visitor.visit(self.pymodule.get_ast())
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
@@ -415,7 +421,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder:
+class _UnboundNameFinder(ast.RopeNodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 
@@ -427,8 +433,8 @@ class _UnboundNameFinder:
             .pyobject
         )
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
+        for child in ast.iter_child_nodes(node):
+            visitor.visit(child)
 
     def _FunctionDef(self, node):
         self._visit_child_scope(node)
@@ -453,7 +459,7 @@ class _UnboundNameFinder:
             ):
                 self.add_unbound(primary)
         else:
-            ast.walk(node, self)
+            self.visit(node)
 
     def _get_root(self):
         pass
@@ -554,7 +560,7 @@ class _GlobalImportFinder:
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module or "",  # see comment at rope.base.ast.walk
+            node.module or "",
             level,
             self._get_names(node.names),
         )
@@ -574,7 +580,7 @@ class _GlobalImportFinder:
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body
-        for index, node in enumerate(nodes):
+        for node in nodes:
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 lines = self.pymodule.logical_lines
                 end_line = lines.logical_line_in(node.lineno)[1] + 1

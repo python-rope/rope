@@ -48,10 +48,10 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
 
         self.assertEqual(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]  # noqa
+        sample_func_scope = scope.get_scopes()[0]
         self.assertEqual(
             get_base_type("Type"),
-            scope.get_scopes()[0]["SampleClass"].get_object().get_type(),
+            sample_func_scope["SampleClass"].get_object().get_type(),
         )
 
     def test_list_comprehension_scope_inside_assignment(self):
@@ -407,7 +407,6 @@ class PyCoreScopesTest(unittest.TestCase):
         inner_scope = scope.get_scopes()[0]
         self.assertEqual(inner_scope, scope.get_inner_scope_for_offset(10))
 
-    @testutils.only_for("3.5")
     def test_get_scope_for_offset_for_function_scope_and_async_with_statement(self):
         scope = libutils.get_string_scope(
             self.project,

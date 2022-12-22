@@ -35,9 +35,9 @@ calling the `create_finder()` function.
     arguments
 """
 
-import ast
 import re
 
+from rope.base import ast
 from rope.base import codeanalyze
 from rope.base import evaluate
 from rope.base import exceptions
@@ -194,9 +194,13 @@ def same_pyname(expected, pyname):
         return False
     if expected == pyname:
         return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and type(
-        pyname
-    ) not in (pynames.ImportedModule, pynames.ImportedName):
+    if not isinstance(
+        expected,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ) and not isinstance(
+        pyname,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ):
         return False
     return (
         expected.get_definition_location() == pyname.get_definition_location()
@@ -355,11 +359,7 @@ class _TextualFinder:
         return c.isalnum() or c == "_"
 
     def _fast_file_query(self, source):
-        try:
-            source.index(self.name)
-            return True
-        except ValueError:
-            return False
+        return self.name in source
 
     def _get_source(self, resource, pymodule):
         if resource is not None:
