@@ -556,21 +556,6 @@ class PatchedASTTest(unittest.TestCase):
             "arguments", [expected_child, "", ",", " ", "**", "", "p2"]
         )
 
-    @testutils.only_for_versions_lower("3")
-    def test_function_node_and_tuple_parameters(self):
-        source = dedent("""\
-            def f(a, (b, c)):
-                pass
-        """)
-        ast_frag = patchedast.get_patched_ast(source, True)
-        checker = _ResultChecker(self, ast_frag)
-        checker.check_region("Function", 0, len(source) - 1)
-        checker.check_children(
-            "Function",
-            ["def", " ", "f", "", "(", "", "arguments", "", ")", "", ":", "\n    ", "Pass"],
-        )
-        checker.check_children("arguments", ["Name", "", ",", " ", "Tuple"])
-
     def test_dict_node(self):
         source = "{1: 2, 3: 4}\n"
         ast_frag = patchedast.get_patched_ast(source, True)
