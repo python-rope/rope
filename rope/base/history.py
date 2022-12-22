@@ -1,4 +1,4 @@
-from rope.base import exceptions, change, taskhandle, utils
+from rope.base import change, exceptions, taskhandle, utils
 
 
 class History:

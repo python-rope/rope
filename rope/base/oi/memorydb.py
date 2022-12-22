@@ -1,5 +1,5 @@
-from rope.base.oi import objectdb
 from rope.base import utils
+from rope.base.oi import objectdb
 
 
 class MemoryDB(objectdb.FileDict):

@@ -1,10 +1,9 @@
+import unittest
 from textwrap import dedent
 
-import unittest
-
 from rope.base import exceptions
-from ropetest import testutils
 from rope.refactor.usefunction import UseFunction
+from ropetest import testutils
 
 
 class UseFunctionTest(unittest.TestCase):

@@ -3,13 +3,7 @@ import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import (
-    arguments,
-    ast,
-    pynames,
-    pyobjects,
-    utils,
-)
+from rope.base import arguments, ast, pynames, pyobjects, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):

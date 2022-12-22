@@ -76,6 +76,9 @@ target-version = [
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
 
+[tool.isort]
+profile = "black"
+
 [tool.pytest.ini_options]
 
 python_files = [

@@ -1,8 +1,7 @@
+import unittest
 from textwrap import dedent
 
-import unittest
-
-from rope.refactor import multiproject, rename, move
+from rope.refactor import move, multiproject, rename
 from ropetest import testutils
 
 

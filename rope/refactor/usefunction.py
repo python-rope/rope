@@ -8,7 +8,7 @@ from rope.base import (
     pyobjects,
     taskhandle,
 )
-from rope.refactor import restructure, sourceutils, similarfinder
+from rope.refactor import restructure, similarfinder, sourceutils
 
 
 class UseFunction:

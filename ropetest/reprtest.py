@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from rope.base import libutils, resources, pyobjectsdef
+from rope.base import libutils, pyobjectsdef, resources
 from rope.base.project import Project
 from rope.contrib import findit
 from rope.refactor import occurrences

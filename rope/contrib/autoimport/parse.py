@@ -10,6 +10,8 @@ import pathlib
 from importlib import import_module
 from typing import Generator, List
 
+from rope.base import ast
+
 from .defs import (
     ModuleCompiled,
     ModuleFile,
@@ -20,8 +22,6 @@ from .defs import (
     PartialName,
     Source,
 )
-from rope.base import ast
-
 
 logger = logging.getLogger(__name__)
 

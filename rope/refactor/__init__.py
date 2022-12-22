@@ -48,7 +48,6 @@ monitoring the progress of refactorings.
 from rope.refactor.importutils import ImportOrganizer  # noqa
 from rope.refactor.topackage import ModuleToPackage  # noqa
 
-
 __all__ = [
     "rename",
     "move",

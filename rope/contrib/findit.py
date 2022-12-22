@@ -1,10 +1,4 @@
-from rope.base import (
-    exceptions,
-    evaluate,
-    pyobjects,
-    taskhandle,
-    worder,
-)
+from rope.base import evaluate, exceptions, pyobjects, taskhandle, worder
 from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 

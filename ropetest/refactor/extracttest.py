@@ -1,10 +1,8 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 import rope.base.codeanalyze
 import rope.base.exceptions
-
 from rope.refactor import extract
 from ropetest import testutils
 

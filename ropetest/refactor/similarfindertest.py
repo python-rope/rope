@@ -1,6 +1,5 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 from rope.refactor import similarfinder
 from ropetest import testutils

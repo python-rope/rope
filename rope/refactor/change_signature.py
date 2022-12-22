@@ -1,16 +1,9 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import (
-    codeanalyze,
-    evaluate,
-    pyobjects,
-    taskhandle,
-    utils,
-    worder,
-)
+from rope.base import codeanalyze, evaluate, pyobjects, taskhandle, utils, worder
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import occurrences, functionutils
+from rope.refactor import functionutils, occurrences
 
 
 class ChangeSignature:

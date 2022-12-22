@@ -1,14 +1,6 @@
-from rope.base import (
-    evaluate,
-    exceptions,
-    libutils,
-    pynames,
-    taskhandle,
-    utils,
-    worder,
-)
-from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import sourceutils, occurrences
+from rope.base import evaluate, exceptions, libutils, pynames, taskhandle, utils, worder
+from rope.base.change import ChangeContents, ChangeSet
+from rope.refactor import occurrences, sourceutils
 
 
 class EncapsulateField:

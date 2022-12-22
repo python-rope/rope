@@ -1,5 +1,5 @@
 import rope.refactor.importutils
-from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
+from rope.base.change import ChangeContents, ChangeSet, CreateFolder, MoveResource
 
 
 class ModuleToPackage:

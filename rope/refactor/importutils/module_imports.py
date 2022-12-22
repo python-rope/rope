@@ -1,12 +1,6 @@
-from typing import Union, List
+from typing import List, Union
 
-from rope.base import (
-    ast,
-    exceptions,
-    pynames,
-    pynamesdef,
-    utils,
-)
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
 

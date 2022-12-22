@@ -6,16 +6,12 @@ from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional, Set, Tuple, Iterator
+from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
-from rope.base import (
-    exceptions,
-    libutils,
-    resourceobserver,
-    taskhandle,
-)
+from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
+from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
     ModuleFile,
     Name,
@@ -34,7 +30,6 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
-from rope.contrib.autoimport import models
 
 
 def get_future_names(

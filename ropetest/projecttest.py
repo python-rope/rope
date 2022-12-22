@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from textwrap import dedent
 
-from rope.base.exceptions import RopeError, ResourceNotFoundError
+from rope.base.exceptions import ResourceNotFoundError, RopeError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
-from rope.base.project import Project, NoProject, _realpath
+from rope.base.project import NoProject, Project, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from ropetest import testutils
 

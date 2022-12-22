@@ -31,7 +31,7 @@ from rope.base import (
     utils,
     worder,
 )
-from rope.base.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import (
     change_signature,
     functionutils,
