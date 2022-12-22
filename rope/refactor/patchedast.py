@@ -6,7 +6,6 @@ from itertools import chain
 
 from rope.base import ast, codeanalyze, exceptions
 
-
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 
 

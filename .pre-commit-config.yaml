@@ -12,3 +12,9 @@ repos:
   hooks:
   - id: black
     name: black check (Python)
+
+- repo: https://github.com/pycqa/isort
+  rev: 5.10.1
+  hooks:
+  - id: isort
+    name: Sort imports (Python)

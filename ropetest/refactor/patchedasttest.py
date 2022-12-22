@@ -7,7 +7,6 @@ from rope.base import ast
 from rope.refactor import patchedast
 from ropetest import testutils
 
-
 NameConstant = "Name" if sys.version_info <= (3, 8) else "NameConstant"
 Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
 

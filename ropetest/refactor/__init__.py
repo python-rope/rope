@@ -1,6 +1,5 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 import rope.base.taskhandle
 import rope.refactor.introduce_parameter
@@ -14,7 +13,7 @@ import ropetest.refactor.renametest
 import ropetest.refactor.restructuretest
 import ropetest.refactor.suitestest
 import ropetest.refactor.usefunctiontest
-from rope.base.exceptions import RefactoringError, InterruptedTaskError
+from rope.base.exceptions import InterruptedTaskError, RefactoringError
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactory
 from rope.refactor.localtofield import LocalToField

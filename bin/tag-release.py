@@ -6,7 +6,6 @@ from datetime import datetime
 
 import toml
 
-
 pyproject = toml.load("pyproject.toml")
 version = pyproject["project"]["version"]
 

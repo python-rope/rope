@@ -1,18 +1,17 @@
 import os.path
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 from rope.base import exceptions
 from rope.contrib.codeassist import (
-    get_definition_location,
-    get_doc,
-    starting_expression,
     code_assist,
-    sorted_proposals,
-    starting_offset,
     get_calltip,
     get_canonical_path,
+    get_definition_location,
+    get_doc,
+    sorted_proposals,
+    starting_expression,
+    starting_offset,
 )
 from ropetest import testutils
 

@@ -19,18 +19,14 @@ from rope.base import (
     taskhandle,
     worder,
 )
-from rope.base.change import ChangeSet, ChangeContents, MoveResource
-from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
+from rope.base.change import ChangeContents, ChangeSet, MoveResource
+from rope.refactor import functionutils, importutils, occurrences, rename, sourceutils
 from rope.refactor.importutils.module_imports import (
     get_first_decorator_or_function_start_line,
 )
 
-
 if typing.TYPE_CHECKING:
-    from rope.base import (
-        project,
-        resources,
-    )
+    from rope.base import project, resources
 
 
 def create_move(project, resource, offset=None):

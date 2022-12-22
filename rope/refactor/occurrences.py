@@ -37,14 +37,16 @@ calling the `create_finder()` function.
 
 import re
 
-from rope.base import ast
-from rope.base import codeanalyze
-from rope.base import evaluate
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    ast,
+    codeanalyze,
+    evaluate,
+    exceptions,
+    pynames,
+    pyobjects,
+    utils,
+    worder,
+)
 
 
 class Finder:

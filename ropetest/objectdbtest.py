@@ -1,7 +1,6 @@
 import unittest
 
-
-from rope.base.oi import objectdb, memorydb
+from rope.base.oi import memorydb, objectdb
 from ropetest import testutils
 
 

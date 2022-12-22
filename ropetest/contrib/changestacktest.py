@@ -1,9 +1,8 @@
 import unittest
 
-
+import rope.base.change
 import rope.base.history
 import rope.contrib.changestack
-import rope.base.change
 from ropetest import testutils
 
 

@@ -7,10 +7,9 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
 import socket
-
 import unittest
-
 
 from rope.base.oi import doa
 
