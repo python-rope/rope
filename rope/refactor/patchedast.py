@@ -940,7 +940,7 @@ class _Source:
 
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
-        integer = r"\-?(0x[\da-fA-F]+|\d+)"
+        integer = r"\-?(0[xo][\da-fA-F]+|\d+)"
         return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
 
     _string_pattern = None
