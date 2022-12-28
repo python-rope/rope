@@ -19,3 +19,11 @@ def test_version_hash_varies_on_rope_version(project):
     with patch("rope.VERSION", "1.0.0"):
         patched_version_hash = versioning.calculate_version_hash(project)
     assert actual_version_hash != patched_version_hash
+
+
+def test_version_hash_varies_on_user_preferences(project):
+    actual_version_hash = versioning.calculate_version_hash(project)
+    assert project.prefs.get("automatic_soa") is False
+    project.prefs.set("automatic_soa", True)
+    patched_version_hash = versioning.calculate_version_hash(project)
+    assert actual_version_hash != patched_version_hash
