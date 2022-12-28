@@ -1,4 +1,5 @@
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Dict, List
 
 
 class FinalQuery:
@@ -49,27 +50,47 @@ class Query:
         return FinalQuery(f"DELETE FROM {self.query}")
 
 
-class Name:
-    table_name = "names"
-    columns = [
-        "name",
-        "module",
-        "package",
-        "source",
-        "type",
-    ]
+class Model(ABC):
+    @property
+    @abstractmethod
+    def table_name(self) -> str:
+        ...
+
+    @property
+    @abstractmethod
+    def schema(self) -> Dict[str, str]:
+        ...
 
     @classmethod
-    def create_table(self, connection):
-        names_table = (
-            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
+    def create_table(cls, connection):
+        metadata_table = [
+            f"{column_name} {column_type}"
+            for column_name, column_type in cls.schema.items()
+        ]
+        metadata_table_definition = ", ".join(metadata_table)
+        connection.execute(
+            f"CREATE TABLE IF NOT EXISTS {cls.table_name}({metadata_table_definition})"
         )
-        connection.execute(f"CREATE TABLE IF NOT EXISTS names{names_table}")
+
+
+class Name(Model):
+    table_name = "names"
+    schema = {
+        "name": "TEXT",
+        "module": "TEXT",
+        "package": "TEXT",
+        "source": "INTEGER",
+        "type": "INTEGER",
+    }
+    columns = list(schema.keys())
+    objects = Query(table_name, columns)
+
+    @classmethod
+    def create_table(cls, connection):
+        super().create_table(connection)
         connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
-
-    objects = Query(table_name, columns)
 
     search_submodule_like = objects.where('module LIKE ("%." || ?)')
     search_module_like = objects.where("module LIKE (?)")
@@ -81,18 +102,13 @@ class Name:
     delete_by_module_name = objects.where("module = ?").delete_from()
 
 
-class Package:
+class Package(Model):
     table_name = "packages"
-    columns = [
-        "package",
-        "path",
-    ]
-
-    @classmethod
-    def create_table(self, connection):
-        packages_table = "(package TEXT, path TEXT)"
-        connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
-
+    schema = {
+        "package": "TEXT",
+        "path": "TEXT",
+    }
+    columns = list(schema.keys())
     objects = Query(table_name, columns)
 
     delete_by_package_name = objects.where("package = ?").delete_from()

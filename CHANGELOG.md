@@ -9,6 +9,8 @@
 - #548 Implement MoveGlobal using string as destination module names (@lieryan)
 - #627 Fix parsing of octal literal (@lieryan)
 - #611 Implement JSON DataFile serialization (@lieryan)
+- #630 SQLite models improvements (@lieryan)
+
 
 # Release 1.6.0
 
