@@ -1,3 +1,4 @@
+import secrets
 from unittest.mock import patch
 
 from rope.base import versioning
@@ -26,4 +27,11 @@ def test_version_hash_varies_on_user_preferences(project):
     assert project.prefs.get("automatic_soa") is False
     project.prefs.set("automatic_soa", True)
     patched_version_hash = versioning.calculate_version_hash(project)
+    assert actual_version_hash != patched_version_hash
+
+
+def test_version_hash_varies_on_schema_file_hash(project):
+    actual_version_hash = versioning.calculate_version_hash(project)
+    with patch("rope.base.versioning._schema_file_hash", return_value=secrets.token_hex()):
+        patched_version_hash = versioning.calculate_version_hash(project)
     assert actual_version_hash != patched_version_hash
