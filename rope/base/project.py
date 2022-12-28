@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import warnings
+from contextlib import ExitStack
 from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
@@ -394,10 +395,9 @@ class _DataFiles:
     def write_data(self, name, data):
         if self.project.ropefolder is not None:
             file = self._get_file(name)
-            with (
-                open(file.real_path, "wb") as output_file,
-                open(file.real_path + ".json", "w") as output_file2,
-            ):
+            with ExitStack() as cm:
+                output_file = cm.enter_context(open(file.real_path, "wb"))
+                output_file2 = cm.enter_context(open(file.real_path + ".json", "w"))
                 pickle.dump(data, output_file, 2)
                 json.dump(data, output_file2, default=lambda o: o.__getstate__())
 
