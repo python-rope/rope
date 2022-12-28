@@ -60,9 +60,7 @@ class ChangeSet(Change):
         self.description = description
         self.time = timestamp
 
-    def do(self, job_set=None):
-        if job_set is None:
-            job_set = taskhandle.NullJobSet()
+    def do(self, job_set=taskhandle.DEFAULT_JOB_SET):
         try:
             done = []
             for change in self.changes:
@@ -74,9 +72,7 @@ class ChangeSet(Change):
                 change.undo()
             raise
 
-    def undo(self, job_set=None):
-        if job_set is None:
-            job_set = taskhandle.NullJobSet()
+    def undo(self, job_set=taskhandle.DEFAULT_JOB_SET):
         try:
             done = []
             for change in reversed(self.changes):
@@ -127,9 +123,7 @@ def _handle_job_set(function):
     methods of `Change`.
     """
 
-    def call(self, job_set=None):
-        if job_set is None:
-            job_set = taskhandle.NullJobSet()
+    def call(self, job_set=taskhandle.DEFAULT_JOB_SET):
         job_set.started_job(str(self))
         function(self)
         job_set.finished_job()

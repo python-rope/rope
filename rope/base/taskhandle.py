@@ -216,3 +216,4 @@ class NullJobSet(BaseJobSet):
 
 
 DEFAULT_TASK_HANDLE = NullTaskHandle()
+DEFAULT_JOB_SET = NullJobSet()
