@@ -5,30 +5,35 @@ import json
 import rope.base.project
 
 
+def get_version_hash_data(project: rope.base.project.Project) -> dict[str, str]:
+    version_hash_data = dict(
+        version_data=f"{rope.VERSION}",
+        prefs_data=_get_prefs_data(project),
+        schema_file_content=_get_file_content("rope.contrib.autoimport.models"),
+    )
+    return version_hash_data
+
+
 def calculate_version_hash(project: rope.base.project.Project) -> str:
+    def _merge(hasher, name: str, serialized_data: str):
+        hashed_data = hashlib.sha256(serialized_data.encode("utf-8")).hexdigest()
+        hasher.update(hashed_data.encode("ascii"))
+
     hasher = hashlib.sha256()
-
-    version_data = f"{rope.VERSION}"
-    hasher.update(version_data.encode("ascii"))
-
-    hashed_prefs_data = _prefs_version_hash_data(project)
-    hasher.update(hashed_prefs_data.encode("ascii"))
-
-    schema_file_hash = _schema_file_hash("rope.contrib.autoimport.models")
-    hasher.update(schema_file_hash.encode("ascii"))
+    for name, data in get_version_hash_data(project).items():
+        _merge(hasher, name, data)
     return hasher.hexdigest()
 
 
-def _prefs_version_hash_data(project):
+def _get_prefs_data(project) -> str:
     prefs_data = dict(vars(project.prefs))
     del prefs_data["project_opened"]
     del prefs_data["callbacks"]
     del prefs_data["dependencies"]
-    serialized_prefs_data = json.dumps(prefs_data, sort_keys=True, indent=2)
-    return hashlib.sha256(serialized_prefs_data.encode("utf-8")).hexdigest()
+    return json.dumps(prefs_data, sort_keys=True, indent=2)
 
 
-def _schema_file_hash(module_name):
+def _get_file_content(module_name) -> str:
     models_module = importlib.util.find_spec(module_name)
     src = models_module.loader.get_source(module_name)
-    return hashlib.sha256(src.encode("utf-8")).hexdigest()
+    return src
