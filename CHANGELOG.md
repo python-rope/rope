@@ -10,6 +10,7 @@
 - #627 Fix parsing of octal literal (@lieryan)
 - #611 Implement JSON DataFile serialization (@lieryan)
 - #630 SQLite models improvements (@lieryan)
+- #631 Implement version hash (@lieryan)
 
 
 # Release 1.6.0
