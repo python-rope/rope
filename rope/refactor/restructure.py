@@ -286,10 +286,10 @@ class _ChangeComputer:
         start, end = patchedast.node_region(node)
         main_text = self.source[start:end]
         collector = codeanalyze.ChangeCollector(main_text)
-        for node_ in self._get_nearest_roots(node):
-            sub_start, sub_end = patchedast.node_region(node_)
+        for node in self._get_nearest_roots(node):
+            sub_start, sub_end = patchedast.node_region(node)
             collector.add_change(
-                sub_start - start, sub_end - start, self._get_node_text(node_)
+                sub_start - start, sub_end - start, self._get_node_text(node)
             )
         result = collector.get_changed()
         if result is None:
