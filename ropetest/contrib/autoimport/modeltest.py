@@ -1,6 +1,14 @@
+import sqlite3
+from typing import Any
+
 import pytest
 
 from rope.contrib.autoimport import models
+
+
+@pytest.fixture
+def empty_db():
+    return sqlite3.connect(":memory:")
 
 
 class TestQuery:
@@ -10,7 +18,16 @@ class TestQuery:
             models.Name.objects.select("doesnotexist")._query
 
 
-class TestNameModel:
+class CreateTableTestMixin:
+    model_class: Any = None
+
+    def test_create_table(self, empty_db):
+        self.model_class.create_table(empty_db)
+
+
+class TestNameModel(CreateTableTestMixin):
+    model_class = models.Name
+
     def test_name_objects(self):
         assert models.Name.objects.select_star()._query == "SELECT * FROM names"
 
@@ -45,7 +62,9 @@ class TestNameModel:
         )
 
 
-class TestPackageModel:
+class TestPackageModel(CreateTableTestMixin):
+    model_class = models.Package
+
     def test_objects(self):
         assert (
             models.Package.objects.select_star()._query == "SELECT * FROM packages"
