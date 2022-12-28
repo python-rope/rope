@@ -131,9 +131,6 @@ def _find_locations(finder, resources, job_set):
     result = []
     for resource in resources:
         job_set.started_job(resource.path)
-        result.extend(
-            Location(occurrence) for occurrence in finder.find_occurrences(resource)
-        )
-
+        result.extend(map(Location, finder.find_occurrences(resource)))
         job_set.finished_job()
     return result
