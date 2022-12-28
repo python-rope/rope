@@ -8,6 +8,7 @@
 - #626 Install pre-commit hooks on rope repository (@lieryan)
 - #548 Implement MoveGlobal using string as destination module names (@lieryan)
 - #627 Fix parsing of octal literal (@lieryan)
+- #611 Implement JSON DataFile serialization (@lieryan)
 
 # Release 1.6.0
 
