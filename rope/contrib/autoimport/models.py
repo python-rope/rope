@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List
 
 
 class FinalQuery:
@@ -58,7 +58,7 @@ class Model(ABC):
 
     @property
     @abstractmethod
-    def schema(self) -> dict[str, str]:
+    def schema(self) -> Dict[str, str]:
         ...
 
     @classmethod
