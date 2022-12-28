@@ -33,7 +33,10 @@ def _get_prefs_data(project) -> str:
     return json.dumps(prefs_data, sort_keys=True, indent=2)
 
 
-def _get_file_content(module_name) -> str:
+def _get_file_content(module_name: str) -> str:
     models_module = importlib.util.find_spec(module_name)
+    assert models_module and models_module.loader
+    assert isinstance(models_module.loader, importlib.machinery.SourceFileLoader)
     src = models_module.loader.get_source(module_name)
+    assert src
     return src
