@@ -400,8 +400,10 @@ class _DataFiles:
     def write_data(self, name, data):
         if self.project.ropefolder is not None:
             file = self._get_file(name)
-            with open(file.real_path, "wb") as output_file, \
-                    open(file.real_path + ".json", "w") as output_file2:
+            with (
+                open(file.real_path, "wb") as output_file,
+                open(file.real_path + ".json", "w") as output_file2,
+            ):
                 pickle.dump(data, output_file, 2)
                 json.dump(data, output_file2, default=lambda o: o.__getstate__())
 

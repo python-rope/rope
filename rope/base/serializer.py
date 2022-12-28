@@ -51,7 +51,7 @@ may or may not work:
 
 def python_to_json(o, version=1):
     if version not in (1, 2):
-        raise ValueError(f'Unexpected version {version}')
+        raise ValueError(f"Unexpected version {version}")
     references = []
     result = {
         "v": version,
@@ -66,7 +66,7 @@ def python_to_json(o, version=1):
 def json_to_python(o):
     version = o["v"]
     if version not in (1, 2):
-        raise ValueError(f'Unexpected version {version}')
+        raise ValueError(f"Unexpected version {version}")
     references = o.get("references", {})
     data = _js2py(o["data"], references, version)
     return data
@@ -77,27 +77,33 @@ def _py2js(o, references, version):
         return o
     elif isinstance(o, tuple):
         if version == 1:
-            return {"$": "t", "items": [_py2js(item, references, version) for item in o]}
+            return {
+                "$": "t",
+                "items": [_py2js(item, references, version) for item in o],
+            }
         else:
             return [_py2js(item, references, version) for item in o]
     elif isinstance(o, list):
         if version == 2:
-            return {"$": "l", "items": [_py2js(item, references, version) for item in o]}
+            return {
+                "$": "l",
+                "items": [_py2js(item, references, version) for item in o],
+            }
         else:
             return [_py2js(item, references, version) for item in o]
     elif isinstance(o, dict):
         result = {}
-        for k, v in o.items():
-            if k == "$":
+        for pykey, pyvalue in o.items():
+            if pykey == "$":
                 raise ValueError('dict cannot contain reserved key "$"')
-            if isinstance(k, str) and not k.isdigit():
-                result[k] = _py2js(v, references, version)
+            if isinstance(pykey, str) and not pykey.isdigit():
+                result[pykey] = _py2js(pyvalue, references, version)
             else:
-                assert isinstance(k, (str, int, tuple)) or k is None
-                assert not isinstance(k, list)
+                assert isinstance(pykey, (str, int, tuple)) or pykey is None
+                assert not isinstance(pykey, list)
                 refid = len(references)
-                references.append(_py2js(k, references, version))
-                result[str(refid)] = _py2js(v, references, version)
+                references.append(_py2js(pykey, references, version))
+                result[str(refid)] = _py2js(pyvalue, references, version)
         return result
     raise TypeError(f"Object of type {type(o)} is not allowed {o}")
 
@@ -110,7 +116,7 @@ def _js2py(o, references, version):
             return list(_js2py(item, references, version) for item in o)
         elif version == 2:
             return tuple(_js2py(item, references, version) for item in o)
-        raise ValueError(f'Unexpected version {version}')
+        raise ValueError(f"Unexpected version {version}")
     elif isinstance(o, dict):
         result = {}
         if "$" in o:
@@ -124,14 +130,16 @@ def _js2py(o, references, version):
                 return list(_js2py(item, references, version) for item in data)
             raise TypeError(f'Unrecognized object of type: {o["$"]} {o}')
         else:
-            for refid, v in o.items():
+            for refid, jsvalue in o.items():
                 assert isinstance(refid, str)
                 if refid.isdigit():
                     refid = int(refid)
                     assert 0 <= refid < len(references)
-                    k = references[refid]
-                    result[_js2py(k, references, version)] = _js2py(v, references, version)
+                    jskey = references[refid]
+                    pyvalue = _js2py(jsvalue, references, version)
+                    pykey = _js2py(jskey, references, version)
+                    result[pykey] = pyvalue
                 else:
-                    result[refid] = _js2py(v, references, version)
+                    result[refid] = _js2py(jsvalue, references, version)
         return result
     raise TypeError(f'Object of type "{type(o).__name__}" is not allowed {o}')
