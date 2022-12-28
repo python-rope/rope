@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import sys
@@ -65,11 +66,9 @@ class _Project:
     def get_python_path_folders(self):
         result = []
         for src in self.prefs.get("python_path", []) + sys.path:
-            try:
+            with contextlib.suppress(exceptions.ResourceNotFoundError):
                 src_folder = get_no_project().get_resource(src)
                 result.append(src_folder)
-            except exceptions.ResourceNotFoundError:
-                pass
         return result
 
     # INFO: It was decided not to cache source folders, since:
@@ -107,7 +106,7 @@ class _Project:
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
+    def do(self, changes, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         """Apply the changes in a `ChangeSet`
 
         Most of the time you call this function for committing the
@@ -253,9 +252,8 @@ class Project(_Project):
         return os.path.join(self._address, *name.split("/"))
 
     def _init_ropefolder(self):
-        if self.ropefolder is not None:
-            if not self.ropefolder.exists():
-                self._create_recursively(self.ropefolder)
+        if self.ropefolder is not None and not self.ropefolder.exists():
+            self._create_recursively(self.ropefolder)
 
     def _create_recursively(self, folder):
         if folder.parent != self.root and not folder.parent.exists():

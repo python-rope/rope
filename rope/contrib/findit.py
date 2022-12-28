@@ -10,7 +10,7 @@ def find_occurrences(
     unsure=False,
     resources=None,
     in_hierarchy=False,
-    task_handle=taskhandle.NullTaskHandle(),
+    task_handle=taskhandle.DEFAULT_TASK_HANDLE,
 ):
     """Return a list of `Location`
 
@@ -43,7 +43,11 @@ def find_occurrences(
 
 
 def find_implementations(
-    project, resource, offset, resources=None, task_handle=taskhandle.NullTaskHandle()
+    project,
+    resource,
+    offset,
+    resources=None,
+    task_handle=taskhandle.DEFAULT_TASK_HANDLE,
 ):
     """Find the places a given method is overridden.
 
@@ -127,7 +131,6 @@ def _find_locations(finder, resources, job_set):
     result = []
     for resource in resources:
         job_set.started_job(resource.path)
-        for occurrence in finder.find_occurrences(resource):
-            result.append(Location(occurrence))
+        result.extend(map(Location, finder.find_occurrences(resource)))
         job_set.finished_job()
     return result

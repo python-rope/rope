@@ -84,7 +84,7 @@ class MoveMethod:
         dest_attr,
         new_name=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,  # FIXME: this is unused
     ):
         """Return the changes needed for this refactoring
 
@@ -312,7 +312,7 @@ class MoveGlobal:
         self,
         dest: Union[None, str, resources.Resource],
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Return the changes needed for this refactoring
 
@@ -512,7 +512,7 @@ class MoveModule:
         self.import_tools = self.tools.import_tools
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.NullTaskHandle()
+        self, dest, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
     ):
         if resources is None:
             resources = self.project.get_python_files()

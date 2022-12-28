@@ -25,7 +25,7 @@ class IntroduceFactory:
         factory_name,
         global_factory=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 

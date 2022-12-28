@@ -94,7 +94,7 @@ class Restructure:
         checks=None,
         imports=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes needed by this restructuring
 

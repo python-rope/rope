@@ -20,7 +20,7 @@ class EncapsulateField:
         getter=None,
         setter=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 

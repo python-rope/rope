@@ -47,7 +47,7 @@ class UseFunction:
                 "usefunction: return should be the last statement."
             )
 
-    def get_changes(self, resources=None, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         if resources is None:
             resources = self.project.get_python_files()
         changes = change.ChangeSet("Using function <%s>" % self.pyfunction.get_name())
@@ -141,12 +141,12 @@ class UseFunction:
 def find_temps(project, code):
     code = "def f():\n" + sourceutils.indent_lines(code, 4)
     pymodule = libutils.get_string_module(project, code)
-    result = []
     function_scope = pymodule.get_scope().get_scopes()[0]
-    for name, pyname in function_scope.get_names().items():
-        if isinstance(pyname, pynames.AssignedName):
-            result.append(name)
-    return result
+    return [
+        name
+        for name, pyname in function_scope.get_names().items()
+        if isinstance(pyname, pynames.AssignedName)
+    ]
 
 
 def _returns_last(node):
