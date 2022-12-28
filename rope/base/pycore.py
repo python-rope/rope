@@ -208,7 +208,7 @@ class PyCore:
             self, pymodule, should_analyze, search_subscopes, followed_calls
         )
 
-    def get_classes(self, task_handle=None):
+    def get_classes(self, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
 
         warnings.warn(
             "`PyCore.get_classes()` is deprecated", DeprecationWarning, stacklevel=2
