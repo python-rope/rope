@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import List
 
 
@@ -49,7 +50,30 @@ class Query:
         return FinalQuery(f"DELETE FROM {self.query}")
 
 
-class Name:
+class Model(ABC):
+    @property
+    @abstractmethod
+    def table_name(self) -> str:
+        ...
+
+    @property
+    @abstractmethod
+    def schema(self) -> dict[str, str]:
+        ...
+
+    @classmethod
+    def create_table(cls, connection):
+        metadata_table = [
+            f"{column_name} {column_type}"
+            for column_name, column_type in cls.schema.items()
+        ]
+        metadata_table_definition = ", ".join(metadata_table)
+        connection.execute(
+            f"CREATE TABLE IF NOT EXISTS {cls.table_name}({metadata_table_definition})"
+        )
+
+
+class Name(Model):
     table_name = "names"
     schema = {
         "name": "TEXT",
@@ -62,11 +86,8 @@ class Name:
     objects = Query(table_name, columns)
 
     @classmethod
-    def create_table(self, connection):
-        names_table = (
-            "(name TEXT, module TEXT, package TEXT, source INTEGER, type INTEGER)"
-        )
-        connection.execute(f"CREATE TABLE IF NOT EXISTS names{names_table}")
+    def create_table(cls, connection):
+        super().create_table(connection)
         connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
@@ -81,7 +102,7 @@ class Name:
     delete_by_module_name = objects.where("module = ?").delete_from()
 
 
-class Package:
+class Package(Model):
     table_name = "packages"
     schema = {
         "package": "TEXT",
@@ -89,10 +110,5 @@ class Package:
     }
     columns = list(schema.keys())
     objects = Query(table_name, columns)
-
-    @classmethod
-    def create_table(self, connection):
-        packages_table = "(package TEXT, path TEXT)"
-        connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
 
     delete_by_package_name = objects.where("package = ?").delete_from()
