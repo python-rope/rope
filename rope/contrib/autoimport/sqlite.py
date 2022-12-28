@@ -155,7 +155,7 @@ class AutoImport:
         self,
         name: str,
         exact_match: bool = False,
-        ignored_names: Set[str] = None,
+        ignored_names: Optional[Set[str]] = None,
     ) -> Generator[SearchResult, None, None]:
         """
         Search both modules and names for an import string.
@@ -260,7 +260,7 @@ class AutoImport:
 
     def generate_cache(
         self,
-        resources: List[Resource] = None,
+        resources: Optional[List[Resource]] = None,
         underlined: bool = False,
         task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
     ):
@@ -291,7 +291,7 @@ class AutoImport:
 
     def generate_modules_cache(
         self,
-        modules: List[str] = None,
+        modules: Optional[List[str]] = None,
         task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
         single_thread: bool = False,
         underlined: Optional[bool] = None,
