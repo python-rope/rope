@@ -21,7 +21,9 @@ def calculate_version_hash(project: rope.base.project.Project) -> str:
 
 def _prefs_version_hash_data(project):
     prefs_data = dict(vars(project.prefs))
+    del prefs_data["project_opened"]
     del prefs_data["callbacks"]
+    del prefs_data["dependencies"]
     return json.dumps(prefs_data, sort_keys=True, indent=2)
 
 
