@@ -1,21 +1,15 @@
-import os
 import json
-import shutil
+import os
 import sys
 import warnings
+from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
-from rope.base import (
-    exceptions,
-    history,
-    pycore,
-    taskhandle,
-    utils,
-)
+import rope.base.resourceobserver as resourceobserver
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
-import rope.base.resourceobserver as resourceobserver
 
 try:
     import cPickle as pickle
@@ -143,7 +137,7 @@ class _Project:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None):
+    def find_module(self, modname, folder=None) -> Optional[File]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found

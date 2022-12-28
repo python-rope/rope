@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from rope.base.serializer import python_to_json, json_to_python, _js2py
+from rope.base.serializer import _js2py, json_to_python, python_to_json
 
 
 @pytest.mark.parametrize("version", [1, 2])

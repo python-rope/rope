@@ -1,12 +1,6 @@
-from typing import Union, List
+from typing import List, Union
 
-from rope.base import (
-    ast,
-    exceptions,
-    pynames,
-    pynamesdef,
-    utils,
-)
+from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
 
@@ -560,7 +554,7 @@ class _GlobalImportFinder:
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module or "",  # see comment at rope.base.ast.walk
+            node.module or "",
             level,
             self._get_names(node.names),
         )

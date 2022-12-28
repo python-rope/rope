@@ -1,7 +1,6 @@
-from rope.base.serializer import python_to_json, json_to_python
-
 from rope.base import utils
 from rope.base.oi import objectdb
+from rope.base.serializer import json_to_python, python_to_json
 
 
 class MemoryDB(objectdb.FileDict):

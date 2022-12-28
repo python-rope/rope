@@ -29,9 +29,9 @@ from and writing to the resource, moving the resource, etc.
 import os
 import re
 import warnings
+from pathlib import Path
 
 from rope.base import change, exceptions, fscommands
-from pathlib import Path
 
 
 class Resource:

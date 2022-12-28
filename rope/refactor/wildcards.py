@@ -1,5 +1,5 @@
-from rope.base import ast, evaluate, builtins, pyobjects
-from rope.refactor import patchedast, occurrences
+from rope.base import ast, builtins, evaluate, pyobjects
+from rope.refactor import occurrences, patchedast
 
 
 class Wildcard:

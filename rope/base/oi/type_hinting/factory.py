@@ -1,13 +1,14 @@
+from rope.base import utils
 from rope.base.oi.type_hinting import interfaces
 from rope.base.oi.type_hinting.providers import (
     composite,
-    inheritance,
     docstrings,
+    inheritance,
     numpydocstrings,
     pep0484_type_comments,
 )
-from rope.base.oi.type_hinting.resolvers import composite as composite_resolvers, types
-from rope.base import utils
+from rope.base.oi.type_hinting.resolvers import composite as composite_resolvers
+from rope.base.oi.type_hinting.resolvers import types
 
 
 class TypeHintingFactory(interfaces.ITypeHintingFactory):

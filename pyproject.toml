@@ -49,6 +49,7 @@ dev = [
     'pytest>=7.0.1',
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
+    'pre-commit>=2.20.0',
 ]
 [tool.setuptools]
 packages = [
@@ -74,6 +75,9 @@ target-version = [
 ]
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
+
+[tool.isort]
+profile = "black"
 
 [tool.pytest.ini_options]
 

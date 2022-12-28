@@ -1,5 +1,5 @@
-from textwrap import dedent
 import unittest
+from textwrap import dedent
 
 import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils

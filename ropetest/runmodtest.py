@@ -1,8 +1,6 @@
 import os
-from textwrap import dedent
-
 import unittest
-
+from textwrap import dedent
 
 from rope.base import exceptions
 from ropetest import testutils

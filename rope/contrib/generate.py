@@ -8,7 +8,7 @@ from rope.base import (
     pyobjects,
     worder,
 )
-from rope.refactor import sourceutils, importutils, functionutils, suites
+from rope.refactor import functionutils, importutils, sourceutils, suites
 
 
 def create_generate(kind, project, resource, offset, goal_resource=None):

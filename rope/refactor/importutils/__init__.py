@@ -4,13 +4,13 @@ This package provides tools for modifying module imports after
 refactorings or as a separate task.
 
 """
+import rope.base.codeanalyze
 import rope.base.evaluate
 from rope.base import libutils
-from rope.base.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, rename
-from rope.refactor.importutils import module_imports, actions
-from rope.refactor.importutils.importinfo import NormalImport, FromImport
-import rope.base.codeanalyze
+from rope.refactor.importutils import actions, module_imports
+from rope.refactor.importutils.importinfo import FromImport, NormalImport
 
 
 class ImportOrganizer:

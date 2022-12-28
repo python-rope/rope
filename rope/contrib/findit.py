@@ -1,10 +1,4 @@
-from rope.base import (
-    exceptions,
-    evaluate,
-    pyobjects,
-    taskhandle,
-    worder,
-)
+from rope.base import evaluate, exceptions, pyobjects, taskhandle, worder
 from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 
@@ -118,7 +112,6 @@ class Location:
         self.lineno = occurrence.lineno
 
     def __repr__(self):
-        pymod = self.resource.project.get_pymodule(self.resource)
         return '<{}.{} "{}:{} ({}-{})" at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,

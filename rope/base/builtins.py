@@ -3,19 +3,7 @@ import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import (
-    arguments,
-    ast,
-    pynames,
-    pyobjects,
-    utils,
-)
-
-
-try:
-    raw_input
-except NameError:
-    raw_input = input
+from rope.base import arguments, ast, pynames, pyobjects, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -847,9 +835,7 @@ _initial_builtins = {
     "tuple": BuiltinName(get_tuple_type()),
     "set": BuiltinName(get_set_type()),
     "str": BuiltinName(get_str_type()),
-    "file": BuiltinName(get_file_type()),
     "open": BuiltinName(BuiltinFunction(function=_open_function, builtin=open)),
-    "unicode": BuiltinName(get_str_type()),
     "range": BuiltinName(BuiltinFunction(function=_range_function, builtin=range)),
     "reversed": BuiltinName(
         BuiltinFunction(function=_reversed_function, builtin=reversed)
@@ -866,9 +852,7 @@ _initial_builtins = {
     "object": BuiltinName(BuiltinObject()),
     "type": BuiltinName(BuiltinType()),
     "iter": BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter)),
-    "raw_input": BuiltinName(
-        BuiltinFunction(function=_input_function, builtin=raw_input)
-    ),
+    "input": BuiltinName(BuiltinFunction(function=_input_function, builtin=input)),
 }
 
 builtins = BuiltinModule("builtins", initial=_initial_builtins)

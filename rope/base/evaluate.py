@@ -7,13 +7,12 @@ import rope.base.pyobjects
 from rope.base import (
     arguments,
     ast,
-    nameanalyze,
     exceptions,
+    nameanalyze,
     pyobjects,
     pyobjectsdef,
     worder,
 )
-
 
 BadIdentifierError = exceptions.BadIdentifierError
 

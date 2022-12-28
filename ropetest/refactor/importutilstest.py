@@ -1,8 +1,7 @@
 import unittest
-
 from textwrap import dedent
 
-from rope.refactor.importutils import ImportTools, importinfo, add_import
+from rope.refactor.importutils import ImportTools, add_import, importinfo
 from ropetest import testutils
 
 
@@ -1615,12 +1614,12 @@ class ImportUtilsTest(unittest.TestCase):
     def test_sorting_future_imports(self):
         self.mod.write(dedent("""\
             import os
-            from __future__ import devision
+            from __future__ import division
         """))
         pymod = self.project.get_module("mod")
         self.assertEqual(
             dedent("""\
-                from __future__ import devision
+                from __future__ import division
 
                 import os
             """),

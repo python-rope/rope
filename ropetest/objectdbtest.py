@@ -1,7 +1,6 @@
 import unittest
 
-
-from rope.base.oi import objectdb, memorydb
+from rope.base.oi import memorydb, objectdb
 from ropetest import testutils
 
 
@@ -178,6 +177,7 @@ class ObjectDBTest(unittest.TestCase):
     @_do_for_all_dbs
     def test_new_json_serialization(self, db):
         import json
+
         from rope.base.oi.memorydb import ScopeInfo
 
         db.add_callinfo("file", "key", (1, 2), 3)
