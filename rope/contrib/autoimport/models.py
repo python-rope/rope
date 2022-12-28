@@ -51,13 +51,15 @@ class Query:
 
 class Name:
     table_name = "names"
-    columns = [
-        "name",
-        "module",
-        "package",
-        "source",
-        "type",
-    ]
+    schema = {
+        "name": "TEXT",
+        "module": "TEXT",
+        "package": "TEXT",
+        "source": "INTEGER",
+        "type": "INTEGER",
+    }
+    columns = list(schema.keys())
+    objects = Query(table_name, columns)
 
     @classmethod
     def create_table(self, connection):
@@ -68,8 +70,6 @@ class Name:
         connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
         connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
         connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
-
-    objects = Query(table_name, columns)
 
     search_submodule_like = objects.where('module LIKE ("%." || ?)')
     search_module_like = objects.where("module LIKE (?)")
@@ -83,16 +83,16 @@ class Name:
 
 class Package:
     table_name = "packages"
-    columns = [
-        "package",
-        "path",
-    ]
+    schema = {
+        "package": "TEXT",
+        "path": "TEXT",
+    }
+    columns = list(schema.keys())
+    objects = Query(table_name, columns)
 
     @classmethod
     def create_table(self, connection):
         packages_table = "(package TEXT, path TEXT)"
         connection.execute(f"CREATE TABLE IF NOT EXISTS packages{packages_table}")
-
-    objects = Query(table_name, columns)
 
     delete_by_package_name = objects.where("package = ?").delete_from()
