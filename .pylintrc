@@ -9,7 +9,7 @@
 # Add <file or directory> to the black list. A base name, not a path.
 ignore=
     .git
-    
+
 # Files or directories matching regex, in Windows or Posix format.
 ignore-paths=
 
@@ -26,7 +26,7 @@ disable=
 
     # Catagories to disable: expensive or make-work
     # typecheck
-    
+
         basic,  # Check on names. Unimportant.
         classes,  # Unimportant.
         design,  # Make work.
@@ -37,24 +37,24 @@ disable=
         variables,  # Unimportant.
 
     # Black. Suppress checks that conflict with Black's conventions.
-    
+
         line-too-long,
-        
+
     # Rope: Suppress checks that conflict with Rope's conventions.
 
         bad-classmethod-argument,
         eval-used,
         function-redefined,
-        inconsistent-return-statements, 
-        invalid-name, 
+        inconsistent-return-statements,
+        invalid-name,
         no-else-return,
         no-self-argument,
         signature-differs,  # Maybe.
         not-callable,  # Maybe.
         unexpected-special-method-signature,
-        
+
     # Rope: potentially serious warnings.
-    
+
         arguments-differ,
         dangerous-default-value,
         modified-iterating-list,
@@ -64,7 +64,7 @@ disable=
         unpacking-non-sequence,
 
     # Rope: to be removed.
-    
+
         duplicate-string-formatting-argument,
         no-else-raise,  # Unnecessary "else" after "raise", remove the "else" and de-indent the code inside it.
         reimported,
@@ -72,14 +72,14 @@ disable=
         unused-import,
         unused-wildcard-import,
         useless-super-delegation,
-        
+
         useless-else-on-loop,  #Else clause on loop without a break statement, remove the else and de-indent all the code inside it.
         unidiomatic-typecheck,
         wildcard-import,
         wrong-import-order,
-        
+
     # Rope: Additional (temporary?) suppressions.
-    
+
         abstract-method,
         arguments-differ,
         consider-merging-isinstance,
@@ -94,9 +94,9 @@ disable=
         super-init-not-called,
         unnecessary-lambda,
         unsupported-assignment-operation,
-    
+
     # Leo: Standard suppressions.
-        
+
         arguments-renamed, # cursesGui2.py
         assignment-from-no-return, # Causes problems when base class return None.
         assignment-from-none, # Causes problems when base class return None.

@@ -3,10 +3,10 @@ from contextlib import contextmanager
 from itertools import chain
 
 from rope.base import ast, codeanalyze
-from rope.base.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeContents, ChangeSet
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
-from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefunction
+from rope.refactor import patchedast, similarfinder, sourceutils, suites, usefunction
 
 
 # Extract refactoring has lots of special cases.  I tried to split it
@@ -947,11 +947,14 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
 
 
 def _get_argnames(arguments):
-    result = [node.arg for node in arguments.args if isinstance(node, ast.arg)]
+    result = []
+    result.extend(node.arg for node in getattr(arguments, "posonlyargs", []))
+    result.extend(node.arg for node in arguments.args)
     if arguments.vararg:
         result.append(arguments.vararg.arg)
     if arguments.kwarg:
         result.append(arguments.kwarg.arg)
+    result.extend(node.arg for node in arguments.kwonlyargs)
     return result
 
 

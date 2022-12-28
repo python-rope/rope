@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from packaging.requirements import Requirement
 from pytoolconfig import PyToolConfig, UniversalKey, field
 from pytoolconfig.sources import Source
+
 from rope.base.resources import Folder
 
 
@@ -69,7 +70,9 @@ class Prefs:
     save_objectdb: bool = field(
         default=False, description="Should rope save object information or not."
     )
-    compress_objectdb: bool = False
+    compress_objectdb: bool = field(
+        default=False, description="Deprecated. This has no effect",
+    )
     automatic_soa: bool = field(
         True, "If `True`, rope analyzes each module when it is being saved."
     )
@@ -92,7 +95,9 @@ class Prefs:
     save_history: bool = field(
         default=True, description="Shows whether to save history across sessions."
     )
-    compress_history: bool = False
+    compress_history: bool = field(
+        default=False, description="Deprecated. This has no effect",
+    )
 
     indent_size: int = field(
         default=4,

@@ -1,4 +1,4 @@
-from rope.base import exceptions, change, taskhandle
+from rope.base import change, exceptions, taskhandle, utils
 
 
 class History:
@@ -15,9 +15,7 @@ class History:
 
     def _load_history(self):
         if self.save:
-            result = self.project.data_files.read_data(
-                "history", compress=self.compress, import_=True
-            )
+            result = self.project.data_files.read_data("history")
             if result is not None:
                 to_change = change.DataToChange(self.project)
                 for data in result[0]:
@@ -152,7 +150,7 @@ class History:
             self._remove_extra_items()
             data.append([to_data(change_) for change_ in self.undo_list])
             data.append([to_data(change_) for change_ in self.redo_list])
-            self.project.data_files.write_data("history", data, compress=self.compress)
+            self.project.data_files.write_data("history", data)
 
     def get_file_undo_list(self, resource):
         return [
@@ -193,8 +191,9 @@ class History:
         return self.project.prefs.get("save_history", False)
 
     @property
+    @utils.deprecated("compress_history is no longer supported")
     def compress(self):
-        return self.project.prefs.get("compress_history", False)
+        return False
 
     def clear(self):
         """Forget all undo and redo information"""

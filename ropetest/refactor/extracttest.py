@@ -1,10 +1,8 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 import rope.base.codeanalyze
 import rope.base.exceptions
-
 from rope.refactor import extract
 from ropetest import testutils
 
@@ -201,6 +199,43 @@ class ExtractMethodTest(unittest.TestCase):
             def new_func():
                 a_var = 10
                 return a_var
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_function_with_kwonlyargs(self):
+        code = dedent("""\
+            def a_func(b, *, a_var):
+                another_var = 20
+                third_var = a_var + another_var
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+            def a_func(b, *, a_var):
+                another_var = 20
+                new_func(a_var, another_var)
+
+            def new_func(a_var, another_var):
+                third_var = a_var + another_var
+        """)
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.8")
+    def test_extract_function_with_posonlyargs(self):
+        code = dedent("""\
+            def a_func(a_var, /, b):
+                another_var = 20
+                third_var = a_var + another_var
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "new_func")
+        expected = dedent("""\
+            def a_func(a_var, /, b):
+                another_var = 20
+                new_func(a_var, another_var)
+
+            def new_func(a_var, another_var):
+                third_var = a_var + another_var
         """)
         self.assertEqual(expected, refactored)
 
@@ -2300,22 +2335,6 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func():
                 exec("def f(): pass", {})
-
-            new_func()
-        """)
-        self.assertEqual(expected, refactored)
-
-    @testutils.only_for_versions_lower("3")
-    def test_extract_exec_statement(self):
-        code = dedent("""\
-            exec "def f(): pass" in {}
-        """)
-        start, end = self._convert_line_range_to_offset(code, 1, 1)
-        refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent("""\
-
-            def new_func():
-                exec "def f(): pass" in {}
 
             new_func()
         """)

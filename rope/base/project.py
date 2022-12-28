@@ -1,21 +1,17 @@
 import contextlib
+import json
 import os
-import shutil
 import sys
 import warnings
+from contextlib import ExitStack
+from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
-from rope.base import (
-    exceptions,
-    history,
-    pycore,
-    taskhandle,
-    utils,
-)
+import rope.base.resourceobserver as resourceobserver
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
-import rope.base.resourceobserver as resourceobserver
 
 try:
     import cPickle as pickle
@@ -141,7 +137,7 @@ class _Project:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None):
+    def find_module(self, modname, folder=None) -> Optional[File]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
@@ -211,6 +207,7 @@ class Project(_Project):
         """
         if projectroot != "/":
             projectroot = _realpath(projectroot).rstrip("/\\")
+        assert isinstance(projectroot, str)
         self._address = projectroot
         self._ropefolder_name = ropefolder
         if not os.path.exists(self._address):
@@ -376,40 +373,31 @@ class _DataFiles:
         self.project = project
         self.hooks = []
 
-    def read_data(self, name, compress=False, import_=False):
+    def read_data(self, name):
         if self.project.ropefolder is None:
             return None
-        compress = compress and self._can_compress()
-        opener = self._get_opener(compress)
-        file = self._get_file(name, compress)
-        if not compress and import_:
-            self._import_old_files(name)
+        file = self._get_file(name)
         if file.exists():
-            input = opener(file.real_path, "rb")
-            try:
+            with open(file.real_path, "rb") as input_file:
                 result = []
                 try:
                     while True:
-                        result.append(pickle.load(input))
+                        result.append(pickle.load(input_file))
                 except EOFError:
                     pass
                 if len(result) == 1:
                     return result[0]
                 if len(result) > 1:
                     return result
-            finally:
-                input.close()
 
-    def write_data(self, name, data, compress=False):
+    def write_data(self, name, data):
         if self.project.ropefolder is not None:
-            compress = compress and self._can_compress()
-            file = self._get_file(name, compress)
-            opener = self._get_opener(compress)
-            output = opener(file.real_path, "wb")
-            try:
-                pickle.dump(data, output, 2)
-            finally:
-                output.close()
+            file = self._get_file(name)
+            with ExitStack() as cm:
+                output_file = cm.enter_context(open(file.real_path, "wb"))
+                output_file2 = cm.enter_context(open(file.real_path + ".json", "w"))
+                pickle.dump(data, output_file, 2)
+                json.dump(data, output_file2, default=lambda o: o.__getstate__())
 
     def add_write_hook(self, hook):
         self.hooks.append(hook)
@@ -418,31 +406,8 @@ class _DataFiles:
         for hook in self.hooks:
             hook()
 
-    def _can_compress(self):
-        try:
-            import gzip  # noqa
-
-            return True
-        except ImportError:
-            return False
-
-    def _import_old_files(self, name):
-        old = self._get_file(name + ".pickle", False)
-        new = self._get_file(name, False)
-        if old.exists() and not new.exists():
-            shutil.move(old.real_path, new.real_path)
-
-    def _get_opener(self, compress):
-        if compress:
-            with contextlib.suppress(ImportError):
-                import gzip
-                return gzip.open
-        return open
-
-    def _get_file(self, name, compress):
+    def _get_file(self, name):
         path = self.project.ropefolder.path + "/" + name
-        if compress:
-            path += ".gz"
         return self.project.get_file(path)
 
 

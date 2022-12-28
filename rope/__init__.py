@@ -1,14 +1,14 @@
 """rope, a python refactoring library"""
 
-from pkg_resources import get_distribution, DistributionNotFound
+from pkg_resources import DistributionNotFound, get_distribution
 
 try:
     VERSION = get_distribution("rope").version
 except DistributionNotFound:
 
     def get_fallback_version():
-        import re
         import pathlib
+        import re
 
         pyproject = (
             pathlib.Path(__file__).resolve().parent.parent / "pyproject.toml"

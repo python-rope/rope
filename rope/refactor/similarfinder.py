@@ -3,12 +3,7 @@ import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 import rope.refactor.wildcards  # Use full qualification for clarity.
-from rope.base import (
-    ast,
-    codeanalyze,
-    exceptions,
-    libutils,
-)
+from rope.base import ast, codeanalyze, exceptions, libutils
 from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 

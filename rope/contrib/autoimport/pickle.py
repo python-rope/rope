@@ -65,7 +65,11 @@ class AutoImport:
         # XXX: breaking if gave up! use generators
         result = []
         for module in self.names:
-            result.extend((global_name, module) for global_name in self.names[module] if global_name.startswith(starting))
+            result.extend(
+                (global_name, module)
+                for global_name in self.names[module]
+                if global_name.startswith(starting)
+            )
 
         return result
 
@@ -97,7 +101,10 @@ class AutoImport:
         return result
 
     def generate_cache(
-        self, resources=None, underlined=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
+        self,
+        resources=None,
+        underlined=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Generate global name cache for project files
 

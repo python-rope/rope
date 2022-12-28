@@ -101,7 +101,7 @@ class PythonFileRunner:
         else:
             self.receiver = _FIFOReceiver()
         self.receiving_thread = threading.Thread(target=self._receive_information)
-        self.receiving_thread.setDaemon(True)
+        self.receiving_thread.daemon = True
         self.receiving_thread.start()
 
     def _receive_information(self):

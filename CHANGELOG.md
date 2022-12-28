@@ -1,8 +1,47 @@
 # **Upcoming release**
 
-- #533 Refactoring to Remove usage of unicode type
-- #559 Improve handling of whitespace in import and from-import statements
-- #581 Remove functions in rope.base.ast that has functionally identical implementation in stdlib's ast 
+- #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
+- #606 Deprecate compress_objectdb and compress_history (@lieryan)
+- #607 Remove importing from legacy files with `.pickle` suffix (@lieryan)
+- #625 Remove support for deprecated ast nodes (@lieryan)
+- #616, #621 Remove `file` builtins (@edreamleo)
+- #626 Install pre-commit hooks on rope repository (@lieryan)
+- #548 Implement MoveGlobal using string as destination module names (@lieryan)
+- #627 Fix parsing of octal literal (@lieryan)
+- #611 Implement JSON DataFile serialization (@lieryan)
+
+# Release 1.6.0
+
+# New features & Enhancements
+
+- #559, #560 Improve handling of whitespace in import and from-import statements (@lieryan)
+- #566, #567, #597 Fix variables in kwonlyargs and posonlyargs not being correctly passed to extracted methods (@lieryan)
+
+## Unit Test
+
+- #589, #596 Fix issue with `sample_project()` creating directories where it shouldn't when running tests (@lieryan)
+- #547 Add config file for linters
+- #593 Remove `only_for` decorator for all python versions less than 3.7 (@edreamleo)
+
+## Tech Debt
+
+- Code quality
+  - #546 Remove unused vars in test (@lieryan, @edreamleo)
+  - #551, #552 Numerous flake8 linter complaints (@edreamleo)
+  - #558 Fix typos (@kianmeng)
+  - #583, #584 More consistent import style (@edreamleo)
+- Python 2-related tech debt
+  - #533 Refactoring to Remove usage of unicode type (@lieryan)
+  - #549, #553 Remove rope.base.utils.pycompat (@dreamleo)
+  - #555 Fix some python2-isms (@lieryan)
+- Rope's AST Wrapper
+  - #536, #578 walk does not return a value (@edreamleo)
+  - #537, #538 Remove special case code from walk (@edreamleo)
+  - #581 Remove functions in rope.base.ast that has functionally identical implementation in stdlib's ast (@lieryan, @edreamleo)
+  - #582 Refactoring rope.base.ast and remove rope.base.astutils (@lieryan, @edreamleo)
+- pynames and pyobjects
+  - #569, #572 rename pynames to pynamesdef in pyobjectsdef.ph (@edreamleo)
+
 
 # Release 1.5.1
 
@@ -10,13 +49,18 @@
 
 # Release 1.5.0
 
+Date: 2022-11-23
+
 - #492 Feat: Global configuration support (@bagel897)
 - #519 Move pytest to pyproject.toml (@gliptak, @bagel897)
 - #509 Fix read/write analysis of the left-hand side of an augmented assignment (@lieryan)
 - #522 Implement patchedast parsing of MatchMapping (@lieryan)
 - #514 Fix inlining dictionary with inline comment (@lieryan)
 
+
 # Release 1.4.0
+
+Date: 2022-10-22
 
 ## Bug fixes
 
@@ -24,7 +68,10 @@
 - #411, #505 Fix extracting generator without parens
 - #18, #510 When the function is a builtin function, the call parameter's name was sometimes incorrectly identified as an AssignedName. This led to rename refactoring incorrectly renaming these parameters.
 
+
 # Release 1.3.0
+
+Date: 2022-07-29
 
 ## Bug fixes
 
@@ -34,6 +81,7 @@
 ## Improvement
 
 - #501, #502 Autoimport improvements
+
 
 # Release 1.2.0
 
@@ -52,11 +100,13 @@ Date: 2022-04-22
 - #487 Improved value inference of __all__ declaration (@lieryan)
 - #424 Add some basic __repr__ to make it easier for debugging (@lieryan)
 
+
 # Release 1.1.1
 
 ## Bug fixes
 
 - #476 Fix rope.contrib.autoimport package missing from release (@bageljrkhanofemus)
+
 
 # Release 1.1.0
 
@@ -77,6 +127,7 @@ Date: 2022-05-25
 
 - The pickle-based autoimport implementation is still the default, but will be deprecated sometime in the future.
 
+
 # Release 1.0.0
 
 Date: 2022-04-08
@@ -88,6 +139,7 @@ Date: 2022-04-08
 ## Bug fixes
 
 - #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
+
 
 # Release 0.23.0
 
@@ -125,6 +177,7 @@ Date: 2021-11-23
 
 - #447 Add Python 3.10 to tests
 
+
 # Release 0.21.1
 
 Date: 2021-11-11
@@ -132,6 +185,7 @@ Date: 2021-11-11
 ## Bug fixes
 
 - #441. Start publishing wheel packages to allow offline installs
+
 
 # Release 0.21.0
 
@@ -179,7 +233,6 @@ Date: 2021-09-18
 
 - Fix caller of `_namedexpr_last()` throwing exception due to returning unexpected list
   instead of boolean
-
 
 
 # Release 0.20.0

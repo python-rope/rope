@@ -4,19 +4,12 @@ import difflib
 import warnings
 
 import rope.base.libutils
-import rope.base.resourceobserver
-import rope.base.resources
 import rope.base.oi.doa
 import rope.base.oi.objectinfo
 import rope.base.oi.soa
-from rope.base import (
-    builtins,
-    exceptions,
-    pyobjectsdef,
-    stdmods,
-    taskhandle,
-    utils,
-)
+import rope.base.resourceobserver
+import rope.base.resources
+from rope.base import builtins, exceptions, pyobjectsdef, stdmods, taskhandle, utils
 
 
 class PyCore:

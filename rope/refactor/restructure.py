@@ -1,7 +1,6 @@
 import warnings
 
-from rope.base import change, taskhandle, builtins, ast, codeanalyze
-from rope.base import libutils
+from rope.base import ast, builtins, change, codeanalyze, libutils, taskhandle
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 

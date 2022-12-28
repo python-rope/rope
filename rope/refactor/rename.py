@@ -1,16 +1,16 @@
 import warnings
 
 from rope.base import (
-    exceptions,
-    pyobjects,
-    pynames,
-    taskhandle,
-    evaluate,
-    worder,
     codeanalyze,
+    evaluate,
+    exceptions,
     libutils,
+    pynames,
+    pyobjects,
+    taskhandle,
+    worder,
 )
-from rope.base.change import ChangeSet, ChangeContents, MoveResource
+from rope.base.change import ChangeContents, ChangeSet, MoveResource
 from rope.refactor import occurrences
 
 

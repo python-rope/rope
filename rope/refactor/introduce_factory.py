@@ -1,12 +1,6 @@
-from rope.base import (
-    evaluate,
-    exceptions,
-    libutils,
-    pyobjects,
-    taskhandle,
-)
-from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import rename, occurrences, sourceutils, importutils
+from rope.base import evaluate, exceptions, libutils, pyobjects, taskhandle
+from rope.base.change import ChangeContents, ChangeSet
+from rope.refactor import importutils, occurrences, rename, sourceutils
 
 
 class IntroduceFactory:

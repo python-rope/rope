@@ -5,11 +5,17 @@ class FinalQuery:
     def __init__(self, query):
         self._query = query
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self._query}")'
+
 
 class Query:
     def __init__(self, query: str, columns: List[str]):
         self.query = query
         self.columns = columns
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.query}", columns={self.columns})'
 
     def select(self, *columns: str):
         if not (set(columns) <= set(self.columns)):

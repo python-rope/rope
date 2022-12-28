@@ -1,6 +1,5 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 import rope.base.exceptions
 from rope.refactor import change_signature

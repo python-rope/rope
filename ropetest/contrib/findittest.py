@@ -1,9 +1,8 @@
+import unittest
 from textwrap import dedent
 
-import unittest
-
 from rope.base import exceptions
-from rope.contrib.findit import find_occurrences, find_implementations, find_definition
+from rope.contrib.findit import find_definition, find_implementations, find_occurrences
 from ropetest import testutils
 
 

@@ -8,7 +8,7 @@ from rope.base import (
     pyobjects,
     taskhandle,
 )
-from rope.refactor import restructure, sourceutils, similarfinder
+from rope.refactor import restructure, similarfinder, sourceutils
 
 
 class UseFunction:
@@ -142,7 +142,11 @@ def find_temps(project, code):
     code = "def f():\n" + sourceutils.indent_lines(code, 4)
     pymodule = libutils.get_string_module(project, code)
     function_scope = pymodule.get_scope().get_scopes()[0]
-    return [name for name, pyname in function_scope.get_names().items() if isinstance(pyname, pynames.AssignedName)]
+    return [
+        name
+        for name, pyname in function_scope.get_names().items()
+        if isinstance(pyname, pynames.AssignedName)
+    ]
 
 
 def _returns_last(node):

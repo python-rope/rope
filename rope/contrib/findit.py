@@ -1,10 +1,4 @@
-from rope.base import (
-    exceptions,
-    evaluate,
-    pyobjects,
-    taskhandle,
-    worder,
-)
+from rope.base import evaluate, exceptions, pyobjects, taskhandle, worder
 from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 
@@ -49,7 +43,11 @@ def find_occurrences(
 
 
 def find_implementations(
-    project, resource, offset, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
+    project,
+    resource,
+    offset,
+    resources=None,
+    task_handle=taskhandle.DEFAULT_TASK_HANDLE,
 ):
     """Find the places a given method is overridden.
 
@@ -117,12 +115,25 @@ class Location:
         self.unsure = occurrence.is_unsure()
         self.lineno = occurrence.lineno
 
+    def __repr__(self):
+        return '<{}.{} "{}:{} ({}-{})" at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.resource.path,
+            self.lineno,
+            self.region[0],
+            self.region[1],
+            hex(id(self)),
+        )
+
 
 def _find_locations(finder, resources, job_set):
     result = []
     for resource in resources:
         job_set.started_job(resource.path)
-        result.extend(Location(occurrence) for occurrence in finder.find_occurrences(resource))
+        result.extend(
+            Location(occurrence) for occurrence in finder.find_occurrences(resource)
+        )
 
         job_set.finished_job()
     return result

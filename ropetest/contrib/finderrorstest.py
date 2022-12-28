@@ -1,7 +1,5 @@
-from textwrap import dedent
-
 import unittest
-
+from textwrap import dedent
 
 from rope.contrib import finderrors
 from ropetest import testutils
