@@ -8,6 +8,7 @@ import pytest
 from rope.base import libutils, pyobjectsdef, resources
 from rope.base.project import Project
 from rope.contrib import findit
+from rope.contrib.autoimport import models
 from rope.refactor import occurrences
 from ropetest import testutils
 
@@ -150,3 +151,17 @@ def test_repr_findit_location(project, mod1):
     assert repr(obj).startswith(
         '<rope.contrib.findit.Location "pkg1/mod1.py:2 (11-13)" at 0x'
     )
+
+
+def test_autoimport_models_query(project, mod1):
+    expected_repr = '''Query("names WHERE module LIKE (?)", columns=['name', 'module', 'package', 'source', 'type'])'''
+    obj = models.Name.search_module_like
+    assert isinstance(obj, models.Query)
+    assert repr(obj) == expected_repr
+
+
+def test_autoimport_models_finalquery(project, mod1):
+    expected_repr = '''FinalQuery("DELETE FROM packages WHERE package = ?")'''
+    obj = models.Package.delete_by_package_name
+    assert isinstance(obj, models.FinalQuery)
+    assert repr(obj) == expected_repr
