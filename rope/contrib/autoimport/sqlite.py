@@ -267,7 +267,7 @@ class AutoImport:
         self,
         resources: List[Resource] = None,
         underlined: bool = False,
-        task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Generate global name cache for project files.
 
@@ -297,7 +297,7 @@ class AutoImport:
     def generate_modules_cache(
         self,
         modules: List[str] = None,
-        task_handle: taskhandle.BaseTaskHandle = None,
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
         single_thread: bool = False,
         underlined: Optional[bool] = None,
     ):
@@ -309,8 +309,6 @@ class AutoImport:
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         underlined = self.underlined if underlined is None else underlined
 
         packages: List[Package] = (

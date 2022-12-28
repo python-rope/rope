@@ -16,7 +16,7 @@ def find_occurrences(
     unsure=False,
     resources=None,
     in_hierarchy=False,
-    task_handle=None,
+    task_handle=taskhandle.DEFAULT_TASK_HANDLE,
 ):
     """Return a list of `Location`
 
@@ -27,8 +27,6 @@ def find_occurrences(
     in the project are searched.
 
     """
-    if task_handle is None:
-        task_handle = taskhandle.NullTaskHandle()
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.get_pymodule(resource)
     primary, pyname = evaluate.eval_location2(this_pymodule, offset)
@@ -51,15 +49,13 @@ def find_occurrences(
 
 
 def find_implementations(
-    project, resource, offset, resources=None, task_handle=None
+    project, resource, offset, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
 ):
     """Find the places a given method is overridden.
 
     Finds the places a method is implemented.  Returns a list of
     `Location`.
     """
-    if task_handle is None:
-        task_handle = taskhandle.NullTaskHandle()
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.get_pymodule(resource)
     pyname = evaluate.eval_location(this_pymodule, offset)

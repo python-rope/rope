@@ -110,14 +110,12 @@ class _Project:
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def do(self, changes, task_handle=None):
+    def do(self, changes, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         """Apply the changes in a `ChangeSet`
 
         Most of the time you call this function for committing the
         changes for a refactoring.
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         self.history.do(changes, task_handle=task_handle)
 
     def get_pymodule(self, resource, force_errors=False):

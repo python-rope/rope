@@ -132,7 +132,7 @@ class InlineMethod(_Inliner):
         remove=True,
         only_current=False,
         resources=None,
-        task_handle=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 
@@ -140,8 +140,6 @@ class InlineMethod(_Inliner):
         `only_current` is `True`, the the current occurrence will be
         inlined, only.
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         changes = ChangeSet("Inline method <%s>" % self.name)
         if resources is None:
             resources = self.project.get_python_files()
@@ -258,10 +256,8 @@ class InlineVariable(_Inliner):
         only_current=False,
         resources=None,
         docs=False,
-        task_handle=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             if rename._is_local(self.pyname):
                 resources = [self.resource]

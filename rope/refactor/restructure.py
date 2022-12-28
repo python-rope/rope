@@ -95,7 +95,7 @@ class Restructure:
         checks=None,
         imports=None,
         resources=None,
-        task_handle=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes needed by this restructuring
 
@@ -119,8 +119,6 @@ class Restructure:
         in restructuring pattern.
 
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         if checks is not None:
             warnings.warn(
                 "The use of checks parameter is deprecated; "

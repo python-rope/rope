@@ -47,9 +47,7 @@ class UseFunction:
                 "usefunction: return should be the last statement."
             )
 
-    def get_changes(self, resources=None, task_handle=None):
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
+    def get_changes(self, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         if resources is None:
             resources = self.project.get_python_files()
         changes = change.ChangeSet("Using function <%s>" % self.pyfunction.get_name())

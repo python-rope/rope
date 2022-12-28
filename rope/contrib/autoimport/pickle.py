@@ -97,7 +97,7 @@ class AutoImport:
         return result
 
     def generate_cache(
-        self, resources=None, underlined=None, task_handle=None
+        self, resources=None, underlined=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
     ):
         """Generate global name cache for project files
 
@@ -106,8 +106,6 @@ class AutoImport:
         project are cached.
 
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         job_set = task_handle.create_jobset(
@@ -119,11 +117,9 @@ class AutoImport:
             job_set.finished_job()
 
     def generate_modules_cache(
-        self, modules, underlined=None, task_handle=None
+        self, modules, underlined=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
     ):
         """Generate global name cache for modules listed in `modules`"""
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         job_set = task_handle.create_jobset(
             "Generating autoimport cache for modules", len(modules)
         )

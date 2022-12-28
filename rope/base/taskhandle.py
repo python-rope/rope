@@ -213,3 +213,6 @@ class NullJobSet(BaseJobSet):
 
     def increment(self):
         pass
+
+
+DEFAULT_TASK_HANDLE = NullTaskHandle()

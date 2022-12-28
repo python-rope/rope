@@ -102,10 +102,7 @@ def sort_and_deduplicate_tuple(
 def should_parse(path: pathlib.Path, underlined: bool) -> bool:
     if underlined:
         return True
-    for part in path.parts:
-        if part.startswith("_"):
-            return False
-    return True
+    return all(not part.startswith("_") for part in path.parts)
 
 
 def get_files(

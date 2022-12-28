@@ -24,15 +24,13 @@ class FixModuleNames:
     def __init__(self, project):
         self.project = project
 
-    def get_changes(self, fixer=str.lower, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, fixer=str.lower, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         """Fix module names
 
         `fixer` is a function that takes and returns a `str`.  Given
         the name of a module, it should return the fixed name.
 
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         stack = changestack.ChangeStack(self.project, "Fixing module names")
         jobset = task_handle.create_jobset(
             "Fixing module names", self._count_fixes(fixer) + 1

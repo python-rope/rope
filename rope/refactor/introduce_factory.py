@@ -31,7 +31,7 @@ class IntroduceFactory:
         factory_name,
         global_factory=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 
@@ -44,8 +44,6 @@ class IntroduceFactory:
         files in the project are searched.
 
         """
-        if task_handle is None:
-            task_handle = taskhandle.NullTaskHandle()
         if resources is None:
             resources = self.project.get_python_files()
         changes = ChangeSet("Introduce factory method <%s>" % factory_name)
