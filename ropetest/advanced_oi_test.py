@@ -1,11 +1,9 @@
-from textwrap import dedent
-
-from rope.base.builtins import Str
-
 import unittest
+from textwrap import dedent
 
 import rope.base.libutils
 import rope.base.oi
+from rope.base.builtins import Str
 from ropetest import testutils
 
 

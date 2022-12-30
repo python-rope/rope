@@ -3,7 +3,7 @@ import ast
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
-from rope.base import pyobjects, evaluate, nameanalyze, arguments
+from rope.base import arguments, evaluate, nameanalyze, pyobjects
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):

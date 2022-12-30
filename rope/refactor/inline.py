@@ -31,7 +31,7 @@ from rope.base import (
     utils,
     worder,
 )
-from rope.base.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import (
     change_signature,
     functionutils,
@@ -132,7 +132,7 @@ class InlineMethod(_Inliner):
         remove=True,
         only_current=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 
@@ -256,7 +256,7 @@ class InlineVariable(_Inliner):
         only_current=False,
         resources=None,
         docs=False,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         if resources is None:
             if rename._is_local(self.pyname):
@@ -414,8 +414,10 @@ class _DefinitionGenerator:
     def get_function_name(self):
         return self.pyfunction.get_name()
 
-    def get_definition(self, primary, pyname, call, host_vars=[], returns=False):
+    def get_definition(self, primary, pyname, call, host_vars=None, returns=False):
         # caching already calculated definitions
+        if host_vars is None:
+            host_vars = []
         return self._calculate_definition(primary, pyname, call, host_vars, returns)
 
     def _calculate_header(self, primary, pyname, call):
@@ -451,7 +453,7 @@ class _DefinitionGenerator:
 
         # If there is a name conflict, all variable names
         # inside the inlined function are renamed
-        if len(set(all_names).intersection(set(host_vars))) > 0:
+        if set(all_names).intersection(set(host_vars)):
 
             prefix = next(_DefinitionGenerator.unique_prefix)
             guest = libutils.get_string_module(self.project, source, self.resource)

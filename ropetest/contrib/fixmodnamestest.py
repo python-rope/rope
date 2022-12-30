@@ -1,9 +1,8 @@
 import unittest
 
-
-from ropetest import testutils
 from rope.contrib.fixmodnames import FixModuleNames
 from rope.contrib.generate import create_module, create_package
+from ropetest import testutils
 
 
 # HACK: for making this test work on case-insensitive file-systems, it

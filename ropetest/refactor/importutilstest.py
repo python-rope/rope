@@ -1,8 +1,7 @@
 import unittest
-
 from textwrap import dedent
 
-from rope.refactor.importutils import ImportTools, importinfo, add_import
+from rope.refactor.importutils import ImportTools, add_import, importinfo
 from ropetest import testutils
 
 

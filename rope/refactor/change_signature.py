@@ -1,16 +1,9 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import (
-    codeanalyze,
-    evaluate,
-    pyobjects,
-    taskhandle,
-    utils,
-    worder,
-)
+from rope.base import codeanalyze, evaluate, pyobjects, taskhandle, utils, worder
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import occurrences, functionutils
+from rope.refactor import functionutils, occurrences
 
 
 class ChangeSignature:
@@ -53,7 +46,7 @@ class ChangeSignature:
         call_changer,
         in_hierarchy=None,
         resources=None,
-        handle=taskhandle.NullTaskHandle(),
+        handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         if resources is None:
             resources = self.project.get_python_files()
@@ -151,7 +144,7 @@ class ChangeSignature:
         changers,
         in_hierarchy=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get changes caused by this refactoring
 
@@ -179,9 +172,8 @@ class _FunctionChangers:
         self.changed_definition_infos = self._get_changed_definition_infos()
 
     def _get_changed_definition_infos(self):
-        result = []
         definition_info = self.definition_info
-        result.append(definition_info)
+        result = [definition_info]
         for changer in self.changers:
             definition_info = copy.deepcopy(definition_info)
             changer.change_definition_info(definition_info)

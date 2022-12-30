@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 import typing
 
 import rope.base.pyobjects
 from rope.base import exceptions, utils
 
-
 if typing.TYPE_CHECKING:
     from typing import Union
+
     from rope.base import pyobjectsdef
 
 

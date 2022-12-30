@@ -1,3 +1,5 @@
+import contextlib
+
 import rope.base.oi.soi
 import rope.base.pyobjects
 from rope.base import pynames, utils
@@ -28,10 +30,8 @@ class AssignedName(pynames.AssignedName):
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
         if self.lineno is None and self.assignments:
-            try:
+            with contextlib.suppress(AttributeError):
                 self.lineno = self.assignments[0].get_lineno()
-            except AttributeError:
-                pass
         return (self.module, self.lineno)
 
     def invalidate(self):

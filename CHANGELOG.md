@@ -1,8 +1,17 @@
 # **Upcoming release**
 
 - #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
-- #606 Deprecate compress_objectdb and compress_history
-- #607 Remove importing from legacy files with `.pickle` suffix
+- #606 Deprecate compress_objectdb and compress_history (@lieryan)
+- #607 Remove importing from legacy files with `.pickle` suffix (@lieryan)
+- #625 Remove support for deprecated ast nodes (@lieryan)
+- #616, #621 Remove `file` builtins (@edreamleo)
+- #626 Install pre-commit hooks on rope repository (@lieryan)
+- #548 Implement MoveGlobal using string as destination module names (@lieryan)
+- #627 Fix parsing of octal literal (@lieryan)
+- #611 Implement JSON DataFile serialization (@lieryan)
+- #630 SQLite models improvements (@lieryan)
+- #631 Implement version hash (@lieryan)
+
 
 # Release 1.6.0
 

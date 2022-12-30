@@ -67,7 +67,7 @@ def analyze_module(project, resource):
     project.pycore.analyze_module(resource)
 
 
-def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
+def analyze_modules(project, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
     """Perform static object analysis on all python files in the project
 
     Note that this might be really time consuming.

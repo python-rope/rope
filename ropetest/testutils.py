@@ -9,7 +9,6 @@ from pathlib import Path
 import rope.base.project
 from rope.contrib import generate
 
-
 logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=logging.INFO)
 
 RUN_TMP_DIR = tempfile.mkdtemp(prefix="ropetest-run-")

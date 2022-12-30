@@ -10,6 +10,8 @@ If you are still using this module, you should migrate to the new and improved
 sqlite-based storage backend (rope.contrib.autoimport.sqlite.AutoImport).
 """
 
+
+import contextlib
 import re
 
 from rope.base import (
@@ -63,9 +65,12 @@ class AutoImport:
         # XXX: breaking if gave up! use generators
         result = []
         for module in self.names:
-            for global_name in self.names[module]:
-                if global_name.startswith(starting):
-                    result.append((global_name, module))
+            result.extend(
+                (global_name, module)
+                for global_name in self.names[module]
+                if global_name.startswith(starting)
+            )
+
         return result
 
     def get_modules(self, name):
@@ -84,7 +89,7 @@ class AutoImport:
         result = []
         for module in self.names:
             if name in self.names[module]:
-                try:
+                with contextlib.suppress(exceptions.ModuleNotFoundError):
                     pymodule = self.project.get_module(module)
                     if name in pymodule:
                         pyname = pymodule[name]
@@ -93,12 +98,13 @@ class AutoImport:
                             resource = module.get_module().get_resource()
                             if resource is not None and lineno is not None:
                                 result.append((resource, lineno))
-                except exceptions.ModuleNotFoundError:
-                    pass
         return result
 
     def generate_cache(
-        self, resources=None, underlined=None, task_handle=taskhandle.NullTaskHandle()
+        self,
+        resources=None,
+        underlined=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Generate global name cache for project files
 
@@ -118,7 +124,7 @@ class AutoImport:
             job_set.finished_job()
 
     def generate_modules_cache(
-        self, modules, underlined=None, task_handle=taskhandle.NullTaskHandle()
+        self, modules, underlined=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
     ):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
@@ -164,23 +170,19 @@ class AutoImport:
 
     def update_resource(self, resource, underlined=None):
         """Update the cache for global names in `resource`"""
-        try:
+        with contextlib.suppress(exceptions.ModuleSyntaxError):
             pymodule = self.project.get_pymodule(resource)
             modname = self._module_name(resource)
             self._add_names(pymodule, modname, underlined)
-        except exceptions.ModuleSyntaxError:
-            pass
 
     def update_module(self, modname, underlined=None):
         """Update the cache for global names in `modname` module
 
         `modname` is the name of a module.
         """
-        try:
+        with contextlib.suppress(exceptions.ModuleNotFoundError):
             pymodule = self.project.get_module(modname)
             self._add_names(pymodule, modname, underlined)
-        except exceptions.ModuleNotFoundError:
-            pass
 
     def _module_name(self, resource):
         return libutils.modname(resource)

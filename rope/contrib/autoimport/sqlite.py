@@ -1,4 +1,6 @@
 """AutoImport module for rope."""
+
+import contextlib
 import re
 import sqlite3
 import sys
@@ -6,16 +8,12 @@ from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from itertools import chain
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional, Set, Tuple, Iterator
+from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
-from rope.base import (
-    exceptions,
-    libutils,
-    resourceobserver,
-    taskhandle,
-)
+from rope.base import exceptions, libutils, resourceobserver, taskhandle
 from rope.base.project import Project
 from rope.base.resources import Resource
+from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
     ModuleFile,
     Name,
@@ -34,7 +32,6 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
-from rope.contrib.autoimport import models
 
 
 def get_future_names(
@@ -158,7 +155,7 @@ class AutoImport:
         self,
         name: str,
         exact_match: bool = False,
-        ignored_names: Set[str] = set(),
+        ignored_names: Optional[Set[str]] = None,
     ) -> Generator[SearchResult, None, None]:
         """
         Search both modules and names for an import string.
@@ -177,6 +174,8 @@ class AutoImport:
         __________
         Unsorted Generator of SearchResults. Each is guaranteed to be unique.
         """
+        if ignored_names is None:
+            ignored_names = set()
         results = set(self._search_name(name, exact_match))
         results = results.union(self._search_module(name, exact_match))
         for result in results:
@@ -261,9 +260,9 @@ class AutoImport:
 
     def generate_cache(
         self,
-        resources: List[Resource] = None,
+        resources: Optional[List[Resource]] = None,
         underlined: bool = False,
-        task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Generate global name cache for project files.
 
@@ -292,8 +291,8 @@ class AutoImport:
 
     def generate_modules_cache(
         self,
-        modules: List[str] = None,
-        task_handle: taskhandle.BaseTaskHandle = taskhandle.NullTaskHandle(),
+        modules: Optional[List[str]] = None,
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
         single_thread: bool = False,
         underlined: Optional[bool] = None,
     ):
@@ -315,7 +314,7 @@ class AutoImport:
 
         existing = self._get_packages_from_cache()
         packages = list(filter_packages(packages, underlined, existing))
-        if len(packages) == 0:
+        if not packages:
             return
         self._add_packages(packages)
         job_set = task_handle.create_jobset("Generating autoimport cache", 0)
@@ -359,7 +358,7 @@ class AutoImport:
             models.Name.search_by_name_like.select("module"), (name,)
         ).fetchall()
         for module in modules:
-            try:
+            with contextlib.suppress(exceptions.ModuleNotFoundError):
                 module_name = module[0]
                 if module_name.startswith(f"{self.project_package.name}."):
                     module_name = ".".join(module_name.split("."))
@@ -371,8 +370,6 @@ class AutoImport:
                         resource = module.get_module().get_resource()
                         if resource is not None and lineno is not None:
                             result.append((resource, lineno))
-            except exceptions.ModuleNotFoundError:
-                pass
         return result
 
     def clear_cache(self):
