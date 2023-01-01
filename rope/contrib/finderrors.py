@@ -25,8 +25,8 @@ TODO:
 """
 import ast
 
-from rope.base.ast import RopeNodeVisitor
 from rope.base import evaluate, pyobjects
+from rope.base.ast import RopeNodeVisitor
 
 
 def find_errors(project, resource):

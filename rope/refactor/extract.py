@@ -1082,16 +1082,15 @@ def _get_function_kind(scope):
 
 
 def _parse_text(body):
-    parse = rope.base.ast.parse
     body = sourceutils.fix_indentation(body, 0)
     try:
-        node = parse(body)
+        node = rope.base.ast.parse(body)
     except SyntaxError:
         # needed to parse expression containing := operator
         try:
-            node = parse("(" + body + ")")
+            node = rope.base.ast.parse("(" + body + ")")
         except SyntaxError:
-            node = parse(
+            node = rope.base.ast.parse(
                 "async def __rope_placeholder__():\n"
                 + sourceutils.fix_indentation(body, 4)
             )
