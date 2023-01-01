@@ -3,7 +3,6 @@ import ast
 import rope.base.evaluate
 
 
-
 class Arguments:
     """A class for evaluating parameters passed to a function
 
