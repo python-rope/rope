@@ -1,6 +1,5 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 from rope.base import ast
 from rope.refactor import suites

@@ -4,10 +4,10 @@ from itertools import chain
 from typing import Dict
 
 from rope.base import ast, codeanalyze
-from rope.base.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeContents, ChangeSet
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
-from rope.refactor import sourceutils, similarfinder, patchedast, suites, usefunction
+from rope.refactor import patchedast, similarfinder, sourceutils, suites, usefunction
 
 
 # Extract refactoring has lots of special cases.  I tried to split it

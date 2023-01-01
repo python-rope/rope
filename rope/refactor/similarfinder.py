@@ -3,12 +3,7 @@ import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 import rope.refactor.wildcards  # Use full qualification for clarity.
-from rope.base import (
-    ast,
-    codeanalyze,
-    exceptions,
-    libutils,
-)
+from rope.base import ast, codeanalyze, exceptions, libutils
 from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
@@ -45,7 +40,9 @@ class SimilarFinder:
         else:
             self.wildcards = wildcards
 
-    def get_matches(self, code, args={}, start=0, end=None):
+    def get_matches(self, code, args=None, start=0, end=None):
+        if args is None:
+            args = {}
         self.args = args
         if end is None:
             end = len(self.source)
@@ -136,9 +133,7 @@ class RawSimilarFinder:
     def _replace_wildcards(self, expression):
         ropevar = _RopeVariable()
         template = CodeTemplate(expression)
-        mapping = {}
-        for name in template.get_names():
-            mapping[name] = ropevar.get_var(name)
+        mapping = {name: ropevar.get_var(name) for name in template.get_names()}
         return template.substitute(mapping)
 
 
@@ -369,10 +364,9 @@ def _pydefined_to_str(pydefined):
     if isinstance(
         pydefined, (rope.base.builtins.BuiltinClass, rope.base.builtins.BuiltinFunction)
     ):
-        return "__builtins__." + pydefined.get_name()
-    else:
-        while pydefined.parent is not None:
-            address.insert(0, pydefined.get_name())
-            pydefined = pydefined.parent
-        module_name = libutils.modname(pydefined.resource)
+        return f"__builtins__.{pydefined.get_name()}"
+    while pydefined.parent is not None:
+        address.insert(0, pydefined.get_name())
+        pydefined = pydefined.parent
+    module_name = libutils.modname(pydefined.resource)
     return ".".join(module_name.split(".") + address)

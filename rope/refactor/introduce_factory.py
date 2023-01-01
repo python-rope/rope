@@ -1,12 +1,6 @@
-from rope.base import (
-    evaluate,
-    exceptions,
-    libutils,
-    pyobjects,
-    taskhandle,
-)
-from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import rename, occurrences, sourceutils, importutils
+from rope.base import evaluate, exceptions, libutils, pyobjects, taskhandle
+from rope.base.change import ChangeContents, ChangeSet
+from rope.refactor import importutils, occurrences, rename, sourceutils
 
 
 class IntroduceFactory:
@@ -31,7 +25,7 @@ class IntroduceFactory:
         factory_name,
         global_factory=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 

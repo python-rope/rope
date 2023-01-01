@@ -1,9 +1,4 @@
-from rope.base import (
-    libutils,
-    pyobjects,
-    exceptions,
-    stdmods,
-)
+from rope.base import exceptions, libutils, pyobjects, stdmods
 from rope.refactor import occurrences
 from rope.refactor.importutils import importinfo
 

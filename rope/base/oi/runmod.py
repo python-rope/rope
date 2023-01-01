@@ -1,7 +1,7 @@
 def __rope_start_everything():
     import os
-    import sys
     import socket
+    import sys
 
     try:
         import cPickle as pickle  # type:ignore
@@ -14,6 +14,10 @@ def __rope_start_everything():
     import base64
     import hashlib
     import hmac
+    import inspect
+    import marshal
+    import threading
+    import types
 
     class _MessageSender:
         def send_data(self, data):

@@ -501,7 +501,7 @@ might want to do something like:
           percent = jobset.get_percent_done()
           if percent is not None:
               text += ' ... %s percent done' % percent
-          print text
+          print(text)
 
   handle.add_observer(update_progress)
 
@@ -631,7 +631,7 @@ Using rename refactoring:
   >>> from rope.contrib import generate
   >>> pkg = generate.create_package(project, 'pkg')
   >>> mod2 = generate.create_module(project, 'mod2', pkg)
-  >>> mod2.write('import mod1\nprint mod1.a_var\n')
+  >>> mod2.write('import mod1\nprint(mod1.a_var)\n')
 
   # We can use `Project.find_module` for finding modules, too
   >>> assert mod2 == project.find_module('pkg.mod2')
@@ -643,7 +643,7 @@ Using rename refactoring:
   >>> mod1.read()
   u'new_var = 10\n'
   >>> mod2.read()
-  u'import mod1\nprint mod1.new_var\n'
+  u'import mod1\nprint(mod1.new_var)\n'
 
   # Undoing rename refactoring
   >>> project.history.undo()
@@ -651,7 +651,7 @@ Using rename refactoring:
   >>> mod1.read()
   u'a_var = 10\n'
   >>> mod2.read()
-  u'import mod1\nprint mod1.a_var\n'
+  u'import mod1\nprint(mod1.a_var)\n'
 
   # Cleaning up
   >>> pkg.remove()
@@ -865,7 +865,7 @@ AutoImport can search for a name from both modules and statements you can import
   autoimport.close()
   project.close()
 
-It provides two new search methods: 
+It provides two new search methods:
  -  search_full() - returns a list of mostly unsorted tuples. This has itemkind and source information.
  -  search() - simpler wrapper around search_full with a basic sorting algorithm
 

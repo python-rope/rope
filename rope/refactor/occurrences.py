@@ -35,16 +35,20 @@ calling the `create_finder()` function.
     arguments
 """
 
+
+import contextlib
 import re
 
-from rope.base import ast
-from rope.base import codeanalyze
-from rope.base import evaluate
-from rope.base import exceptions
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import utils
-from rope.base import worder
+from rope.base import (
+    ast,
+    codeanalyze,
+    evaluate,
+    exceptions,
+    pynames,
+    pyobjects,
+    utils,
+    worder,
+)
 
 
 class Finder:
@@ -62,7 +66,9 @@ class Finder:
 
     """
 
-    def __init__(self, project, name, filters=[lambda o: True], docs=False):
+    def __init__(self, project, name, filters=None, docs=False):
+        if filters is None:
+            filters = [lambda o: True]
         self.project = project
         self.name = name
         self.docs = docs
@@ -143,17 +149,13 @@ class Occurrence:
 
     @utils.saveit
     def get_pyname(self):
-        try:
+        with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_pyname_at(self.offset)
-        except exceptions.BadIdentifierError:
-            pass
 
     @utils.saveit
     def get_primary_and_pyname(self):
-        try:
+        with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
-        except exceptions.BadIdentifierError:
-            pass
 
     @utils.saveit
     def is_in_import_statement(self):
@@ -194,9 +196,13 @@ def same_pyname(expected, pyname):
         return False
     if expected == pyname:
         return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and type(
-        pyname
-    ) not in (pynames.ImportedModule, pynames.ImportedName):
+    if not isinstance(
+        expected,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ) and not isinstance(
+        pyname,
+        (pynames.ImportedModule, pynames.ImportedName),
+    ):
         return False
     return (
         expected.get_definition_location() == pyname.get_definition_location()

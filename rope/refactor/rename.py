@@ -1,16 +1,16 @@
 import warnings
 
 from rope.base import (
-    exceptions,
-    pyobjects,
-    pynames,
-    taskhandle,
-    evaluate,
-    worder,
     codeanalyze,
+    evaluate,
+    exceptions,
     libutils,
+    pynames,
+    pyobjects,
+    taskhandle,
+    worder,
 )
-from rope.base.change import ChangeSet, ChangeContents, MoveResource
+from rope.base.change import ChangeContents, ChangeSet, MoveResource
 from rope.refactor import occurrences
 
 
@@ -59,7 +59,7 @@ class Rename:
         unsure=None,
         docs=False,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes needed for this refactoring
 

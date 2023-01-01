@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Union
 
 import rope.base.utils as base_utils
 from rope.base import evaluate

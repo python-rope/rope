@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 import typing
 
 import rope.base.pyobjects
 from rope.base import exceptions, utils
 
-
 if typing.TYPE_CHECKING:
     from typing import Union
+
     from rope.base import pyobjectsdef
 
 
@@ -35,7 +36,7 @@ class DefinedName(PyName):
 
 
 class AssignedName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class UnboundName(PyName):
@@ -100,7 +101,7 @@ class EvaluatedName(PyName):
 
 
 class ParameterName(PyName):
-    """Only a placeholder"""
+    pass
 
 
 class ImportedModule(PyName):

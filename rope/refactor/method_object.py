@@ -1,14 +1,7 @@
 import warnings
 
-from rope.base import (
-    change,
-    codeanalyze,
-    evaluate,
-    exceptions,
-    libutils,
-    pyobjects,
-)
-from rope.refactor import sourceutils, occurrences, rename
+from rope.base import change, codeanalyze, evaluate, exceptions, libutils, pyobjects
+from rope.refactor import occurrences, rename, sourceutils
 
 
 class MethodObject:

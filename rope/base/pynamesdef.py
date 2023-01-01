@@ -1,6 +1,12 @@
+import contextlib
+
 import rope.base.oi.soi
-from rope.base import pynames
-from rope.base.pynames import *
+import rope.base.pyobjects
+from rope.base import pynames, utils
+
+
+class DefinedName(pynames.DefinedName):
+    pass
 
 
 class AssignedName(pynames.AssignedName):
@@ -24,15 +30,17 @@ class AssignedName(pynames.AssignedName):
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
         if self.lineno is None and self.assignments:
-            try:
+            with contextlib.suppress(AttributeError):
                 self.lineno = self.assignments[0].get_lineno()
-            except AttributeError:
-                pass
         return (self.module, self.lineno)
 
     def invalidate(self):
         """Forget the `PyObject` this `PyName` holds"""
         self.pyobject.set(None)
+
+
+class UnboundName(pynames.UnboundName):
+    pass
 
 
 class ParameterName(pynames.ParameterName):
@@ -52,6 +60,22 @@ class ParameterName(pynames.ParameterName):
 
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
+
+
+class AssignmentValue(pynames.AssignmentValue):
+    pass
+
+
+class EvaluatedName(pynames.EvaluatedName):
+    pass
+
+
+class ImportedModule(pynames.ImportedModule):
+    pass
+
+
+class ImportedName(pynames.ImportedName):
+    pass
 
 
 _Inferred = pynames._Inferred

@@ -2,8 +2,9 @@
 # Based on super lightweight Simple Top-Down Parser from http://effbot.org/zone/simple-top-down-parsing.htm
 # and https://bitbucket.org/emacsway/sqlbuilder/src/default/sqlbuilder/smartsql/contrib/evaluate.py
 import re
-from rope.base.oi.type_hinting import utils
+
 from rope.base import utils as base_utils
+from rope.base.oi.type_hinting import utils
 
 
 class SymbolBase:

@@ -1,19 +1,17 @@
+import contextlib
+import json
 import os
 import sys
 import warnings
+from contextlib import ExitStack
+from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
-from rope.base import (
-    exceptions,
-    history,
-    pycore,
-    taskhandle,
-    utils,
-)
+import rope.base.resourceobserver as resourceobserver
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
-import rope.base.resourceobserver as resourceobserver
 
 try:
     import cPickle as pickle  # type:ignore
@@ -68,11 +66,9 @@ class _Project:
     def get_python_path_folders(self):
         result = []
         for src in self.prefs.get("python_path", []) + sys.path:
-            try:
+            with contextlib.suppress(exceptions.ResourceNotFoundError):
                 src_folder = get_no_project().get_resource(src)
                 result.append(src_folder)
-            except exceptions.ResourceNotFoundError:
-                pass
         return result
 
     # INFO: It was decided not to cache source folders, since:
@@ -110,7 +106,7 @@ class _Project:
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
+    def do(self, changes, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
         """Apply the changes in a `ChangeSet`
 
         Most of the time you call this function for committing the
@@ -141,7 +137,7 @@ class _Project:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None):
+    def find_module(self, modname, folder=None) -> Optional[File]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
@@ -256,9 +252,8 @@ class Project(_Project):
         return os.path.join(self._address, *name.split("/"))
 
     def _init_ropefolder(self):
-        if self.ropefolder is not None:
-            if not self.ropefolder.exists():
-                self._create_recursively(self.ropefolder)
+        if self.ropefolder is not None and not self.ropefolder.exists():
+            self._create_recursively(self.ropefolder)
 
     def _create_recursively(self, folder):
         if folder.parent != self.root and not folder.parent.exists():
@@ -398,8 +393,11 @@ class _DataFiles:
     def write_data(self, name, data):
         if self.project.ropefolder is not None:
             file = self._get_file(name)
-            with open(file.real_path, "wb") as output_file:
+            with ExitStack() as cm:
+                output_file = cm.enter_context(open(file.real_path, "wb"))
+                output_file2 = cm.enter_context(open(file.real_path + ".json", "w"))
                 pickle.dump(data, output_file, 2)
+                json.dump(data, output_file2, default=lambda o: o.__getstate__())
 
     def add_write_hook(self, hook):
         self.hooks.append(hook)

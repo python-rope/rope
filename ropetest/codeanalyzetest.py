@@ -1,14 +1,9 @@
-from textwrap import dedent
 import unittest
+from textwrap import dedent
 
 import rope.base.evaluate
-from rope.base import (
-    codeanalyze,
-    exceptions,
-    libutils,
-    worder,
-)
-from rope.base.codeanalyze import SourceLinesAdapter, LogicalLineFinder, get_block_start
+from rope.base import codeanalyze, exceptions, libutils, worder
+from rope.base.codeanalyze import LogicalLineFinder, SourceLinesAdapter, get_block_start
 from ropetest import testutils
 
 

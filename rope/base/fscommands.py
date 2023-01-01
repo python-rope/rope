@@ -6,12 +6,11 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 `MercurialCommands` for example.
 
 """
-import re
 import os
+import re
 import shutil
 import subprocess
 import typing
-
 
 FileContent = typing.NewType("FileContent", bytes)
 

@@ -1,7 +1,7 @@
 import warnings
 
 from rope.base import exceptions, resourceobserver
-from rope.base.oi import objectdb, memorydb, transform
+from rope.base.oi import memorydb, objectdb, transform
 
 
 class ObjectInfoManager:

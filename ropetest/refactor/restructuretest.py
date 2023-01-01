@@ -1,9 +1,8 @@
+import unittest
 from textwrap import dedent
 
 from rope.refactor import restructure
 from ropetest import testutils
-
-import unittest
 
 
 class RestructureTest(unittest.TestCase):

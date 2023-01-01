@@ -1,22 +1,16 @@
 import bisect
+import contextlib
 import difflib
 from typing import Callable
 import warnings
 
 import rope.base.libutils
-import rope.base.resourceobserver
-import rope.base.resources
 import rope.base.oi.doa
 import rope.base.oi.objectinfo
 import rope.base.oi.soa
-from rope.base import (
-    builtins,
-    exceptions,
-    pyobjectsdef,
-    stdmods,
-    taskhandle,
-    utils,
-)
+import rope.base.resourceobserver
+import rope.base.resources
+from rope.base import builtins, exceptions, pyobjectsdef, stdmods, taskhandle, utils
 
 
 class PyCore:
@@ -216,7 +210,8 @@ class PyCore:
             self, pymodule, should_analyze, search_subscopes, followed_calls
         )
 
-    def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
+    def get_classes(self, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
+
         warnings.warn(
             "`PyCore.get_classes()` is deprecated", DeprecationWarning, stacklevel=2
         )
@@ -297,7 +292,7 @@ class _ExtensionCache:
 def perform_soa_on_changed_scopes(project, resource, old_contents):
     pycore = project.pycore
     if resource.exists() and pycore.is_python_file(resource):
-        try:
+        with contextlib.suppress(exceptions.ModuleSyntaxError):
             new_contents = resource.read()
             # detecting changes in new_contents relative to old_contents
             detector = _TextChangeDetector(new_contents, old_contents)
@@ -313,8 +308,6 @@ def perform_soa_on_changed_scopes(project, resource, old_contents):
                 return detector.consume_changes(start, end)
 
             pycore.analyze_module(resource, should_analyze, search_subscopes)
-        except exceptions.ModuleSyntaxError:
-            pass
 
 
 class _TextChangeDetector:

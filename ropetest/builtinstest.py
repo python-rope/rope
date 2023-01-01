@@ -1,10 +1,9 @@
+import unittest
 from textwrap import dedent
 
-import unittest
-
 from rope.base import builtins, libutils, pyobjects
-from ropetest import testutils
 from rope.base.builtins import Dict
+from ropetest import testutils
 
 
 class BuiltinTypesTest(unittest.TestCase):

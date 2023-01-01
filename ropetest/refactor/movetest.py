@@ -1,6 +1,5 @@
-from textwrap import dedent
-
 import unittest
+from textwrap import dedent
 
 from rope.base import exceptions
 from rope.refactor import move
@@ -39,6 +38,18 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.mod1, self.mod1.read().index("foo") + 1, self.mod2)
         self.assertEqual("bar = 321\n", self.mod1.read())
         self.assertEqual("foo = 123\n", self.mod2.read())
+
+    def test_move_target_is_module_name(self):
+        self.mod1.write("foo = 123\n")
+        self._move(self.mod1, self.mod1.read().index("foo") + 1, "mod2")
+        self.assertEqual("", self.mod1.read())
+        self.assertEqual("foo = 123\n", self.mod2.read())
+
+    def test_move_target_is_package_name(self):
+        self.mod1.write("foo = 123\n")
+        self._move(self.mod1, self.mod1.read().index("foo") + 1, "pkg.mod4")
+        self.assertEqual("", self.mod1.read())
+        self.assertEqual("foo = 123\n", self.mod4.read())
 
     def test_move_constant_multiline(self):
         self.mod1.write(dedent("""\

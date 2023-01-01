@@ -1,14 +1,6 @@
-from rope.base import (
-    evaluate,
-    exceptions,
-    libutils,
-    pynames,
-    taskhandle,
-    utils,
-    worder,
-)
-from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import sourceutils, occurrences
+from rope.base import evaluate, exceptions, libutils, pynames, taskhandle, utils, worder
+from rope.base.change import ChangeContents, ChangeSet
+from rope.refactor import occurrences, sourceutils
 
 
 class EncapsulateField:
@@ -28,7 +20,7 @@ class EncapsulateField:
         getter=None,
         setter=None,
         resources=None,
-        task_handle=taskhandle.NullTaskHandle(),
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Get the changes this refactoring makes
 

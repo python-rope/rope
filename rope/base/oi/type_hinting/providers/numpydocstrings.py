@@ -4,6 +4,7 @@ https://github.com/davidhalter/jedi/blob/b489019f5bd5750051122b94cc767df47751ecb
 Thanks to @davidhalter for this utils under MIT License.
 """
 import re
+
 from rope.base.ast import literal_eval
 from rope.base.oi.type_hinting.providers import docstrings  # type:ignore
 
