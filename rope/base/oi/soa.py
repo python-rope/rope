@@ -1,7 +1,9 @@
-import rope.base.ast
+import ast
+
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
+from rope.base.ast import RopeNodeVisitor
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -31,11 +33,11 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes, followed_
             )
 
         visitor = SOAVisitor(pycore, pydefined, _follow if followed_calls else None)
-        for child in rope.base.ast.iter_child_nodes(pydefined.get_ast()):
+        for child in ast.iter_child_nodes(pydefined.get_ast()):
             visitor.visit(child)
 
 
-class SOAVisitor(rope.base.ast.RopeNodeVisitor):
+class SOAVisitor(RopeNodeVisitor):
     def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
@@ -49,7 +51,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         pass
 
     def _Call(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
@@ -97,7 +99,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         ]
 
     def _AnnAssign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -108,7 +110,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
 
     def _Assign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -143,7 +145,7 @@ class _SOAAssignVisitor(nameanalyze._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, rope.base.ast.Subscript) and isinstance(
-            node.slice, (rope.base.ast.Index, rope.base.ast.expr)
+        if isinstance(node, ast.Subscript) and isinstance(
+            node.slice, (ast.Index, ast.expr)
         ):
             self.nodes.append((node, levels))

@@ -4,13 +4,14 @@ Functions to find importable names.
 Can extract names from source code of a python file, .so object, or builtin module.
 """
 
+import ast
 import inspect
 import logging
 import pathlib
 from importlib import import_module
 from typing import Generator, List
 
-from rope.base import ast
+import rope.base
 
 from .defs import (
     ModuleCompiled,
@@ -45,7 +46,7 @@ def get_names_from_file(
 ) -> Generator[PartialName, None, None]:
     """Get all the names from a given file using ast."""
     try:
-        root_node = ast.parse(module.read_bytes())
+        root_node = rope.base.ast.parse(module.read_bytes())
     except SyntaxError as error:
         print(error)
         return

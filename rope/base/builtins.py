@@ -1,9 +1,10 @@
 """This module tries to support builtin types and functions."""
+import ast
 import inspect
 import io
 
 import rope.base.evaluate
-from rope.base import arguments, ast, pynames, pyobjects, utils
+from rope.base import arguments, pynames, pyobjects, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):

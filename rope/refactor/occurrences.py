@@ -35,12 +35,12 @@ calling the `create_finder()` function.
     arguments
 """
 
-
+import ast
 import contextlib
 import re
 
+import rope.base
 from rope.base import (
-    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -339,7 +339,7 @@ class _TextualFinder:
                     yield match.start("fstring") + occurrence_node.col_offset
 
     def _search_in_f_string(self, f_string):
-        tree = ast.parse(f_string)
+        tree = rope.base.ast.parse(f_string)
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == self.name:
                 yield node

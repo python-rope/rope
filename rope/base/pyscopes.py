@@ -1,5 +1,6 @@
+import ast
 import rope.base.builtins  # Use full qualification for clarity.
-from rope.base import ast, codeanalyze, exceptions, pynames, utils
+from rope.base import codeanalyze, exceptions, pynames, utils
 from rope.refactor import patchedast
 
 

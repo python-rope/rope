@@ -1,9 +1,11 @@
 """This module can be used for finding similar code"""
+import ast
 import re
 
+import rope.base
 import rope.base.builtins  # Use full qualification for clarity.
 import rope.refactor.wildcards  # Use full qualification for clarity.
-from rope.base import ast, codeanalyze, exceptions, libutils
+from rope.base import codeanalyze, exceptions, libutils
 from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
@@ -73,10 +75,10 @@ class RawSimilarFinder:
     def __init__(self, source, node=None, does_match=None):
         if node is None:
             try:
-                node = ast.parse(source)
+                node = rope.base.ast.parse(source)
             except SyntaxError:
                 # needed to parse expression containing := operator
-                node = ast.parse("(" + source + ")")
+                node = rope.base.ast.parse("(" + source + ")")
         if does_match is None:
             self.does_match = self._simple_does_match
         else:
@@ -120,7 +122,7 @@ class RawSimilarFinder:
 
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
-        node = ast.parse(expression)
+        node = rope.base.ast.parse(expression)
         # Getting Module.Stmt.nodes
         nodes = node.body
         if len(nodes) == 1 and isinstance(nodes[0], ast.Expr):
@@ -153,7 +155,7 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            ast.call_for_nodes(self.body, self._check_node, recursive=True)
+            rope.base.ast.call_for_nodes(self.body, self._check_node, recursive=True)
         return self.matches
 
     def _check_node(self, node):

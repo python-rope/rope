@@ -23,7 +23,10 @@ TODO:
 * ... ;-)
 
 """
-from rope.base import ast, evaluate, pyobjects
+import ast
+
+from rope.base.ast import RopeNodeVisitor
+from rope.base import evaluate, pyobjects
 
 
 def find_errors(project, resource):
@@ -37,7 +40,7 @@ def find_errors(project, resource):
     return finder.errors
 
 
-class _BadAccessFinder(ast.RopeNodeVisitor):
+class _BadAccessFinder(RopeNodeVisitor):
     def __init__(self, pymodule):
         self.pymodule = pymodule
         self.scope = pymodule.get_scope()

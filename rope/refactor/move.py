@@ -26,7 +26,7 @@ from rope.refactor.importutils.module_imports import (
 )
 
 if typing.TYPE_CHECKING:
-    from rope.base import project, resources
+    from rope.base import resources
 
 
 def create_move(project, resource, offset=None):
