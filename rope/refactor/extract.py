@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 from contextlib import contextmanager
 from itertools import chain
 
@@ -35,7 +36,7 @@ from rope.refactor import patchedast, similarfinder, sourceutils, suites, usefun
 # classes.
 class _ExtractRefactoring:
 
-    kind_prefixes = {}
+    kind_prefixes: Dict[str, str] = {}
 
     def __init__(self, project, resource, start_offset, end_offset, variable=False):
         self.project = project

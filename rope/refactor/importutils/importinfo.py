@@ -1,3 +1,6 @@
+from typing import List
+
+
 class ImportStatement:
     """Represent an import in a module
 
@@ -188,7 +191,7 @@ class FromImport(ImportInfo):
 
 class EmptyImport(ImportInfo):
 
-    names_and_aliases = []
+    names_and_aliases: List[str] = []
 
     def is_empty(self):
         return True
