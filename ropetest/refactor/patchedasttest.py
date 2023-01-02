@@ -1535,7 +1535,6 @@ class _ResultChecker:
                         break
 
                 return self.result is not None
-                ### return bool(self.result)
         
         search = Search()
 
