@@ -1513,44 +1513,12 @@ class _ResultChecker:
         goal = text
         if not isinstance(text, (tuple, list)):
             goal = [text]
-            
-        ### from leo.core import leoGlobals as g  ###
-        
-        if 1:
-            class Search:
-                result = None
 
-                def __call__(self, node):
+        class Search:
+            result = None
 
-                    for text in goal:
-                        if sys.version_info >= (3, 8) and text in [
-                            "Num",
-                            "Str",
-                            "NameConstant",
-                            "Ellipsis",
-                        ]:
-                            text = "Constant"
-                        if str(node).startswith(text):
-                            self.result = node
-                            break
-                        if node.__class__.__name__.startswith(text):
-                            self.result = node
-                            break
+            def __call__(self, node):
 
-                    ### g.trace(node.__class__.__name__, repr(goal), self.result.__class__.__name__)  ###
-                    ### return self.result is not None
-                    return bool(self.result)
-            def _search_nodes(self, node, goal):
-                # Return the *last* result found.
-                result = self._search_node(node, goal)
-                if not result:
-                    for child in ast.iter_child_nodes(node):
-                        result = self._search_nodes(child, goal)
-                return result
-            def _search_node(self, node, goal):
-                result = None
-                ### from leo.core import leoGlobals as g  ###
-                ### g.trace(node.__class__.__name__, goal)
                 for text in goal:
                     if sys.version_info >= (3, 8) and text in [
                         "Num",
@@ -1560,24 +1528,24 @@ class _ResultChecker:
                     ]:
                         text = "Constant"
                     if str(node).startswith(text):
-                        ### self.result = node
-                        result = node
+                        self.result = node
                         break
                     if node.__class__.__name__.startswith(text):
-                        ### self.result = node
-                        result = node
+                        self.result = node
                         break
-                ### g.trace('DONE', node.__class__.__name__, repr(goal), result.__class__.__name__)  ###
-                return result
 
-            search = Search()
-            ast.call_for_nodes(self.ast, search)
-            ### g.trace('search.result', search.result.__class__.__name__)  ###
-            ### print('')  ###
-            return search.result
-        else:
-            return self._search_nodes(self.ast, goal)
+                return self.result is not None
+                ### return bool(self.result)
+        
+        search = Search()
 
+        def find(node):
+            if not search(node):
+                for child in ast.iter_child_nodes(node):
+                    find(child)
+
+        find(self.ast)
+        return search.result
     def check_children(self, text, children):
         node = self._find_node(text)
         if node is None:
