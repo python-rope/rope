@@ -516,7 +516,7 @@ class _ExceptionalConditionChecker:
 
 class _ExtractMethodParts(ast.RopeNodeVisitor):
     def __init__(self, info):
-        self.info = info
+        self.info: str = info
         self.info_collector = self._create_info_collector()
         self.info.kind = self._get_kind_by_scope()
         self._check_constraints()
@@ -778,7 +778,7 @@ class _ExtractVariableParts:
 
 
 class _FunctionInformationCollector(ast.RopeNodeVisitor):
-    def __init__(self, start, end, is_global):
+    def __init__(self, start: int, end: int, is_global: bool):
         self.start = start
         self.end = end
         self.is_global = is_global

@@ -292,7 +292,7 @@ class PyPackage(pyobjects.PyPackage):
 
 
 class _AnnAssignVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor):
+    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
         self.type_hint = None
@@ -334,7 +334,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
 
 
 class _ExpressionVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor):
+    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
 
     def _assigned(self, name, assignment=None):
@@ -361,7 +361,7 @@ class _ExpressionVisitor(ast.RopeNodeVisitor):
 
 
 class _AssignVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor):
+    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
 

@@ -1,3 +1,4 @@
+from typing import List
 from rope.base import ast
 
 
@@ -19,7 +20,7 @@ def get_name_levels(node):
 
 
 class _NodeNameCollector(ast.RopeNodeVisitor):
-    def __init__(self, levels=None):
+    def __init__(self, levels: List[int]=None):
         self.names = []
         self.levels = levels
         self.index = 0

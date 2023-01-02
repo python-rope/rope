@@ -24,6 +24,7 @@ TODO:
 
 """
 from rope.base import ast, evaluate, pyobjects
+from rope.base.pyobjects import PyModule, PyScope
 
 
 def find_errors(project, resource):
@@ -38,9 +39,9 @@ def find_errors(project, resource):
 
 
 class _BadAccessFinder(ast.RopeNodeVisitor):
-    def __init__(self, pymodule):
+    def __init__(self, pymodule: PyModule):
         self.pymodule = pymodule
-        self.scope = pymodule.get_scope()
+        self.scope: PyScope = pymodule.get_scope()
         self.errors = []
 
     def _Name(self, node):
