@@ -1,11 +1,15 @@
-from typing import List, Union
+from __future__ import annotations
+from typing import Callable, List, Union, TYPE_CHECKING
 
 from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
+if TYPE_CHECKING:
+    from rope.base.pyobjects import PyModule, PyObject
+
 
 class ModuleImports:
-    def __init__(self, project, pymodule, import_filter=None):
+    def __init__(self, project: PyObject, pymodule: PyModule, import_filter: Callable=None):
         self.project = project
         self.pymodule = pymodule
         self.separating_lines = 0
@@ -392,7 +396,7 @@ def _count_blank_lines(get_line, start, end, step=1):
 
 
 class _OneTimeSelector:
-    def __init__(self, names):
+    def __init__(self, names: List[str]):
         self.names = names
         self.selected_names = set()
 
@@ -416,7 +420,7 @@ class _OneTimeSelector:
 
 
 class _UnboundNameFinder(ast.RopeNodeVisitor):
-    def __init__(self, pyobject):
+    def __init__(self, pyobject: PyObject):
         self.pyobject = pyobject
 
     def _visit_child_scope(self, node):
@@ -466,7 +470,7 @@ class _UnboundNameFinder(ast.RopeNodeVisitor):
 
 
 class _GlobalUnboundNameFinder(_UnboundNameFinder):
-    def __init__(self, pymodule, wanted_pyobject):
+    def __init__(self, pymodule: PyModule, wanted_pyobject: PyObject):
         super().__init__(pymodule)
         self.unbound = set()
         self.names = set()

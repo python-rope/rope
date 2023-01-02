@@ -1,5 +1,6 @@
+from __future__ import annotations
 from operator import itemgetter
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TYPE_CHECKING
 
 import rope.base.builtins
 import rope.base.pynames
@@ -13,6 +14,9 @@ from rope.base import (
     pyobjectsdef,
     worder,
 )
+
+if TYPE_CHECKING:
+    from rope.base.pyscopes import Scope
 
 BadIdentifierError = exceptions.BadIdentifierError
 
@@ -158,7 +162,7 @@ class ScopeNameFinder:
 
 
 class StatementEvaluator(ast.RopeNodeVisitor):
-    def __init__(self, scope):
+    def __init__(self, scope: Scope):
         self.scope = scope
         self.result = None
         self.old_result = None

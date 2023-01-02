@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import Optional, Tuple
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
@@ -73,8 +73,7 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name, pyobject):
-    # type: (str, Union[PyDefinedObject, PyObject]) -> Optional[PyDefinedObject, PyObject]
+def resolve_type(type_name: str, pyobject: PyObject) -> Optional[Tuple[PyDefinedObject, PyObject]]:
     """
     Find proper type object from its name.
     """
