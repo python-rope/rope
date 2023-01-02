@@ -151,9 +151,16 @@ class _ASTMatcher:
         self.matches_callback = does_match
 
     def find_matches(self):
+        """Find matches in self.body."""
         if self.matches is None:
             self.matches = []
-            ast.call_for_nodes(self.body, self._check_node)
+
+            def find(node):
+                if not self._check_node(node):
+                    for child in ast.iter_child_nodes(node):
+                        find(child)
+
+            find(self.body)
         return self.matches
 
     def _check_node(self, node):
