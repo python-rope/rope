@@ -153,7 +153,7 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            ast.call_for_nodes(self.body, self._check_node, recursive=True)
+            ast.call_for_nodes(self.body, self._check_node)
         return self.matches
 
     def _check_node(self, node):
