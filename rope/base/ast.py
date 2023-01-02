@@ -1,6 +1,5 @@
 import ast
 from ast import *  # noqa: F401,F403
-from typing import Callable
 
 from rope.base import fscommands
 
@@ -20,17 +19,6 @@ def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
         error.filename = filename
         error.msg = str(e)
         raise error
-
-
-def call_for_nodes(node, callback: Callable) -> None:
-    """
-    Apply the callback to node.
-    Return immediately if the callback returns a result.
-    Otherwise, recursively call *all* of node's direct children.
-    """
-    if not callback(node):
-        for child in ast.iter_child_nodes(node):
-            call_for_nodes(child, callback)
 
 
 class RopeNodeVisitor(ast.NodeVisitor):
