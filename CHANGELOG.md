@@ -11,6 +11,7 @@
 - #611 Implement JSON DataFile serialization (@lieryan)
 - #630 SQLite models improvements (@lieryan)
 - #631 Implement version hash (@lieryan)
+- #634 Remove call_for_nodes(recursive) argument (@edreamleo)
 
 
 # Release 1.6.0
