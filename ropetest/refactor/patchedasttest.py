@@ -839,28 +839,14 @@ class PatchedASTTest(unittest.TestCase):
         )
 
     def test_set_node(self):
-        # make sure we are in a python version with set literals
         source = "{1, 2}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("Set", 0, len(source) - 1)
         checker.check_children("Set", ["{", "", "Num", "", ",", " ", "Num", "", "}"])
 
     def test_set_comp_node(self):
-        # make sure we are in a python version with set comprehensions
         source = "{i for i in range(1) if True}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("SetComp", 0, len(source) - 1)
@@ -873,14 +859,7 @@ class PatchedASTTest(unittest.TestCase):
         )
 
     def test_dict_comp_node(self):
-        # make sure we are in a python version with dict comprehensions
         source = "{i:i for i in range(1) if True}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("DictComp", 0, len(source) - 1)
