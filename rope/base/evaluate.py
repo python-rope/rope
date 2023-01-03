@@ -13,6 +13,7 @@ from rope.base import (
     pyobjectsdef,
     worder,
 )
+from rope.base.ast import rope_parse
 
 BadIdentifierError = exceptions.BadIdentifierError
 
@@ -49,7 +50,7 @@ def eval_str(holding_scope, name):
 def eval_str2(holding_scope, name):
     try:
         # parenthesizing for handling cases like 'a_var.\nattr'
-        node = ast.parse("(%s)" % name)
+        node = rope_parse("(%s)" % name)
     except SyntaxError:
         raise BadIdentifierError("Not a resolvable python identifier selected.")
     return eval_node2(holding_scope, node)

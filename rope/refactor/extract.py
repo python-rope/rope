@@ -1081,7 +1081,7 @@ def _get_function_kind(scope):
 def _parse_text(body):
     body = sourceutils.fix_indentation(body, 0)
     try:
-        node = ast.parse(body)
+        node = ast.parse(body)  # stdlib.ast.parse.
     except SyntaxError:
         # needed to parse expression containing := operator
         try:

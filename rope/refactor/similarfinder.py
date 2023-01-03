@@ -4,6 +4,7 @@ import re
 import rope.base.builtins  # Use full qualification for clarity.
 import rope.refactor.wildcards  # Use full qualification for clarity.
 from rope.base import ast, codeanalyze, exceptions, libutils
+from rope.base.ast import rope_parse
 from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
@@ -73,10 +74,10 @@ class RawSimilarFinder:
     def __init__(self, source, node=None, does_match=None):
         if node is None:
             try:
-                node = ast.parse(source)
+                node = rope_parse(source)
             except SyntaxError:
                 # needed to parse expression containing := operator
-                node = ast.parse("(" + source + ")")
+                node = rope_parse("(" + source + ")")
         if does_match is None:
             self.does_match = self._simple_does_match
         else:
@@ -120,7 +121,7 @@ class RawSimilarFinder:
 
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
-        node = ast.parse(expression)
+        node = rope_parse(expression)
         # Getting Module.Stmt.nodes
         nodes = node.body
         if len(nodes) == 1 and isinstance(nodes[0], ast.Expr):

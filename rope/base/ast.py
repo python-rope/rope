@@ -4,7 +4,7 @@ from ast import *  # noqa: F401,F403
 from rope.base import fscommands
 
 
-def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
+def rope_parse(source, filename="<string>", *args, **kwargs):  # type: ignore
     if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
     if b"\r" in source:
