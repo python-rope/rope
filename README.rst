@@ -35,7 +35,7 @@ Overview
 Most Python syntax up to Python 3.10 is supported. Please file bugs and contribute
 patches if you encounter gaps.
 
-Since version 1.0.0, rope does no longer support running on Python 2.
+Since version 1.0.0, rope no longer support running on Python 2.
 If you need Python 2 support, then check out the `python2` branch or the 0.x.x
 releases.
 
