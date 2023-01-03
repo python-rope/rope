@@ -8,7 +8,6 @@ from rope.refactor import patchedast
 from ropetest import testutils
 
 NameConstant = "Name" if sys.version_info <= (3, 8) else "NameConstant"
-Bytes = "Bytes" if (3, 0) <= sys.version_info <= (3, 8) else "Str"
 
 
 class PatchedASTTest(unittest.TestCase):
@@ -57,8 +56,8 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         str_fragment = 'b"("'
         start = source.index(str_fragment)
-        checker.check_region(Bytes, start, start + len(str_fragment))
-        checker.check_children(Bytes, [str_fragment])
+        checker.check_region("Bytes", start, start + len(str_fragment))
+        checker.check_children("Bytes", [str_fragment])
 
     def test_integer_literals_and_region(self):
         source = "a = 10\n"
@@ -839,28 +838,14 @@ class PatchedASTTest(unittest.TestCase):
         )
 
     def test_set_node(self):
-        # make sure we are in a python version with set literals
         source = "{1, 2}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("Set", 0, len(source) - 1)
         checker.check_children("Set", ["{", "", "Num", "", ",", " ", "Num", "", "}"])
 
     def test_set_comp_node(self):
-        # make sure we are in a python version with set comprehensions
         source = "{i for i in range(1) if True}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("SetComp", 0, len(source) - 1)
@@ -873,14 +858,7 @@ class PatchedASTTest(unittest.TestCase):
         )
 
     def test_dict_comp_node(self):
-        # make sure we are in a python version with dict comprehensions
         source = "{i:i for i in range(1) if True}\n"
-
-        try:
-            eval(source)
-        except SyntaxError:
-            return
-
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region("DictComp", 0, len(source) - 1)
@@ -1285,7 +1263,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         self.assert_single_case_match_block(checker, "MatchValue")
         checker.check_children("MatchValue", [
-            "Constant"
+            "Num"
         ])
 
     @testutils.only_for_versions_higher("3.10")
@@ -1340,7 +1318,7 @@ class PatchedASTTest(unittest.TestCase):
             ")",
         ])
         checker.check_children("MatchValue", [
-            "Constant"
+            "Num"
         ])
 
     @testutils.only_for_versions_higher("3.10")
@@ -1488,7 +1466,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("MatchMapping", [
             "{",
             "",
-            "Constant",
+            "Str",
             "",
             ":",
             " ",
@@ -1520,17 +1498,10 @@ class _ResultChecker:
             def __call__(self, node):
 
                 for text in goal:
-                    if sys.version_info >= (3, 8) and text in [
-                        "Num",
-                        "Str",
-                        "NameConstant",
-                        "Ellipsis",
-                    ]:
-                        text = "Constant"
                     if str(node).startswith(text):
                         self.result = node
                         break
-                    if node.__class__.__name__.startswith(text):
+                    if ast.get_node_type_name(node).startswith(text):
                         self.result = node
                         break
 
@@ -1561,15 +1532,8 @@ class _ResultChecker:
                     break
             else:
                 self.test_case.assertNotEqual("", text, "probably ignoring some node")
-                if sys.version_info >= (3, 8) and expected in [
-                    "Num",
-                    "Str",
-                    "NameConstant",
-                    "Ellipsis",
-                ]:
-                    expected = "Constant"
                 self.test_case.assertTrue(
-                    child.__class__.__name__.startswith(expected),
+                    ast.get_node_type_name(child).startswith(expected),
                     msg="Expected <%s> but was <%s>"
-                    % (expected, child.__class__.__name__),
+                    % (expected, ast.get_node_type_name(child)),
                 )
