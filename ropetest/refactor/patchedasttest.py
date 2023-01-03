@@ -1536,7 +1536,7 @@ class _ResultChecker:
                 return self.result is not None
 
         search = Search()
-        rope.base.ast.call_for_nodes(self.ast, search, recursive=True)
+        rope.base.ast.call_for_nodes(self.ast, search)
         return search.result
 
     def check_children(self, text, children):

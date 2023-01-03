@@ -155,7 +155,7 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            rope.base.ast.call_for_nodes(self.body, self._check_node, recursive=True)
+            rope.base.ast.call_for_nodes(self.body, self._check_node)
         return self.matches
 
     def _check_node(self, node):

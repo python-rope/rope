@@ -20,12 +20,12 @@ def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
         raise error
 
 
-def call_for_nodes(node, callback, recursive=False):
+def call_for_nodes(node, callback):
     """If callback returns `True` the child nodes are skipped"""
     result = callback(node)
-    if recursive and not result:
+    if not result:
         for child in ast.iter_child_nodes(node):
-            call_for_nodes(child, callback, recursive)
+            call_for_nodes(child, callback)
 
 
 class RopeNodeVisitor(ast.NodeVisitor):
