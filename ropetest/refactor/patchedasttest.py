@@ -1505,13 +1505,6 @@ class _ResultChecker:
             return result is not None
                     
         ast.call_for_nodes(self.ast, match)
-                    
-        # def find(node):
-            # match(node)
-            # for child in ast.iter_child_nodes(node):
-                # find(child)
-
-        # find(self.ast)
         return result
 
     def check_children(self, text, children):
