@@ -110,7 +110,7 @@ class _PatchingASTWalker:
                 continue
             offset = self.source.offset
             if isinstance(child, ast.AST):
-                self.__call__(child)
+                self(child)
                 token_start = child.region[0]
             else:
                 if child is self.String:
