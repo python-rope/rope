@@ -7,10 +7,6 @@ def __rope_start_everything():
         import cPickle as pickle  # type:ignore
     except ImportError:
         import pickle  # type:ignore
-    import marshal
-    import inspect
-    import types
-    import threading
     import base64
     import hashlib
     import hmac
