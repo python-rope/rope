@@ -19,11 +19,11 @@ def create_generate(kind, project, resource, offset, goal_resource=None):
 
     """
     d = {
-        'class': GenerateClass,
-        'function': GenerateFunction,
-        'module': GenerateModule,
-        'package': GeneratePackage,
-        'variable': GenerateVariable,
+        "class": GenerateClass,
+        "function": GenerateFunction,
+        "module": GenerateModule,
+        "package": GeneratePackage,
+        "variable": GenerateVariable,
     }
     generate = d.get(kind)
     return generate(project, resource, offset, goal_resource=goal_resource)
