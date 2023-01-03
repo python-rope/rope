@@ -37,7 +37,7 @@ def patch_ast(node, source, sorted_children=False):
     if hasattr(node, "region"):
         return node
     walker = _PatchingASTWalker(source, children=sorted_children)
-    call_for_nodes(node, walker)
+    walker(node)
     return node
 
 
@@ -113,7 +113,7 @@ class _PatchingASTWalker:
                 continue
             offset = self.source.offset
             if isinstance(child, ast.AST):
-                call_for_nodes(child, self)
+                self(child)
                 token_start = child.region[0]
             else:
                 if child is self.String:
