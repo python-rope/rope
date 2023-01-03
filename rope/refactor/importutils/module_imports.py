@@ -1,6 +1,7 @@
 from typing import List, Union
 
 from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.base.ast import RopeNodeVisitor
 from rope.refactor.importutils import actions, importinfo
 
 
@@ -415,7 +416,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder(ast.RopeNodeVisitor):
+class _UnboundNameFinder(RopeNodeVisitor):
     def __init__(self, pyobject):
         self.pyobject = pyobject
 

@@ -13,6 +13,7 @@ from rope.base import (
     pyobjectsdef,
     worder,
 )
+from rope.base.ast import RopeNodeVisitor
 
 BadIdentifierError = exceptions.BadIdentifierError
 
@@ -157,7 +158,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator(ast.RopeNodeVisitor):
+class StatementEvaluator(RopeNodeVisitor):
     def __init__(self, scope):
         self.scope = scope
         self.result = None

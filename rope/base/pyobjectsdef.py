@@ -14,6 +14,7 @@ from rope.base import (
     pyobjects,
     utils,
 )
+from rope.base.ast import RopeNodeVisitor
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -291,7 +292,7 @@ class PyPackage(pyobjects.PyPackage):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class _AnnAssignVisitor(ast.RopeNodeVisitor):
+class _AnnAssignVisitor(RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
@@ -333,7 +334,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         pass
 
 
-class _ExpressionVisitor(ast.RopeNodeVisitor):
+class _ExpressionVisitor(RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
 
@@ -360,7 +361,7 @@ class _ExpressionVisitor(ast.RopeNodeVisitor):
         self.visit(node.value)
 
 
-class _AssignVisitor(ast.RopeNodeVisitor):
+class _AssignVisitor(RopeNodeVisitor):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
