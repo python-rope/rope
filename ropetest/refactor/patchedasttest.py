@@ -1535,7 +1535,7 @@ class _ResultChecker:
                 return self.result is not None
 
         search = Search()
-        ast.call_for_nodes(self.ast, search, recursive=True)
+        ast.call_for_nodes(self.ast, search)
         return search.result
 
     def check_children(self, text, children):
