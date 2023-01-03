@@ -1491,23 +1491,28 @@ class _ResultChecker:
         goal = text
         if not isinstance(text, (tuple, list)):
             goal = [text]
+            
+        result = None
 
-        class Search:
-            result = None
+        def match(node):
+            nonlocal result
+            for text in goal:
+                if (
+                    str(node).startswith(text)
+                    or ast.get_node_type_name(node).startswith(text)
+                ):
+                    result = node
+            return result is not None
+                    
+        ast.call_for_nodes(self.ast, match)
+                    
+        # def find(node):
+            # match(node)
+            # for child in ast.iter_child_nodes(node):
+                # find(child)
 
-            def __call__(self, node):
-                for text in goal:
-                    if str(node).startswith(text):
-                        self.result = node
-                        break
-                    if ast.get_node_type_name(node).startswith(text):
-                        self.result = node
-                        break
-                return self.result is not None
-
-        search = Search()
-        ast.call_for_nodes(self.ast, search)
-        return search.result
+        # find(self.ast)
+        return result
 
     def check_children(self, text, children):
         node = self._find_node(text)
