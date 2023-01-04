@@ -41,7 +41,7 @@ def call_for_nodes(node, callback):
     """
     A general preorder traversal, provided the callback always returns `None/False`.
 
-    If callback returns `True` the child nodes are skipped as in  _ResultChecker._find_node.
+    If callback returns `True` the child nodes are skipped as in _ResultChecker._find_node.
     """
     result = callback(node)
     if not result:
