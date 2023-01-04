@@ -39,9 +39,15 @@ def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
 
 def call_for_nodes(node, callback):
     """
-    A full preorder traversal when `bool(callback(node))` is *always* `False`.
+    Pre-order depth-first traversal of AST nodes, calling `callback(node)` for
+    each node visited.
 
-    A limited preorder traversal when `bool(callback(node)` is sometimes `True`.
+    When each node is visited, `callback(node)` will be called with the visited
+    `node`, then its children node will be visited.
+
+    If `callback(node)` returns `True` for a node, then the descendants of that
+    node will not be visited.
+
     See _ResultChecker._find_node for an example.
     """
     result = callback(node)
