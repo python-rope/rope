@@ -8,7 +8,7 @@ try:
     from ast import _const_node_type_names
 except ImportError:
     # backported from stdlib `ast`
-    assert sys.version_info <= (3, 7)
+    assert sys.version_info < (3, 8)
     _const_node_type_names = {
         bool: "NameConstant",  # should be before int
         type(None): "NameConstant",
