@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from rope.base import (
     change,
     codeanalyze,
@@ -13,26 +13,18 @@ from rope.base import (
 from rope.refactor import functionutils, importutils, sourceutils, suites
 
 if TYPE_CHECKING:
-    from rope.base.pyobjects import PyObject
+    from rope.base.project import Project
     from rope.base.resources import Resource
-
-GenerateVal = Union[
-    "_Generate",
-    "GenerateClass",
-    "GenerateFunction",
-    "GenerateModule",
-    "GeneratePackage",
-    "GenerateVariable",
-]
 
 
 def create_generate(
     kind: str,
-    project: PyObject,
+    project: Project,
     resource: Resource,
     offset: int,
     goal_resource: Resource = None,
-) -> GenerateVal:
+):
+
     """A factory for creating `Generate` objects
 
     `kind`: 'variable', 'function', 'class', 'module' or 'package'.
@@ -47,7 +39,7 @@ def create_generate(
         "package": GeneratePackage,
         "variable": GenerateVariable,
     }
-    generate = d.get(kind, _Generate)
+    generate = d[kind]
     return generate(project, resource, offset, goal_resource=goal_resource)
 
 
