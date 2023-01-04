@@ -1488,7 +1488,6 @@ class _ResultChecker:
         self.test_case.assertEqual((start, end), node.region)
 
     def _find_node(self, text):
-
         """Find the **outer-most last match** in self.ast.
         
         For example, given the goal:
