@@ -14,8 +14,9 @@ from rope.refactor import functionutils, importutils, sourceutils, suites
 def create_generate(kind, project, resource, offset, goal_resource=None):
     """A factory for creating `Generate` objects
 
-    `kind` can be 'variable', 'function', 'class', 'module' or
-    'package'.
+    `kind`: 'variable', 'function', 'class', 'module' or 'package'.
+
+    Used in https://github.com/python-rope/ropemode but not in Rope itself.
 
     """
     d = {
