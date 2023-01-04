@@ -1512,7 +1512,6 @@ class _ResultChecker:
             result = None
 
             def __call__(self, node):
-               
                 for text in goal:
                     if str(node).startswith(text):
                         self.result = node
