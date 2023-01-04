@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 from rope.base import (
     change,
     codeanalyze,
@@ -16,14 +16,6 @@ if TYPE_CHECKING:
     from rope.base.pyobjects import PyObject
     from rope.base.resources import Resource
 
-GenerateKind = Literal[
-    "class",
-    "function",
-    "module",
-    "package",
-    "variable",
-]
-
 GenerateVal = Union[
     "_Generate",
     "GenerateClass",
@@ -35,7 +27,7 @@ GenerateVal = Union[
 
 
 def create_generate(
-    kind: GenerateKind,
+    kind: str,
     project: PyObject,
     resource: Resource,
     offset: int,
