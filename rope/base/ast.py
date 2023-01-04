@@ -39,9 +39,10 @@ def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
 
 def call_for_nodes(node, callback):
     """
-    A general preorder traversal, provided the callback always returns `None/False`.
-
-    If callback returns `True` the child nodes are skipped as in _ResultChecker._find_node.
+    A full preorder traversal, when `bool(callback(node))` *always* returns `False`.
+    
+    A limited preorder traversal when `bool(callback(node)` may sometimes be `True`.
+    See _ResultChecker._find_node for an example.
     """
     result = callback(node)
     if not result:
