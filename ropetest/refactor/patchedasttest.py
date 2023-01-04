@@ -1495,7 +1495,7 @@ class _ResultChecker:
         
             ${var1} + ${var2}
         
-        and given the text text:
+        and given the text:
                 
             (a + b) + (c + (d + e))
             
