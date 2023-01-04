@@ -8,6 +8,7 @@ try:
     from ast import _const_node_type_names
 except ImportError:
     # backported from stdlib `ast`
+    assert sys.version_info <= (3, 7)
     _const_node_type_names = {
         bool: "NameConstant",  # should be before int
         type(None): "NameConstant",
@@ -38,7 +39,18 @@ def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
 
 
 def call_for_nodes(node, callback):
-    """If callback returns `True` the child nodes are skipped"""
+    """
+    Pre-order depth-first traversal of AST nodes, calling `callback(node)` for
+    each node visited.
+
+    When each node is visited, `callback(node)` will be called with the visited
+    `node`, then its children node will be visited.
+
+    If `callback(node)` returns `True` for a node, then the descendants of that
+    node will not be visited.
+
+    See _ResultChecker._find_node for an example.
+    """
     result = callback(node)
     if not result:
         for child in ast.iter_child_nodes(node):
