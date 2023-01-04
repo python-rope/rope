@@ -1488,6 +1488,22 @@ class _ResultChecker:
         self.test_case.assertEqual((start, end), node.region)
 
     def _find_node(self, text):
+
+        """Find the **outer-most last match** in self.ast.
+        
+        For example, given the goal:
+        
+            ${var1} + ${var2}
+        
+        and given the text text:
+                
+            (a + b) + (c + (d + e))
+            
+        the outermost last match would be:
+            
+            (c + (d + e))
+
+        """
         goal = text
         if not isinstance(text, (tuple, list)):
             goal = [text]
@@ -1496,6 +1512,7 @@ class _ResultChecker:
             result = None
 
             def __call__(self, node):
+               
                 for text in goal:
                     if str(node).startswith(text):
                         self.result = node
