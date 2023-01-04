@@ -1488,6 +1488,32 @@ class _ResultChecker:
         self.test_case.assertEqual((start, end), node.region)
 
     def _find_node(self, text):
+        """
+        Find the node in `self.ast` whose type is named in `text`.
+
+        :param text: ast node name
+
+        Generally, the test should only have a single matching node, as it make
+        the test much harder to understand when there may be multiple matches.
+
+        If `self.ast` contains more than one nodes that matches `text`, then
+        the **outer-most last match** takes precedence.
+
+        For example, given that we are looking for `ast.Call` node:
+
+            checker._find_node("Call")
+
+        and given that `self.ast` is the AST for this code:
+
+            func_a(1, func_b(2, 3)) + func_c(4, func_d(5, 6))
+
+        the outer-most last match would be the ast node representing this bit:
+
+            func_c(4, func_d(5, 6))
+
+        Note that the order of traversal is based on the order of ast nodes,
+        which usually, but not always, match textual order.
+        """
         goal = text
         if not isinstance(text, (tuple, list)):
             goal = [text]

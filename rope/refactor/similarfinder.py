@@ -153,6 +153,8 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
+            # _check_nodes always returns None, so
+            # call_for_nodes traverses self.body's entire tree.
             ast.call_for_nodes(self.body, self._check_node)
         return self.matches
 
