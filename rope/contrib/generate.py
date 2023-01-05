@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from rope.base import (
     change,
     codeanalyze,
@@ -10,13 +14,32 @@ from rope.base import (
 )
 from rope.refactor import functionutils, importutils, sourceutils, suites
 
+if TYPE_CHECKING:
+    from typing import Literal, Optional
 
-def create_generate(kind, project, resource, offset, goal_resource=None):
+    from rope.base.project import Project
+    from rope.base.resources import Resource
+
+    GenerateKind = Literal[
+        "variable",
+        "function",
+        "class",
+        "module",
+        "package",
+    ]
+
+
+def create_generate(
+    kind: GenerateKind,
+    project: Project,
+    resource: Resource,
+    offset: int,
+    goal_resource: Optional[Resource] = None,
+):
+
     """A factory for creating `Generate` objects
 
-    `kind` can be 'variable', 'function', 'class', 'module' or
-    'package'.
-
+    Used in https://github.com/python-rope/ropemode but not in Rope itself.
     """
     d = {
         "class": GenerateClass,
@@ -25,7 +48,7 @@ def create_generate(kind, project, resource, offset, goal_resource=None):
         "package": GeneratePackage,
         "variable": GenerateVariable,
     }
-    generate = d.get(kind)
+    generate = d[kind]
     return generate(project, resource, offset, goal_resource=goal_resource)
 
 
