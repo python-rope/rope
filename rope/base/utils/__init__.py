@@ -61,7 +61,8 @@ def deprecated(message=None):
             message = "%s is deprecated" % func.__name__
 
         def newfunc(*args, **kwds):
-            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            if 0:  ###
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
             return func(*args, **kwds)
 
         return newfunc

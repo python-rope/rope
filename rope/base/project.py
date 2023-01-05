@@ -347,6 +347,7 @@ class _FileListCacher:
         )
         self.project.add_observer(rawobserver)
 
+
     def get_files(self):
         if self.files is None:
             self.files = set()

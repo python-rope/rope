@@ -5,10 +5,15 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
+from leo.core import leoGlobals as g  ###
+
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
+        if self.id().endswith('test_simple_type_inferencing'):
+            print('ObjectInferTest.setUp', self.id())
+            g.pdb()
         self.project = testutils.sample_project()
 
     def tearDown(self):
@@ -21,9 +26,21 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
+        g.pdb()  # Same as import pdb; pdb.set_trace
+        
+        # scope is a GlobalScope.
+        # scope.pyobject is a PyModule.
         scope = libutils.get_string_scope(self.project, code)
+        
+        # scope["Sample"] is a DefinedName.
+        # scope["Sample"].pyobject is a PyClass.
         sample_class = scope["Sample"].get_object()
+        
+        # scope["a_var"] is an AssignedName.
+        # scope["a_var"].pyobject is an _Inferred.
+        # scope["a_var"].get_object() is a PyObject.
         a_var = scope["a_var"].get_object()
+
         self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
