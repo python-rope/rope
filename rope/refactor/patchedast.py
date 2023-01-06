@@ -130,7 +130,8 @@ class _PatchingASTWalker:
                 child = self.source[region[0] : region[1]]
                 token_start = region[0]
             if not first_token:
-                formats.append(self.source[offset:token_start])
+                if not isinstance(node, ast.JoinedStr):
+                    formats.append(self.source[offset:token_start])
                 if self.children:
                     children.append(self.source[offset:token_start])
             else:
