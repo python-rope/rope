@@ -12,6 +12,7 @@ class ObjectInferTest(unittest.TestCase):
         Init self.project to a new Project instance for this test, with default prefs.
         self.project.fscommands manages temp files in a temp directory.
         """
+        ### print('')  ### A hack, for the traces in saveit.
         super().setUp()
         if 0:  ###
             if self.id().endswith('test_simple_type_inferencing'):
