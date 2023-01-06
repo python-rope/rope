@@ -5,15 +5,17 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
-from leo.core import leoGlobals as g  ###
-
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
+        """
+        Init self.project to a new Project instance for this test, with default prefs.
+        self.project.fscommands manages temp files in a temp directory.
+        """
         super().setUp()
-        if self.id().endswith('test_simple_type_inferencing'):
-            print('ObjectInferTest.setUp', self.id())
-            g.pdb()
+        if 0:  ###
+            if self.id().endswith('test_simple_type_inferencing'):
+                import pdb ; pdb.set_trace()
         self.project = testutils.sample_project()
 
     def tearDown(self):
@@ -26,20 +28,27 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
-        g.pdb()  # Same as import pdb; pdb.set_trace
-        
-        # scope is a GlobalScope.
-        # scope.pyobject is a PyModule.
+        # setUp instantiates self.project to a Project instance.
+
+        ### import pdb ; pdb.set_trace()  ###
+
         scope = libutils.get_string_scope(self.project, code)
-        
-        # scope["Sample"] is a DefinedName.
-        # scope["Sample"].pyobject is a PyClass.
+        # scope is a GlobalScope.  It might be any subclass of Scope.
+        # scope.pyobject is a pyobjectsdef.PyModule.
+
         sample_class = scope["Sample"].get_object()
-        
-        # scope["a_var"] is an AssignedName.
-        # scope["a_var"].pyobject is an _Inferred.
-        # scope["a_var"].get_object() is a PyObject.
+        # sample_class is a pyobjectsdef.PyClass ("::Sample" at 0x14035953520)
+
+        # scope["Sample"] is a DefinedName.
+        # scope["Sample"].pyobject is a pyobjectsdef.PyClass.
+
         a_var = scope["a_var"].get_object()
+        # a_var is a pyobjects.PyObject
+        # a_var.get_type() is a pyobjectsdef.PyClass ("::Sample" at 0x14035953520)
+
+        # scope["a_var"] is an pynamesdef.AssignedName.
+        # scope["a_var"].pyobject is a pynames._Inferred.
+        # scope["a_var"].get_object() is a pyobjects.PyObject.
 
         self.assertEqual(sample_class, a_var.get_type())
 

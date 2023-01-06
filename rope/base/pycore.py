@@ -1,6 +1,8 @@
+from __future__ import annotations
 import bisect
 import contextlib
 import difflib
+from typing import TYPE_CHECKING
 import warnings
 
 import rope.base.libutils
@@ -10,6 +12,10 @@ import rope.base.oi.soa
 import rope.base.resourceobserver
 import rope.base.resources
 from rope.base import builtins, exceptions, pyobjectsdef, stdmods, taskhandle, utils
+
+if TYPE_CHECKING:
+    from rope.base.pyscopes import Scope
+    from rope.base.resources import Resource
 
 
 class PyCore:
@@ -97,7 +103,7 @@ class PyCore:
         return pyobjectsdef.PyModule(self, code, resource, force_errors=force_errors)
 
     @utils.deprecated("Use `libutils.get_string_scope` instead")
-    def get_string_scope(self, code, resource=None):
+    def get_string_scope(self, code: str, resource: Resource=None) -> Scope:
         """Returns a `Scope` object for the given code"""
         return rope.base.libutils.get_string_scope(code, resource)
 

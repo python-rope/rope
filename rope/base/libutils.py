@@ -81,7 +81,7 @@ def analyze_modules(project, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
 
 
 def get_string_module(project, code, resource=None, force_errors=False):
-    """Returns a `PyObject` object for the given code
+    """Instantiates a `PyModule` object for the given code.
 
     If `force_errors` is `True`, `exceptions.ModuleSyntaxError` is
     raised if module has syntax errors.  This overrides
@@ -94,7 +94,7 @@ def get_string_module(project, code, resource=None, force_errors=False):
 
 
 def get_string_scope(project, code, resource=None):
-    """Returns a `Scope` object for the given code"""
+    """Instantiates a `Scope` object for the given code"""
     return get_string_module(project, code, resource).get_scope()
 
 
