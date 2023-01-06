@@ -7,39 +7,42 @@ from leo.core import leoGlobals as g
 assert g  ###
 
 
-def inject_object(class_name):
+def inject(func):
     """
-    A decorator that instantiates an instance of the class whose name is given
-    and injects that 
-    
+    func is a function that instantiates an object.
+
+    This decorator injects the object as an ivar of self.
+    The ivars's name is "_" + func.__name__.
+
     """
     # """A decorator that caches the return value of a function"""
+    tag = "@inject"
+    ivar_name = "_" + func.__name__
 
-    name = "_" + class_name.__name__
-
-    def _wrapper(self, *args, **kwds):
-        if not hasattr(self, name):
-            obj = class_name(self, *args, **kwds)
+    def _wrapper(self, *args, **kwargs):
+        if not hasattr(self, ivar_name):
+            # Instantiate the object.
+            obj = func(self, *args, **kwargs)
             if 1:  # Tracing version.
-                self_name = self.__class__.__name__
-                func_name = repr(class_name)
-                if 1:  # Brief func_name
-                    temp_name = func_name.replace("<function ", "")
-                    i = temp_name.find(" at ")
-                    func_name = temp_name[:i]
-                    print(f"saveit: {self_name:>15}.{name:<20} = {func_name}")
-                else:  # Verbose.
-                    g.printObj(obj, tag=f"{self_name}.{name} = {func_name}")
-            setattr(self, name, obj)
+                injected_name = f"{self.__class__.__name__}.{ivar_name}"
+                func_s = repr(func).replace("<function ", "")
+                i = func_s.find(" at ")
+                description = f"{func_s[:i]:30} = {obj.__class__.__name__}"
+                if 1:  # Brief
+                    print(f"{tag} ivar: {injected_name:>30} = {description}")
+                else:
+                    print("")
+                    g.printObj(obj, tag=f"{tag} ivar: {injected_name} = {description}")
+            setattr(self, ivar_name, obj)
             # Original.
-            # setattr(self, name, class_name(self, *args, **kwds))
-        return getattr(self, name)
+            # setattr(self, ivar_name, func(self, *args, **kwds))
+        return getattr(self, ivar_name)
 
     return _wrapper
 
 
-cacheit = inject_object
-saveit = inject_object
+cacheit = inject
+saveit = inject
 
 
 def prevent_recursion(default):
