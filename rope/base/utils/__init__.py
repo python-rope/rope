@@ -2,7 +2,7 @@ import sys
 import warnings
 
 
-from leo.core import leoGlobals as g  ###
+from leo.core import leoGlobals as g ; assert g  ###
 
 
 def saveit(func):
