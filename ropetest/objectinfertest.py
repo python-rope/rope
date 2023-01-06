@@ -12,8 +12,8 @@ class ObjectInferTest(unittest.TestCase):
         Init self.project to a new Project instance for this test, with default prefs.
         self.project.fscommands manages temp files in a temp directory.
         """
-        if 0:
-            print('')  # For single tests.
+        if 1:
+            print('')  # For single tests. Does not affect full-test-r script.
         super().setUp()
         if 0:
             if self.id().endswith('test_simple_type_inferencing'):

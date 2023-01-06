@@ -8,31 +8,31 @@ assert g  ###
 
 
 def inject_object(class_name):
-    """A decorator that caches the return value of a function"""
+    """
+    A decorator that instantiates an instance of the class whose name is given
+    and injects that 
+    
+    """
+    # """A decorator that caches the return value of a function"""
 
     name = "_" + class_name.__name__
 
     def _wrapper(self, *args, **kwds):
         if not hasattr(self, name):
-            if 0:  # Tracing version.
-                val = class_name(self, *args, **kwds)
+            obj = class_name(self, *args, **kwds)
+            if 1:  # Tracing version.
+                self_name = self.__class__.__name__
                 func_name = repr(class_name)
-                if 0:  # Brief func_name
-                    func_name = func_name.replace("<function ", "")
-                    i = func_name.find(" at ")
-                    func_name = func_name[:i]
-                if 1:  # Brief.
-                    print(
-                        f"saveit: {self.__class__.__name__:>20}.{name:<20} = {func_name}"
-                    )
+                if 1:  # Brief func_name
+                    temp_name = func_name.replace("<function ", "")
+                    i = temp_name.find(" at ")
+                    func_name = temp_name[:i]
+                    print(f"saveit: {self_name:>15}.{name:<20} = {func_name}")
                 else:  # Verbose.
-                    print("")
-                    g.printObj(
-                        val, tag=f"{self.__class__.__name__}.{name} = {func_name}"
-                    )
-                setattr(self, name, val)
-            else:  # Original.
-                setattr(self, name, class_name(self, *args, **kwds))
+                    g.printObj(obj, tag=f"{self_name}.{name} = {func_name}")
+            setattr(self, name, obj)
+            # Original.
+            # setattr(self, name, class_name(self, *args, **kwds))
         return getattr(self, name)
 
     return _wrapper
