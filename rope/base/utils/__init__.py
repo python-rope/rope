@@ -9,34 +9,50 @@ assert g  ###
 
 def inject(func):
     """
-    func is a function that instantiates an object.
+    A decorator that injects ivars (in self) whose values are singleton objects.
 
-    This decorator injects the object as an ivar of self.
-    The ivars's name is "_" + func.__name__.
+    :param func: A function/method that instantiates an object.
+
+    :return: getattr(self, ivar_name), creating the ivar as necessary,
+             where ivar_name = f"_{func.__name__}"
 
     """
     # """A decorator that caches the return value of a function"""
-    tag = "@inject"
-    ivar_name = "_" + func.__name__
+    ivar_name = f"_{func.__name__}"
 
-    def _wrapper(self, *args, **kwargs):
-        if not hasattr(self, ivar_name):
-            # Instantiate the object.
-            obj = func(self, *args, **kwargs)
-            if 1:  # Tracing version.
-                injected_name = f"{self.__class__.__name__}.{ivar_name}"
-                func_s = repr(func).replace("<function ", "")
-                i = func_s.find(" at ")
-                description = f"{func_s[:i]:30} = {obj.__class__.__name__}"
-                if 1:  # Brief
-                    print(f"{tag} ivar: {injected_name:>30} = {description}")
-                else:
-                    print("")
-                    g.printObj(obj, tag=f"{tag} ivar: {injected_name} = {description}")
-            setattr(self, ivar_name, obj)
-            # Original.
-            # setattr(self, ivar_name, func(self, *args, **kwds))
-        return getattr(self, ivar_name)
+    if 1:  # Original version:
+
+        def _wrapper(self, *args, **kwargs):
+            if not hasattr(self, ivar_name):
+                # Instantiate the singleton object.
+                obj = func(self, *args, **kwargs)
+                setattr(self, ivar_name, obj)
+            # Return the value of the ivar.
+            return getattr(self, ivar_name)
+
+    else:
+
+        def _wrapper(self, *args, **kwargs):
+            tag = "@inject"
+            if not hasattr(self, ivar_name):
+                # Instantiate the object.
+                obj = func(self, *args, **kwargs)
+                if 1:  # Tracing version.
+                    injected_name = f"{self.__class__.__name__}.{ivar_name}"
+                    func_s = repr(func).replace("<function ", "")
+                    i = func_s.find(" at ")
+                    description = f"{func_s[:i]:30} = {obj.__class__.__name__}"
+                    if 1:  # Brief
+                        print(f"{tag} ivar: {injected_name:>30} = {description}")
+                    else:
+                        print("")
+                        g.printObj(
+                            obj, tag=f"{tag} ivar: {injected_name} = {description}"
+                        )
+                setattr(self, ivar_name, obj)
+                # Original.
+                # setattr(self, ivar_name, func(self, *args, **kwds))
+            return getattr(self, ivar_name)
 
     return _wrapper
 
