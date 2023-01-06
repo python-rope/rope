@@ -4,6 +4,7 @@ import warnings
 
 from leo.core import leoGlobals as g  ###
 
+
 def saveit(func):
     """A decorator that caches the return value of a function"""
 
@@ -15,14 +16,18 @@ def saveit(func):
                 val = func(self, *args, **kwds)
                 func_name = repr(func)
                 if 0:  # Brief func_name
-                    func_name = func_name.replace('<function ','')
-                    i = func_name.find(' at ')
+                    func_name = func_name.replace("<function ", "")
+                    i = func_name.find(" at ")
                     func_name = func_name[:i]
                 if 1:  # Brief.
-                    print(f"saveit: {self.__class__.__name__:>20}.{name:<20} = {func_name}")
+                    print(
+                        f"saveit: {self.__class__.__name__:>20}.{name:<20} = {func_name}"
+                    )
                 else:  # Verbose.
-                    print('')
-                    g.printObj(val, tag=f"{self.__class__.__name__}.{name} = {func_name}")
+                    print("")
+                    g.printObj(
+                        val, tag=f"{self.__class__.__name__}.{name} = {func_name}"
+                    )
                 setattr(self, name, val)
             else:  ### original.
                 setattr(self, name, func(self, *args, **kwds))

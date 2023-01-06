@@ -103,7 +103,7 @@ class PyCore:
         return pyobjectsdef.PyModule(self, code, resource, force_errors=force_errors)
 
     @utils.deprecated("Use `libutils.get_string_scope` instead")
-    def get_string_scope(self, code: str, resource: Resource=None) -> Scope:
+    def get_string_scope(self, code: str, resource: Resource = None) -> Scope:
         """Returns a `Scope` object for the given code"""
         return rope.base.libutils.get_string_scope(code, resource)
 

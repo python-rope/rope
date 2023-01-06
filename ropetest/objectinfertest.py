@@ -16,7 +16,7 @@ class ObjectInferTest(unittest.TestCase):
         super().setUp()
         if 0:  ###
             if self.id().endswith('test_simple_type_inferencing'):
-                import pdb ; pdb.set_trace()
+                import pdb ; pdb.set_trace()  # pylint: disable=forgotten-debug-statement
         self.project = testutils.sample_project()
 
     def tearDown(self):
