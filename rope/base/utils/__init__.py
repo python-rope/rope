@@ -9,12 +9,15 @@ assert g  ###
 
 def inject(func):
     """
-    A decorator that injects ivars (in self) whose values are singleton objects.
+    A decorator that injects a singleton ivar in self.
 
     :param func: A function/method that instantiates an object.
+    
+    The ivar's name (ivar_name) is f"_{func.__name__}".
+                 
+    The decorator creates the ivar if it does not exist.
 
-    :return: getattr(self, ivar_name), creating the ivar as necessary,
-             where ivar_name = f"_{func.__name__}"
+    :return: getattr(self, ivar_name), the value of the ivar.
 
     """
     # """A decorator that caches the return value of a function"""
