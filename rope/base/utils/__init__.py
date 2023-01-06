@@ -2,19 +2,21 @@ import sys
 import warnings
 
 
-from leo.core import leoGlobals as g ; assert g  ###
+from leo.core import leoGlobals as g
+
+assert g  ###
 
 
-def saveit(func):
+def inject_object(class_name):
     """A decorator that caches the return value of a function"""
 
-    name = "_" + func.__name__
+    name = "_" + class_name.__name__
 
     def _wrapper(self, *args, **kwds):
         if not hasattr(self, name):
-            if 0:  ###
-                val = func(self, *args, **kwds)
-                func_name = repr(func)
+            if 0:  # Tracing version.
+                val = class_name(self, *args, **kwds)
+                func_name = repr(class_name)
                 if 0:  # Brief func_name
                     func_name = func_name.replace("<function ", "")
                     i = func_name.find(" at ")
@@ -29,14 +31,15 @@ def saveit(func):
                         val, tag=f"{self.__class__.__name__}.{name} = {func_name}"
                     )
                 setattr(self, name, val)
-            else:  ### original.
-                setattr(self, name, func(self, *args, **kwds))
+            else:  # Original.
+                setattr(self, name, class_name(self, *args, **kwds))
         return getattr(self, name)
 
     return _wrapper
 
 
-cacheit = saveit
+cacheit = inject_object
+saveit = inject_object
 
 
 def prevent_recursion(default):
