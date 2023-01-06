@@ -2,6 +2,8 @@ import sys
 import warnings
 
 
+###print_flag = False  ###
+
 def saveit(func):
     """A decorator that caches the return value of a function"""
 
@@ -9,7 +11,21 @@ def saveit(func):
 
     def _wrapper(self, *args, **kwds):
         if not hasattr(self, name):
-            setattr(self, name, func(self, *args, **kwds))
+            if 1:  ###
+                # global print_flag
+                # if not print_flag:
+                    # print('')
+                    # print_flag = True
+                print('')
+                val = func(self, *args, **kwds)
+                func_name = repr(func).replace('<function ','')
+                i = func_name.find(' at ')
+                # print(f"saveit: {self.__class__.__name__:>20}.{name:<20} {func_name[:i]}()")
+                from leo.core import leoGlobals as g  ###
+                g.printObj(val, tag=f"{self.__class__.__name__}.{name} = {func_name[:i]}()")
+                setattr(self, name, val)
+            else:  ### original.
+                setattr(self, name, func(self, *args, **kwds))
         return getattr(self, name)
 
     return _wrapper
