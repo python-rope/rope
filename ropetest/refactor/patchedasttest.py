@@ -220,6 +220,12 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("BinOp", ["Num", " ", "+", " ", "Str"])
 
+    def test_handling_fstrings(self):
+        source = '1 + f"("\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("BinOp", ["Num", " ", "+", " ", "JoinedStr"])
+
     def test_handling_implicit_string_concatenation(self):
         source = "a = '1''2'"
         ast_frag = patchedast.get_patched_ast(source, True)
