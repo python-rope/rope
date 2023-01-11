@@ -13,6 +13,7 @@
 - #631 Implement version hash (@lieryan)
 - #634 Remove call_for_nodes(recursive) argument (@edreamleo)
 - #643, #435 Fix fstrings with mismatched parens (@apmorton)
+- #646 Fix renaming kwargs when refactoring from imports (@apmorton)
 
 # Release 1.6.0
 
