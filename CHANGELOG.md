@@ -12,7 +12,7 @@
 - #630 SQLite models improvements (@lieryan)
 - #631 Implement version hash (@lieryan)
 - #634 Remove call_for_nodes(recursive) argument (@edreamleo)
-
+- #643, #435 Fix fstrings with mismatched parens (@apmorton)
 
 # Release 1.6.0
 
