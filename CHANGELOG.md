@@ -1,5 +1,5 @@
 # **Upcoming release**
-
+- #648 Remove __init__ from import statement when using sqlite autoimport (@bagel897)
 - #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
 - #606 Deprecate compress_objectdb and compress_history (@lieryan)
 - #607 Remove importing from legacy files with `.pickle` suffix (@lieryan)
