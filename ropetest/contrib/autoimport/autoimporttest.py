@@ -1,4 +1,5 @@
 # Special cases, easier to express in pytest
+from contextlib import closing
 from textwrap import dedent
 
 import pytest
@@ -10,9 +11,8 @@ from rope.contrib.autoimport.sqlite import AutoImport
 
 @pytest.fixture
 def autoimport(project: Project):
-    a = AutoImport(project)
-    yield a
-    a.close()
+    with closing(AutoImport(project)) as ai:
+        yield ai
 
 
 def test_init_py(
