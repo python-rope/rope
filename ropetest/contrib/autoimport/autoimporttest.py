@@ -1,17 +1,11 @@
 # Special cases, easier to express in pytest
-import os
-from pathlib import Path
+from textwrap import dedent
 
 import pytest
 
 from rope.base.project import Project
-from rope.base.resources import Resource
+from rope.base.resources import File, Folder
 from rope.contrib.autoimport.sqlite import AutoImport
-
-
-@pytest.fixture
-def project(tmp_path: Path):
-    return Project(tmp_path)
 
 
 @pytest.fixture
@@ -21,35 +15,20 @@ def autoimport(project: Project):
     a.close()
 
 
-@pytest.fixture
-def mod1_folder(project: Project, tmp_path: Path):
-    s = "mod1"
-    p = tmp_path / s
-    p.mkdir()
-    assert p.exists()
-    yield Resource(project, s)
-
-
-@pytest.fixture
-def mod2_file(project: Project, tmp_path: Path):
-    s = "mod2.py"
-    p = tmp_path / s
-    p.touch()
-    assert p.exists()
-    yield Resource(project, s)
-
-
 def test_init_py(
-    autoimport: AutoImport, project: Project, mod1_folder: Resource, mod2_file: Resource
+    autoimport: AutoImport,
+    project: Project,
+    pkg1: Folder,
+    mod1: File,
 ):
-    s = "__init__.py"
-    i = mod1_folder.pathlib / s
-    with i.open(mode="x") as f:
-        f.write("def foo():\n")
-        f.write("\tpass\n")
-    with mod2_file.pathlib.open(mode="w") as f:
-        f.write("foo")
-    autoimport.generate_cache([Resource(project, os.path.join("mod1", s))])
+    mod1_init = pkg1.get_child("__init__.py")
+    mod1_init.write(dedent("""\
+        def foo():
+            pass
+    """))
+    mod1.write(dedent("""\
+        foo
+    """))
+    autoimport.generate_cache([mod1_init])
     results = autoimport.search("foo", True)
-    print(results)
-    assert [("from mod1 import foo", "foo")] == results
+    assert [("from pkg1 import foo", "foo")] == results
