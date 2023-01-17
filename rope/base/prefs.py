@@ -71,7 +71,8 @@ class Prefs:
         default=False, description="Should rope save object information or not."
     )
     compress_objectdb: bool = field(
-        default=False, description="Deprecated. This has no effect",
+        default=False,
+        description="Deprecated. This has no effect",
     )
     automatic_soa: bool = field(
         True, "If `True`, rope analyzes each module when it is being saved."
@@ -96,7 +97,8 @@ class Prefs:
         default=True, description="Shows whether to save history across sessions."
     )
     compress_history: bool = field(
-        default=False, description="Deprecated. This has no effect",
+        default=False,
+        description="Deprecated. This has no effect",
     )
 
     indent_size: int = field(
