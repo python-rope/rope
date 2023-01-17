@@ -1,10 +1,13 @@
 # **Upcoming release**
 
+# Release 1.8.0
+
 - #650 Install pre-commit hooks on rope repository (@lieryan)
 - #655 Remove unused __init__() methods (@edreamleo, @lieryan)
-- #674 Fix/supress all mypy complaints
-- #687 Fix autoimport not scanning packages recursively (@lieryan)
-
+- #656 Reformat using black 23.1.0 (@edreamleo)
+- #674 Fix/supress all mypy complaints (@edreamleo)
+- #680 Remove a do-nothing statement in soi._handle_first_parameter (@edreamleo)
+- #687, #688 Fix autoimport not scanning packages recursively (@lieryan)
 
 # Release 1.7.0
 
@@ -52,12 +55,12 @@
 ## Tests/Dev
 
 - #626 Install pre-commit hooks on rope repository (@lieryan)
-- #628 Add isort to pre-commit
-- #638 Add a function to identify ast Constant nodes more granularly
+- #628 Add isort to pre-commit (@lieryan)
+- #638 Add a function to identify ast Constant nodes more granularly (@lieryan)
 
 ## Docs
 
-- #636 Update readme to reflect 1.0 has been released.
+- #636 Update readme to reflect 1.0 has been released. (@maxnoe)
 
 
 # Release 1.6.0
