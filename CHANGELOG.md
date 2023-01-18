@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-...
+- #650 Install pre-commit hooks on rope repository (@lieryan)
 
 
 # Release 1.7.0
@@ -50,7 +50,7 @@
 
 - #626 Install pre-commit hooks on rope repository (@lieryan)
 - #628 Add isort to pre-commit
-- #638 Add a function to identify ast Constant nodes more granularly 
+- #638 Add a function to identify ast Constant nodes more granularly
 
 ## Docs
 
