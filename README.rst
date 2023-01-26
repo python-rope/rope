@@ -96,30 +96,13 @@ Many thanks the following people:
 Packaging Status
 ================
 
-.. csv-table:: 
-   :header: "Version", "Distribution"
+.. image:: https://repology.org/badge/vertical-allrepos/python:rope.svg
+   :target: https://repology.org/project/python:rope/versions
+   :alt: Packaging status
 
-   "|PyPI|", PyPI
-   "|Arch (AUR)|", Arch (AUR)
-   "|Debian (Stable)|", Debian (Stable)
-   "|Debian (Sid)|", Debian (Sid)
-   "|Fedora|", Fedora
-
-
-.. |PyPI| image:: https://img.shields.io/pypi/v/rope
-   :alt: PyPI
-
-.. |Arch (AUR)| image:: https://img.shields.io/archlinux/v/community/any/python-rope
-   :alt: Arch Linux package
-
-.. |Debian (Stable)| image:: https://img.shields.io/debian/v/python3-rope
-   :alt: Debian package
-
-.. |Debian (Sid)| image:: https://img.shields.io/debian/v/python3-rope/sid
-   :alt: Debian package
-
-.. |Fedora| image:: https://img.shields.io/fedora/v/python3-rope
-   :alt: Fedora package
+.. image:: https://repology.org/badge/vertical-allrepos/rope.svg
+   :target: https://repology.org/project/rope/versions
+   :alt: Packaging status
 
 License
 =======
