@@ -93,6 +93,34 @@ Many thanks the following people:
 .. _`all of our current and former contributors`: https://github.com/python-rope/rope/blob/master/CONTRIBUTORS.md
 .. _`all authors of editor integrations`: https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F
 
+Packaging Status
+================
+
+.. csv-table:: 
+   :header: "Version", "Distribution"
+
+   "|PyPI|", PyPI
+   "|Arch (AUR)|", Arch (AUR)
+   "|Debian (Stable)|", Debian (Stable)
+   "|Debian (Sid)|", Debian (Sid)
+   "|Fedora|", Fedora
+
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/rope
+   :alt: PyPI
+
+.. |Arch (AUR)| image:: https://img.shields.io/archlinux/v/community/any/python-rope
+   :alt: Arch Linux package
+
+.. |Debian (Stable)| image:: https://img.shields.io/debian/v/python3-rope
+   :alt: Debian package
+
+.. |Debian (Sid)| image:: https://img.shields.io/debian/v/python3-rope/sid
+   :alt: Debian package
+
+.. |Fedora| image:: https://img.shields.io/fedora/v/python3-rope
+   :alt: Fedora package
+
 License
 =======
 
