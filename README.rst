@@ -96,11 +96,11 @@ Many thanks the following people:
 Packaging Status
 ================
 
-.. image:: https://repology.org/badge/vertical-allrepos/python:rope.svg
+.. image:: https://repology.org/badge/vertical-allrepos/python:rope.svg?exclude_unsupported=1
    :target: https://repology.org/project/python:rope/versions
    :alt: Packaging status
 
-.. image:: https://repology.org/badge/vertical-allrepos/rope.svg
+.. image:: https://repology.org/badge/vertical-allrepos/rope.svg?exclude_unsupported=1
    :target: https://repology.org/project/rope/versions
    :alt: Packaging status
 
