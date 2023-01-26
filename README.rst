@@ -60,6 +60,7 @@ Why use Rope?
 - Unlike PyRight and PyLance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in a language that you are already familiar with
 - In comparison to Jedi, Rope is focused on refactoring. While Jedi provides some basic refactoring capabilities, Rope supports many more advanced refactoring operations and options that Jedi does not.
 
+
 Bug Reports
 ===========
 
@@ -82,13 +83,15 @@ Many thanks the following people:
 - Matej Cepl (`@mcepl`_) as former long-time Rope maintainer
 - Nick Smith <nicks@fastmail.fm> (`@soupytwist`_) as former Rope maintainer
 - `all of our current and former contributors`_
-- authors of editor integrations
+- `all authors of editor integrations`_
+- all maintainers of distro/package managers
 
 .. _`@aligrudi`: https://github.com/aligrudi
 .. _`@soupytwist`: https://github.com/soupytwist
 .. _`@lieryan`: https://github.com/lieryan
 .. _`@mcepl`: https://github.com/mcepl
 .. _`all of our current and former contributors`: https://github.com/python-rope/rope/blob/master/CONTRIBUTORS.md
+.. _`all authors of editor integrations`: https://github.com/python-rope/rope/wiki/How-to-use-Rope-in-my-IDE-or-Text-editor%3F
 
 License
 =======
