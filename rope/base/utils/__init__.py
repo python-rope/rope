@@ -16,8 +16,6 @@ def saveit(func):
 
     :return: getattr(self, name), the singleton value computed by func.
 
-    A decorator that caches the return value of a function
-
     This decorator is similar (but not identical) to the following:
 
     - @functools.cache/cached_property
