@@ -3,7 +3,29 @@ import warnings
 
 
 def saveit(func):
-    """A decorator that caches the return value of a function"""
+    """
+    A decorator that supports the `lazy singleton` pattern.
+
+    For each decorated function, the decorator creates the singleton value when
+    the decorated function is first called, *not* when importing a module.
+
+    This decorator injects a `private helper ivar` (name) into `self`.
+    Only the decorator uses this ivar.
+
+    :param func: A function/method that instantiates an object.
+
+    :return: getattr(self, name), the singleton value computed by func.
+
+    A decorator that caches the return value of a function
+
+    This decorator is similar (but not identical) to the following:
+
+    - @functools.cache/cached_property
+     https://docs.python.org/3/library/functools.html#functools.cache
+
+    - @functools.cached_property
+      https://docs.python.org/3/library/functools.html#functools.cached_property
+    """
 
     name = "_" + func.__name__
 
