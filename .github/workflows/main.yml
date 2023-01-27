@@ -18,6 +18,8 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: 'gha-cache-key.txt'
     - name: Install dependencies
       run: |
         python -m pip install -e .[dev]

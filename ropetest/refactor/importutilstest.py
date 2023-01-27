@@ -903,6 +903,13 @@ class ImportUtilsTest(unittest.TestCase):
         changed_module = self.import_tools.froms_to_imports(pymod)
         self.assertEqual("import os\nos.path.exists('.')\n", changed_module)
 
+
+    def test_transforming_froms_to_normal_kwarg_with_same_name(self):
+        self.mod.write("from os import path\nfoo(path=path.join('a', 'b'))\n")
+        pymod = self.project.get_pymodule(self.mod)
+        changed_module = self.import_tools.froms_to_imports(pymod)
+        self.assertEqual("import os\nfoo(path=os.path.join('a', 'b'))\n", changed_module)
+
     def test_transform_relatives_imports_to_abs_imports_doing_nothing(self):
         self.mod2.write("from pkg1 import mod1\nimport mod1\n")
         pymod = self.project.get_pymodule(self.mod2)

@@ -72,7 +72,7 @@ def get_modname_from_path(
         for part in rel_path_parts[:-1]:
             modname += part
             modname += "."
-        if rel_path_parts[-1] == "__init__":
+        if rel_path_parts[-1] == "__init__.py":
             modname = modname[:-1]
         else:
             modname = modname + modpath.stem

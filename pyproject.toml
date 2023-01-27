@@ -20,7 +20,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Topic :: Software Development',
 ]
-version = '1.6.0'
+version = '1.7.0'
 dependencies = ['pytoolconfig[global] >= 1.2.2']
 
 [[project.authors]]
@@ -50,6 +50,7 @@ dev = [
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
     'pre-commit>=2.20.0',
+    'pip-tools>=6.12.1',
 ]
 [tool.setuptools]
 packages = [

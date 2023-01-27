@@ -1,8 +1,17 @@
 Release Process
 ===============
 
+Pre-Release
+-----------
+
+1. Update :ref:`gha-cache-key.txt <gha-cache-key>`:
+   ``pip-compile --extra dev --generate-hashes -o gha-cache-key.txt``
+
+Release
+-------
+
 1. Ensure tickets assigned to Milestones are up to date
-2. Update CHANGELOG.md
+2. Update ``CHANGELOG.md``
 3. Increment version number in ``pyproject.toml``
 4. `git commit && git push`
 5. Tag the release with the tag annotation containing the release information,

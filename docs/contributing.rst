@@ -140,3 +140,22 @@ All required packages for development could be installed with::
 .. _`python-rope/rope`: https://github.com/python-rope/rope
 .. _`pull request`: https://help.github.com/articles/using-pull-requests
 .. _`pytest`: https://pytest.org/
+
+
+.. _gha-cache-key:
+
+Updating gha-cache-key.txt
+--------------------------
+
+``gha-cache-key.txt`` file is used as cache-key for Github Action to cache pip
+packages. Refer to `PR #650`_ to see how it works.
+
+.. _`PR #650`: https://github.com/python-rope/rope/pull/650
+
+To re-generate the cache key, run this command:
+
+.. code-block:: sh
+
+    $ pip-compile --extra dev --generate-hashes -o gha-cache-key.txt
+    $ git add gha-cache-key.txt
+    $ git commit

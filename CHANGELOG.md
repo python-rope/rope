@@ -1,22 +1,65 @@
 # **Upcoming release**
 
-- #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
-- #606 Deprecate compress_objectdb and compress_history (@lieryan)
-- #607 Remove importing from legacy files with `.pickle` suffix (@lieryan)
-- #625 Remove support for deprecated ast nodes (@lieryan)
-- #616, #621 Remove `file` builtins (@edreamleo)
-- #626 Install pre-commit hooks on rope repository (@lieryan)
+- #650 Install pre-commit hooks on rope repository (@lieryan)
+
+
+# Release 1.7.0
+
+## Feature
+
 - #548 Implement MoveGlobal using string as destination module names (@lieryan)
+
+## Bug
+
 - #627 Fix parsing of octal literal (@lieryan)
-- #611 Implement JSON DataFile serialization (@lieryan)
-- #630 SQLite models improvements (@lieryan)
-- #631 Implement version hash (@lieryan)
-- #634 Remove call_for_nodes(recursive) argument (@edreamleo)
+- #643, #435 Fix fstrings with mismatched parens (@apmorton)
+- #646 Fix renaming kwargs when refactoring from imports (@apmorton)
+- #648 Remove __init__ from import statement when using sqlite autoimport (@bagel897)
+
+## Improvements
+
+- rope.contrib.generate improvements
+  - #640 Remove unnecessary eval in generate.py (@edreamleo)
+  - #641 Add type annotations for rope.contrib.generate.create_generate() (@edreamleo)
+
+- call_for_nodes() improvements
+  - #634 Remove call_for_nodes(recursive) argument (@edreamleo)
+  - #642 Add comments & docstrings related to call_for_nodes (@edreamleo, @lieryan)
+
+- Data storage improvements
+  - #604 Fix test that sometimes leaves files behind in the current working directory (@lieryan)
+  - #606 Deprecate compress_objectdb and compress_history (@lieryan)
+  - #607 Remove importing from legacy files with `.pickle` suffix (@lieryan)
+  - #611 Implement JSON DataFile serialization (@lieryan)
+  - #630 SQLite models improvements (@lieryan)
+  - #631 Implement version hash (@lieryan)
+
+## Tech Debt
+
+- #594 Tidy up patchedast (@Alex-CodeLab)
+- #595 Global default DEFAULT_TASK_HANDLE (@Alex-CodeLab)
+- #609, #610, #612, #613 Fix pyflakes issues (@edreamleo)
+- #615 Remove 'unicode' from builtins dict (@edreamleo)
+- #616, #621 Remove `file` builtins (@edreamleo)
+- #618 Separate pynames and pynamesdef and remove star-import (@edreamleo, @lieryan)
+- #620 Remove unused import in occurrences.py (@edreamleo)
+- #625 Remove support for deprecated ast nodes (@lieryan)
+
+
+## Tests/Dev
+
+- #626 Install pre-commit hooks on rope repository (@lieryan)
+- #628 Add isort to pre-commit
+- #638 Add a function to identify ast Constant nodes more granularly
+
+## Docs
+
+- #636 Update readme to reflect 1.0 has been released.
 
 
 # Release 1.6.0
 
-# New features & Enhancements
+## New features & Enhancements
 
 - #559, #560 Improve handling of whitespace in import and from-import statements (@lieryan)
 - #566, #567, #597 Fix variables in kwonlyargs and posonlyargs not being correctly passed to extracted methods (@lieryan)

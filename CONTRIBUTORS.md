@@ -78,6 +78,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/thomkeh"><img src="https://avatars.githubusercontent.com/u/7741417?v=4?s=100" width="100px;" alt="Thomas MK"/><br /><sub><b>Thomas MK</b></sub></a><br /><a href="https://github.com/python-rope/rope/issues?q=author%3Athomkeh" title="Bug reports">🐛</a> <a href="https://github.com/python-rope/rope/commits?author=thomkeh" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://leoeditor.com/"><img src="https://avatars.githubusercontent.com/u/592928?v=4?s=100" width="100px;" alt="Edward K. Ream"/><br /><sub><b>Edward K. Ream</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=edreamleo" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/apmorton"><img src="https://avatars.githubusercontent.com/u/63636?v=4?s=100" width="100px;" alt="Austin Morton"/><br /><sub><b>Austin Morton</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=apmorton" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 
