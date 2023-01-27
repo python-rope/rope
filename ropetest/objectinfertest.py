@@ -13,7 +13,7 @@ class ObjectInferTest(unittest.TestCase):
         self.project.fscommands manages temp files in a temp directory.
         """
         if 1:
-            print('')  # For single tests. Does not affect full-test-r script.
+            print('')  # For single tests. Does not affect the test-r or full-test-r scripts.
         super().setUp()
         if 0:
             if self.id().endswith('test_simple_type_inferencing'):
@@ -32,7 +32,7 @@ class ObjectInferTest(unittest.TestCase):
         """)
         # setUp instantiates self.project to a Project instance.
 
-        ### import pdb ; pdb.set_trace()  ###
+        import pdb ; pdb.set_trace()  ###
 
         scope = libutils.get_string_scope(self.project, code)
         # scope is a GlobalScope.  It might be any subclass of Scope.

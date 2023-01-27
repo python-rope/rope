@@ -15,7 +15,7 @@ def inject(func):
     The ivar's name (ivar_name) is f"_{func.__name__}".
 
     :param func: A function/method that instantiates an object.
-    
+
     :return: getattr(self, ivar_name), the value of the ivar.
 
     """
@@ -44,7 +44,7 @@ def inject(func):
                     func_s = repr(func).replace("<function ", "")
                     i = func_s.find(" at ")
                     description = f"{func_s[:i]:30} = {obj.__class__.__name__}"
-                    if 1:  # Brief
+                    if 0:  # Brief
                         print(f"{tag} ivar: {injected_name:>30} = {description}")
                     else:
                         print("")
