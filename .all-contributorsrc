@@ -519,6 +519,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "apmorton",
+      "name": "Austin Morton",
+      "avatar_url": "https://avatars.githubusercontent.com/u/63636?v=4",
+      "profile": "https://github.com/apmorton",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",

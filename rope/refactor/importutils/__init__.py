@@ -130,7 +130,11 @@ class ImportTools:
             if alias is not None:
                 imported = alias
             occurrence_finder = occurrences.create_finder(
-                self.project, imported, pymodule[imported], imports=False
+                self.project,
+                imported,
+                pymodule[imported],
+                imports=False,
+                keywords=False,
             )
             source = rename.rename_in_module(
                 occurrence_finder,

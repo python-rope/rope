@@ -130,7 +130,8 @@ class _PatchingASTWalker:
                 child = self.source[region[0] : region[1]]
                 token_start = region[0]
             if not first_token:
-                formats.append(self.source[offset:token_start])
+                if not isinstance(node, ast.JoinedStr):
+                    formats.append(self.source[offset:token_start])
                 if self.children:
                     children.append(self.source[offset:token_start])
             else:
@@ -321,9 +322,8 @@ class _PatchingASTWalker:
 
     def _ClassDef(self, node):
         children = []
-        if getattr(node, "decorator_list", None):
-            for decorator in node.decorator_list:
-                children.extend(("@", decorator))
+        for decorator in node.decorator_list:
+            children.extend(("@", decorator))
         children.extend(["class", node.name])
         if node.bases:
             children.append("(")
