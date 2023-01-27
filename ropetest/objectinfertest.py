@@ -5,6 +5,8 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
+from leo.core import leoGlobals as g  ###
+
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
@@ -15,9 +17,6 @@ class ObjectInferTest(unittest.TestCase):
         if 1:
             print('')  # For single tests. Does not affect the test-r or full-test-r scripts.
         super().setUp()
-        if 0:
-            if self.id().endswith('test_simple_type_inferencing'):
-                import pdb ; pdb.set_trace()  # pylint: disable=forgotten-debug-statement
         self.project = testutils.sample_project()
 
     def tearDown(self):
@@ -30,27 +29,40 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
-        # setUp instantiates self.project to a Project instance.
+        
+        # 1. setUp creates self.project.
 
-        import pdb ; pdb.set_trace()  ###
-
-        scope = libutils.get_string_scope(self.project, code)
-        # scope is a GlobalScope.  It might be any subclass of Scope.
-        # scope.pyobject is a pyobjectsdef.PyModule.
+            # setUp instantiates self.project to a Project instance.
+            # self.project = testutils.sample_project()
+            
+        # 2. get_string_scope sets self.scope to the scope of the test string.
+        
+            # Sets self.scope to pyobjectsdef.PyModule(project.pycore, code, ...)
+            # (code is the test string, defined above.)
+            
+        # Instantiating the pyobjectsdef.PyModule does all the work!!!
+        scope = libutils.get_string_scope(self.project, code)  
+        
+            # scope is a GlobalScope.  It might be any subclass of Scope.
+            # scope.pyobject is a pyobjectsdef.PyModule.
 
         sample_class = scope["Sample"].get_object()
-        # sample_class is a pyobjectsdef.PyClass ("::Sample" at 0x14035953520)
-
-        # scope["Sample"] is a DefinedName.
-        # scope["Sample"].pyobject is a pyobjectsdef.PyClass.
+        
+            # sample_class is a pyobjectsdef.PyClass ("::Sample" at ...)
+            # scope["Sample"] is a DefinedName.
+            # scope["Sample"].pyobject is a pyobjectsdef.PyClass.
 
         a_var = scope["a_var"].get_object()
-        # a_var is a pyobjects.PyObject
-        # a_var.get_type() is a pyobjectsdef.PyClass ("::Sample" at 0x14035953520)
+        
+            # a_var is a pyobjects.PyObject
+            # a_var.get_type() is a pyobjectsdef.PyClass ("::Sample" at ...)
 
-        # scope["a_var"] is an pynamesdef.AssignedName.
-        # scope["a_var"].pyobject is a pynames._Inferred.
-        # scope["a_var"].get_object() is a pyobjects.PyObject.
+            # scope["a_var"] is an pynamesdef.AssignedName.
+            # scope["a_var"].pyobject is a pynames._Inferred.
+            # scope["a_var"].get_object() is a pyobjects.PyObject.
+
+        print(f"\nsample_class: {sample_class}")
+        import pdb ; pdb.set_trace()  ###
 
         self.assertEqual(sample_class, a_var.get_type())
 
