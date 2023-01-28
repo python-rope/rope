@@ -30,6 +30,28 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
         
+        # Inject g attributes to support this pattern:
+        #
+        #   if getattr(g, 'trace_ctors', None):
+        #       g.trace(
+        #           f"{g.get_ctor_name(self, __file__)} "
+        #           f"{ast_node.__class__.__name__:14}",  # or f"({' ':14'}"
+        #           g.callers())
+        
+        def get_ctor_name(self, file_name):
+            class_name = self.__class__.__name__
+            module_name = g.shortFileName(file_name).replace('.py', '')
+            combined_name = f"{module_name}.{class_name}"
+            return f"{combined_name:>25}"
+
+        g.trace_ctors = True  # True: Enable tracing in ctors.
+        g.get_ctor_name = get_ctor_name  # Inject the formatting function.
+        
+        def banner(s):
+            if 1: print(f"\n===== {s}\n")
+            
+        banner('after setUp')
+        
         # 1. setUp creates self.project.
 
             # setUp instantiates self.project to a Project instance.
@@ -40,13 +62,25 @@ class ObjectInferTest(unittest.TestCase):
             # Sets self.scope to pyobjectsdef.PyModule(project.pycore, code, ...)
             # (code is the test string, defined above.)
             
-        # Instantiating the pyobjectsdef.PyModule does all the work!!!
-        scope = libutils.get_string_scope(self.project, code)  
+        # ??? Instantiating the pyobjectsdef.PyModule does all the work ???
+        
+            # PyDefinedObject.__init__ calls:
+                
+                # self.concluded_attributes = self.get_module()._get_concluded_data()
+                # self.attributes = self.get_module()._get_concluded_data()
+            
+            # But all attributes are empty for this test.
+
+        scope = libutils.get_string_scope(self.project, code)
+        
+        banner('after get_string_scope')
         
             # scope is a GlobalScope.  It might be any subclass of Scope.
             # scope.pyobject is a pyobjectsdef.PyModule.
 
         sample_class = scope["Sample"].get_object()
+        
+        banner('after sample_class = scope["Sample"].get_object()')
         
             # sample_class is a pyobjectsdef.PyClass ("::Sample" at ...)
             # scope["Sample"] is a DefinedName.
@@ -61,8 +95,8 @@ class ObjectInferTest(unittest.TestCase):
             # scope["a_var"].pyobject is a pynames._Inferred.
             # scope["a_var"].get_object() is a pyobjects.PyObject.
 
-        print(f"\nsample_class: {sample_class}")
-        import pdb ; pdb.set_trace()  ###
+        print(f"sample_class: {sample_class}")
+        ### import pdb ; pdb.set_trace()  ###
 
         self.assertEqual(sample_class, a_var.get_type())
 
