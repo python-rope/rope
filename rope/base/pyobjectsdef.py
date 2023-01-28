@@ -17,6 +17,7 @@ from rope.base import (
 
 from leo.core import leoGlobals as g  ###
 
+
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
         rope.base.pyobjects.AbstractFunction.__init__(self)
@@ -134,7 +135,7 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
-        if getattr(g, 'trace_ctors', None):  ###
+        if getattr(g, "trace_ctors", None):  ###
             g.trace(f"{g.get_ctor_name(self, __file__)} {' ':14}", g.callers())
 
     def get_superclasses(self):
@@ -185,7 +186,7 @@ class PyModule(pyobjects.PyModule):
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
-        if getattr(g, 'trace_ctors', None):  ###
+        if getattr(g, "trace_ctors", None):  ###
             g.trace(f"{g.get_ctor_name(self, __file__)} {' ':14}", g.callers())
         super().__init__(pycore, node, resource)
 
@@ -591,7 +592,7 @@ class _GlobalVisitor(_ScopeVisitor):
     pass  ###
     ###
     # def __init__(self, pycore, owner_object):
-        # super().__init__(pycore, owner_object)
+    # super().__init__(pycore, owner_object)
 
 
 class _ClassVisitor(_ScopeVisitor):

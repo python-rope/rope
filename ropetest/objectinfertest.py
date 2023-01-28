@@ -30,7 +30,7 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
         
-        trace = False  # Set to False when running all tests.
+        trace = True  # Set to False when running all tests.
 
         def get_ctor_name(self, file_name):
             """Return <module-name>.<class-name>:>20"""

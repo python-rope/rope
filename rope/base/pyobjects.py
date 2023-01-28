@@ -173,8 +173,11 @@ class PyDefinedObject:
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
-        if getattr(g, 'trace_ctors', None):  ###
-            g.trace(f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}", g.callers())
+        if getattr(g, "trace_ctors", None):  ###
+            g.trace(
+                f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
+                g.callers(),
+            )
 
     def __repr__(self):
         return '<{}.{} "{}" at {}>'.format(
@@ -294,21 +297,26 @@ class _ConcludedData:
 
     def __str__(self):
         return "pyobjects._ConcludedData<" + str(self.data) + ">"
-        
-    ### 
 
+    ###
 
     def _ekr_dump(self):
-        
+
         g.printObj(self.data, tag=f"***** pyobjects._ConcludedData: {id(self)}")
+
+
 class _PyModule(PyDefinedObject, AbstractModule):
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
-        if getattr(g, 'trace_ctors', None):  ###
-            g.trace(f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}", g.callers())
+        if getattr(g, "trace_ctors", None):  ###
+            g.trace(
+                f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
+                g.callers(),
+            )
+
     @property
     def absolute_name(self) -> str:
         return self.get_name()
@@ -325,10 +333,9 @@ class _PyModule(PyDefinedObject, AbstractModule):
     def get_resource(self):
         return self.resource
 
-
     def _ekr_dump_concluded_data(self):
 
-        g.trace('(pyobjects._PyModule._ekr_dump_concluded_data)')
+        g.trace("(pyobjects._PyModule._ekr_dump_concluded_data)")
         tag = self.get_name()
         try:
             for i, z in enumerate(self.concluded_data):
@@ -338,6 +345,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
             z = self.concluded_data
             g.printObj(f"{z!s}", tag=tag)
             # z._ekr_dump()
+
 
 class PyModule(_PyModule):
     pass
