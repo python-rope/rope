@@ -588,8 +588,10 @@ class _ComprehensionVisitor(_ScopeVisitor):
 
 
 class _GlobalVisitor(_ScopeVisitor):
-    def __init__(self, pycore, owner_object):
-        super().__init__(pycore, owner_object)
+    pass  ###
+    ###
+    # def __init__(self, pycore, owner_object):
+        # super().__init__(pycore, owner_object)
 
 
 class _ClassVisitor(_ScopeVisitor):
