@@ -2,7 +2,7 @@ import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import ast, codeanalyze, exceptions, pynames, utils
 from rope.refactor import patchedast
 
-from leo.core import leoGlobals as g  ###
+from rope.base import leoGlobals as g  ###
 
 assert g  ###
 

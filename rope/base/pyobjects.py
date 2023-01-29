@@ -2,7 +2,9 @@ from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
-from leo.core import leoGlobals as g  ###
+from rope.base import leoGlobals as g  ###
+
+assert g  ###
 
 
 class PyObject:

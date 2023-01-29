@@ -5,8 +5,8 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
-from leo.core import leoGlobals as g  ###
-
+from rope.base import leoGlobals as g  ###
+assert g  ###
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
@@ -30,18 +30,10 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
         
-        trace = True  # Set to False when running all tests.
-
-        def get_ctor_name(self, file_name):
-            """Return <module-name>.<class-name>:>20"""
-            class_name = self.__class__.__name__
-            module_name = g.shortFileName(file_name).replace('.py', '')
-            combined_name = f"{module_name}.{class_name}"
-            return f"{combined_name:>25}"
+        trace = False  # Set to False when running all tests.
 
         if trace:
             g.trace_ctors = True  # True: Enable tracing in ctors.
-            g.get_ctor_name = get_ctor_name  # Inject the formatting function.
         
         def banner(s):
             if trace:

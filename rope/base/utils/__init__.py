@@ -1,8 +1,7 @@
 import sys
 import warnings
 
-
-from leo.core import leoGlobals as g
+from rope.base import leoGlobals as g
 
 assert g  ###
 

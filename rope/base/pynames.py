@@ -10,7 +10,9 @@ if typing.TYPE_CHECKING:
 
     from rope.base import pyobjectsdef
 
-from leo.core import leoGlobals as g  ###
+from rope.base import leoGlobals as g  ###
+
+assert g  ###
 
 
 class PyName:
