@@ -72,8 +72,8 @@ def callers_list(n: int = 4) -> List[str]:
     return list(reversed(result))
 
 
-def get_ctor_name(self, file_name, width=25):
-    """Return <module-name>.<class-name>:>20"""
+def get_ctor_name(self: Any, file_name: str, width: int = 25):
+    """Return <module-name>.<class-name>:>width"""
     class_name = self.__class__.__name__
     module_name = shortFileName(file_name).replace(".py", "")
     combined_name = f"{module_name}.{class_name}"
