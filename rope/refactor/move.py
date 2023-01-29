@@ -330,9 +330,9 @@ class MoveGlobal:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError("Move destination does not exist.")
-        if dest.is_folder() and dest.has_child("__init__.py"):
-            dest = dest.get_child("__init__.py")
-        if dest.is_folder():
+        if dest.is_folder() and dest.has_child("__init__.py"):  # type:ignore
+            dest = dest.get_child("__init__.py")  # type:ignore
+        if dest.is_folder():  # type:ignore
             raise exceptions.RefactoringError(
                 "Move destination for non-modules should not be folders."
             )
