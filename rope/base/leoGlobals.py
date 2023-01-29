@@ -7,7 +7,7 @@ Duplicated here so that Rope's commit checks won't fail.
 # from __future__ import annotations
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 def _callerName(n: int) -> str:
@@ -96,7 +96,7 @@ def printObj(obj: Any, indent: str = "", tag: str = None) -> None:
 
 
 def objToString(
-    obj: Any, indent: str = "", tag: str = "", concise: bool = False
+    obj: Any, indent: str = "", tag: Optional[str] = "", concise: bool = False
 ) -> str:
     """
     Pretty print any Python object to a string.
@@ -139,7 +139,7 @@ def objToString(
     return f"{indent} {obj!r}"
 
 
-def dictToString(d: Dict[str, str], indent: str = "", tag: str = None) -> str:
+def dictToString(d: Dict[str, str], indent: str = "", tag: Optional[str] = None) -> str:
     """Pretty print a Python dict to a string."""
     # pylint: disable=unnecessary-lambda
     if not d:
@@ -159,7 +159,7 @@ def dictToString(d: Dict[str, str], indent: str = "", tag: str = None) -> str:
     return f"{tag}...\n{s}\n" if tag else s
 
 
-def listToString(obj: Any, indent: str = "", tag: str = None) -> str:
+def listToString(obj: Any, indent: str = "", tag: Optional[str] = None) -> str:
     """Pretty print a Python list to a string."""
     if not obj:
         return indent + "[]"
@@ -178,7 +178,7 @@ def listToString(obj: Any, indent: str = "", tag: str = None) -> str:
     return f"{tag}...\n{s}\n" if tag else s
 
 
-def tupleToString(obj: Any, indent: str = "", tag: str = None) -> str:
+def tupleToString(obj: Any, indent: str = "", tag: Optional[str] = None) -> str:
     """Pretty print a Python tuple to a string."""
     if not obj:
         return "(),"
@@ -223,5 +223,5 @@ def trace(*args: Any) -> None:
     name = _callerName(2)
     if name.endswith(".pyc"):
         name = name[:-1]
-    args = "".join(str(z) for z in args)
-    print(f"{name} {args}")
+    args2 = "".join(str(z) for z in args)
+    print(f"{name} {args2}")
