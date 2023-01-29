@@ -1,28 +1,19 @@
 import sys
 import warnings
+from typing import Callable
 
 
-def saveit(func):
+def saveit(func: Callable):
     """
-    A decorator that supports the `lazy singleton` pattern.
+    A decorator calls func *once*, saves function's value, and returns the
+    saved value for the first and all later calls to func.
 
-    For each decorated function, the decorator creates the singleton value when
-    the decorated function is first called, *not* when importing a module.
+    This decorator is part of Rope's startup code. It has no direct role in
+    Rope's type inference code.
 
-    This decorator injects a `private helper ivar` (name) into `self`.
-    Only the decorator uses this ivar.
+    :param func: a Callable.
 
-    :param func: A function/method that instantiates an object.
-
-    :return: getattr(self, name), the singleton value computed by func.
-
-    This decorator is similar (but not identical) to the following:
-
-    - @functools.cache/cached_property
-     https://docs.python.org/3/library/functools.html#functools.cache
-
-    - @functools.cached_property
-      https://docs.python.org/3/library/functools.html#functools.cached_property
+    :return: saved value computed by calling func the first time.
     """
 
     name = "_" + func.__name__
