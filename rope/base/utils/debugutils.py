@@ -127,10 +127,8 @@ def printObj(obj: Any, tag: str = None, indent: int = 0) -> None:
     print(objToString(obj, indent=indent))
 
 
-def shortFileName(fileName: str, n: int = None) -> str:
+def shortFileName(fileName: str) -> str:
     """Return the base name of a path."""
-    if n is not None:
-        trace('"n" keyword argument is no longer used')
     return os.path.basename(fileName) if fileName else ""
 
 
