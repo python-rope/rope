@@ -2,7 +2,7 @@ from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
-from rope.base import leoGlobals as g  ###
+from rope.base.utils import debugutils as g  ###
 
 assert g  ###
 

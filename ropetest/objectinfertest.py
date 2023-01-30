@@ -5,7 +5,7 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
-from rope.base import leoGlobals as g  ###
+from rope.base.utils import debugutils as g  ###
 assert g  ###
 
 class ObjectInferTest(unittest.TestCase):
