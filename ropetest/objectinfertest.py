@@ -33,6 +33,7 @@ class ObjectInferTest(unittest.TestCase):
         trace = False  # Set to False when running all tests.
 
         if trace:
+            # Make *sure* that g.trace_ctors exists only for this test.
             g.trace_ctors = True  # True: Enable tracing in ctors.
         
         def banner(s):
