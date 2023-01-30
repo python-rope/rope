@@ -30,7 +30,7 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
         
-        trace = False  # Set to False when running all tests.
+        trace = True  # Set to False when running all tests.
 
         if trace:
             # Make *sure* that g.trace_ctors exists only for this test.
@@ -68,7 +68,7 @@ class ObjectInferTest(unittest.TestCase):
             # scope is a GlobalScope.  It might be any subclass of Scope.
             # scope.pyobject is a pyobjectsdef.PyModule.
             
-        if trace: g.trace('*** scope.pyobject', scope.pyobject)
+        ### if trace: g.trace('*** scope.pyobject', scope.pyobject)
 
         # *** Calling scope["Sample"] (via _ScopeVisitor._ClassDef)
         #     instantiates pyobjects.PyClass *and* pyobjectsdef.PyClass.

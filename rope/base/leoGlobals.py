@@ -6,8 +6,9 @@ Duplicated here so that Rope's commit checks won't fail.
 
 # from __future__ import annotations
 import os
+import pprint
 import sys
-from typing import Any, Dict, List
+from typing import Any, List
 
 
 def _callerName(n: int) -> str:
@@ -81,6 +82,35 @@ def get_ctor_name(self: Any, file_name: str, width: int = 25):
     return f"{padding}{combined_name}"
 
 
+def objToString(obj: Any, indent: int = 0, width: int = 120) -> str:
+    """
+    Pretty print any Python object to a string.
+    """
+
+    s = pprint.pformat(
+        obj,
+        compact=False,
+        depth=None,
+        # indent=len(indent) if isinstance(indent, str) else indent,
+        indent=indent,
+        sort_dicts=True,
+        # underscore_numbers=False,
+        width=width,
+    )
+    if s and isinstance(obj, str) and "\n" in s:
+        # Weird: strip ()
+        if s[0] == "(":
+            s = s[1:]
+        if s and s[-1] == ")":
+            s = s[:-1]
+        results = ["[\n"]
+        for i, z in enumerate(splitLines(s)):
+            results.append(f"  {i:4}: {z!s}")
+        results.append("\n]\n")
+        return "".join(results)
+    return s
+
+
 def plural(obj: Any) -> str:
     """Return "s" or "" depending on n."""
     if isinstance(obj, (list, tuple, str)):
@@ -90,111 +120,11 @@ def plural(obj: Any) -> str:
     return "" if n == 1 else "s"
 
 
-def printObj(obj: Any, indent: str = "", tag: str = None) -> None:
-    """Pretty print any Python object"""
-    print(objToString(obj, indent=indent, tag=tag))
-
-
-def objToString(
-    obj: Any, indent: str = "", tag: str = "", concise: bool = False
-) -> str:
-    """
-    Pretty print any Python object to a string.
-
-    concise=False: (Legacy) return a detailed string.
-    concise=True: Return a summary string.
-    """
+def printObj(obj: Any, tag: str = None, indent: int = 0) -> None:
+    """Pretty print any Python object using g.pr."""
     if tag:
         print(tag.strip())
-    if concise:
-        r = repr(obj)
-        if obj is None:
-            return f"{indent}None"
-        if isinstance(obj, dict):
-            return f"{indent}dict: {len(obj.keys())} keys"
-        if isinstance(obj, list):
-            return f"{indent}list: {len(obj)} items plural(len(obj))"
-        if isinstance(obj, tuple):
-            return f"{indent}tuple: {len(obj)} item{plural(len(obj))}"
-        if "method" in r:
-            return f"{indent}method: {obj.__name__}"
-        if "class" in r:
-            return f"{indent}class"
-        if "module" in r:
-            return f"{indent}module"
-        return f"{indent}object: {obj!r}"
-
-    # concise = False
-    if isinstance(obj, dict):
-        return dictToString(obj, indent=indent)
-    if isinstance(obj, list):
-        return listToString(obj, indent=indent)
-    if isinstance(obj, tuple):
-        return tupleToString(obj, indent=indent)
-    if isinstance(obj, str):
-        # Print multi-line strings as lists.
-        lines = splitLines(obj)
-        if len(lines) > 1:
-            return listToString(lines, indent=indent)
-    return f"{indent} {obj!r}"
-
-
-def dictToString(d: Dict[str, str], indent: str = "", tag: str = None) -> str:
-    """Pretty print a Python dict to a string."""
-    # pylint: disable=unnecessary-lambda
-    if not d:
-        return "{}"
-    result = ["{\n"]
-    indent2 = indent + " " * 4
-    n = 2 + len(indent) + max([len(repr(z)) for z in d.keys()])
-    for i, key in enumerate(sorted(d, key=lambda z: repr(z))):
-        pad = " " * max(0, (n - len(repr(key))))
-        result.append(f"{pad}{key}:")
-        result.append(objToString(d.get(key), indent=indent2))
-        if i + 1 < len(d.keys()):
-            result.append(",")
-        result.append("\n")
-    result.append(indent + "}")
-    s = "".join(result)
-    return f"{tag}...\n{s}\n" if tag else s
-
-
-def listToString(obj: Any, indent: str = "", tag: str = None) -> str:
-    """Pretty print a Python list to a string."""
-    if not obj:
-        return indent + "[]"
-    result = [indent, "["]
-    indent2 = indent + " " * 4
-    # I prefer not to compress lists.
-    for i, obj2 in enumerate(obj):
-        result.append("\n" + indent2)
-        result.append(objToString(obj2, indent=indent2))
-        if i + 1 < len(obj) > 1:
-            result.append(",")
-        else:
-            result.append("\n" + indent)
-    result.append("]")
-    s = "".join(result)
-    return f"{tag}...\n{s}\n" if tag else s
-
-
-def tupleToString(obj: Any, indent: str = "", tag: str = None) -> str:
-    """Pretty print a Python tuple to a string."""
-    if not obj:
-        return "(),"
-    result = ["("]
-    indent2 = indent + " " * 4
-    for i, obj2 in enumerate(obj):
-        if len(obj) > 1:
-            result.append("\n" + indent2)
-        result.append(objToString(obj2, indent=indent2))
-        if len(obj) == 1 or i + 1 < len(obj):
-            result.append(",")
-        elif len(obj) > 1:
-            result.append("\n" + indent)
-    result.append(")")
-    s = "".join(result)
-    return f"{tag}...\n{s}\n" if tag else s
+    print(objToString(obj, indent=indent))
 
 
 def shortFileName(fileName: str, n: int = None) -> str:
