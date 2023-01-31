@@ -87,19 +87,14 @@ def objToString(obj: Any, indent: int = 0, width: int = 120) -> str:
     """
     Pretty print any Python object to a string.
     """
-
-    s = pprint.pformat(obj, indent=indent, width=width)
-    if s and isinstance(obj, str) and "\n" in s:
-        # When len(s) > width, parens enclose the representation!
-        if len(s) >= width and s.startswith("(") and s.endswith(")"):
-            s = s[1:-1]
-        results = ["[\n"]
-        # Include line numbers.
-        for i, z in enumerate(splitLines(s)):
-            results.append(f"  {i:4}: {z!s}")
-        results.append("\n]\n")
-        return "".join(results)
-    return s
+    if not isinstance(obj, str):
+        s = pprint.pformat(obj, indent=indent, width=width)
+        return f"{obj.__class__.__name__}: {pprint.saferepr(s)}"
+    if "\n" not in obj:
+        return f"str: {obj!r}"
+    # Return the enumerated lines of the string.
+    lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(splitLines(obj))])
+    return f"str: [\n{lines}]\n"
 
 
 def plural(obj: Any) -> str:
