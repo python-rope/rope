@@ -89,15 +89,12 @@ def objToString(obj: Any, indent: int = 0, width: int = 120) -> str:
     """
 
     s = pprint.pformat(obj, indent=indent, width=width)
-
-    # Print line numbers for multi-line strings.
     if s and isinstance(obj, str) and "\n" in s:
-        # Weird: strip ()
-        if s[0] == "(":
-            s = s[1:]
-        if s and s[-1] == ")":
-            s = s[:-1]
+        # When len(s) > width, parens enclose the representation!
+        if len(s) >= width and s.startswith("(") and s.endswith(")"):
+            s = s[1:-1]
         results = ["[\n"]
+        # Include line numbers.
         for i, z in enumerate(splitLines(s)):
             results.append(f"  {i:4}: {z!s}")
         results.append("\n]\n")
