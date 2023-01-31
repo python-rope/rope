@@ -88,16 +88,9 @@ def objToString(obj: Any, indent: int = 0, width: int = 120) -> str:
     Pretty print any Python object to a string.
     """
 
-    s = pprint.pformat(
-        obj,
-        compact=False,
-        depth=None,
-        # indent=len(indent) if isinstance(indent, str) else indent,
-        indent=indent,
-        sort_dicts=True,
-        # underscore_numbers=False,
-        width=width,
-    )
+    s = pprint.pformat(obj, indent=indent, width=width)
+
+    # Print line numbers for multi-line strings.
     if s and isinstance(obj, str) and "\n" in s:
         # Weird: strip ()
         if s[0] == "(":
