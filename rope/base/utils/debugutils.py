@@ -4,7 +4,6 @@ Tracing and debugging functions from Leo.
 Duplicated here so that Rope's commit checks won't fail.
 """
 
-# from __future__ import annotations
 import os
 import pprint
 import sys
