@@ -14,10 +14,9 @@ class ObjectInferTest(unittest.TestCase):
         Init self.project to a new Project instance for this test, with default prefs.
         self.project.fscommands manages temp files in a temp directory.
         """
-        if 1:
-            print('')  # For single tests. Does not affect the test-r or full-test-r scripts.
         super().setUp()
         self.project = testutils.sample_project()
+        g.trace_ctors = False  ###
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -29,63 +28,64 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
-        
+
         trace = True  # Set to False when running all tests.
 
-        if trace:
-            # Make *sure* that g.trace_ctors exists only for this test.
-            g.trace_ctors = True  # True: Enable tracing in ctors.
-        
         def banner(s):
             if trace:
-                print(f"\n===== {s}\n")
-            
+                print(f"\n{g._callerName(2)}: ===== {s}\n")
+
+        if trace:
+            print('')
+            g.trace_ctors = True  # True: Enable tracing in ctors.
+
+
         banner('after setUp')
-        
+
         # 1. setUp creates self.project.
 
             # setUp instantiates self.project to a Project instance.
             # self.project = testutils.sample_project()
-            
+
         # 2. get_string_scope sets self.scope to the scope of the test string.
-        
+
             # Sets self.scope to pyobjectsdef.PyModule(project.pycore, code, ...)
             # (code is the test string, defined above.)
-            
+
         # ??? Instantiating the pyobjectsdef.PyModule does all the work ???
-        
+
             # PyDefinedObject.__init__ calls:
-                
+
                 # self.concluded_attributes = self.get_module()._get_concluded_data()
                 # self.attributes = self.get_module()._get_concluded_data()
-            
+
             # But all attributes are empty for this test.
 
         scope = libutils.get_string_scope(self.project, code)
-        
+
         banner('after get_string_scope')
-        
+
             # scope is a GlobalScope.  It might be any subclass of Scope.
             # scope.pyobject is a pyobjectsdef.PyModule.
-            
+
         ### if trace: g.trace('*** scope.pyobject', scope.pyobject)
 
         # *** Calling scope["Sample"] (via _ScopeVisitor._ClassDef)
         #     instantiates pyobjects.PyClass *and* pyobjectsdef.PyClass.
         #     (Because pyobjectsDef.PyClass is a subclass of pyobjects.PyClass.)
         # scope["Sample"] is a pynamesdef.DefinedName.
-        
+
         sample_class = scope["Sample"].get_object()
-        
+
         banner('after sample_class = scope["Sample"].get_object()')
-        
-        
+
+
             # sample_class is a pyobjectsdef.PyClass ("::Sample" at ...)
             # scope["Sample"] is a DefinedName.
             # scope["Sample"].pyobject is a pyobjectsdef.PyClass.
 
         a_var = scope["a_var"].get_object()
-        
+
             # a_var is a pyobjects.PyObject
             # a_var.get_type() is a pyobjectsdef.PyClass ("::Sample" at ...)
 
@@ -96,7 +96,6 @@ class ObjectInferTest(unittest.TestCase):
         if trace: print(f"sample_class: {sample_class}")
 
         self.assertEqual(sample_class, a_var.get_type())
-
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = dedent("""\
             class Sample(object):

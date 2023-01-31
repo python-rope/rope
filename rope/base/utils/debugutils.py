@@ -10,6 +10,8 @@ import pprint
 import sys
 from typing import Any, List
 
+trace_ctors = False  # For traces in various ctors.
+
 
 def _callerName(n: int) -> str:
     try:
