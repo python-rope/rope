@@ -83,18 +83,19 @@ def get_ctor_name(self: Any, file_name: str, width: int = 25):
     return f"{padding}{combined_name}"
 
 
-def objToString(obj: Any, indent: int = 0, width: int = 120) -> str:
+def objToString(obj: Any, indent: int = 0, tag: str = None, width: int = 120) -> str:
     """
     Pretty print any Python object to a string.
     """
     if not isinstance(obj, str):
-        s = pprint.pformat(obj, indent=indent, width=width)
-        return f"{obj.__class__.__name__}: {pprint.saferepr(s)}"
-    if "\n" not in obj:
-        return f"str: {obj!r}"
-    # Return the enumerated lines of the string.
-    lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(splitLines(obj))])
-    return f"str: [\n{lines}]\n"
+        result = pprint.pformat(obj, indent=indent, width=width)
+    elif "\n" not in obj:
+        result = repr(obj)
+    else:
+        # Return the enumerated lines of the string.
+        lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(splitLines(obj))])
+        result = f"[\n{lines}]\n"
+    return f"{tag.strip()}: {result}" if tag.strip() else result
 
 
 def plural(obj: Any) -> str:
@@ -108,9 +109,7 @@ def plural(obj: Any) -> str:
 
 def printObj(obj: Any, tag: str = None, indent: int = 0) -> None:
     """Pretty print any Python object using g.pr."""
-    if tag:
-        print(tag.strip())
-    print(objToString(obj, indent=indent))
+    print(objToString(obj, indent=indent, tag=tag))
 
 
 def shortFileName(fileName: str) -> str:
