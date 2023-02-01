@@ -10,6 +10,8 @@ import sys
 from typing import Any, List
 
 trace_ctors = False  # For traces in various ctors.
+visitor_trace_list: List[str] = None  # List of visitors to trace.
+ctor_trace_list: List[str] = None  # List of ctors to trace.
 
 
 def _callerName(n: int) -> str:
