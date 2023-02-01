@@ -303,7 +303,7 @@ class _ConcludedData:
     ###
 
     def _ekr_dump(self):
-        g.printObj(self.data, tag=f"***** pyobjects._ConcludedData: {id(self)}")
+        g.print_obj(self.data, tag=f"***** pyobjects._ConcludedData: {id(self)}")
 
 
 class _PyModule(PyDefinedObject, AbstractModule):
@@ -339,11 +339,11 @@ class _PyModule(PyDefinedObject, AbstractModule):
         tag = self.get_name()
         try:
             for i, z in enumerate(self.concluded_data):
-                g.printObj(f"{i:3} {z!s}", tag=tag)
+                g.print_obj(f"{i:3} {z!s}", tag=tag)
                 # z._ekr_dump()
         except TypeError:
             z = self.concluded_data
-            g.printObj(f"{z!s}", tag=tag)
+            g.print_obj(f"{z!s}", tag=tag)
             # z._ekr_dump()
 
 

@@ -47,7 +47,7 @@ def inject(func):
                         print(f"{tag} ivar: {injected_name:>30} = {description}")
                     else:
                         print("")
-                        g.printObj(
+                        g.print_obj(
                             obj, tag=f"{tag} ivar: {injected_name} = {description}"
                         )
                 setattr(self, ivar_name, obj)

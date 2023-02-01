@@ -33,7 +33,7 @@ class ObjectInferTest(unittest.TestCase):
 
         def banner(s):
             if trace:
-                print(f"\n{g._callerName(2)}: ===== {s}\n")
+                print(f"\n{g._caller_name(2)}: ===== {s}\n")
 
         if trace:
             print('')

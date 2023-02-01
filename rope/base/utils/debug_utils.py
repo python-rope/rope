@@ -14,15 +14,13 @@ visitor_trace_list: List[str] = None  # List of visitors to trace.
 ctor_trace_list: List[str] = None  # List of ctors to trace.
 
 
-def _callerName(n: int) -> str:
+def _caller_name(n: int) -> str:
     try:
-        # get the function name from the call stack.
+        # Get the function name from the call stack.
         f1 = sys._getframe(n)  # The stack frame, n levels up.
         code1 = f1.f_code  # The code object
         locals_ = f1.f_locals  # The local namespace.
         name = code1.co_name
-        # sfn = shortFilename(code1.co_filename)  # The file name.
-        # line = code1.co_firstlineno
         obj = locals_.get("self")
         if obj and name == "__init__":
             return f"{obj.__class__.__name__}.{name}"
@@ -45,11 +43,11 @@ def callers(n: int = 4) -> str:
     Return a string containing a comma-separated list of the calling
     function's callers.
     """
-    # Be careful to call _callerName with smaller values of i first:
+    # Be careful to call _caller_name with smaller values of i first:
     # sys._getframe throws ValueError if there are less than i entries.
     i, result = 3, []
     while 1:
-        s = _callerName(n=i)
+        s = _caller_name(n=i)
         if s:
             result.append(s)
         if not s or len(result) >= n:
@@ -63,11 +61,11 @@ def callers_list(n: int = 4) -> List[str]:
     Return a string containing a comma-separated list of the calling
     function's callers.
     """
-    # Be careful to call _callerName with smaller values of i first:
+    # Be careful to call _caller_name with smaller values of i first:
     # sys._getframe throws ValueError if there are less than i entries.
     i, result = 3, []
     while 1:
-        s = _callerName(n=i)
+        s = _caller_name(n=i)
         if s:
             result.append(s)
         if not s or len(result) >= n:
@@ -79,25 +77,10 @@ def callers_list(n: int = 4) -> List[str]:
 def get_ctor_name(self: Any, file_name: str, width: int = 25):
     """Return <module-name>.<class-name>:>width"""
     class_name = self.__class__.__name__
-    module_name = shortFileName(file_name).replace(".py", "")
+    module_name = short_file_name(file_name).replace(".py", "")
     combined_name = f"{module_name}.{class_name}"
     padding = " " * max(0, 25 - len(combined_name))
     return f"{padding}{combined_name}"
-
-
-def objToString(obj: Any, indent: int = 0, tag: str = None, width: int = 120) -> str:
-    """
-    Pretty print any Python object to a string.
-    """
-    if not isinstance(obj, str):
-        result = pprint.pformat(obj, indent=indent, width=width)
-    elif "\n" not in obj:
-        result = repr(obj)
-    else:
-        # Return the enumerated lines of the string.
-        lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(splitLines(obj))])
-        result = f"[\n{lines}]\n"
-    return f"{tag.strip()}: {result}" if tag and tag.strip() else result
 
 
 def plural(obj: Any) -> str:
@@ -109,20 +92,17 @@ def plural(obj: Any) -> str:
     return "" if n == 1 else "s"
 
 
-def printObj(obj: Any, tag: str = None, indent: int = 0) -> None:
+def print_obj(obj: Any, tag: str = None, indent: int = 0) -> None:
     """Pretty print any Python object."""
-    print(objToString(obj, indent=indent, tag=tag))
+    print(to_string(obj, indent=indent, tag=tag))
 
 
-def shortFileName(fileName: str) -> str:
+def short_file_name(file_name: str) -> str:
     """Return the base name of a path."""
-    return os.path.basename(fileName) if fileName else ""
+    return os.path.basename(file_name) if file_name else ""
 
 
-shortFilename = shortFileName
-
-
-def splitLines(s: str) -> List[str]:
+def split_lines(s: str) -> List[str]:
     """
     Split s into lines, preserving the number of lines and
     the endings of all lines, including the last line.
@@ -130,12 +110,24 @@ def splitLines(s: str) -> List[str]:
     return s.splitlines(True) if s else []  # This is a Python string function!
 
 
-splitlines = splitLines
+def to_string(obj: Any, indent: int = 0, tag: str = None, width: int = 120) -> str:
+    """
+    Pretty print any Python object to a string.
+    """
+    if not isinstance(obj, str):
+        result = pprint.pformat(obj, indent=indent, width=width)
+    elif "\n" not in obj:
+        result = repr(obj)
+    else:
+        # Return the enumerated lines of the string.
+        lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(split_lines(obj))])
+        result = f"[\n{lines}]\n"
+    return f"{tag.strip()}: {result}" if tag and tag.strip() else result
 
 
 def trace(*args: Any) -> None:
     """Print the name of the calling function followed by all the args."""
-    name = _callerName(2)
+    name = _caller_name(2)
     if name.endswith(".pyc"):
         name = name[:-1]
     args = "".join(str(z) for z in args)
