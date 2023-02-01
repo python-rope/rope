@@ -95,7 +95,7 @@ def objToString(obj: Any, indent: int = 0, tag: str = None, width: int = 120) ->
         # Return the enumerated lines of the string.
         lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(splitLines(obj))])
         result = f"[\n{lines}]\n"
-    return f"{tag.strip()}: {result}" if tag.strip() else result
+    return f"{tag.strip()}: {result}" if tag and tag.strip() else result
 
 
 def plural(obj: Any) -> str:
