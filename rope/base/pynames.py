@@ -10,7 +10,7 @@ if typing.TYPE_CHECKING:
 
     from rope.base import pyobjectsdef
 
-from rope.base.utils import debugutils as g  ###
+from rope.base.utils import debug_utils as g  ###
 
 assert g  ###
 

@@ -15,7 +15,7 @@ from rope.base import (
     utils,
 )
 
-from rope.base.utils import debugutils as g  ###
+from rope.base.utils import debug_utils as g  ###
 
 assert g  ###
 

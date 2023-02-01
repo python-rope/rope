@@ -2,7 +2,7 @@ import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import ast, codeanalyze, exceptions, pynames, utils
 from rope.refactor import patchedast
 
-from rope.base.utils import debugutils as g  ###
+from rope.base.utils import debug_utils as g  ###
 
 assert g  ###
 
