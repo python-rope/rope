@@ -303,7 +303,6 @@ class _ConcludedData:
     ###
 
     def _ekr_dump(self):
-
         g.printObj(self.data, tag=f"***** pyobjects._ConcludedData: {id(self)}")
 
 
@@ -336,7 +335,6 @@ class _PyModule(PyDefinedObject, AbstractModule):
         return self.resource
 
     def _ekr_dump_concluded_data(self):
-
         g.trace("(pyobjects._PyModule._ekr_dump_concluded_data)")
         tag = self.get_name()
         try:

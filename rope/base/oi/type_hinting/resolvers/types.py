@@ -12,5 +12,5 @@ class Resolver(interfaces.IResolver):
         """
         try:
             return evaluate.evaluate(hint, pyobject)
-        except (Exception):
+        except Exception:
             pass

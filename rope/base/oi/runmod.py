@@ -101,7 +101,7 @@ def __rope_start_everything():
                     returned,
                 )
                 self.sender.send_data(data)
-            except (TypeError):
+            except TypeError:
                 pass
             return self.on_function_call
 

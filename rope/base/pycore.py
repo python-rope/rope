@@ -215,7 +215,6 @@ class PyCore:
         )
 
     def get_classes(self, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
-
         warnings.warn(
             "`PyCore.get_classes()` is deprecated", DeprecationWarning, stacklevel=2
         )
