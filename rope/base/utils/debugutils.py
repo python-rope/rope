@@ -108,7 +108,7 @@ def plural(obj: Any) -> str:
 
 
 def printObj(obj: Any, tag: str = None, indent: int = 0) -> None:
-    """Pretty print any Python object using g.pr."""
+    """Pretty print any Python object."""
     print(objToString(obj, indent=indent, tag=tag))
 
 
