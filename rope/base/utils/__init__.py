@@ -1,7 +1,7 @@
 import sys
 import warnings
 
-from rope.base.utils import debug_utils as g
+from rope.base.utils import tracing_utils as g
 
 assert g  ###
 
