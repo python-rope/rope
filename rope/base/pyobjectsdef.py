@@ -15,9 +15,9 @@ from rope.base import (
     utils,
 )
 
-from rope.base.utils import tracing_utils as g  ###
+from rope.base.utils import tracing_utils as g
 
-assert g  ###
+assert g
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -591,7 +591,7 @@ class _ComprehensionVisitor(_ScopeVisitor):
 
 
 class _GlobalVisitor(_ScopeVisitor):
-    pass  ###
+    pass
     ###
     # def __init__(self, pycore, owner_object):
     # super().__init__(pycore, owner_object)

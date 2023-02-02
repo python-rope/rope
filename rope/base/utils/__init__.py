@@ -3,7 +3,7 @@ import warnings
 
 from rope.base.utils import tracing_utils as g
 
-assert g  ###
+assert g
 
 
 def saveit(func):

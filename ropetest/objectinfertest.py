@@ -5,8 +5,8 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
-from rope.base.utils import tracing_utils as g  ###
-assert g  ###
+from rope.base.utils import tracing_utils as g
+assert g
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
@@ -68,7 +68,7 @@ class ObjectInferTest(unittest.TestCase):
             # scope is a GlobalScope.  It might be any subclass of Scope.
             # scope.pyobject is a pyobjectsdef.PyModule.
 
-        ### if trace: g.trace('*** scope.pyobject', scope.pyobject)
+        # if trace: g.trace('*** scope.pyobject', scope.pyobject)
 
         # *** Calling scope["Sample"] (via _ScopeVisitor._ClassDef)
         #     instantiates pyobjects.PyClass *and* pyobjectsdef.PyClass.

@@ -10,9 +10,9 @@ if typing.TYPE_CHECKING:
 
     from rope.base import pyobjectsdef
 
-from rope.base.utils import tracing_utils as g  ###
+from rope.base.utils import tracing_utils as g
 
-assert g  ###
+assert g
 
 
 class PyName:

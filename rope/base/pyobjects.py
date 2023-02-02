@@ -2,9 +2,9 @@ from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
-from rope.base.utils import tracing_utils as g  ###
+from rope.base.utils import tracing_utils as g
 
-assert g  ###
+assert g
 
 
 class PyObject:
