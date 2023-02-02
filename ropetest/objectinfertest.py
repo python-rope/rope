@@ -6,6 +6,7 @@ from rope.base import libutils
 from ropetest import testutils
 
 from rope.base.utils import tracing_utils as g
+
 assert g
 
 class ObjectInferTest(unittest.TestCase):

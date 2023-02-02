@@ -4,6 +4,10 @@ from ast import *  # noqa: F401,F403
 
 from rope.base import fscommands
 
+from rope.base.utils import tracing_utils as g
+
+assert g
+
 try:
     from ast import _const_node_type_names
 except ImportError:
@@ -58,8 +62,10 @@ def call_for_nodes(node, callback):
 
 
 class RopeNodeVisitor(ast.NodeVisitor):
+    # This is the only visit method in Rope.
     def visit(self, node):
         """Modified from ast.NodeVisitor to match rope's existing Visitor implementation"""
+        g.trace(node.__class__.__name__, g.callers())
         method = "_" + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
         return visitor(node)
