@@ -126,5 +126,5 @@ def trace(*args: Any) -> None:
     name = _caller_name(2)
     if name.endswith(".pyc"):
         name = name[:-1]
-    args = "".join(str(z) for z in args)
+    args = " ".join(str(z) for z in args)
     print(f"{name} {args}")
