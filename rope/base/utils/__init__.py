@@ -6,7 +6,7 @@ from rope.base.utils import tracing_utils as g
 assert g  ###
 
 
-def inject(func):
+def saveit(func):
     """
     A decorator that injects a singleton ivar (in self) if the ivar does
     not already exist.
@@ -34,7 +34,7 @@ def inject(func):
     else:
 
         def _wrapper(self, *args, **kwargs):
-            tag = "@inject"
+            tag = "@saveit"
             if not hasattr(self, ivar_name):
                 # Instantiate the object.
                 obj = func(self, *args, **kwargs)
@@ -58,8 +58,7 @@ def inject(func):
     return _wrapper
 
 
-cacheit = inject
-saveit = inject
+cacheit = saveit
 
 
 def prevent_recursion(default):
