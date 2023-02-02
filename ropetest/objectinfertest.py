@@ -30,14 +30,13 @@ class ObjectInferTest(unittest.TestCase):
         """)
 
         trace = True  # Set to False when running all tests.
+        
+        if trace:
+            print('')
 
         def banner(s):
             if trace:
-                print(f"\n{g._caller_name(2)}: ===== {s}\n")
-
-        if trace:
-            print('')
-            g.trace_ctors = True  # True: Enable tracing in ctors.
+                print(f"\n{g._caller_name(2)}: ===== {s}")
 
 
         banner('after setUp')
@@ -63,7 +62,7 @@ class ObjectInferTest(unittest.TestCase):
 
         scope = libutils.get_string_scope(self.project, code)
 
-        banner('after get_string_scope')
+        banner('after get_string_scope\n')
 
             # scope is a GlobalScope.  It might be any subclass of Scope.
             # scope.pyobject is a pyobjectsdef.PyModule.
@@ -77,7 +76,7 @@ class ObjectInferTest(unittest.TestCase):
 
         sample_class = scope["Sample"].get_object()
 
-        banner('after sample_class = scope["Sample"].get_object()')
+        banner('after sample_class = scope["Sample"].get_object()\n')
 
 
             # sample_class is a pyobjectsdef.PyClass ("::Sample" at ...)
@@ -93,7 +92,8 @@ class ObjectInferTest(unittest.TestCase):
             # scope["a_var"].pyobject is a pynames._Inferred.
             # scope["a_var"].get_object() is a pyobjects.PyObject.
 
-        if trace: print(f"sample_class: {sample_class}")
+        if trace:
+            print(f"\nsample_class: {sample_class}")
 
         self.assertEqual(sample_class, a_var.get_type())
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):

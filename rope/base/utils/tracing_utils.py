@@ -13,10 +13,10 @@ from typing import Any, List
 def _caller_name(n: int) -> str:
     try:
         # Get the function name from the call stack.
-        f1 = sys._getframe(n)  # The stack frame, n levels up.
-        code1 = f1.f_code  # The code object
-        locals_ = f1.f_locals  # The local namespace.
-        name = code1.co_name
+        frame = sys._getframe(n)  # The stack frame, n levels up.
+        code = frame.f_code  # The code object
+        locals_ = frame.f_locals  # The local namespace.
+        name = code.co_name
         obj = locals_.get("self")
         if obj and name == "__init__":
             return f"{obj.__class__.__name__}.{name}"

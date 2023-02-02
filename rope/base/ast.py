@@ -65,9 +65,12 @@ class RopeNodeVisitor(ast.NodeVisitor):
     # This is the only visit method in Rope.
     def visit(self, node):
         """Modified from ast.NodeVisitor to match rope's existing Visitor implementation"""
-        g.trace(f"{node.__class__.__name__:>10}:", g.callers())
         method = "_" + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
+        if 1:
+            module, name = visitor.__module__, visitor.__name__
+            if name != "generic_visit":
+                g.trace(f"{module:>25}.{name:<10}", g.callers())
         return visitor(node)
 
 
