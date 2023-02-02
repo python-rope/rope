@@ -194,9 +194,9 @@ class ImportedName(PyName):
 
 def _get_concluded_data(module):
     if module is None:
-        g.trace("(*** pynames function): instantiate")  ###
+        g.trace("(*** pynames function): instantiate")
         return rope.base.pyobjects._ConcludedData()
-    if 0:  ###
+    if 0:
         # Callers...
         # test_simple_type_inferencing,__getitem__,get_name,__getitem__,
         # get_attribute,newfunc,_get_structural_attributes,_create_structural_attributes,

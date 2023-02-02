@@ -16,7 +16,6 @@ class ObjectInferTest(unittest.TestCase):
         """
         super().setUp()
         self.project = testutils.sample_project()
-        g.trace_ctors = False  ###
 
     def tearDown(self):
         testutils.remove_project(self.project)

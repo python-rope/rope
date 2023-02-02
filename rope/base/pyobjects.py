@@ -175,7 +175,7 @@ class PyDefinedObject:
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
-        if g.trace_ctors:  ###
+        if 0:
             g.trace(
                 f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
                 g.callers(),
@@ -312,7 +312,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
-        if g.trace_ctors:  ###
+        if 0:
             g.trace(
                 f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
                 g.callers(),
