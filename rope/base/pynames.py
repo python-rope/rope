@@ -6,9 +6,10 @@ import rope.base.pyobjects
 from rope.base import exceptions, utils
 
 if typing.TYPE_CHECKING:
-    from typing import Union
+    from typing import Any, Tuple, Union
 
     from rope.base import pyobjectsdef
+    from rope.base.pyobjects import PyObject
 
 from rope.base.utils import tracing_utils as g
 
@@ -18,11 +19,13 @@ assert g
 class PyName:
     """References to `PyObject` inside python programs"""
 
-    def get_object(self):
+    def get_object(self) -> PyObject:
         """Return the `PyObject` object referenced by this `PyName`"""
+        return None
 
-    def get_definition_location(self):
+    def get_definition_location(self) -> Tuple[Any, int]:
         """Return a (module, lineno) tuple"""
+        return None
 
 
 class DefinedName(PyName):
