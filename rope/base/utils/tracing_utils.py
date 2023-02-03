@@ -11,6 +11,7 @@ from typing import Any, List
 
 
 def _caller_name(n: int) -> str:
+    """Return the name of the caller n levels back in the call stack."""
     try:
         # Get the function name from the call stack.
         frame = sys._getframe(n)  # The stack frame, n levels up.
@@ -30,7 +31,7 @@ def _caller_name(n: int) -> str:
 
 
 def caller(i: int = 1) -> str:
-    """Return the caller name i levels up the stack."""
+    """Return the caller name i levels up the call stack."""
     return callers(i + 1).split(",")[0]
 
 
@@ -71,7 +72,7 @@ def callers_list(n: int = 4) -> List[str]:
 
 
 def get_ctor_name(self: Any, file_name: str, width: int = 25):
-    """Return <module-name>.<class-name>:>width"""
+    """Return <module-name>.<class-name> padded to the given width."""
     class_name = self.__class__.__name__
     module_name = short_file_name(file_name).replace(".py", "")
     combined_name = f"{module_name}.{class_name}"
@@ -102,8 +103,10 @@ def split_lines(s: str) -> List[str]:
     """
     Split s into lines, preserving the number of lines and
     the endings of all lines, including the last line.
+
+    This function is not the same as s.splitlines(True).
     """
-    return s.splitlines(True) if s else []  # This is a Python string function!
+    return s.splitlines(True) if s else []
 
 
 def to_string(obj: Any, indent: int = 0, tag: str = None, width: int = 120) -> str:
