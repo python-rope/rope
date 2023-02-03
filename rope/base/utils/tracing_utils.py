@@ -71,7 +71,7 @@ def callers_list(n: int = 4) -> List[str]:
     return list(reversed(result))
 
 
-def get_ctor_name(self: Any, file_name: str, width: int = 25):
+def get_ctor_name(self: Any, file_name: str, width: int = 25) -> str:
     """Return <module-name>.<class-name> padded to the given width."""
     class_name = self.__class__.__name__
     module_name = short_file_name(file_name).replace(".py", "")
@@ -129,5 +129,5 @@ def trace(*args: Any) -> None:
     name = _caller_name(2)
     if name.endswith(".pyc"):
         name = name[:-1]
-    args = " ".join(str(z) for z in args)
-    print(f"{name} {args}")
+    args_s = " ".join(str(z) for z in args)
+    print(f"{name} {args_s}")
