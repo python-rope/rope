@@ -8,7 +8,6 @@ from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
 
 
 def get_super_func(pyfunc):
-
     if not isinstance(pyfunc.parent, PyClass):
         return
 
@@ -113,7 +112,6 @@ def resolve_type(type_name, pyobject):
 
 
 class ParametrizeType:
-
     _supported_mapping = {
         "builtins.list": "rope.base.builtins.get_list",
         "builtins.tuple": "rope.base.builtins.get_tuple",

@@ -187,7 +187,6 @@ class FromImport(ImportInfo):
 
 
 class EmptyImport(ImportInfo):
-
     names_and_aliases = []
 
     def is_empty(self):
