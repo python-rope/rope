@@ -439,7 +439,6 @@ class _DefinitionGenerator:
         return header, to_be_inlined
 
     def _calculate_definition(self, primary, pyname, call, host_vars, returns):
-
         header, to_be_inlined = self._calculate_header(primary, pyname, call)
 
         source = header + self.body
@@ -454,7 +453,6 @@ class _DefinitionGenerator:
         # If there is a name conflict, all variable names
         # inside the inlined function are renamed
         if set(all_names).intersection(set(host_vars)):
-
             prefix = next(_DefinitionGenerator.unique_prefix)
             guest = libutils.get_string_module(self.project, source, self.resource)
 
