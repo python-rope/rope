@@ -66,3 +66,7 @@ Add necessary modules:
 - pip install tabulate
 - pip install sphinx_rtd_theme
 
+Run sphinx-build from the docs directory:
+    
+    docs>sphinx-build -M html . _build -a
+
