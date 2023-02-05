@@ -9,7 +9,7 @@ This document describes how Rope does type inference.
 .. contents:: Table of Contents
 
 Notes from YouTube video
-++++++++++++++++++++++++
+------------------------
 
 .. https://youtu.be/NvV5OrVk24c
 
@@ -42,19 +42,19 @@ Typical use:
    project.do(changes)
 
 What you should know
-++++++++++++++++++++
+--------------------
 
 You should understand Python's ast module.
 
 Overview of type inference
-++++++++++++++++++++++++++
+--------------------------
 
 - Startup process.
 - Traversers.
 - What is an inference?
 
 How to run sphinx
-+++++++++++++++++
+-----------------
 
 To do: move this to a separate document.
 
