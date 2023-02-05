@@ -53,3 +53,16 @@ Overview of type inference
 - Traversers.
 - What is an inference?
 
+How to run sphinx
++++++++++++++++++
+
+To do: move this to a separate document.
+
+Make sure conf.py can import rope.
+- Add rope to the path (or sitecustomize.py) if necessary.
+  
+Add necessary modules:
+- pip install sphinx_autodoc_typehints
+- pip install tabulate
+- pip install sphinx_rtd_theme
+
