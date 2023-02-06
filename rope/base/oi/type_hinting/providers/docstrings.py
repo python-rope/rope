@@ -106,7 +106,6 @@ class IReturnParser:
 
 
 class DocstringParamParser(IParamParser):
-
     DOCSTRING_PARAM_PATTERNS = [
         r"\s*:type\s+%s:\s*([^\n]+)",  # Sphinx
         r"\s*:param\s+(\w+)\s+%s:[^\n]+",  # Sphinx param with type
@@ -144,7 +143,6 @@ class DocstringParamParser(IParamParser):
 
 
 class DocstringReturnParser(IReturnParser):
-
     DOCSTRING_RETURN_PATTERNS = [
         re.compile(r"\s*:rtype:\s*([^\n]+)", re.M),  # Sphinx
         re.compile(r"\s*@rtype:\s*([^\n]+)", re.M),  # Epydoc
@@ -164,7 +162,6 @@ class DocstringReturnParser(IReturnParser):
 
 
 class RSTRoleStrip:
-
     RST_ROLE_PATTERN = re.compile(r":[^`]+:`([^`]+)`")
 
     def __call__(self, type_str):

@@ -6,7 +6,6 @@ from rope.base import utils
 
 
 def _stdlib_path():
-
     return os.path.dirname(inspect.getsourcefile(inspect))
 
 

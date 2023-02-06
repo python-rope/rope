@@ -164,9 +164,6 @@ class JobSet(BaseJobSet):
 
 
 class NullTaskHandle(BaseTaskHandle):
-    def __init__(self):
-        pass
-
     def is_stopped(self):
         return False
 
@@ -188,9 +185,6 @@ class NullTaskHandle(BaseTaskHandle):
 
 
 class NullJobSet(BaseJobSet):
-    def __init__(self, *args):
-        pass
-
     def started_job(self, name):
         pass
 

@@ -35,8 +35,7 @@ from rope.refactor import patchedast, similarfinder, sourceutils, suites, usefun
 # There are a few more helper functions and classes used by above
 # classes.
 class _ExtractRefactoring:
-
-    kind_prefixes: Dict[str, str] = {}
+    kind_prefixes = {}
 
     def __init__(self, project, resource, start_offset, end_offset, variable=False):
         self.project = project
