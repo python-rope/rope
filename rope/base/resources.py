@@ -159,9 +159,6 @@ class File(Resource):
 class Folder(Resource):
     """Represents a folder"""
 
-    def __init__(self, project, name):
-        super().__init__(project, name)
-
     def is_folder(self):
         return True
 
