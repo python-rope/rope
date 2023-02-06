@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #650 Install pre-commit hooks on rope repository (@lieryan)
+- #655 Remove unused __init__() methods (@edreamleo, @lieryan)
 
 
 # Release 1.7.0
