@@ -28,7 +28,7 @@ def _compat_compare_digest(a, b):
     # Computes the bitwise difference of all characters in the two strings
     # before returning whether or not they are equal.
     difference = 0
-    for (a_char, b_char) in zip(a, b):
+    for a_char, b_char in zip(a, b):
         difference |= ord(a_char) ^ ord(b_char)
     return difference == 0
 

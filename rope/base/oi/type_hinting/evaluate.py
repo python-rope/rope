@@ -7,7 +7,6 @@ from rope.base.oi.type_hinting import utils
 
 
 class SymbolBase:
-
     name = None  # node/token type name
 
     def __init__(self):
@@ -127,7 +126,6 @@ symbol_table = SymbolTable()
 
 
 class Lexer:
-
     _token_pattern = re.compile(
         r"""
         \s*
@@ -179,7 +177,6 @@ class Lexer:
 
 
 class Parser:
-
     token = None
     next = None
 
@@ -321,7 +318,6 @@ def evaluate(self, pyobject):
 
 
 class Compiler:
-
     parser_factory = Parser
     lexer_factory = Lexer
     symbol_table = symbol_table
@@ -342,7 +338,6 @@ compile = Compiler()
 
 
 class Evaluator:
-
     compile = compile
 
     def __call__(self, program, pyobject):

@@ -36,7 +36,6 @@ def create_generate(
     offset: int,
     goal_resource: Optional[Resource] = None,
 ):
-
     """A factory for creating `Generate` objects
 
     Used in https://github.com/python-rope/ropemode but not in Rope itself.
