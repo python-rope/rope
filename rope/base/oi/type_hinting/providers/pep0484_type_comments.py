@@ -1,6 +1,6 @@
 import re
 
-### from rope.base.oi.type_hinting import utils
+# from rope.base.oi.type_hinting import utils
 from rope.base.oi.type_hinting.providers import interfaces
 
 

@@ -2,17 +2,23 @@
 
 .. _`python's ast module`: https://docs.python.org/3/library/ast.html
 
-==========================
-Rope's Theory of Operation
-==========================
+=====================
+How Rope infers types
+=====================
 
-This document describes how Rope does type inference.
+This is the Theory of Operation for Rope's type inference,
+the most complex part of Rope.
 
-Only Rope's devs need understand this material.
+Only Rope's core devs need to understand this material.
 
 Some familiarity with `Python's ast module`_ is recommended, but not essential.
 
 .. contents:: Table of Contents
+
+Why Rope must infer types
+-------------------------
+
+.. To do.
 
 Overview of Rope's code base
 ----------------------------
@@ -21,6 +27,7 @@ Overview of Rope's code base
 - Type inference code.
 - Utility code.
 - Refactoring code.
+- Code completion.
 
 Overview of type inference
 --------------------------
@@ -46,5 +53,5 @@ Deep study of a few unit tests is recommended.
 
 `ObjectInferTest.test_simple_type_inferencing` is a good place to start.
 
---- Insert traces here ---
+.. --- Insert traces here ---
 
