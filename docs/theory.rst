@@ -28,16 +28,23 @@ Overview of type inference
 --------------------------
 
 
-Type inference is hard.
+.. _`mypy`: https://mypy-lang.org/
 
-- chains of attribute.
-- Arguments are hardest.
-- Global inference is harder than local inference.
-  
-Rope infers types only as needed.
+Type inference is hard because the types of objects may depend on the type
+of objects in other methods, functions or modules.
 
-`@prevent_recursion` prevents endless inference loops.
-Searching for this decorator highlights type inference code.
+In particular, the return type of a function f may depend on the type of
+its arguments, and the types of those arguments may depend on all the
+various calls to f throughout the program.
+
+The necessary chains of inference can be bewilderingly complex. The
+`@prevent_recursion` decorator prevents endless inference loops, but this
+decorator is only one part of the puzzle.
+
+Unlike `mypy`_, Rope:
+
+- Infers types only as needed.
+- Does no type checking: Rope does not check that the types of all objects are consistent.
 
 Questions to be answered
 ------------------------
