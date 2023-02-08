@@ -38,7 +38,6 @@ class ObjectInferTest(unittest.TestCase):
             if trace:
                 print(f"\n{g._caller_name(2)}: ===== {s}")
 
-
         banner('after setUp')
 
         # 1. setUp creates self.project.
@@ -93,7 +92,8 @@ class ObjectInferTest(unittest.TestCase):
             # scope["a_var"].get_object() is a pyobjects.PyObject.
 
         if trace:
-            print(f"\nsample_class: {sample_class}")
+            print('')
+            print(f"sample_class: {sample_class}")
 
         self.assertEqual(sample_class, a_var.get_type())
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):

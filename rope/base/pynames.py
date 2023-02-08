@@ -19,6 +19,12 @@ assert g
 class PyName:
     """References to `PyObject` inside python programs"""
 
+    if 1:  # Temp ctor.
+
+        def __init__(self):
+            g.trace('*****')  ### Not called in basic test.
+            print(g.format("__init__", self.__module__), g.callers())
+
     def get_object(self) -> Optional[PyObject]:
         """Return the `PyObject` object referenced by this `PyName`"""
         return None
@@ -31,6 +37,8 @@ class PyName:
 class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
+        if 1:
+            print(g.format("__init__", self.__module__, "DefinedName"), g.callers())
 
     def get_object(self):
         return self.pyobject

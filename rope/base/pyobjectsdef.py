@@ -138,7 +138,7 @@ class PyClass(pyobjects.PyClass):
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
         if 0:
-            g.trace(f"{g.get_ctor_name(self, __file__)} {' ':14}", g.callers())
+            print(g.format("__init__", self.__module__), g.callers())
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -189,7 +189,7 @@ class PyModule(pyobjects.PyModule):
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
         if 0:
-            g.trace(f"{g.get_ctor_name(self, __file__)} {' ':14}", g.callers())
+            print(g.format("__init__", self.__module__), g.callers())
         super().__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):

@@ -71,13 +71,9 @@ def callers_list(n: int = 4) -> List[str]:
     return list(reversed(result))
 
 
-def get_ctor_name(self: Any, file_name: str, width: int = 25) -> str:
-    """Return <module-name>.<class-name> padded to the given width."""
-    class_name = self.__class__.__name__
-    module_name = short_file_name(file_name).replace(".py", "")
-    combined_name = f"{module_name}.{class_name}"
-    padding = " " * max(0, 25 - len(combined_name))
-    return f"{padding}{combined_name}"
+def format(caller: str, module: str, function: str = "") -> str:
+    """Format call, module and optional function, aligned for traces."""
+    return f"{caller:<10} {module:>25}.{function:<15}"
 
 
 def plural(obj: Any) -> str:

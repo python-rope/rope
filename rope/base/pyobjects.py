@@ -176,8 +176,8 @@ class PyDefinedObject:
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
         if 0:
-            g.trace(
-                f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
+            print(
+                g.format("__init__", self.__module__, ast_node.__class__.__name__),
                 g.callers(),
             )
 
@@ -313,10 +313,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
         if 0:
-            g.trace(
-                f"{g.get_ctor_name(self, __file__)} {ast_node.__class__.__name__:14}",
-                g.callers(),
-            )
+            print(g.format("__init__", self.__module__), g.callers())
 
     @property
     def absolute_name(self) -> str:
