@@ -22,7 +22,7 @@ class PyName:
     if 1:  # Temp ctor.
 
         def __init__(self):
-            g.trace('*****')  ### Not called in basic test.
+            g.trace("*****")  ### Not called in basic test.
             print(g.format("__init__", self.__module__), g.callers())
 
     def get_object(self) -> Optional[PyObject]:
