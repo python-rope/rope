@@ -71,16 +71,21 @@ def callers_list(n: int = 4) -> List[str]:
     return list(reversed(result))
 
 
+def align(s1: str, s2) -> str:
+    return f"{' ':10} {s1:>16}.{s2:<15}"
+
+
 def format(caller_name: str, module: str, function: str = "") -> str:
     """Format caller_name, module and optional function, aligned for traces."""
     module_s = module.replace("rope.base.", "")
-    return f"{caller_name:>10} {module_s:>15}.{function:<15}"
+    return f"{caller_name:>10} {module_s:>16}.{function:<15}"
 
 
-def format_ctor(self: Any) -> str:
+def format_ctor(self: Any, file_name: str) -> str:
     class_s = self.__class__.__name__
-    module_s = self.__module__.replace("rope.base.", "")
-    return f"{'__init__':>10} {module_s:>15}.{class_s:<15}"
+    # file_name_s = file_name.replace("rope.base.", "")
+    file_name_s = short_file_name(file_name)
+    return f"{'__init__':>10} {file_name_s:>16}.{class_s:<15}"
 
 
 def plural(obj: Any) -> str:

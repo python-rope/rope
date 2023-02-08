@@ -38,7 +38,7 @@ class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
         if 1:
-            print(g.format_ctor(self), g.callers(4))
+            print(g.format_ctor(self, __file__), g.callers(4))
 
     def get_object(self):
         return self.pyobject

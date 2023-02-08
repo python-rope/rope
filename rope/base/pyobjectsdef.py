@@ -138,7 +138,7 @@ class PyClass(pyobjects.PyClass):
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
         if 1:
-            print(g.format_ctor(self), g.callers(4))
+            print(g.format_ctor(self, __file__), g.callers(4))
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -189,7 +189,7 @@ class PyModule(pyobjects.PyModule):
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
         if 1:
-            print(g.format_ctor(self), g.callers(4))
+            print(g.format_ctor(self, __file__), g.callers(4))
         super().__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):
@@ -423,10 +423,16 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _ClassDef(self, node):
         pyclass = PyClass(self.pycore, node, self.owner_object)
         self.names[node.name] = pynamesdef.DefinedName(pyclass)
+        if 1:
+            print(g.align("_ScopeVisitor", "_ClassDef"), node.name)
         self.defineds.append(pyclass)
 
     def _FunctionDef(self, node):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
+
+        if 1:
+            print(g.align("_ScopeVisitor", "_FunctionDef"), node.name)
+
         for decorator in pyfunction.decorators:
             if isinstance(decorator, ast.Name) and decorator.id == "property":
                 if isinstance(self, _ClassVisitor):

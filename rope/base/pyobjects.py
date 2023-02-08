@@ -176,7 +176,7 @@ class PyDefinedObject:
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
         if 1:
-            print(g.format_ctor(self), g.callers(4))
+            print(g.format_ctor(self, __file__), g.callers(4))
 
     def __repr__(self):
         return '<{}.{} "{}" at {}>'.format(
@@ -310,7 +310,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
         if 1:
-            print(g.format_ctor(self), g.callers(4))
+            print(g.format_ctor(self, __file__), g.callers(4))
 
     @property
     def absolute_name(self) -> str:
