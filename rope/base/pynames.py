@@ -38,7 +38,7 @@ class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
         if 1:
-            print(g.format("__init__", self.__module__, "DefinedName"), g.callers())
+            print(g.format_ctor(self), g.callers(2))
 
     def get_object(self):
         return self.pyobject

@@ -137,8 +137,8 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
-        if 0:
-            print(g.format("__init__", self.__module__), g.callers())
+        if 1:
+            print(g.format_ctor(self), g.callers(2))
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -188,8 +188,8 @@ class PyModule(pyobjects.PyModule):
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
-        if 0:
-            print(g.format("__init__", self.__module__), g.callers())
+        if 1:
+            print(g.format_ctor(self), g.callers(2))
         super().__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):
