@@ -23,7 +23,7 @@ class PyName:
 
         def __init__(self):
             g.trace("*****")  ### Not called in basic test.
-            print(g.format("__init__", self.__module__), g.callers())
+            print(g.format_ctor("PyName", __file__))
 
     def get_object(self) -> Optional[PyObject]:
         """Return the `PyObject` object referenced by this `PyName`"""
@@ -38,7 +38,7 @@ class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
         if 1:
-            print(g.format_ctor(self, __file__), g.callers(4))
+            print(g.format_ctor("DefinedName", __file__), repr(pyobject))
 
     def get_object(self):
         return self.pyobject

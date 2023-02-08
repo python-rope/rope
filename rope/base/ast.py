@@ -70,7 +70,7 @@ class RopeNodeVisitor(ast.NodeVisitor):
         if 1:
             module, name = visitor.__module__, visitor.__name__
             if name != "generic_visit":
-                print(g.format("visit", module, name), g.callers(4))
+                print(g.format("visit", module, name))
         return visitor(node)
 
 

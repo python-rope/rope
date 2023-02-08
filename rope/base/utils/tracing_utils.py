@@ -72,20 +72,21 @@ def callers_list(n: int = 4) -> List[str]:
 
 
 def align(s1: str, s2) -> str:
-    return f"{' ':10} {s1:>16}.{s2:<15}"
+    return f"{' ':15} {s1:>16}.{s2:<15}"
 
 
 def format(caller_name: str, module: str, function: str = "") -> str:
     """Format caller_name, module and optional function, aligned for traces."""
     module_s = module.replace("rope.base.", "")
-    return f"{caller_name:>10} {module_s:>16}.{function:<15}"
+    return f"{caller_name:>15} {module_s:>16}.{function:<15}"
 
 
-def format_ctor(self: Any, file_name: str) -> str:
-    class_s = self.__class__.__name__
-    # file_name_s = file_name.replace("rope.base.", "")
+def format_ctor(class_name: str, file_name: str) -> str:
+    """Format a ctor, aligned for traces."""
+    # Careful: use an explicit class name.
+    # self.__class__.__name__ can yield unexpected/confusing results.
     file_name_s = short_file_name(file_name)
-    return f"{'__init__':>10} {file_name_s:>16}.{class_s:<15}"
+    return f"{'__init__':>15} {file_name_s:>16}.{class_name:<15}"
 
 
 def plural(obj: Any) -> str:
