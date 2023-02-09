@@ -30,11 +30,11 @@ class PyCore:
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
         self._init_automatic_soa()
-        if 1:  # trace
+        if 0:  # trace
             # This will be the first enabled print statement,
             # if there is no trace in any setUp method.
             print("\n")
-        if 1:  # trace
+        if 0:  # trace
             print(g.format_ctor("PyCore", __file__))
 
     def _init_python_files(self):

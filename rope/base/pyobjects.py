@@ -12,7 +12,7 @@ class PyObject:
         if type_ is None:
             type_ = self
 
-        if 1:  # trace
+        if 0:  # trace
             if not hasattr(self, "type") or type_ != self.type:
                 if "builtins" not in g.callers():
                     print(
@@ -187,7 +187,11 @@ class PyDefinedObject:
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
         if 1:  # trace  # trace
-            print(g.format_ctor("DefinedObject", __file__), ast_node)
+            # print('')
+            print(
+                g.format_ctor("PyDefinedObject", __file__),
+                f"ast_node: {ast_node.__class__.__name__}",
+            )
 
     def __repr__(self):
         return '<{}.{} "{}" at {}>'.format(
@@ -293,7 +297,7 @@ class PyClass(PyDefinedObject, AbstractClass):
 class _ConcludedData:
     def __init__(self):
         self.data_ = None
-        if 1:  # trace
+        if 0:  # trace
             ###
             # import re
             # pat = re.compile(r"_?[A-Z]")
@@ -332,7 +336,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
-        if 1:  # trace  # trace
+        if 0:  # trace  # trace
             print(g.format_ctor("PyModule", __file__))
 
     @property

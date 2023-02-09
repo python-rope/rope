@@ -16,7 +16,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         self.name = name
         self.pycore = pycore
         self.initial = initial
-        if 1:  # trace
+        if 0:  # trace
             print(g.format_ctor("pyobjects.PyObject", __file__), name)
 
     parent = None

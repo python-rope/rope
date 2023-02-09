@@ -17,14 +17,15 @@ class Scope:
         """Return the names defined or imported in this scope"""
         if 1:  # trace
             data = self.pyobject.get_attributes()
-            print("Scope.get_names", g.callers(6))
-            if 0:  ### Fails in general.
+            # print("Scope.get_names", g.callers(6))
+            try:
+                # Fails in general...
                 for z in data:
                     print(
                         f"{z:>10} {data[z].__class__.__name__:<12} pyobject: {data[z].pyobject}"
                     )
                 print("")
-            else:
+            except Exception:
                 print(f"\n{g.to_string(data)}\n")
         return self.pyobject.get_attributes()
 
