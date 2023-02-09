@@ -123,6 +123,8 @@ def get_unknown():
 
 class AbstractClass(PyObject):
     def __init__(self):
+        if 0:  # trace  This trace disables all other traces!!!
+            print(g.format_ctor("AbstractClass", __file__), g.callers(1))
         super().__init__(get_base_type("Type"))
 
     def get_name(self):
@@ -175,7 +177,7 @@ class PyDefinedObject:
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
-        if 1:
+        if 1:  # trace  # trace
             print(g.format_ctor("DefinedObject", __file__), ast_node)
 
     def __repr__(self):
@@ -282,9 +284,21 @@ class PyClass(PyDefinedObject, AbstractClass):
 class _ConcludedData:
     def __init__(self):
         self.data_ = None
+        if 1:  # trace
+            import re
+
+            pat = re.compile(r"_?[A-Z]")
+            callers_s = ",".join([z for z in g.callers_list(20) if re.match(pat, z)])
+            print(
+                g.format_ctor("_ConcludedData", __file__), f"id: {id(self)}", callers_s
+            )
 
     def set(self, data):
         self.data_ = data
+        if 0:  # trace
+            tag = f"_ConcludedData.set: {id(self)}"
+            n = 2 if isinstance(data, (dict, list, set)) else 6
+            print(f"{tag} {data.__class__.__name__:<14}", g.callers(n))
 
     def get(self):
         return self.data_
@@ -297,11 +311,6 @@ class _ConcludedData:
     def __str__(self):
         return "pyobjects._ConcludedData<" + str(self.data) + ">"
 
-    ###
-
-    def _ekr_dump(self):
-        g.print_obj(self.data, tag=f"***** pyobjects._ConcludedData: {id(self)}")
-
 
 class _PyModule(PyDefinedObject, AbstractModule):
     def __init__(self, pycore, ast_node, resource):
@@ -309,7 +318,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
-        if 1:
+        if 1:  # trace  # trace
             print(g.format_ctor("PyModule", __file__))
 
     @property

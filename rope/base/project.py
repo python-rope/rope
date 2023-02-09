@@ -226,7 +226,7 @@ class Project(_Project):
             self.prefs.add("ignored_resources", ropefolder)
         self._init_source_folders()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # Changing this will cause a unit test to fail.
         return '<{}.{} "{}">'.format(
             self.__class__.__module__,
@@ -234,9 +234,11 @@ class Project(_Project):
             self.address,
         )
 
-    def description(self):
-        file_name = g.short_file_name(self.address)
-        return f"{self.__class__.__module__}.{self.__class__.__name__}:{file_name}"
+    def description(self) -> str:
+        if 1:  # trace
+            file_name = g.short_file_name(self.address)
+            return f"{self.__class__.__module__}.{self.__class__.__name__}:{file_name}"
+        return ""
 
     @utils.deprecated("Delete once deprecated functions are gone")
     def _init_source_folders(self):

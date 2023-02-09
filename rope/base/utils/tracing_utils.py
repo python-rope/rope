@@ -86,7 +86,7 @@ def format_ctor(class_name: str, file_name: str) -> str:
     # Careful: use an explicit class name.
     # self.__class__.__name__ can yield unexpected/confusing results.
     file_name_s = short_file_name(file_name)
-    return f"{'__init__':>15} {file_name_s:>16}.{class_name:<15}"
+    return f"{'__init__':>15} {file_name_s:>16}:{class_name:<15}"
 
 
 def plural(obj: Any) -> str:

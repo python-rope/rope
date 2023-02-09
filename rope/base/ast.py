@@ -67,7 +67,7 @@ class RopeNodeVisitor(ast.NodeVisitor):
         """Modified from ast.NodeVisitor to match rope's existing Visitor implementation"""
         method = "_" + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
-        if 0:
+        if 0:  # trace
             module, name = visitor.__module__, visitor.__name__
             if name != "generic_visit":
                 print(g.format("visit", module, name))

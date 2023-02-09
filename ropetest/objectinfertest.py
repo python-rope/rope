@@ -15,8 +15,12 @@ class ObjectInferTest(unittest.TestCase):
         Init self.project to a new Project instance for this test, with default prefs.
         self.project.fscommands manages temp files in a temp directory.
         """
+        if 0: # trace: Do this before calling super().setUp()
+            print('\n')
+            print('ObjectInferTest.setUp\n')
         super().setUp()
         self.project = testutils.sample_project()
+        
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -30,7 +34,7 @@ class ObjectInferTest(unittest.TestCase):
         """)
 
         # setUp creates self.project.
-        print('\n')
+        print('')
         print('after:  setUp\n')
         print('self.project:', self.project.description())
 
@@ -63,6 +67,7 @@ class ObjectInferTest(unittest.TestCase):
         
         a_var = a_var_scope.get_object()
 
+        print('')
         print('           a_var:', a_var)
         print('a_var.get_type():', a_var.get_type())
 
