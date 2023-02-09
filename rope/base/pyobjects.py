@@ -11,6 +11,15 @@ class PyObject:
     def __init__(self, type_):
         if type_ is None:
             type_ = self
+
+        if 1:  # trace
+            if not hasattr(self, "type") or type_ != self.type:
+                if "builtins" not in g.callers():
+                    print(
+                        g.format_ctor("PyObject", __file__),
+                        f"id: {id(self)}",
+                        g.callers(2),
+                    )
         self.type = type_
 
     def get_attributes(self):

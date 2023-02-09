@@ -42,8 +42,9 @@ class ObjectInferTest(unittest.TestCase):
 
         scope = libutils.get_string_scope(self.project, code)
 
-        print('\nscope:', scope)
-        print('scope.pyobject', scope.pyobject)
+        print('')
+        print('         scope:', scope)
+        print('scope.pyobject:', scope.pyobject)
 
         print('\ndo: sample_scope = scope["Sample"]\n')
 
@@ -61,7 +62,7 @@ class ObjectInferTest(unittest.TestCase):
         
         a_var_scope = scope["a_var"]
         
-        print('a_var_scope', a_var_scope)
+        print('a_var_scope:', a_var_scope)
         
         print('\ndo: a_var = a_var_scope.get_object()\n')
         
@@ -70,8 +71,13 @@ class ObjectInferTest(unittest.TestCase):
         print('')
         print('           a_var:', a_var)
         print('a_var.get_type():', a_var.get_type())
+        
+        print('\ndo: self.assertEqual(sample_class, a_var.get_type())')
 
         self.assertEqual(sample_class, a_var.get_type())
+        
+        print('')
+        print('sample_class:', sample_class)
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = dedent("""\
             class Sample(object):

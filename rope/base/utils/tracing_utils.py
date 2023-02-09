@@ -18,13 +18,6 @@ def _caller_name(n: int) -> str:
         code = frame.f_code  # The code object
         name = code.co_name
         file_name = short_file_name(code.co_filename)[:-3]
-        # if 0:
-        # locals_ = frame.f_locals  # The local namespace.
-        # file_name = short_file_name(code.co_filename)
-        # obj = locals_.get("self")
-        # trace(repr(name), repr(obj), repr(file_name))  ###
-        # if obj and name == "__init__":
-        # return f"**{file_name}:{obj.__class__.__name__}.{name}"
         return f"{file_name}:{name}"
     except ValueError:
         # The stack is not deep enough OR
@@ -46,7 +39,7 @@ def callers(n: int = 4) -> str:
     """
     # Be careful to call _caller_name with smaller values of i first:
     # sys._getframe throws ValueError if there are less than i entries.
-    i, result = 3, []
+    i, result = 4, []
     while 1:
         s = _caller_name(n=i)
         if s:
@@ -54,7 +47,7 @@ def callers(n: int = 4) -> str:
         if not s or len(result) >= n:
             break
         i += 1
-    return ",".join(reversed(result))
+    return ", ".join(reversed(result))
 
 
 def callers_list(n: int = 4) -> List[str]:
