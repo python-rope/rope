@@ -23,7 +23,10 @@ class AssignedName(pynames.AssignedName):
         )
         self.pyobject.set(pyobject)
         if 1:  # trace
-            print(g.format_ctor("pynamesdef.AssignedName", __file__), repr(pyobject))
+            print(
+                g.format_ctor("pynamesdef.AssignedName", __file__),
+                f"pyobject: {pyobject!r}",
+            )
 
     @utils.prevent_recursion(lambda: None)
     def _get_inferred(self):

@@ -138,7 +138,20 @@ class PyClass(pyobjects.PyClass):
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
         if 1:  # trace
-            print(g.format_ctor("PyClass", __file__), ast_node.name)
+            print(g.format_ctor("PyClass", __file__), "node.name:", ast_node.name)
+
+    if 0:  # trace
+        # Overried po.PyDefinedObject.__repr__
+
+        # return '<{}.{} "{}" at {}>'.format(
+        # self.__class__.__module__,
+        # self.__class__.__name__,
+        # self.absolute_name,
+        # hex(id(self)),
+        # )
+
+        def __repr__(self) -> str:
+            return f"pyobjectsdef.PyClass: {self.absolute_name}"
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -695,4 +708,10 @@ class StarImport:
         for name in imported:
             if not name.startswith("_"):
                 result[name] = pynamesdef.ImportedName(self.imported_module, name)
+        if 1:  # trace
+            data = result
+            tag = "StarImport.get_names"
+            # n = 2 if isinstance(data, (dict, list, set)) else 4
+            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
+            print(g.to_string(data))
         return result

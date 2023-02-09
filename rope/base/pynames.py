@@ -19,6 +19,8 @@ assert g
 class PyName:
     """References to `PyObject` inside python programs"""
 
+    ### Holds analysis of assignments statements.
+
     if 1:  # trace (temp ctor)
 
         def __init__(self):
@@ -37,7 +39,7 @@ class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
         if 1:  # trace
-            print(g.format_ctor("DefinedName", __file__), repr(pyobject))
+            print(g.format_ctor("DefinedName", __file__), f"pyobject: {pyobject!r}")
 
     def get_object(self):
         return self.pyobject

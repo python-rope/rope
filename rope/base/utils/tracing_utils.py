@@ -122,7 +122,8 @@ def to_string(obj: Any, indent: int = 0, tag: str = None, width: int = 120) -> s
     if not isinstance(obj, str):
         result = pprint.pformat(obj, indent=indent, width=width)
     elif "\n" not in obj:
-        result = repr(obj)
+        # result = repr(obj)
+        result = f"{' '*indent} {obj!r}"
     else:
         # Return the enumerated lines of the string.
         lines = "".join([f"  {i:4}: {z!r}\n" for i, z in enumerate(split_lines(obj))])

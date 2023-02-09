@@ -308,10 +308,11 @@ class _ConcludedData:
 
     def set(self, data):
         self.data_ = data
-        if 1:  # trace
+        if 0:  # trace:  now done in the get_names methods of Scopes.
             tag = f"_ConcludedData.set: {id(self)}"
             n = 2 if isinstance(data, (dict, list, set)) else 4
             print(f"{tag} {data.__class__.__name__:<14}", g.callers(n))
+            print(g.to_string(data))
 
     def get(self):
         return self.data_
