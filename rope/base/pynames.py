@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
     from rope.base import pyobjectsdef
     from rope.base.pyobjects import PyObject
 
-from rope.base.utils import tracing_utils as g
+from rope.base.utils import tracing_utils as g  ###
 
 assert g
 
@@ -22,8 +22,7 @@ class PyName:
     if 1:  # Temp ctor.
 
         def __init__(self):
-            g.trace("*****")  ### Not called in basic test.
-            print(g.format_ctor("PyName", __file__))
+            print(g.format_ctor("***PyName**", __file__))
 
     def get_object(self) -> Optional[PyObject]:
         """Return the `PyObject` object referenced by this `PyName`"""
@@ -39,6 +38,7 @@ class DefinedName(PyName):
         self.pyobject = pyobject
         if 1:
             print(g.format_ctor("DefinedName", __file__), repr(pyobject))
+            # print(self.__class__.__qualname__)
 
     def get_object(self):
         return self.pyobject

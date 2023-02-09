@@ -13,6 +13,8 @@ from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config
 from rope.base.resources import File, Folder, _ResourceMatcher
 
+from rope.base.utils import tracing_utils as g  ###
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -225,11 +227,16 @@ class Project(_Project):
         self._init_source_folders()
 
     def __repr__(self):
+        # Changing this will cause a unit test to fail.
         return '<{}.{} "{}">'.format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.address,
         )
+
+    def description(self):
+        file_name = g.short_file_name(self.address)
+        return f"{self.__class__.__module__}.{self.__class__.__name__}:{file_name}"
 
     @utils.deprecated("Delete once deprecated functions are gone")
     def _init_source_folders(self):

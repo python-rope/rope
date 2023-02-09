@@ -423,14 +423,14 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _ClassDef(self, node):
         pyclass = PyClass(self.pycore, node, self.owner_object)
         self.names[node.name] = pynamesdef.DefinedName(pyclass)
-        if 1:
+        if 0:
             print(g.format("def _ClassDef", "_ScopeVisitor", "_ClassDef"), node.name)
         self.defineds.append(pyclass)
 
     def _FunctionDef(self, node):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
 
-        if 1:
+        if 0:
             print(
                 g.format("def _FunctionDef", "_ScopeVisitor", "_FunctionDef"), node.name
             )

@@ -29,69 +29,42 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
 
-        print('')
-        print('')
-        print('after:  setUp')
-        print('before: get_string_scope\n')
+        # setUp creates self.project.
+        print('\n')
+        print('after:  setUp\n')
+        print('self.project:', self.project.description())
 
-        # 1. setUp creates self.project.
-
-            # setUp instantiates self.project to a Project instance.
-            # self.project = testutils.sample_project()
-
-        # 2. get_string_scope sets self.scope to the scope of the test string.
-
-            # Sets self.scope to pyobjectsdef.PyModule(project.pycore, code, ...)
-            # (code is the test string, defined above.)
-
-        # ??? Instantiating the pyobjectsdef.PyModule does all the work ???
-
-            # PyDefinedObject.__init__ calls:
-
-                # self.concluded_attributes = self.get_module()._get_concluded_data()
-                # self.attributes = self.get_module()._get_concluded_data()
-
-            # But all attributes are empty for this test.
+        print('\ndo: scope = libutils.get_string_scope(...)\n')
 
         scope = libutils.get_string_scope(self.project, code)
 
-        print('')
-        print('after:  get_string_scope')
-        print('before: sample_class = scope["Sample"].get_object()\n')
+        print('\nscope:', scope)
+        print('scope.pyobject', scope.pyobject)
 
-            # scope is a GlobalScope.  It might be any subclass of Scope.
-            # scope.pyobject is a pyobjectsdef.PyModule.
+        print('\ndo: sample_scope = scope["Sample"]\n')
 
-        # if trace: g.trace('*** scope.pyobject', scope.pyobject)
-
-        # *** Calling scope["Sample"] (via _ScopeVisitor._ClassDef)
-        #     instantiates pyobjects.PyClass *and* pyobjectsdef.PyClass.
-        #     (Because pyobjectsDef.PyClass is a subclass of pyobjects.PyClass.)
-        # scope["Sample"] is a pynamesdef.DefinedName.
-
-        sample_class = scope["Sample"].get_object()
-
-        print('')
-        print('after:  sample_class = scope["Sample"].get_object()')
-        print('before: a_var = scope["a_var"].get_object()\n')
-
-            # sample_class is a pyobjectsdef.PyClass ("::Sample" at ...)
-            # scope["Sample"] is a DefinedName.
-            # scope["Sample"].pyobject is a pyobjectsdef.PyClass.
-
-        a_var = scope["a_var"].get_object()
+        sample_scope = scope["Sample"]
+            
+        print('\nsample_scope:', sample_scope)
         
-        print('')
-        print('after: a_var = scope["a_var"].get_object()\n')
+        print('\ndo: sample_scope.get_object()')
 
-            # a_var is a pyobjects.PyObject
-            # a_var.get_type() is a pyobjectsdef.PyClass ("::Sample" at ...)
+        sample_class = sample_scope.get_object()
 
-            # scope["a_var"] is an pynamesdef.AssignedName.
-            # scope["a_var"].pyobject is a pynames._Inferred.
-            # scope["a_var"].get_object() is a pyobjects.PyObject.
+        print('\nsample_class:', sample_class)
+        
+        print('\ndo: na_var_scope = scope["a_var"]\n')
+        
+        a_var_scope = scope["a_var"]
+        
+        print('a_var_scope', a_var_scope)
+        
+        print('\ndo: a_var = a_var_scope.get_object()\n')
+        
+        a_var = a_var_scope.get_object()
 
-        print(f"sample_class: {sample_class}")
+        print('           a_var:', a_var)
+        print('a_var.get_type():', a_var.get_type())
 
         self.assertEqual(sample_class, a_var.get_type())
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
