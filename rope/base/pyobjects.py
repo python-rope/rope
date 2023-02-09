@@ -123,8 +123,8 @@ def get_unknown():
 
 class AbstractClass(PyObject):
     def __init__(self):
-        if 0:  # trace  This trace disables all other traces!!!
-            print(g.format_ctor("AbstractClass", __file__), g.callers(1))
+        if 0:  # trace  !!!This trace disables all other traces!!!
+            print(g.format_ctor("AbstractClass", __file__))
         super().__init__(get_base_type("Type"))
 
     def get_name(self):
@@ -285,19 +285,23 @@ class _ConcludedData:
     def __init__(self):
         self.data_ = None
         if 1:  # trace
-            import re
+            ###
+            # import re
+            # pat = re.compile(r"_?[A-Z]")
+            # callers_s = ",".join([z for z in g.callers_list(20) if re.match(pat, z)])
+            # print(g.format_ctor("_ConcludedData", __file__), f"id: {id(self)}", callers_s)
 
-            pat = re.compile(r"_?[A-Z]")
-            callers_s = ",".join([z for z in g.callers_list(20) if re.match(pat, z)])
             print(
-                g.format_ctor("_ConcludedData", __file__), f"id: {id(self)}", callers_s
+                g.format_ctor("_ConcludedData", __file__),
+                f"id: {id(self)}",
+                g.callers(4),
             )
 
     def set(self, data):
         self.data_ = data
-        if 0:  # trace
+        if 1:  # trace
             tag = f"_ConcludedData.set: {id(self)}"
-            n = 2 if isinstance(data, (dict, list, set)) else 6
+            n = 2 if isinstance(data, (dict, list, set)) else 4
             print(f"{tag} {data.__class__.__name__:<14}", g.callers(n))
 
     def get(self):

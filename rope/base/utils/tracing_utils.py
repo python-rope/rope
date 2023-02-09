@@ -16,12 +16,16 @@ def _caller_name(n: int) -> str:
         # Get the function name from the call stack.
         frame = sys._getframe(n)  # The stack frame, n levels up.
         code = frame.f_code  # The code object
-        locals_ = frame.f_locals  # The local namespace.
         name = code.co_name
-        obj = locals_.get("self")
-        if obj and name == "__init__":
-            return f"{obj.__class__.__name__}.{name}"
-        return name
+        file_name = short_file_name(code.co_filename)[:-3]
+        # if 0:
+        # locals_ = frame.f_locals  # The local namespace.
+        # file_name = short_file_name(code.co_filename)
+        # obj = locals_.get("self")
+        # trace(repr(name), repr(obj), repr(file_name))  ###
+        # if obj and name == "__init__":
+        # return f"**{file_name}:{obj.__class__.__name__}.{name}"
+        return f"{file_name}:{name}"
     except ValueError:
         # The stack is not deep enough OR
         # sys._getframe does not exist on this platform.
