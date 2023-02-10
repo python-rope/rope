@@ -9,9 +9,6 @@ if TYPE_CHECKING:
     from rope.base.pyscopes import Scope
 
     PyFunc = Union[PyFunction, DefinedPyFunction]
-else:
-    PyFunc = Any
-    Scope = Any
 Node = ast.AST
 
 

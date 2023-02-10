@@ -11,8 +11,6 @@ if TYPE_CHECKING:
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
 
     PyFunc = Union[PyFunction, DefinedPyFunction]
-else:
-    PyFunc = Any
 
 
 class DefinedName(pynames.DefinedName):

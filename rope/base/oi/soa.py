@@ -1,6 +1,6 @@
 # type:ignore
 from __future__ import annotations
-from typing import Any, Callable, Union, TYPE_CHECKING
+from typing import Callable, Union, TYPE_CHECKING
 
 import rope.base.ast
 import rope.base.oi.soi
@@ -8,12 +8,13 @@ import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
 
 if TYPE_CHECKING:
+    from rope.base.pycore import PyCore
     from rope.base.pyobjects import PyFunction
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
 
     PyFunc = Union[PyFunction, DefinedPyFunction]
-else:
-    PyFunc = Any
+# # # else:
+# # # PyFunc = Any
 
 
 def analyze_module(
@@ -29,8 +30,8 @@ def analyze_module(
 
 
 def _analyze_node(
-    pycore,
-    pydefined,
+    pycore: PyCore,
+    pydefined: DefinedPyFunction,
     should_analyze: Callable,
     search_subscopes: Callable,
     followed_calls: bool,
