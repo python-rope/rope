@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 from contextlib import contextmanager
 from itertools import chain
 from typing import Dict
@@ -35,7 +36,7 @@ from rope.refactor import patchedast, similarfinder, sourceutils, suites, usefun
 # There are a few more helper functions and classes used by above
 # classes.
 class _ExtractRefactoring:
-    kind_prefixes = {}
+    kind_prefixes: Dict[str, str] = {}
 
     def __init__(self, project, resource, start_offset, end_offset, variable=False):
         self.project = project
@@ -516,7 +517,7 @@ class _ExceptionalConditionChecker:
 
 class _ExtractMethodParts(ast.RopeNodeVisitor):
     def __init__(self, info):
-        self.info = info
+        self.info: str = info
         self.info_collector = self._create_info_collector()
         self.info.kind = self._get_kind_by_scope()
         self._check_constraints()
@@ -778,7 +779,7 @@ class _ExtractVariableParts:
 
 
 class _FunctionInformationCollector(ast.RopeNodeVisitor):
-    def __init__(self, start, end, is_global):
+    def __init__(self, start: int, end: int, is_global: bool):
         self.start = start
         self.end = end
         self.is_global = is_global

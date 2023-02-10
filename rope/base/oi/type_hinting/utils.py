@@ -1,3 +1,4 @@
+# type:ignore
 import logging
 from typing import Optional, Tuple
 
@@ -75,6 +76,7 @@ def get_mro(pyclass):
 def resolve_type(
     type_name: str,
     pyobject: PyDefinedObject,
+    type_name: str, pyobject: PyObject
 ) -> Optional[Tuple[PyDefinedObject, PyObject]]:
     """
     Find proper type object from its name.

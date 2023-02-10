@@ -1,7 +1,8 @@
+from __future__ import annotations
 import bisect
 import contextlib
 import difflib
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 import warnings
 
 import rope.base.libutils
@@ -11,6 +12,12 @@ import rope.base.oi.soa
 import rope.base.resourceobserver
 import rope.base.resources
 from rope.base import builtins, exceptions, pyobjectsdef, stdmods, taskhandle, utils
+
+from rope.base.utils import tracing_utils as g
+
+if TYPE_CHECKING:
+    from rope.base.pyscopes import Scope
+    from rope.base.resources import Resource
 
 
 class PyCore:
@@ -23,6 +30,12 @@ class PyCore:
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
         self._init_automatic_soa()
+        if 0:  # trace
+            # This will be the first enabled print statement,
+            # if there is no trace in any setUp method.
+            print("\n")
+        if 0:  # trace
+            print(g.format_ctor("PyCore", __file__))
 
     def _init_python_files(self):
         self.python_matcher = None
@@ -98,7 +111,7 @@ class PyCore:
         return pyobjectsdef.PyModule(self, code, resource, force_errors=force_errors)
 
     @utils.deprecated("Use `libutils.get_string_scope` instead")
-    def get_string_scope(self, code, resource=None):
+    def get_string_scope(self, code: str, resource: Resource = None) -> Scope:
         """Returns a `Scope` object for the given code"""
         return rope.base.libutils.get_string_scope(code, resource)
 

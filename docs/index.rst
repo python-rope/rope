@@ -15,6 +15,7 @@ Welcome to rope's documentation!
    library
    configuration
    contributing
+   theory
    release-process
    dev/issues
 

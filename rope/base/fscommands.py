@@ -1,3 +1,4 @@
+# type:ignore
 """Project file system commands.
 
 This modules implements file system operations used by rope.  Different

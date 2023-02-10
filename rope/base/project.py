@@ -1,3 +1,4 @@
+# type:ignore
 import contextlib
 import json
 import os
@@ -12,6 +13,8 @@ from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config  # type:ignore
 from rope.base.resources import File, Folder, _ResourceMatcher
+
+from rope.base.utils import tracing_utils as g  ###
 
 try:
     import cPickle as pickle  # type:ignore
@@ -224,12 +227,19 @@ class Project(_Project):
             self.prefs.add("ignored_resources", ropefolder)
         self._init_source_folders()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        # Changing this will cause a unit test to fail.
         return '<{}.{} "{}">'.format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.address,
         )
+
+    def description(self) -> str:
+        if 1:  # trace
+            file_name = g.short_file_name(self.address)
+            return f"{self.__class__.__module__}.{self.__class__.__name__}:{file_name}"
+        return ""
 
     @utils.deprecated("Delete once deprecated functions are gone")
     def _init_source_folders(self):

@@ -1,8 +1,22 @@
+from __future__ import annotations
 import contextlib
+from typing import Any, Union, TYPE_CHECKING
 
 import rope.base.oi.soi
 import rope.base.pyobjects
 from rope.base import pynames, utils
+
+from rope.base.utils import tracing_utils as g
+
+assert g
+
+if TYPE_CHECKING:
+    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+
+    PyFunc = Union[PyFunction, DefinedPyFunction]
+else:
+    PyFunc = Any
 
 
 class DefinedName(pynames.DefinedName):
@@ -18,6 +32,11 @@ class AssignedName(pynames.AssignedName):
             self._get_inferred, pynames._get_concluded_data(module)
         )
         self.pyobject.set(pyobject)
+        if 1:  # trace
+            print(
+                g.format_ctor("pynamesdef.AssignedName", __file__),
+                f"pyobject: {pyobject!r}",
+            )
 
     @utils.prevent_recursion(lambda: None)
     def _get_inferred(self):
@@ -44,9 +63,11 @@ class UnboundName(pynames.UnboundName):
 
 
 class ParameterName(pynames.ParameterName):
-    def __init__(self, pyfunction, index):
+    def __init__(self, pyfunction: PyFunc, index: int) -> None:
         self.pyfunction = pyfunction
         self.index = index
+        if 1:  # trace
+            print(g.format_ctor("ParameterName", __file__), repr(pyfunction))
 
     def get_object(self):
         result = self.pyfunction.get_parameter(self.index)

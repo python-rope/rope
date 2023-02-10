@@ -5,11 +5,22 @@ import rope.base.builtins  # Use fully-qualified names for clarity.
 from rope.base import libutils
 from ropetest import testutils
 
+from rope.base.utils import tracing_utils as g
+
+assert g
 
 class ObjectInferTest(unittest.TestCase):
     def setUp(self):
+        """
+        Init self.project to a new Project instance for this test, with default prefs.
+        self.project.fscommands manages temp files in a temp directory.
+        """
+        if 0: # trace: Do this before calling super().setUp()
+            print('\n')
+            print('ObjectInferTest.setUp\n')
         super().setUp()
         self.project = testutils.sample_project()
+        
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -21,11 +32,52 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
-        scope = libutils.get_string_scope(self.project, code)
-        sample_class = scope["Sample"].get_object()
-        a_var = scope["a_var"].get_object()
-        self.assertEqual(sample_class, a_var.get_type())
 
+        # setUp creates self.project.
+        print('')
+        print('after:  setUp\n')
+        print('self.project:', self.project.description())
+
+        print('\ndo: scope = libutils.get_string_scope(...)\n')
+
+        scope = libutils.get_string_scope(self.project, code)
+
+        print('')
+        print('         scope:', scope)
+        print('scope.pyobject:', scope.pyobject)
+
+        print('\ndo: sample_scope = scope["Sample"]\n')
+
+        sample_scope = scope["Sample"]
+            
+        print('\nsample_scope:', sample_scope)
+        
+        print('\ndo: sample_scope.get_object()')
+
+        sample_class = sample_scope.get_object()
+
+        print('\nsample_class:', sample_class)
+        
+        print('\ndo: na_var_scope = scope["a_var"]\n')
+        
+        a_var_scope = scope["a_var"]
+        
+        print('a_var_scope:', a_var_scope)
+        
+        print('\ndo: a_var = a_var_scope.get_object()\n')
+        
+        a_var = a_var_scope.get_object()
+
+        print('')
+        print('           a_var:', a_var)
+        print('a_var.get_type():', a_var.get_type())
+        
+        print('\ndo: self.assertEqual(sample_class, a_var.get_type())')
+
+        self.assertEqual(sample_class, a_var.get_type())
+        
+        print('')
+        print('sample_class:', sample_class)
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = dedent("""\
             class Sample(object):

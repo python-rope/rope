@@ -6,24 +6,40 @@ import rope.base.pyobjects
 from rope.base import exceptions, utils
 
 if typing.TYPE_CHECKING:
-    from typing import Union
+    from typing import Any, Optional, Tuple, Union
 
     from rope.base import pyobjectsdef
+    from rope.base.pyobjects import PyObject
+
+from rope.base.utils import tracing_utils as g  ###
+
+assert g
 
 
 class PyName:
     """References to `PyObject` inside python programs"""
 
-    def get_object(self):
-        """Return the `PyObject` object referenced by this `PyName`"""
+    ### Holds analysis of assignments statements.
 
-    def get_definition_location(self):
+    if 1:  # trace (temp ctor)
+
+        def __init__(self):
+            print(g.format_ctor("***PyName**", __file__))
+
+    def get_object(self) -> Optional[PyObject]:
+        """Return the `PyObject` object referenced by this `PyName`"""
+        return None
+
+    def get_definition_location(self) -> Optional[Tuple[Any, int]]:
         """Return a (module, lineno) tuple"""
+        return None
 
 
 class DefinedName(PyName):
     def __init__(self, pyobject):
         self.pyobject = pyobject
+        if 1:  # trace
+            print(g.format_ctor("DefinedName", __file__), f"pyobject: {pyobject!r}")
 
     def get_object(self):
         return self.pyobject
@@ -187,7 +203,17 @@ class ImportedName(PyName):
 
 def _get_concluded_data(module):
     if module is None:
+        g.trace("(*** pynames function): instantiate")
         return rope.base.pyobjects._ConcludedData()
+    if 0:
+        # Callers...
+        # test_simple_type_inferencing,__getitem__,get_name,__getitem__,
+        # get_attribute,newfunc,_get_structural_attributes,_create_structural_attributes,
+        # visit,_Assign,visit,_Assign,visit,_Name,_assigned,_assigned,__init__
+        print("")
+        g.trace("(*** pynames function): return module._get_concluded_data")
+        g.trace(g.callers(17))
+        g.trace(module._ekr_dump_concluded_data())
     return module._get_concluded_data()
 
 

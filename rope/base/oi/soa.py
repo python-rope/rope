@@ -1,8 +1,19 @@
-from typing import Callable
+# type:ignore
+from __future__ import annotations
+from typing import Any, Union, TYPE_CHECKING
+
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
+
+if TYPE_CHECKING:
+    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+
+    PyFunc = Union[PyFunction, DefinedPyFunction]
+else:
+    PyFunc = Any
 
 
 def analyze_module(
@@ -34,7 +45,7 @@ def _analyze_node(
         return_true = lambda pydefined: True
         return_false = lambda pydefined: False
 
-        def _follow(pyfunction):
+        def _follow(pyfunction: PyFunc) -> None:
             _analyze_node(
                 pycore, pyfunction, return_true, return_false, new_followed_calls
             )
@@ -79,7 +90,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
             return
         self._call(pyfunction, args)
 
-    def _args_with_self(self, primary, self_pyname, pyfunction, node):
+    def _args_with_self(self, primary, self_pyname, pyfunction: PyFunc, node: None):
         base_args = arguments.create_arguments(primary, pyfunction, node, self.scope)
         return arguments.MixedArguments(self_pyname, base_args, self.scope)
 

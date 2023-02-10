@@ -190,7 +190,7 @@ class FromImport(ImportInfo):
 
 
 class EmptyImport(ImportInfo):
-    names_and_aliases: List = []
+    names_and_aliases: List[str] = []
 
     def is_empty(self):
         return True

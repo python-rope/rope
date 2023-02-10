@@ -1,3 +1,4 @@
+# type:ignore
 """AutoImport module for rope."""
 
 import contextlib
