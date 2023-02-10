@@ -341,7 +341,8 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
     @property
     def absolute_name(self) -> str:
-        return self.get_name()
+        # mypy error?
+        return self.get_name()  # type:ignore
 
     def _get_concluded_data(self):
         new_data = _ConcludedData()

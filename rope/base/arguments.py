@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 else:
     PyFunc = Any
     Scope = Any
+Node = ast.AST
 
 
 class Arguments:

@@ -17,7 +17,7 @@ from rope.refactor import functionutils, importutils, sourceutils, suites
 if TYPE_CHECKING:
     from typing import Literal, Optional
 
-    from rope.base.project import Project
+    from rope.base.project import Project  # type:ignore
     from rope.base.resources import Resource
 
     GenerateKind = Literal[

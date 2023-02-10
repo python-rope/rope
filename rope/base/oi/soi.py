@@ -4,15 +4,28 @@ For more information see the documentation in `rope.base.oi`
 package.
 
 """
+from __future__ import annotations
+from typing import Any, Union, TYPE_CHECKING
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import arguments, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
+
+if TYPE_CHECKING:
+    import ast
+    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+
+    Node = ast.AST
+    PyFunc = Union[PyFunction, DefinedPyFunction]
+else:
+    Node = Any
+    PyFunc = Any
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 
 
 @_ignore_inferred
-def infer_returned_object(pyfunction, args):
+def infer_returned_object(pyfunction: PyFunc, args):
     """Infer the `PyObject` this `PyFunction` returns after calling"""
     object_info = pyfunction.pycore.object_info
     result = object_info.get_exact_returned(pyfunction, args)
@@ -36,7 +49,7 @@ def infer_returned_object(pyfunction, args):
 
 
 @_ignore_inferred
-def infer_parameter_objects(pyfunction):
+def infer_parameter_objects(pyfunction: PyFunc):
     """Infer the `PyObject` of parameters of this `PyFunction`"""
     object_info = pyfunction.pycore.object_info
     result = object_info.get_parameter_objects(pyfunction)
@@ -85,7 +98,7 @@ def infer_assigned_object(pyname):
     return result
 
 
-def get_passed_objects(pyfunction, parameter_index):
+def get_passed_objects(pyfunction: PyFunc, parameter_index: int) -> Any:
     object_info = pyfunction.pycore.object_info
     result = object_info.get_passed_objects(pyfunction, parameter_index)
     if not result:

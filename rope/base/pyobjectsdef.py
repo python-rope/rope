@@ -1,3 +1,4 @@
+from typing import Any
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -18,6 +19,9 @@ from rope.base import (
 from rope.base.utils import tracing_utils as g
 
 assert g
+
+# This can't be fixed until we distinguish between stdlib.ast and rope.base.ast.
+Node = Any
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -458,7 +462,7 @@ class _ScopeVisitor(_ExpressionVisitor):
             )
         self.defineds.append(pyclass)
 
-    def _FunctionDef(self, node):
+    def _FunctionDef(self, node: Node):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
 
         for decorator in pyfunction.decorators:

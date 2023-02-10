@@ -4,7 +4,7 @@ import sys
 from collections import OrderedDict
 from typing import Generator, List, Optional, Tuple
 
-from rope.base.project import Project
+from rope.base.project import Project  # type:ignore
 
 from .defs import ModuleCompiled, ModuleFile, ModuleInfo, Package, PackageType, Source
 

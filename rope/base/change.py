@@ -6,7 +6,7 @@ from typing import Union
 
 import rope.base.fscommands
 from rope.base import exceptions, taskhandle, utils
-from rope.base.fscommands import FileContent
+from rope.base.fscommands import FileContent  # type:ignore
 
 
 class Change:
@@ -334,7 +334,7 @@ class _ResourceOperations:
     def write_file(self, resource, contents: Union[str, FileContent]):
         data: FileContent
         if not isinstance(contents, bytes):
-            data = rope.base.fscommands.unicode_to_file_data(
+            data = rope.base.fscommands.unicode_to_file_data(  # type:ignore
                 contents,
                 newlines=resource.newlines,
             )
