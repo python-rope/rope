@@ -1,4 +1,5 @@
-from typing import Any
+import ast
+
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -7,7 +8,7 @@ import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import (
     arguments,
-    ast,
+    # ast,
     exceptions,
     fscommands,
     nameanalyze,
@@ -16,8 +17,7 @@ from rope.base import (
     utils,
 )
 
-# This can't be fixed until we distinguish between stdlib.ast and rope.base.ast.
-Node = Any
+from rope.base.ast import RopeNodeVisitor
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -194,7 +194,7 @@ class PyModule(pyobjects.PyModule):
                 raise
             else:
                 source = "\n"
-                node = ast.parse("\n")
+                node = rope.base.ast.parse("\n")
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
@@ -214,7 +214,7 @@ class PyModule(pyobjects.PyModule):
                     source_bytes = fscommands.unicode_to_file_data(source_code)
                 else:
                     source_bytes = source_code
-            ast_node = ast.parse(source_bytes, filename=filename)
+            ast_node = rope.base.ast.parse(source_bytes, filename=filename)
         except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
@@ -256,7 +256,7 @@ class PyPackage(pyobjects.PyPackage):
                 init_dot_py, force_errors=force_errors
             ).get_ast()
         else:
-            ast_node = ast.parse("\n")
+            ast_node = rope.base.ast.parse("\n")
         super().__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
@@ -308,8 +308,8 @@ class PyPackage(pyobjects.PyPackage):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-class _AnnAssignVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
+class _AnnAssignVisitor(RopeNodeVisitor):
+    def __init__(self, scope_visitor: RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
         self.type_hint = None
@@ -350,8 +350,8 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         pass
 
 
-class _ExpressionVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
+class _ExpressionVisitor(RopeNodeVisitor):
+    def __init__(self, scope_visitor: RopeNodeVisitor):
         self.scope_visitor = scope_visitor
 
     def _assigned(self, name, assignment=None):
@@ -377,8 +377,8 @@ class _ExpressionVisitor(ast.RopeNodeVisitor):
         self.visit(node.value)
 
 
-class _AssignVisitor(ast.RopeNodeVisitor):
-    def __init__(self, scope_visitor: ast.RopeNodeVisitor):
+class _AssignVisitor(RopeNodeVisitor):
+    def __init__(self, scope_visitor: RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
 
@@ -440,7 +440,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         self.names[node.name] = pynamesdef.DefinedName(pyclass)
         self.defineds.append(pyclass)
 
-    def _FunctionDef(self, node: Node):
+    def _FunctionDef(self, node: ast.FunctionDef):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
 
         for decorator in pyfunction.decorators:
