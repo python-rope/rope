@@ -11,9 +11,6 @@ class ObjectInferTest(unittest.TestCase):
         Init self.project to a new Project instance for this test, with default prefs.
         self.project.fscommands manages temp files in a temp directory.
         """
-        if 0: # trace: Do this before calling super().setUp()
-            print('\n')
-            print('ObjectInferTest.setUp\n')
         super().setUp()
         self.project = testutils.sample_project()
         
@@ -28,12 +25,11 @@ class ObjectInferTest(unittest.TestCase):
                 pass
             a_var = Sample()
         """)
-
         scope = libutils.get_string_scope(self.project, code)
-        sample_scope = scope["Sample"]
-        sample_class = sample_scope.get_object()
+        sample_class = scope["Sample"].get_object()
         a_var = scope["a_var"].get_object()
         self.assertEqual(sample_class, a_var.get_type())
+
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = dedent("""\
             class Sample(object):
