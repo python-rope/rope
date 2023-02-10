@@ -17,9 +17,6 @@ if TYPE_CHECKING:
 
     Node = ast.AST
     PyFunc = Union[PyFunction, DefinedPyFunction]
-else:
-    Node = Any
-    PyFunc = Any
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 

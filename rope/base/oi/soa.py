@@ -1,8 +1,7 @@
-# type:ignore
 from __future__ import annotations
+import ast
 from typing import Callable, Union, TYPE_CHECKING
 
-import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
@@ -11,10 +10,9 @@ if TYPE_CHECKING:
     from rope.base.pycore import PyCore
     from rope.base.pyobjects import PyFunction
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+    from rope.base.pynames import PyName
 
     PyFunc = Union[PyFunction, DefinedPyFunction]
-# # # else:
-# # # PyFunc = Any
 
 
 def analyze_module(
@@ -34,7 +32,7 @@ def _analyze_node(
     pydefined: DefinedPyFunction,
     should_analyze: Callable,
     search_subscopes: Callable,
-    followed_calls: bool,
+    followed_calls: int,
 ) -> None:
     if search_subscopes(pydefined):
         for scope in pydefined.get_scope().get_scopes():
@@ -46,13 +44,13 @@ def _analyze_node(
         return_true = lambda pydefined: True
         return_false = lambda pydefined: False
 
-        def _follow(pyfunction: PyFunc) -> None:
+        def _follow(pyfunction: DefinedPyFunction) -> None:
             _analyze_node(
                 pycore, pyfunction, return_true, return_false, new_followed_calls
             )
 
         visitor = SOAVisitor(pycore, pydefined, _follow if followed_calls else None)
-        for child in rope.base.ast.iter_child_nodes(pydefined.get_ast()):
+        for child in ast.iter_child_nodes(pydefined.get_ast()):
             visitor.visit(child)
 
 
@@ -70,7 +68,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         pass
 
     def _Call(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
@@ -91,7 +89,9 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
             return
         self._call(pyfunction, args)
 
-    def _args_with_self(self, primary, self_pyname, pyfunction: PyFunc, node: None):
+    def _args_with_self(
+        self, primary, self_pyname: PyName, pyfunction: PyFunc, node: ast.Call
+    ):
         base_args = arguments.create_arguments(primary, pyfunction, node, self.scope)
         return arguments.MixedArguments(self_pyname, base_args, self.scope)
 
@@ -118,7 +118,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         ]
 
     def _AnnAssign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -129,7 +129,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         self._evaluate_assign_value(node, nodes, type_hint=node.annotation)
 
     def _Assign(self, node):
-        for child in rope.base.ast.iter_child_nodes(node):
+        for child in ast.iter_child_nodes(node):
             self.visit(child)
         visitor = _SOAAssignVisitor()
         nodes = []
@@ -164,7 +164,7 @@ class _SOAAssignVisitor(nameanalyze._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, rope.base.ast.Subscript) and isinstance(
-            node.slice, (rope.base.ast.Index, rope.base.ast.expr)
+        if isinstance(node, ast.Subscript) and isinstance(
+            node.slice, (ast.Index, ast.expr)
         ):
             self.nodes.append((node, levels))
