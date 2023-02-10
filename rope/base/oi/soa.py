@@ -1,6 +1,6 @@
 # type:ignore
 from __future__ import annotations
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, Callable, Union, TYPE_CHECKING
 
 import rope.base.ast
 import rope.base.oi.soi

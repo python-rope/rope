@@ -1,11 +1,23 @@
 # type:ignore
 import logging
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
+
+if TYPE_CHECKING:
+    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+    from rope.base.pyscopes import Scope
+
+    PyFunc = Union[PyFunction, DefinedPyFunction]
+    PyObj = Union[PyObject, PyDefinedObject]
+else:
+    PyFunc = Any
+    PyObj = Any
+    Scope = Any
 
 
 def get_super_func(pyfunc):
@@ -75,8 +87,7 @@ def get_mro(pyclass):
 
 def resolve_type(
     type_name: str,
-    pyobject: PyDefinedObject,
-    type_name: str, pyobject: PyObject
+    pyobject: PyObj,  ###
 ) -> Optional[Tuple[PyDefinedObject, PyObject]]:
     """
     Find proper type object from its name.
