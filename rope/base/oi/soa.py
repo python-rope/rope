@@ -1,6 +1,6 @@
 from __future__ import annotations
 import ast
-from typing import Callable, Union, TYPE_CHECKING
+from typing import Callable, List, Union, TYPE_CHECKING
 
 import rope.base.oi.soi
 import rope.base.pynames
@@ -8,11 +8,11 @@ from rope.base import arguments, evaluate, nameanalyze, pyobjects
 
 if TYPE_CHECKING:
     from rope.base.pycore import PyCore
-    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjects import AbstractFunction, PyFunction
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
     from rope.base.pynames import PyName
 
-    PyFunc = Union[PyFunction, DefinedPyFunction]
+    PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
 
 
 def analyze_module(
@@ -67,7 +67,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
     def _ClassDef(self, node):
         pass
 
-    def _Call(self, node):
+    def _Call(self, node: ast.Call):
         for child in ast.iter_child_nodes(node):
             self.visit(child)
         primary, pyname = evaluate.eval_node2(self.scope, node.func)
@@ -90,12 +90,16 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         self._call(pyfunction, args)
 
     def _args_with_self(
-        self, primary, self_pyname: PyName, pyfunction: PyFunc, node: ast.Call
+        self,
+        primary,
+        self_pyname: PyName,
+        pyfunction: PyFunc,
+        node: ast.Call,
     ):
         base_args = arguments.create_arguments(primary, pyfunction, node, self.scope)
         return arguments.MixedArguments(self_pyname, base_args, self.scope)
 
-    def _call(self, pyfunction, args):
+    def _call(self, pyfunction: DefinedPyFunction, args):
         if isinstance(pyfunction, pyobjects.PyFunction):
             if self.follow is not None:
                 before = self._parameter_objects(pyfunction)
@@ -111,7 +115,7 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
-    def _parameter_objects(self, pyfunction):
+    def _parameter_objects(self, pyfunction: DefinedPyFunction):
         return [
             pyfunction.get_parameter(i)
             for i in range(len(pyfunction.get_param_names(False)))
@@ -138,7 +142,12 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
             nodes.extend(visitor.nodes)
         self._evaluate_assign_value(node, nodes)
 
-    def _evaluate_assign_value(self, node, nodes, type_hint=False):
+    def _evaluate_assign_value(
+        self,
+        node: Union[ast.Assign, ast.AnnAssign],
+        nodes: List,
+        type_hint: bool = False,
+    ) -> None:
         for subscript, levels in nodes:
             instance = evaluate.eval_node(self.scope, subscript.value)
             args_pynames = [evaluate.eval_node(self.scope, subscript.slice)]

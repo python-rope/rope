@@ -4,11 +4,11 @@ import rope.base.evaluate
 from rope.base import ast
 
 if TYPE_CHECKING:
-    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjects import AbstractFunction, PyFunction
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
     from rope.base.pyscopes import Scope
 
-    PyFunc = Union[PyFunction, DefinedPyFunction]
+    PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
 Node = ast.AST
 
 
