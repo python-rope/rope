@@ -2,24 +2,11 @@ from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
-from rope.base.utils import tracing_utils as g
-
-assert g
-
 
 class PyObject:
     def __init__(self, type_):
         if type_ is None:
             type_ = self
-
-        if 0:  # trace
-            if not hasattr(self, "type") or type_ != self.type:
-                if "builtins" not in g.callers():
-                    print(
-                        g.format_ctor("PyObject", __file__),
-                        f"id: {id(self)}",
-                        g.callers(2),
-                    )
         self.type = type_
 
     def get_attributes(self):
@@ -131,11 +118,6 @@ def get_unknown():
 
 
 class AbstractClass(PyObject):
-    def __init__(self):
-        if 0:  # trace  !!!This trace disables all other traces!!!
-            print(g.format_ctor("AbstractClass", __file__))
-        super().__init__(get_base_type("Type"))
-
     def get_name(self):
         pass
 
@@ -186,12 +168,6 @@ class PyDefinedObject:
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
         self.defineds = None
-        if 1:  # trace  # trace
-            # print('')
-            print(
-                g.format_ctor("PyDefinedObject", __file__),
-                f"ast_node: {ast_node.__class__.__name__}",
-            )
 
     def __repr__(self):
         return '<{}.{} "{}" at {}>'.format(
@@ -297,26 +273,9 @@ class PyClass(PyDefinedObject, AbstractClass):
 class _ConcludedData:
     def __init__(self):
         self.data_ = None
-        if 0:  # trace
-            ###
-            # import re
-            # pat = re.compile(r"_?[A-Z]")
-            # callers_s = ",".join([z for z in g.callers_list(20) if re.match(pat, z)])
-            # print(g.format_ctor("_ConcludedData", __file__), f"id: {id(self)}", callers_s)
-
-            print(
-                g.format_ctor("_ConcludedData", __file__),
-                f"id: {id(self)}",
-                g.callers(4),
-            )
 
     def set(self, data):
         self.data_ = data
-        if 0:  # trace:  now done in the get_names methods of Scopes.
-            tag = f"_ConcludedData.set: {id(self)}"
-            n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag} {data.__class__.__name__:<14}", g.callers(n))
-            print(g.to_string(data))
 
     def get(self):
         return self.data_
@@ -336,8 +295,6 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data = []
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
-        if 0:  # trace  # trace
-            print(g.format_ctor("PyModule", __file__))
 
     @property
     def absolute_name(self) -> str:
@@ -355,18 +312,6 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
     def get_resource(self):
         return self.resource
-
-    def _ekr_dump_concluded_data(self):
-        g.trace("(pyobjects._PyModule._ekr_dump_concluded_data)")
-        tag = self.get_name()
-        try:
-            for i, z in enumerate(self.concluded_data):
-                g.print_obj(f"{i:3} {z!s}", tag=tag)
-                # z._ekr_dump()
-        except TypeError:
-            z = self.concluded_data
-            g.print_obj(f"{z!s}", tag=tag)
-            # z._ekr_dump()
 
 
 class PyModule(_PyModule):

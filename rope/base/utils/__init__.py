@@ -1,9 +1,4 @@
 import sys
-import warnings
-
-from rope.base.utils import tracing_utils as g
-
-assert g
 
 
 def saveit(func):
@@ -21,39 +16,13 @@ def saveit(func):
     # """A decorator that caches the return value of a function"""
     ivar_name = f"_{func.__name__}"
 
-    if 1:  # Original version:
-
-        def _wrapper(self, *args, **kwargs):
-            if not hasattr(self, ivar_name):
-                # Instantiate the singleton object.
-                obj = func(self, *args, **kwargs)
-                setattr(self, ivar_name, obj)
-            # Return the value of the ivar.
-            return getattr(self, ivar_name)
-
-    else:
-
-        def _wrapper(self, *args, **kwargs):
-            tag = "@saveit"
-            if not hasattr(self, ivar_name):
-                # Instantiate the object.
-                obj = func(self, *args, **kwargs)
-                if 1:  # Tracing version.
-                    injected_name = f"{self.__class__.__name__}.{ivar_name}"
-                    func_s = repr(func).replace("<function ", "")
-                    i = func_s.find(" at ")
-                    description = f"{func_s[:i]:30} = {obj.__class__.__name__}"
-                    if 0:  # Brief
-                        print(f"{tag} ivar: {injected_name:>30} = {description}")
-                    else:
-                        print("")
-                        g.print_obj(
-                            obj, tag=f"{tag} ivar: {injected_name} = {description}"
-                        )
-                setattr(self, ivar_name, obj)
-                # Original.
-                # setattr(self, ivar_name, func(self, *args, **kwds))
-            return getattr(self, ivar_name)
+    def _wrapper(self, *args, **kwargs):
+        if not hasattr(self, ivar_name):
+            # Instantiate the singleton object.
+            obj = func(self, *args, **kwargs)
+            setattr(self, ivar_name, obj)
+        # Return the value of the ivar.
+        return getattr(self, ivar_name)
 
     return _wrapper
 
@@ -104,8 +73,6 @@ def deprecated(message=None):
             message = "%s is deprecated" % func.__name__
 
         def newfunc(*args, **kwds):
-            if 0:  ###
-                warnings.warn(message, DeprecationWarning, stacklevel=2)
             return func(*args, **kwds)
 
         return newfunc

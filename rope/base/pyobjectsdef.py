@@ -16,10 +16,6 @@ from rope.base import (
     utils,
 )
 
-from rope.base.utils import tracing_utils as g
-
-assert g
-
 # This can't be fixed until we distinguish between stdlib.ast and rope.base.ast.
 Node = Any
 
@@ -141,9 +137,6 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
-        if 1:  # trace
-            print(g.format_ctor("PyClass", __file__), "node.name:", ast_node.name)
-
     if 0:  # trace
         # Overried po.PyDefinedObject.__repr__
 
@@ -205,8 +198,6 @@ class PyModule(pyobjects.PyModule):
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
         self.coding = fscommands.read_str_coding(self.source_code)
-        if 0:  # trace
-            print(g.format_ctor("PyModule", __file__))
         super().__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):
@@ -321,8 +312,8 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
         self.type_hint = None
-        if 0:  # trace
-            print(g.format_ctor("_AnnAssignVisitor", __file__))
+
+
 
     def _AnnAssign(self, node):
         self.assigned_ast = node.value
@@ -363,9 +354,6 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
 class _ExpressionVisitor(ast.RopeNodeVisitor):
     def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
-        if 0:  # trace
-            print(g.format_ctor("_ExpressionVisitor", __file__))
-
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
@@ -393,9 +381,6 @@ class _AssignVisitor(ast.RopeNodeVisitor):
     def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
-        if 0:  # trace
-            print(g.format_ctor("_AssignVisitor", __file__))
-
     # Assign(expr* targets, expr value, string? type_comment)
 
     def _Assign(self, node):
@@ -442,9 +427,6 @@ class _ScopeVisitor(_ExpressionVisitor):
         self.owner_object = owner_object
         self.names = {}
         self.defineds = []
-        if 0:  # trace
-            print(g.format_ctor("_ScopeVisitor", __file__))
-
     def get_module(self):
         if self.owner_object is not None:
             return self.owner_object.get_module()
@@ -454,12 +436,6 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _ClassDef(self, node):
         pyclass = PyClass(self.pycore, node, self.owner_object)
         self.names[node.name] = pynamesdef.DefinedName(pyclass)
-        if 1:
-            print("")
-            g.trace(
-                f"ScopeVisitor._ClassDef: NEW DefinedName: {node.name}: "
-                f"{self.names[node.name]}\n"
-            )
         self.defineds.append(pyclass)
 
     def _FunctionDef(self, node: Node):
@@ -487,12 +463,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         else:
             self.names[node.name] = pynamesdef.DefinedName(pyfunction)
 
-            if 1:
-                print("")
-                g.trace(
-                    f"ScopeVisitor._FunctionDef: NEW DefinedName: {node.name}: "
-                    f"{self.names[node.name]}\n"
-                )
+
         self.defineds.append(pyfunction)
 
     def _AsyncFunctionDef(self, node):
@@ -519,17 +490,9 @@ class _ScopeVisitor(_ExpressionVisitor):
         pyname = self.names.get(name, None)
         if pyname is None:
             pyname = pynamesdef.AssignedName(module=self.get_module())
-            if 1:  # trace
-                print("")
-                g.trace(f"ScopeVisitor._assigned: NEW pyname: {pyname}")
         if isinstance(pyname, pynamesdef.AssignedName):
             if assignment is not None:
                 pyname.assignments.append(assignment)
-                if 1:  # trace
-                    g.trace(
-                        f"ScopeVisitor._assigned: NEW append to assignments: {assignment}"
-                    )
-                    # print("")
             self.names[name] = pyname
 
     def _update_evaluated(
@@ -665,9 +628,6 @@ class _FunctionVisitor(_ScopeVisitor):
         super().__init__(pycore, owner_object)
         self.returned_asts = []
         self.generator = False
-        if 0:  # trace
-            print(g.format_ctor("_FunctionVisitor", __file__))
-
     def _Return(self, node):
         if node.value is not None:
             self.returned_asts.append(node.value)
@@ -682,9 +642,6 @@ class _ClassInitVisitor(_AssignVisitor):
     def __init__(self, scope_visitor, self_name):
         super().__init__(scope_visitor)
         self.self_name = self_name
-        if 0:  # trace
-            print(g.format_ctor("_ClassInitVisitor", __file__))
-
     def _Attribute(self, node):
         if not isinstance(node.ctx, ast.Store):
             return
@@ -732,10 +689,4 @@ class StarImport:
         for name in imported:
             if not name.startswith("_"):
                 result[name] = pynamesdef.ImportedName(self.imported_module, name)
-        if 1:  # trace
-            data = result
-            tag = "StarImport.get_names"
-            # n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
-            print(g.to_string(data))
         return result

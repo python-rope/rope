@@ -2,10 +2,6 @@ import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import ast, codeanalyze, exceptions, pynames, utils
 from rope.refactor import patchedast
 
-from rope.base.utils import tracing_utils as g
-
-assert g
-
 
 class Scope:
     def __init__(self, pycore, pyobject, parent_scope):
@@ -15,18 +11,6 @@ class Scope:
 
     def get_names(self):
         """Return the names defined or imported in this scope"""
-        if 1:  # trace
-            data = self.pyobject.get_attributes()
-            # print("Scope.get_names", g.callers(6))
-            try:
-                # Fails in general...
-                for z in data:
-                    print(
-                        f"{z:>10} {data[z].__class__.__name__:<12} pyobject: {data[z].pyobject}"
-                    )
-                print("")
-            except Exception:
-                print(f"\n{g.to_string(data)}\n")
         return self.pyobject.get_attributes()
 
     def get_defined_names(self):
@@ -163,12 +147,6 @@ class GlobalScope(Scope):
             result = dict(self.builtin_names)
             result.update(super().get_names())
             self.names.set(result)
-        if 0:  # trace
-            data = self.names.get()
-            tag = "GlobalScope.get_names"
-            # n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
-            print(g.to_string(data))
         return self.names.get()
 
     def get_inner_scope_for_line(self, lineno, indents=None):
@@ -201,13 +179,6 @@ class ComprehensionScope(Scope):
         return self.names
 
     def get_names(self):
-        if 1:  # trace
-            data = self._get_names()
-            tag = "ComprehensionScope.get_names"
-            # n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
-            print(g.to_string(data, indent=4))
-
         return self._get_names()
 
     def _visit_comprehension(self):
@@ -264,12 +235,6 @@ class FunctionScope(Scope):
         return self.is_generator
 
     def get_names(self):
-        if 1:  # trace
-            data = self._get_names()
-            tag = "FunctionScope.get_names"
-            # n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
-            print(g.to_string(data))
         return self._get_names()
 
     def _create_scopes(self):
@@ -393,12 +358,6 @@ class TemporaryScope(Scope):
         self.names = names
 
     def get_names(self):
-        if 1:  # trace
-            data = self.names
-            tag = "TemporaryScope.get_names"
-            # n = 2 if isinstance(data, (dict, list, set)) else 4
-            print(f"{tag:>20} {data.__class__.__name__:<14}", g.callers(4))
-            print(g.to_string(data))
         return self.names
 
     def get_defined_names(self):

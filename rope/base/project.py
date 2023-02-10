@@ -14,7 +14,6 @@ from rope.base.exceptions import ModuleNotFoundError
 from rope.base.prefs import Prefs, get_config  # type:ignore
 from rope.base.resources import File, Folder, _ResourceMatcher
 
-from rope.base.utils import tracing_utils as g  ###
 
 try:
     import cPickle as pickle  # type:ignore
@@ -234,12 +233,6 @@ class Project(_Project):
             self.__class__.__name__,
             self.address,
         )
-
-    def description(self) -> str:
-        if 1:  # trace
-            file_name = g.short_file_name(self.address)
-            return f"{self.__class__.__module__}.{self.__class__.__name__}:{file_name}"
-        return ""
 
     @utils.deprecated("Delete once deprecated functions are gone")
     def _init_source_folders(self):

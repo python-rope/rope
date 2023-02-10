@@ -5,10 +5,6 @@ import io
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 
-from rope.base.utils import tracing_utils as g
-
-assert g
-
 
 class BuiltinModule(pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
@@ -16,8 +12,6 @@ class BuiltinModule(pyobjects.AbstractModule):
         self.name = name
         self.pycore = pycore
         self.initial = initial
-        if 0:  # trace
-            print(g.format_ctor("builtins.BuiltinModule", __file__), name)
 
     parent = None
 

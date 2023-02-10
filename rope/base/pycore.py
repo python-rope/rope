@@ -13,8 +13,6 @@ import rope.base.resourceobserver
 import rope.base.resources
 from rope.base import builtins, exceptions, pyobjectsdef, stdmods, taskhandle, utils
 
-from rope.base.utils import tracing_utils as g
-
 if TYPE_CHECKING:
     from rope.base.pyscopes import Scope
     from rope.base.resources import Resource
@@ -30,12 +28,6 @@ class PyCore:
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
         self._init_automatic_soa()
-        if 0:  # trace
-            # This will be the first enabled print statement,
-            # if there is no trace in any setUp method.
-            print("\n")
-        if 0:  # trace
-            print(g.format_ctor("PyCore", __file__))
 
     def _init_python_files(self):
         self.python_matcher = None
@@ -219,7 +211,7 @@ class PyCore:
             followed_calls = self.project.prefs.get("soa_followed_calls", 0)
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        rope.base.oi.soa.analyze_module(
+        rope.base.oi.soa.analyze_module(  # type:ignore
             self, pymodule, should_analyze, search_subscopes, followed_calls
         )
 
