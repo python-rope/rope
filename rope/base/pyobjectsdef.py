@@ -137,6 +137,7 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
+
     if 0:  # trace
         # Overried po.PyDefinedObject.__repr__
 
@@ -313,8 +314,6 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
         self.assigned_ast = None
         self.type_hint = None
 
-
-
     def _AnnAssign(self, node):
         self.assigned_ast = node.value
         self.type_hint = node.annotation
@@ -354,6 +353,7 @@ class _AnnAssignVisitor(ast.RopeNodeVisitor):
 class _ExpressionVisitor(ast.RopeNodeVisitor):
     def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
+
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
@@ -381,6 +381,7 @@ class _AssignVisitor(ast.RopeNodeVisitor):
     def __init__(self, scope_visitor: ast.RopeNodeVisitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
+
     # Assign(expr* targets, expr value, string? type_comment)
 
     def _Assign(self, node):
@@ -427,6 +428,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         self.owner_object = owner_object
         self.names = {}
         self.defineds = []
+
     def get_module(self):
         if self.owner_object is not None:
             return self.owner_object.get_module()
@@ -462,7 +464,6 @@ class _ScopeVisitor(_ExpressionVisitor):
                     break
         else:
             self.names[node.name] = pynamesdef.DefinedName(pyfunction)
-
 
         self.defineds.append(pyfunction)
 
@@ -628,6 +629,7 @@ class _FunctionVisitor(_ScopeVisitor):
         super().__init__(pycore, owner_object)
         self.returned_asts = []
         self.generator = False
+
     def _Return(self, node):
         if node.value is not None:
             self.returned_asts.append(node.value)
@@ -642,6 +644,7 @@ class _ClassInitVisitor(_AssignVisitor):
     def __init__(self, scope_visitor, self_name):
         super().__init__(scope_visitor)
         self.self_name = self_name
+
     def _Attribute(self, node):
         if not isinstance(node.ctx, ast.Store):
             return

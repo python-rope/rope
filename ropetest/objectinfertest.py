@@ -29,51 +29,11 @@ class ObjectInferTest(unittest.TestCase):
             a_var = Sample()
         """)
 
-        # setUp creates self.project.
-        print('')
-        print('after:  setUp\n')
-        print('self.project:', self.project.description())
-
-        print('\ndo: scope = libutils.get_string_scope(...)\n')
-
         scope = libutils.get_string_scope(self.project, code)
-
-        print('')
-        print('         scope:', scope)
-        print('scope.pyobject:', scope.pyobject)
-
-        print('\ndo: sample_scope = scope["Sample"]\n')
-
         sample_scope = scope["Sample"]
-            
-        print('\nsample_scope:', sample_scope)
-        
-        print('\ndo: sample_scope.get_object()')
-
         sample_class = sample_scope.get_object()
-
-        print('\nsample_class:', sample_class)
-        
-        print('\ndo: na_var_scope = scope["a_var"]\n')
-        
-        a_var_scope = scope["a_var"]
-        
-        print('a_var_scope:', a_var_scope)
-        
-        print('\ndo: a_var = a_var_scope.get_object()\n')
-        
-        a_var = a_var_scope.get_object()
-
-        print('')
-        print('           a_var:', a_var)
-        print('a_var.get_type():', a_var.get_type())
-        
-        print('\ndo: self.assertEqual(sample_class, a_var.get_type())')
-
+        a_var = scope["a_var"].get_object()
         self.assertEqual(sample_class, a_var.get_type())
-        
-        print('')
-        print('sample_class:', sample_class)
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = dedent("""\
             class Sample(object):

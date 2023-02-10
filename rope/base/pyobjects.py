@@ -118,6 +118,9 @@ def get_unknown():
 
 
 class AbstractClass(PyObject):
+    def __init__(self):
+        super().__init__(get_base_type("Type"))
+
     def get_name(self):
         pass
 
