@@ -1,3 +1,4 @@
+# type:ignore
 """A module containing classes for move refactoring
 
 `create_move()` is a factory for creating move refactoring objects

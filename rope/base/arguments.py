@@ -1,5 +1,17 @@
+from __future__ import annotations
+from typing import Any, Union, TYPE_CHECKING
 import rope.base.evaluate
 from rope.base import ast
+
+if TYPE_CHECKING:
+    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+    from rope.base.pyscopes import Scope
+
+    PyFunc = Union[PyFunction, DefinedPyFunction]
+else:
+    PyFunc = Any
+    Scope = Any
 
 
 class Arguments:
@@ -41,10 +53,15 @@ class Arguments:
         return rope.base.evaluate.eval_node(self.scope, ast_node)
 
 
-def create_arguments(primary, pyfunction, call_node, scope):
+# Call(expr func, expr* args, keyword* keywords)
+
+
+def create_arguments(
+    primary, pyfunction: PyFunc, call_node: ast.Call, scope: Scope
+) -> Arguments:
     """A factory for creating `Arguments`"""
     args = list(call_node.args)
-    args.extend(call_node.keywords)
+    args.extend(call_node.keywords)  # type:ignore
     called = call_node.func
     # XXX: Handle constructors
     if _is_method_call(primary, pyfunction) and isinstance(called, ast.Attribute):
@@ -94,7 +111,7 @@ class MixedArguments:
         return self.pyname
 
 
-def _is_method_call(primary, pyfunction):
+def _is_method_call(primary: Any, pyfunction: PyFunc) -> bool:
     if primary is None:
         return False
     pyobject = primary.get_object()
