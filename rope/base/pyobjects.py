@@ -185,8 +185,6 @@ class PyDefinedObject:
         obj_name = self.get_name()
         return self.get_module().get_name() + ("::" + obj_name if obj_name else "")
 
-    visitor_class = None
-
     @utils.prevent_recursion(lambda: {})
     def _get_structural_attributes(self):
         if self.structural_attributes is None:
@@ -238,6 +236,8 @@ class PyDefinedObject:
         if self.defineds is None:
             self._get_structural_attributes()
         return self.defineds
+
+    visitor_class = None
 
     def _create_structural_attributes(self):
         if self.visitor_class is None:
