@@ -1,6 +1,12 @@
-from typing import Optional
+from __future__ import annotations
+from typing import Any, Optional, TYPE_CHECKING
 
 from rope.base import ast, exceptions, utils
+
+if TYPE_CHECKING:
+    from rope.base.resources import Resource
+
+    PyObj = Any  # temp.
 
 
 class PyObject:
@@ -18,6 +24,9 @@ class PyObject:
         if name not in self.get_attributes():
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
+
+    def get_module(self) -> Any:
+        return None
 
     def get_type(self):
         return self.type
@@ -152,11 +161,17 @@ class AbstractModule(PyObject):
     def __init__(self, doc=None):
         super().__init__(get_base_type("Module"))
 
-    def get_doc(self):
-        pass
+    def get_doc(self) -> Optional[str]:
+        return None
 
-    def get_resource(self):
-        pass
+    def get_module(self) -> Any:
+        return None
+
+    def get_name(self) -> Optional[str]:
+        return None
+
+    def get_resource(self) -> Optional[Resource]:
+        return None
 
 
 class PyDefinedObject:
@@ -219,7 +234,7 @@ class PyDefinedObject:
             self.scope = self._create_scope()
         return self.scope
 
-    def get_module(self):
+    def get_module(self) -> Any:
         current_object = self
         while current_object.parent is not None:
             current_object = current_object.parent
@@ -300,7 +315,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
         PyDefinedObject.__init__(self, pycore, ast_node, None)
 
     @property
-    def absolute_name(self) -> str:
+    def absolute_name(self) -> Optional[str]:
         return self.get_name()
 
     def _get_concluded_data(self):
