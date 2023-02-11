@@ -28,6 +28,11 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
         sample_class = scope["Sample"].get_object()
         a_var = scope["a_var"].get_object()
+        if 1:  # trace:
+            print('')
+            print(scope)
+            print(sample_class)
+            print(a_var)
         self.assertEqual(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
