@@ -1,6 +1,10 @@
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
 
 from rope.base import ast, exceptions, utils
+
+if TYPE_CHECKING:
+    from rope.base.resources import Resource
 
 
 class PyObject:
@@ -149,14 +153,16 @@ class AbstractFunction(PyObject):
 
 
 class AbstractModule(PyObject):
-    def __init__(self, doc=None):
+    def __init__(self, doc=None) -> None:
         super().__init__(get_base_type("Module"))
 
-    def get_doc(self):
-        pass
+    def get_doc(self) -> Optional[str]:
+        return None
 
-    def get_resource(self):
-        pass
+    def get_name(self) -> Optional[str]:
+        return None
+    def get_resource(self) -> Optional[Resource]:
+        return None
 
 
 class PyDefinedObject:
@@ -300,9 +306,8 @@ class _PyModule(PyDefinedObject, AbstractModule):
         PyDefinedObject.__init__(self, pycore, ast_node, None)
 
     @property
-    def absolute_name(self) -> str:
-        # mypy error?
-        return self.get_name()  # type:ignore
+    def absolute_name(self) -> Optional[str]:
+        return self.get_name()
 
     def _get_concluded_data(self):
         new_data = _ConcludedData()
