@@ -161,6 +161,7 @@ class AbstractModule(PyObject):
 
     def get_name(self) -> Optional[str]:
         return None
+
     def get_resource(self) -> Optional[Resource]:
         return None
 
