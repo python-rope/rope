@@ -5,6 +5,7 @@ from rope.base import ast, exceptions, utils
 
 if TYPE_CHECKING:
     from rope.base.resources import Resource
+    from rope.base.pyscopes import Scope
 
 
 class PyObject:
@@ -162,7 +163,7 @@ class AbstractModule(PyObject):
     def get_doc(self) -> Optional[str]:
         return None
 
-    def get_module(self) -> Any:
+    def get_module(self) -> Optional[Scope]:
         return None
 
     def get_name(self) -> Optional[str]:

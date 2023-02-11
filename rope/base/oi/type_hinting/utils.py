@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from typing import Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
@@ -76,7 +76,7 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name: str, pyobject: PyObj):
+def resolve_type(type_name: str, pyobject: PyObj) -> Optional[PyObject]:
     """
     Find proper type object from its name.
     """
