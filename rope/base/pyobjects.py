@@ -23,6 +23,9 @@ class PyObject:
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
+    def get_module(self) -> Optional[PyObject]:
+        return None
+
     def get_type(self):
         return self.type
 
