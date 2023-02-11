@@ -51,13 +51,12 @@ class Arguments:
         return rope.base.evaluate.eval_node(self.scope, ast_node)
 
 
-# Call(expr func, expr* args, keyword* keywords)
-
-
 def create_arguments(
     primary, pyfunction: PyFunc, call_node: ast.Call, scope: Scope
 ) -> Arguments:
     """A factory for creating `Arguments`"""
+    # Call(expr func, expr* args, keyword* keywords)
+
     args = list(call_node.args)
     args.extend(call_node.keywords)  # type:ignore
     called = call_node.func

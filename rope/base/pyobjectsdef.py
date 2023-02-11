@@ -1,4 +1,5 @@
 import ast
+from typing import Any
 
 import rope.base.builtins
 import rope.base.codeanalyze
@@ -298,7 +299,7 @@ class PyPackage(pyobjects.PyPackage):
     def _create_scope(self):
         return self.get_module().get_scope()
 
-    def get_module(self):
+    def get_module(self) -> Any:
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             return self.pycore.project.get_pymodule(init_dot_py)
@@ -429,7 +430,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         self.names = {}
         self.defineds = []
 
-    def get_module(self):
+    def get_module(self) -> Any:
         if self.owner_object is not None:
             return self.owner_object.get_module()
         else:

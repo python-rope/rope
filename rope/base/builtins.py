@@ -1,9 +1,14 @@
 """This module tries to support builtin types and functions."""
+from __future__ import annotations
 import inspect
 import io
+from typing import Any, TYPE_CHECKING
 
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
+
+if TYPE_CHECKING:
+    from rope.base.pyscopes import Scope
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -80,7 +85,7 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
         result.update(self.initial)
         return result
 
-    def get_module(self):
+    def get_module(self) -> Any:
         return builtins
 
 
@@ -695,10 +700,10 @@ class Lambda(pyobjects.AbstractFunction):
         else:
             return pyobjects.get_unknown()
 
-    def get_module(self):
+    def get_module(self) -> Any:
         return self.parent.get_module()
 
-    def get_scope(self):
+    def get_scope(self) -> Scope:
         return self.scope
 
     def get_kind(self):

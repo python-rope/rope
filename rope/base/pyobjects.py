@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 from rope.base import ast, exceptions, utils
 
 if TYPE_CHECKING:
     from rope.base.resources import Resource
+    from rope.base.pyscopes import Scope
 
 
 class PyObject:
@@ -23,7 +24,16 @@ class PyObject:
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
-    def get_module(self) -> Optional[PyObject]:
+    def get_doc(self) -> Optional[str]:
+        return None
+
+    def get_module(self) -> Any:
+        return None
+
+    def get_name(self) -> Optional[str]:
+        return None
+
+    def get_resource(self) -> Optional[Resource]:
         return None
 
     def get_type(self):
@@ -222,12 +232,12 @@ class PyDefinedObject:
             return self._get_concluded_attributes()[name]
         raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
 
-    def get_scope(self):
+    def get_scope(self) -> Scope:
         if self.scope is None:
             self.scope = self._create_scope()
         return self.scope
 
-    def get_module(self):
+    def get_module(self) -> Any:
         current_object = self
         while current_object.parent is not None:
             current_object = current_object.parent

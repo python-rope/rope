@@ -2,7 +2,7 @@ from __future__ import annotations
 import bisect
 import contextlib
 import difflib
-from typing import Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 import warnings
 
 import rope.base.libutils
@@ -71,7 +71,7 @@ class PyCore:
         return self.python_matcher.does_match(resource)
 
     @utils.deprecated("Use `project.get_module` instead")
-    def get_module(self, name, folder=None):
+    def get_module(self, name, folder=None) -> Any:
         """Returns a `PyObject` if the module was found."""
         return self.project.get_module(name, folder)
 

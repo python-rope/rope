@@ -1,8 +1,8 @@
-# type:ignore
 import contextlib
 import json
 import os
 import sys
+from typing import Any
 import warnings
 from contextlib import ExitStack
 from typing import Optional
@@ -54,7 +54,7 @@ class _Project:
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
 
-    def get_module(self, name, folder=None):
+    def get_module(self, name, folder=None) -> Any:
         """Returns a `PyObject` if the module was found."""
         # check if this is a builtin module
         pymod = self.pycore.builtin_module(name)
