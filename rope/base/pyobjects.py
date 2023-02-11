@@ -6,8 +6,6 @@ from rope.base import ast, exceptions, utils
 if TYPE_CHECKING:
     from rope.base.resources import Resource
 
-    PyObj = Any  # temp.
-
 
 class PyObject:
     def __init__(self, type_):
@@ -25,7 +23,7 @@ class PyObject:
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
-    def get_module(self) -> Any:
+    def get_module(self) -> Optional[Any]:
         return None
 
     def get_type(self):
