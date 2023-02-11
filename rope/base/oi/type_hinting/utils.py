@@ -76,7 +76,7 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name: str, pyobject: PyObj) -> Optional[PyObject]:
+def resolve_type(type_name: str, pyobject: PyObj) -> Optional[PyObj]:
     """
     Find proper type object from its name.
     """
