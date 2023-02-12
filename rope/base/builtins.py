@@ -83,6 +83,9 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
     def get_module(self):
         return builtins
 
+    def get_superclasses(self):
+        return []
+
 
 class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
     def __init__(

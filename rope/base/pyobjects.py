@@ -5,9 +5,7 @@ from rope.base import ast, exceptions, utils
 
 class PyObject:
     def __init__(self, type_):
-        if type_ is None:
-            type_ = self
-        self.type = type_
+        self.type = type_ or self
 
     def get_attributes(self):
         if self.type is self:
@@ -63,22 +61,11 @@ class PyObject:
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
 
-    _types = None
-    _unknown = None
 
-    @staticmethod
-    def _get_base_type(name):
-        if PyObject._types is None:
-            PyObject._types = {}
-            base_type = PyObject(None)
-            PyObject._types["Type"] = base_type
-            PyObject._types["Module"] = PyObject(base_type)
-            PyObject._types["Function"] = PyObject(base_type)
-            PyObject._types["Unknown"] = PyObject(base_type)
-        return PyObject._types[name]
+_anchor_types = None
 
 
-def get_base_type(name):
+def get_base_type(name: str) -> PyObject:
     """Return the base type with name `name`.
 
     The base types are 'Type', 'Function', 'Module' and 'Unknown'.  It
@@ -95,68 +82,80 @@ def get_base_type(name):
     provide more methods.
 
     """
-    return PyObject._get_base_type(name)
+    global _anchor_types
+    if _anchor_types is None:
+        base_type = PyObject(None)
+        _anchor_types = {
+            "Function": PyObject(base_type),
+            "Module": PyObject(base_type),
+            "Type": base_type,
+            "Unknown": PyObject(base_type),
+        }
+    return _anchor_types[name]
 
 
-def get_unknown():
-    """Return a pyobject whose type is unknown
+def get_unknown() -> PyObject:
+    """Return a pyobject whose type is unknown.
 
-    Note that two unknown objects are equal.  So for example you can
-    write::
+    Note that two unknown objects are equal.
+
+    For example you can write::
 
       if pyname.get_object() == get_unknown():
           print('cannot determine what this pyname holds')
 
     Rope could have used `None` for indicating unknown objects but
-    we had to check that in many places.  So actually this method
-    returns a null object.
-
+    we had to check that in many places.
     """
-    if PyObject._unknown is None:
-        PyObject._unknown = PyObject(get_base_type("Unknown"))
-    return PyObject._unknown
+    return get_base_type("Unknown")
 
 
 class AbstractClass(PyObject):
     def __init__(self):
         super().__init__(get_base_type("Type"))
 
-    def get_name(self):
-        pass
+    if 0:
 
-    def get_doc(self):
-        pass
+        def get_name(self):
+            pass
 
-    def get_superclasses(self):
-        return []
+        def get_doc(self):
+            pass
+
+        def get_superclasses(self):
+            return []
 
 
 class AbstractFunction(PyObject):
     def __init__(self):
         super().__init__(get_base_type("Function"))
 
-    def get_name(self):
-        pass
+    if 0:
 
-    def get_doc(self):
-        pass
+        def get_name(self):
+            pass
 
-    def get_param_names(self, special_args=True):
-        return []
+        def get_doc(self):
+            pass
 
-    def get_returned_object(self, args):
-        return get_unknown()
+        def get_param_names(self, special_args=True):
+            return []
+
+        def get_returned_object(self, args):
+            return get_unknown()
 
 
 class AbstractModule(PyObject):
     def __init__(self, doc=None):
         super().__init__(get_base_type("Module"))
 
-    def get_doc(self):
-        pass
+    if 0:
 
-    def get_resource(self):
-        pass
+        def get_doc(self):
+            pass
+
+        def get_resource(self):
+            pass
 
 
 class PyDefinedObject:
