@@ -9,10 +9,11 @@ from rope.base import (
     ast,
     exceptions,
     nameanalyze,
-    pyobjects,
+    # pyobjects,
     pyobjectsdef,
     worder,
 )
+from rope.base.utils.predicates import is_abstract_class, is_abstract_function
 
 BadIdentifierError = exceptions.BadIdentifierError
 
@@ -100,7 +101,8 @@ class ScopeNameFinder:
             if isinstance(pyobject, pyobjectsdef.PyFunction):
                 parameter_name = pyobject.get_parameters().get(keyword_name, None)
                 return (None, parameter_name)
-            elif isinstance(pyobject, pyobjects.AbstractFunction):
+            # elif isinstance(pyobject, pyobjects.AbstractFunction):
+            if is_abstract_function(pyobject):
                 parameter_name = rope.base.pynames.ParameterName()
                 return (None, parameter_name)
         # class body
@@ -138,10 +140,13 @@ class ScopeNameFinder:
             function_pyname = None
         if function_pyname is not None:
             pyobject = function_pyname.get_object()
-            if isinstance(pyobject, pyobjects.AbstractFunction):
+            # if isinstance(pyobject, pyobjects.AbstractFunction):
+            if is_abstract_function(pyobject):
                 return pyobject
             elif (
-                isinstance(pyobject, pyobjects.AbstractClass) and "__init__" in pyobject
+                # isinstance(pyobject, pyobjects.AbstractClass) and "__init__" in pyobject
+                is_abstract_class(pyobject)
+                and "__init__" in pyobject
             ):
                 return pyobject["__init__"].get_object()
             elif "__call__" in pyobject:
@@ -186,7 +191,8 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             args = arguments.create_arguments(primary, pyobject, node, self.scope)
             return pyobject.get_returned_object(args)
 
-        if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
+        # if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
+        if is_abstract_class(pyobject):
             result = None
             if "__new__" in pyobject:
                 new_function = pyobject["__new__"].get_object()
@@ -197,7 +203,8 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             return
 
         pyfunction = None
-        if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
+        # if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
+        if is_abstract_function(pyobject):
             pyfunction = pyobject
         elif "__call__" in pyobject:
             pyfunction = pyobject["__call__"].get_object()
@@ -345,7 +352,8 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             return
         if function_name in pyobject:
             called = pyobject[function_name].get_object()
-            if not called or not isinstance(called, pyobjects.AbstractFunction):
+            # if not called or not isinstance(called, pyobjects.AbstractFunction):
+            if not called or not is_abstract_function(called):
                 return
             args = [node]
             if other_args:

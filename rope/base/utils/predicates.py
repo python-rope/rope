@@ -11,9 +11,9 @@ def is_abstract_class(obj):
         obj,
         (
             builtins.BuiltinClass,
-            pyobjects.PyClass,
             builtins.Generator,
             builtins.Iterator,
+            pyobjects.PyClass,
         ),
     )
 
