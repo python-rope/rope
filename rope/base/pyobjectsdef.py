@@ -14,6 +14,7 @@ from rope.base import (
     pyobjects,
     utils,
 )
+from rope.base.utils.predicates import is_abstract_module
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -554,9 +555,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get("ignore_bad_imports", False):
             return False
-        return not isinstance(
-            imported_module.get_object(), rope.base.pyobjects.AbstractModule
-        )
+        return not is_abstract_module(imported_module.get_object())
 
     def _Global(self, node):
         module = self.get_module()
