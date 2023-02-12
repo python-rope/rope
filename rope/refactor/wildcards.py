@@ -118,7 +118,6 @@ class _CheckObject:
 
     def _get_super_classes(self, pyobject):
         result = []
-        ### if isinstance(pyobject, pyobjects.AbstractClass):
         if is_abstract_class(pyobject):
             for superclass in pyobject.get_superclasses():
                 result.append(superclass)

@@ -592,13 +592,10 @@ class _ProposalSorter:
 
 class PyDocExtractor:
     def get_doc(self, pyobject):
-        # if isinstance(pyobject, pyobjects.AbstractFunction):
         if is_abstract_function(pyobject):
             return self._get_function_docstring(pyobject)
-        # elif isinstance(pyobject, pyobjects.AbstractClass):
         if is_abstract_class(pyobject):
             return self._get_class_docstring(pyobject)
-        # elif isinstance(pyobject, pyobjects.AbstractModule):
         if is_abstract_module(pyobject):
             return self._trim_docstring(pyobject.get_doc())
         return None

@@ -73,13 +73,10 @@ def get_base_type(name: str) -> PyObject:
     is discouraged.  Use classes defined in this module instead.
     For example instead of
     ``pyobject.get_type() == get_base_type('Function')`` use
-    ``isinstance(pyobject, AbstractFunction)``.
+    ``is_abstract_function(pyobject)``.
 
-    You can use `AbstractClass` for classes, `AbstractFunction` for
-    functions, and `AbstractModule` for modules.  You can also use
-    `PyFunction` and `PyClass` for testing if an object is
-    defined somewhere and rope can access its source.  These classes
-    provide more methods.
+    You can use `is_abstract_class` for classes, `is_abstract_functions` for
+    functions, and `is_abstract_module` for modules.
 
     """
     global _anchor_types

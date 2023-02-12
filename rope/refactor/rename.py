@@ -139,7 +139,6 @@ class Rename:
             return resource in resources
 
     def _is_renaming_a_module(self):
-        # return isinstance(self.old_pyname.get_object(), pyobjects.AbstractModule)
         return is_abstract_module(self.old_pyname.get_object())
 
     def is_method(self):

@@ -56,7 +56,6 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         if pyname is None:
             return
         pyfunction = pyname.get_object()
-        # if isinstance(pyfunction, pyobjects.AbstractFunction):
         if is_abstract_function(pyfunction):
             args = arguments.create_arguments(primary, pyfunction, node, self.scope)
         # elif isinstance(pyfunction, pyobjects.PyClass):

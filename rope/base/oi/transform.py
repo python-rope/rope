@@ -33,7 +33,6 @@ class PyObjectToTextual:
         return self.transform(pyobject)
 
     def PyObject_to_textual(self, pyobject):
-        # if isinstance(pyobject.get_type(), rope.base.pyobjects.AbstractClass):
         if is_abstract_class(pyobject.get_type()):
             result = self.transform(pyobject.get_type())
             if result[0] == "defined":
