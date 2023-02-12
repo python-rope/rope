@@ -34,13 +34,13 @@ calling the `create_finder()` function.
   * `keywords`: If False, don't return instances that are the names of keyword
     arguments
 """
-
+import ast
 
 import contextlib
 import re
 
 from rope.base import (
-    ast,
+    # ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -49,6 +49,7 @@ from rope.base import (
     utils,
     worder,
 )
+import rope.base.ast as rast
 
 
 class Finder:
@@ -339,8 +340,8 @@ class _TextualFinder:
                     yield match.start("fstring") + occurrence_node.col_offset
 
     def _search_in_f_string(self, f_string):
-        tree = ast.parse(f_string)
-        for node in ast.walk(tree):
+        tree = rast.parse(f_string)
+        for node in rast.ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == self.name:
                 yield node
 

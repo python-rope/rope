@@ -24,7 +24,9 @@ TODO:
 
 """
 from typing import List
-from rope.base import ast, evaluate, pyobjects
+import ast
+from rope.base import evaluate, pyobjects
+from rope.base.ast import RopeNodeVisitor
 from rope.base.pyobjects import PyModule
 from rope.base.pyscopes import Scope
 
@@ -40,7 +42,7 @@ def find_errors(project, resource):
     return finder.errors
 
 
-class _BadAccessFinder(ast.RopeNodeVisitor):
+class _BadAccessFinder(RopeNodeVisitor):
     def __init__(self, pymodule: PyModule):
         self.pymodule = pymodule
         self.scope: Scope = pymodule.get_scope()

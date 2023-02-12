@@ -1,10 +1,11 @@
+import ast
 import collections
 import numbers
 import re
 import warnings
 from itertools import chain
 
-from rope.base import ast, codeanalyze, exceptions
+from rope.base import codeanalyze, exceptions
 
 COMMA_IN_WITH_PATTERN = re.compile(r"\(.*?\)|(,)")
 

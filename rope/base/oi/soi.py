@@ -5,7 +5,7 @@ package.
 
 """
 from __future__ import annotations
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, Optional, Union, TYPE_CHECKING
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import arguments, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
@@ -22,7 +22,7 @@ _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 
 
 @_ignore_inferred
-def infer_returned_object(pyfunction: PyFunc, args) -> PyObject:
+def infer_returned_object(pyfunction: PyFunc, args) -> Optional[PyObject]:
     """Infer the return type of a function."""
     import ast  ###
 
@@ -80,6 +80,7 @@ def infer_returned_object(pyfunction: PyFunc, args) -> PyObject:
         report("hint_returned", result)
         return pyobjects.PyObject(type_)
     report("Fail", None)
+    return None
 
 
 @_ignore_inferred

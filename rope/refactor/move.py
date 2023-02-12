@@ -1,4 +1,3 @@
-# type:ignore
 """A module containing classes for move refactoring
 
 `create_move()` is a factory for creating move refactoring objects
@@ -331,6 +330,7 @@ class MoveGlobal:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError("Move destination does not exist.")
+        ### Valid pylint complaints ...
         if dest.is_folder() and dest.has_child("__init__.py"):  # type:ignore
             dest = dest.get_child("__init__.py")  # type:ignore
         if dest.is_folder():  # type:ignore

@@ -1,10 +1,11 @@
 import re
-from typing import Dict
+import ast
 from contextlib import contextmanager
 from itertools import chain
 from typing import Dict
 
-from rope.base import ast, codeanalyze
+from rope.base import codeanalyze
+from rope.base.ast import RopeNodeVisitor
 from rope.base.change import ChangeContents, ChangeSet
 from rope.base.exceptions import RefactoringError
 from rope.base.utils.datastructures import OrderedSet
@@ -515,7 +516,7 @@ class _ExceptionalConditionChecker:
         return next.isalnum() or next == "_"
 
 
-class _ExtractMethodParts(ast.RopeNodeVisitor):
+class _ExtractMethodParts(RopeNodeVisitor):
     def __init__(self, info):
         self.info: str = info
         self.info_collector = self._create_info_collector()
@@ -778,7 +779,7 @@ class _ExtractVariableParts:
         return {}
 
 
-class _FunctionInformationCollector(ast.RopeNodeVisitor):
+class _FunctionInformationCollector(RopeNodeVisitor):
     def __init__(self, start: int, end: int, is_global: bool):
         self.start = start
         self.end = end
@@ -959,7 +960,7 @@ def _get_argnames(arguments):
     return result
 
 
-class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
+class _VariableReadsAndWritesFinder(RopeNodeVisitor):
     def __init__(self):
         self.written = set()
         self.read = set()
@@ -999,7 +1000,7 @@ class _VariableReadsAndWritesFinder(ast.RopeNodeVisitor):
         return visitor.read
 
 
-class _BaseErrorFinder(ast.RopeNodeVisitor):
+class _BaseErrorFinder(RopeNodeVisitor):
     @classmethod
     def has_errors(cls, code):
         if code.strip() == "":
@@ -1067,7 +1068,7 @@ class _AsyncStatementFinder(_BaseErrorFinder):
         pass
 
 
-class _GlobalFinder(ast.RopeNodeVisitor):
+class _GlobalFinder(RopeNodeVisitor):
     def __init__(self):
         self.globals_ = OrderedSet()
 

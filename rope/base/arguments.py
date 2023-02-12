@@ -1,7 +1,9 @@
 from __future__ import annotations
+import ast
 from typing import Any, Union, TYPE_CHECKING
 import rope.base.evaluate
-from rope.base import ast
+
+# from rope.base import ast
 
 if TYPE_CHECKING:
     from rope.base.pyobjects import AbstractFunction, PyFunction

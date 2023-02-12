@@ -1,4 +1,5 @@
 from __future__ import annotations
+import ast
 from operator import itemgetter
 from typing import Optional, Tuple, TYPE_CHECKING
 
@@ -7,13 +8,14 @@ import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
     arguments,
-    ast,
+    # ast,
     exceptions,
     nameanalyze,
     pyobjects,
     pyobjectsdef,
     worder,
 )
+from rope.base.ast import RopeNodeVisitor
 
 if TYPE_CHECKING:
     from rope.base.pyscopes import Scope
@@ -161,7 +163,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator(ast.RopeNodeVisitor):
+class StatementEvaluator(rope.base.ast.RopeNodeVisitor):
     def __init__(self, scope: Scope):
         self.scope = scope
         self.result = None

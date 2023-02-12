@@ -1,9 +1,11 @@
 import ast
 import sys
-from ast import *  # noqa: F401,F403
+
+# from ast import *  # noqa: F401,F403
 
 from rope.base import fscommands
 
+# Handle Python 3.7 and before.
 try:
     from ast import _const_node_type_names  # type:ignore
 except ImportError:

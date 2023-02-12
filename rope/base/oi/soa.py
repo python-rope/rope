@@ -5,6 +5,7 @@ from typing import Callable, List, Tuple, Union, TYPE_CHECKING
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
+from rope.base.ast import RopeNodeVisitor
 
 if TYPE_CHECKING:
     from rope.base.pycore import PyCore
@@ -55,7 +56,7 @@ def _analyze_node(
             visitor.visit(child)
 
 
-class SOAVisitor(rope.base.ast.RopeNodeVisitor):
+class SOAVisitor(RopeNodeVisitor):
     def __init__(self, pycore, pydefined, follow_callback=None) -> None:
         self.pycore = pycore
         self.pymodule = pydefined.get_module()

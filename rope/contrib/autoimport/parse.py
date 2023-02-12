@@ -10,7 +10,8 @@ import pathlib
 from importlib import import_module
 from typing import Generator, List
 
-from rope.base import ast
+# from rope.base import ast
+import ast
 
 from .defs import (
     ModuleCompiled,

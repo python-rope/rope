@@ -1,9 +1,10 @@
+import ast
 import itertools
 import sys
 import unittest
 from textwrap import dedent
 
-from rope.base import ast
+import rope.base.ast as rast
 from rope.refactor import patchedast
 from ropetest import testutils
 
@@ -1532,13 +1533,13 @@ class _ResultChecker:
                     if str(node).startswith(text):
                         self.result = node
                         break
-                    if ast.get_node_type_name(node).startswith(text):
+                    if rast.get_node_type_name(node).startswith(text):
                         self.result = node
                         break
                 return self.result is not None
 
         search = Search()
-        ast.call_for_nodes(self.ast, search)
+        rast.call_for_nodes(self.ast, search)
         return search.result
 
     def check_children(self, text, children):
@@ -1558,7 +1559,7 @@ class _ResultChecker:
             else:
                 self.test_case.assertNotEqual("", text, "probably ignoring some node")
                 self.test_case.assertTrue(
-                    ast.get_node_type_name(child).startswith(expected),
+                    rast.get_node_type_name(child).startswith(expected),
                     msg="Expected <%s> but was <%s>"
-                    % (expected, ast.get_node_type_name(child)),
+                    % (expected, rast.get_node_type_name(child)),
                 )

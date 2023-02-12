@@ -1,7 +1,8 @@
 from __future__ import annotations
+import ast
 from typing import Any, Optional, TYPE_CHECKING
 
-from rope.base import ast, exceptions, utils
+from rope.base import exceptions, utils
 
 if TYPE_CHECKING:
     from rope.base.resources import Resource

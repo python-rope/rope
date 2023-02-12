@@ -1,9 +1,11 @@
 """This module can be used for finding similar code"""
+import ast
 import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 import rope.refactor.wildcards  # Use full qualification for clarity.
-from rope.base import ast, codeanalyze, exceptions, libutils
+from rope.base import codeanalyze, exceptions, libutils
+# from rope.base.ast import RopeNodeVisitor
 from rope.refactor import patchedast
 from rope.refactor.patchedast import MismatchedTokenError
 
@@ -155,7 +157,7 @@ class _ASTMatcher:
             self.matches = []
             # _check_nodes always returns None, so
             # call_for_nodes traverses self.body's entire tree.
-            ast.call_for_nodes(self.body, self._check_node)
+            rope.base.ast.call_for_nodes(self.body, self._check_node)
         return self.matches
 
     def _check_node(self, node):

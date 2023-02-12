@@ -1,12 +1,12 @@
-# type: ignore
 """
 Some code extracted (or based on code) from:
 https://github.com/davidhalter/jedi/blob/b489019f5bd5750051122b94cc767df47751ecb7/jedi/evaluate/docstrings.py
 Thanks to @davidhalter for this utils under MIT License.
 """
+import ast
 import re
 
-from rope.base.ast import literal_eval
+# from rope.base.ast import literal_eval
 from rope.base.oi.type_hinting.providers import docstrings  # type:ignore
 
 try:

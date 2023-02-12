@@ -1,7 +1,9 @@
 from __future__ import annotations
+import ast
 from typing import Callable, List, Set, Union, TYPE_CHECKING
 
-from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.base import exceptions, pynames, pynamesdef, utils
+from rope.base.ast import RopeNodeVisitor
 from rope.refactor.importutils import actions, importinfo
 
 if TYPE_CHECKING:
@@ -421,7 +423,7 @@ class _OneTimeSelector:
         return False
 
 
-class _UnboundNameFinder(ast.RopeNodeVisitor):
+class _UnboundNameFinder(RopeNodeVisitor):
     def __init__(self, pyobject: PyObject):
         self.pyobject = pyobject
 

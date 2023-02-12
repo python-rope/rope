@@ -1,11 +1,12 @@
 """This module tries to support builtin types and functions."""
 from __future__ import annotations
+import ast
 import inspect
 import io
 from typing import Any, TYPE_CHECKING
 
 import rope.base.evaluate
-from rope.base import arguments, ast, pynames, pyobjects, utils
+from rope.base import arguments, pynames, pyobjects, utils
 
 if TYPE_CHECKING:
     from rope.base.pyscopes import Scope
