@@ -211,7 +211,7 @@ class PyCore:
             followed_calls = self.project.prefs.get("soa_followed_calls", 0)
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        rope.base.oi.soa.analyze_module(  # type:ignore
+        rope.base.oi.soa.analyze_module(
             self, pymodule, should_analyze, search_subscopes, followed_calls
         )
 

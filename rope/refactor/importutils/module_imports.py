@@ -481,6 +481,9 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
         for name, pyname in pymodule._get_structural_attributes().items():
             if not isinstance(pyname, (pynames.ImportedName, pynames.ImportedModule)):
                 self.names.add(name)
+
+        # Valid mypy complaint: "PyObject" has no attribute "get_scope"
+
         wanted_scope = wanted_pyobject.get_scope()  # type:ignore
         self.start = wanted_scope.get_start()
         self.end = wanted_scope.get_end() + 1

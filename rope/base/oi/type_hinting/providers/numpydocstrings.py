@@ -6,10 +6,10 @@ Thanks to @davidhalter for this utils under MIT License.
 import ast
 import re
 
-# from rope.base.ast import literal_eval
-from rope.base.oi.type_hinting.providers import docstrings  # type:ignore
+from rope.base.oi.type_hinting.providers import docstrings
 
 try:
+    # mypy: Cannot find implementation or library stub for module named "numpydoc.docscrape"
     from numpydoc.docscrape import NumpyDocString  # type:ignore
 except ImportError:
     NumpyDocString = None
@@ -41,4 +41,7 @@ class _DummyParamParser(docstrings.IParamParser):
 
 
 if not NumpyDocString:
+    # mypy: Cannot assign to a type
+    # mypy: Incompatible types in assignment (expression has type "Type[_DummyParamParser]",
+    #       variable has type "Type[NumPyDocstringParamParser]")
     NumPyDocstringParamParser = _DummyParamParser  # type:ignore

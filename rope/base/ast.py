@@ -1,8 +1,6 @@
 import ast
 import sys
 
-# from ast import *  # noqa: F401,F403
-
 from rope.base import fscommands
 
 # Handle Python 3.7 and before.
@@ -23,7 +21,7 @@ except ImportError:
     }
 
 
-def parse(source, filename="<string>", *args, **kwargs):  # type: ignore
+def parse(source, filename="<string>", *args, **kwargs):
     if isinstance(source, str):
         source = fscommands.unicode_to_file_data(source)
     if b"\r" in source:

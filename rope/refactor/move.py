@@ -330,7 +330,11 @@ class MoveGlobal:
             resources = self.project.get_python_files()
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError("Move destination does not exist.")
-        ### Valid pylint complaints ...
+
+        # Valid pylint complaints:
+        #  "Resource" has no attribute "has_child"
+        # "Resource" has no attribute "get_child"
+
         if dest.is_folder() and dest.has_child("__init__.py"):  # type:ignore
             dest = dest.get_child("__init__.py")  # type:ignore
         if dest.is_folder():  # type:ignore

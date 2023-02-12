@@ -1,9 +1,7 @@
 from __future__ import annotations
 import ast
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, List, Union, TYPE_CHECKING
 import rope.base.evaluate
-
-# from rope.base import ast
 
 if TYPE_CHECKING:
     from rope.base.pyobjects import AbstractFunction, PyFunction
@@ -59,8 +57,8 @@ def create_arguments(
     """A factory for creating `Arguments`"""
     # Call(expr func, expr* args, keyword* keywords)
 
-    args = list(call_node.args)
-    args.extend(call_node.keywords)  # type:ignore
+    args: List = list(call_node.args)
+    args.extend(call_node.keywords)
     called = call_node.func
     # XXX: Handle constructors
     if _is_method_call(primary, pyfunction) and isinstance(called, ast.Attribute):

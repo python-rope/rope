@@ -1,4 +1,3 @@
-# type:ignore
 """AutoImport module for rope."""
 
 import contextlib
@@ -436,6 +435,11 @@ class AutoImport:
 
         folders = self.project.get_python_path_folders()
         folder_paths = map(lambda folder: Path(folder.real_path), folders)
+
+        # Valid mypy complaint:
+        # error: Incompatible types in assignment
+        # (expression has type "filter[Path]", variable has type "map[Path]")
+
         folder_paths = filter(filter_folders, folder_paths)  # type:ignore
         return list(OrderedDict.fromkeys(folder_paths))
 
