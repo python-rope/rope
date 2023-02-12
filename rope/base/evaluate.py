@@ -8,7 +8,6 @@ import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import (
     arguments,
-    # ast,
     exceptions,
     nameanalyze,
     pyobjects,
@@ -163,7 +162,7 @@ class ScopeNameFinder:
         )
 
 
-class StatementEvaluator(rope.base.ast.RopeNodeVisitor):
+class StatementEvaluator(RopeNodeVisitor):
     def __init__(self, scope: Scope):
         self.scope = scope
         self.result = None
