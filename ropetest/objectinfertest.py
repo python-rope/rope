@@ -28,7 +28,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
         sample_class = scope["Sample"].get_object()
         a_var = scope["a_var"].get_object()
-        if 1:  # trace:
+        if 0:  # trace:
             print('')
             print(scope)
             print(sample_class)

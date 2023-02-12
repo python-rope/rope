@@ -87,7 +87,7 @@ class ObjectArguments:
 
 
 class MixedArguments:
-    def __init__(self, pyname, arguments, scope):
+    def __init__(self, pyname, arguments: Arguments, scope: Scope) -> None:
         """`arguments` is an instance of `Arguments`"""
         self.pyname = pyname
         self.args = arguments

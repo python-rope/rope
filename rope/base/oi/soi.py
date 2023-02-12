@@ -12,7 +12,7 @@ from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 if TYPE_CHECKING:
     import ast
-    from rope.base.pyobjects import PyFunction
+    from rope.base.pyobjects import PyFunction, PyObject
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
 
     Node = ast.AST
@@ -22,27 +22,64 @@ _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 
 
 @_ignore_inferred
-def infer_returned_object(pyfunction: PyFunc, args):
-    """Infer the `PyObject` this `PyFunction` returns after calling"""
+def infer_returned_object(pyfunction: PyFunc, args) -> PyObject:
+    """Infer the return type of a function."""
+    import ast  ###
+
+    trace = False
+
+    def arg_to_string(arg):
+        if isinstance(arg, ast.Call):
+            return f"Call:{arg.func.id}"  # Name.id.
+        if isinstance(arg, ast.Constant):
+            return f"Constant:{arg.value}"
+        if isinstance(arg, ast.Name):
+            return f"Name:{arg.id}"
+        if isinstance(arg, ast.keyword):
+            arg2 = getattr(arg, "arg", None)
+            return f"keyword:{arg2}" if arg2 else "keyword"
+        return arg.__class__.__name__
+
+    def report(kind, result):
+        if not trace:
+            return
+        # from rope.base.arguments import Arguments
+        # if isinstance(args, Arguments): breakpoint()
+        try:
+            args_s = ",".join([arg_to_string(arg) for arg in args.args])
+        except AttributeError:
+            args_s = args.__class__.__name__  # ObjectArguments have no args member.
+        print("")
+        print(
+            "soi.infer_returned_object...\n"
+            f"{pyfunction.absolute_name:>15} args: {args_s:<20} "
+            f"==> {kind} {result.__class__.__name__}"
+        )
+
     object_info = pyfunction.pycore.object_info
     result = object_info.get_exact_returned(pyfunction, args)
     if result is not None:
+        report("Cached", result)
         return result
     result = _infer_returned(pyfunction, args)
     if result is not None:
         if args and pyfunction.get_module().get_resource() is not None:
             params = args.get_arguments(pyfunction.get_param_names(special_args=False))
             object_info.function_called(pyfunction, params, result)
+        report("_infer_returned", result)
         return result
     result = object_info.get_returned(pyfunction, args)
     if result is not None:
+        report("get_returned", result)
         return result
     hint_return = get_type_hinting_factory(
         pyfunction.pycore.project
     ).make_return_provider()
     type_ = hint_return(pyfunction)
     if type_ is not None:
+        report("hint_returned", result)
         return pyobjects.PyObject(type_)
+    report("Fail", None)
 
 
 @_ignore_inferred
