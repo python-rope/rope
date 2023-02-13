@@ -237,6 +237,11 @@ class PyClass(PyDefinedObject):
     def __init__(self, pycore, ast_node, parent):
         super().__init__(pycore, ast_node, parent, get_base_type("Type"))
 
+    # From AbstractClass.
+
+    def get_superclasses(self):
+        return []
+
 
 class _ConcludedData:
     def __init__(self):
