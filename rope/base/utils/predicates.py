@@ -25,6 +25,7 @@ def is_abstract_function(obj):
 
 
 def is_abstract_module(obj):
-    return isinstance(obj, (
-        builtins.BuiltinModule, pyobjects._PyModule),
+    return isinstance(
+        obj,
+        (builtins.BuiltinModule, pyobjects._PyModule),
     )

@@ -10,7 +10,7 @@ from rope.base.utils.predicates import is_abstract_class, is_abstract_function
 
 class BuiltinModule(pyobjects.PyObject):  ### (pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
-        pyobjects.PyObject.__init__(self, get_base_type("Module"))  ###
+        pyobjects.PyObject.__init__(self, get_base_type("Module"))
         self.name = name
         self.pycore = pycore
         self.initial = initial
@@ -70,7 +70,7 @@ class _BuiltinElement:
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement, pyobjects.PyObject): ###, pyobjects.AbstractClass):
+class BuiltinClass(_BuiltinElement, pyobjects.PyObject):  ###, pyobjects.AbstractClass):
     def __init__(self, builtin, attributes, parent=None):
         pyobjects.PyObject.__init__(self, get_base_type("Type"))
         _BuiltinElement.__init__(self, builtin, parent)
@@ -89,13 +89,14 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject): ###, pyobjects.Abstract
         return []
 
 
-class BuiltinFunction(_BuiltinElement, pyobjects.PyObject): ###, pyobjects.AbstractFunction):
+class BuiltinFunction(
+    _BuiltinElement, pyobjects.PyObject
+):  ###, pyobjects.AbstractFunction):
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
         pyobjects.PyObject.__init__(self, get_base_type("Function"))
         _BuiltinElement.__init__(self, builtin, parent)
-        ### pyobjects.AbstractFunction.__init__(self)
         self.argnames = argnames
         self.returned = returned
         self.function = function

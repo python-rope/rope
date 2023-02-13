@@ -206,13 +206,11 @@ class PyDefinedObject:
         pass
 
 
-class PyFunction(PyDefinedObject, PyObject): ###, AbstractFunction):
+class PyFunction(PyDefinedObject, PyObject):  ###, AbstractFunction):
     ### pass
     def __init__(self, pycore, ast_node, parent):
         PyObject.__init__(self, get_base_type("Function"))
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
-
-
 
 
 class PyComprehension(PyDefinedObject, PyObject):
