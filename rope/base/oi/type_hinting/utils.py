@@ -1,11 +1,9 @@
 import logging
-### Deleted annotation comment.
-### from typing import Optional, Union
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
-from rope.base.pyobjects import PyClass, PyFunction  ### PyDefinedObject, PyObject
+from rope.base.pyobjects import PyClass, PyFunction
 
 
 def get_super_func(pyfunc):
