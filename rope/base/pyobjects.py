@@ -5,7 +5,7 @@ from rope.base import ast, exceptions, utils
 
 class PyObject:
     def __init__(self, type_):
-        self.type = type_ or self
+        self.type = self if type_ is None else type_
 
     def get_attributes(self):
         if self.type is self:
@@ -250,7 +250,6 @@ class _PyModule(PyDefinedObject, PyObject):  ###, AbstractModule):
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
-        ### AbstractModule.__init__(self)
         PyObject.__init__(self, get_base_type("Module"))
         PyDefinedObject.__init__(self, pycore, ast_node, None)
 

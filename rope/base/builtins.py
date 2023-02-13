@@ -790,14 +790,12 @@ def _super_function(args):
     passed_class, passed_self = args.get_arguments(["type", "self"])
     if passed_self is None:
         return passed_class
-    else:
-        # pyclass = passed_self.get_type()
-        pyclass = passed_class
-        if is_abstract_class(pyclass):
-            supers = pyclass.get_superclasses()
-            if supers:
-                return pyobjects.PyObject(supers[0])
-        return passed_self
+    pyclass = passed_class
+    if is_abstract_class(pyclass):
+        supers = pyclass.get_superclasses()
+        if supers:
+            return pyobjects.PyObject(supers[0])
+    return passed_self
 
 
 def _zip_function(args):
