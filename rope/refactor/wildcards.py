@@ -2,6 +2,7 @@ import ast
 
 from rope.base import builtins, evaluate, pyobjects
 from rope.refactor import occurrences, patchedast
+from rope.base.utils.predicates import is_abstract_class
 
 
 class Wildcard:
@@ -119,7 +120,7 @@ class _CheckObject:
 
     def _get_super_classes(self, pyobject):
         result = []
-        if isinstance(pyobject, pyobjects.AbstractClass):
+        if is_abstract_class(pyobject):
             for superclass in pyobject.get_superclasses():
                 result.append(superclass)
                 result.extend(self._get_super_classes(superclass))

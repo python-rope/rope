@@ -17,14 +17,14 @@ from rope.base import (
     pyobjects,
     utils,
 )
+from rope.base.utils.predicates import is_abstract_module
 
 from rope.base.ast import RopeNodeVisitor
 
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
-        rope.base.pyobjects.AbstractFunction.__init__(self)
-        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent)
         self.arguments = self.ast_node.args
         self.parameter_pyobjects = pynamesdef._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data()
@@ -119,8 +119,7 @@ class PyFunction(pyobjects.PyFunction):
 class PyComprehension(pyobjects.PyComprehension):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ComprehensionVisitor
-        rope.base.pyobjects.PyObject.__init__(self, type_="Comp")
-        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent, type_="Comp")
 
     def _create_scope(self):
         return rope.base.pyscopes.ComprehensionScope(
@@ -134,8 +133,7 @@ class PyComprehension(pyobjects.PyComprehension):
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ClassVisitor
-        rope.base.pyobjects.AbstractClass.__init__(self)
-        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
 
@@ -424,7 +422,7 @@ class _AssignVisitor(RopeNodeVisitor):
 
 class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
-        _ExpressionVisitor.__init__(self, scope_visitor=self)
+        super().__init__(scope_visitor=self)
         self.pycore = pycore
         self.owner_object = owner_object
         self.names = {}
@@ -580,9 +578,7 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get("ignore_bad_imports", False):
             return False
-        return not isinstance(
-            imported_module.get_object(), rope.base.pyobjects.AbstractModule
-        )
+        return not is_abstract_module(imported_module.get_object())
 
     def _Global(self, node):
         module = self.get_module()

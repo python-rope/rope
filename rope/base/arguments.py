@@ -2,6 +2,7 @@ from __future__ import annotations
 import ast
 from typing import Any, List, Union, TYPE_CHECKING
 import rope.base.evaluate
+from rope.base.utils.predicates import is_abstract_class
 
 if TYPE_CHECKING:
     from rope.base.pyobjects import AbstractFunction, PyFunction
@@ -118,8 +119,8 @@ def _is_method_call(primary: Any, pyfunction: PyFunc) -> bool:
         and isinstance(pyfunction.parent, rope.base.pyobjects.PyClass)
     ):
         return True
-    if isinstance(
-        pyobject.get_type(), rope.base.pyobjects.AbstractClass
-    ) and isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
+    if is_abstract_class(pyobject.get_type()) and isinstance(
+        pyfunction, rope.base.builtins.BuiltinFunction
+    ):
         return True
     return False

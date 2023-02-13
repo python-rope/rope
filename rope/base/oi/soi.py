@@ -9,6 +9,7 @@ from typing import Any, Optional, Union, TYPE_CHECKING
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import arguments, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
+from rope.base.utils.predicates import is_abstract_function
 
 if TYPE_CHECKING:
     import ast
@@ -251,7 +252,7 @@ def _follow_evaluations(assignment, pyname, pyobject):
             if new_pyname is not None:
                 pyobject = new_pyname.get_object()
         if pyobject is not None and call:
-            if isinstance(pyobject, pyobjects.AbstractFunction):
+            if is_abstract_function(pyobject):
                 args = arguments.ObjectArguments([pyname])
                 pyobject = pyobject.get_returned_object(args)
             else:
