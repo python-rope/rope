@@ -228,6 +228,8 @@ class PyModule(pyobjects.PyModule):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
+# PyModule = PyDefinedModule  # Fails
+# PyDefinedModule = PyModule  # Passes.
 class PyPackage(pyobjects.PyPackage):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource

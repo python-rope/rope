@@ -38,9 +38,14 @@ class DynamicOITest(unittest.TestCase):
                 return eval("arg")
             a_var = a_func(mod1)
         """)
+        # breakpoint()
         mod2.write(code)
         self.pycore.run_module(mod2).wait_process()
         pymod2 = self.project.get_pymodule(mod2)
+        if 1:  # trace
+            print('')
+            print('test_module_dti:', self.project.get_pymodule(mod1).__class__.__name__)
+            print('test_module_dti:', pymod2["a_var"].get_object().__class__.__name__)
         self.assertEqual(self.project.get_pymodule(mod1), pymod2["a_var"].get_object())
 
     def test_class_from_another_module_dti(self):
