@@ -19,8 +19,7 @@ from rope.base.utils.predicates import is_abstract_module
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
-        ### rope.base.pyobjects.AbstractFunction.__init__(self)
-        super().__init__(pycore, ast_node, parent)  ###
+        super().__init__(pycore, ast_node, parent)
         self.arguments = self.ast_node.args
         self.parameter_pyobjects = pynamesdef._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data()

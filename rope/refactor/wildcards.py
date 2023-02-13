@@ -1,4 +1,4 @@
-from rope.base import ast, builtins, evaluate  ###, pyobjects
+from rope.base import ast, builtins, evaluate
 from rope.refactor import occurrences, patchedast
 from rope.base.utils.predicates import is_abstract_class
 

@@ -206,8 +206,8 @@ class PyDefinedObject:
         pass
 
 
-class PyFunction(PyDefinedObject, PyObject):  ###, AbstractFunction):
-    ### pass
+class PyFunction(PyDefinedObject, PyObject):
+    # was (PyDefinedObject, AbstractFunction).
     def __init__(self, pycore, ast_node, parent):
         PyObject.__init__(self, get_base_type("Function"))
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
@@ -220,8 +220,9 @@ class PyComprehension(PyDefinedObject, PyObject):
         return "<comprehension>"
 
 
-class PyClass(PyDefinedObject, PyObject):  ###, AbstractClass):
-    ### pass
+class PyClass(PyDefinedObject, PyObject):
+    # AbstractClass.
+
     def __init__(self, pycore, ast_node, parent):
         PyObject.__init__(self, get_base_type("Type"))
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
@@ -246,7 +247,9 @@ class _ConcludedData:
         return "<" + str(self.data) + ">"
 
 
-class _PyModule(PyDefinedObject, PyObject):  ###, AbstractModule):
+class _PyModule(PyDefinedObject, PyObject):
+    # was (PyDefinedObject, AbstractModule).
+
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
