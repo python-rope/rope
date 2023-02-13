@@ -19,8 +19,8 @@ from rope.base.utils.predicates import is_abstract_module
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):
-        rope.base.pyobjects.AbstractFunction.__init__(self)
-        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        ### rope.base.pyobjects.AbstractFunction.__init__(self)
+        super().__init__(pycore, ast_node, parent)  ###
         self.arguments = self.ast_node.args
         self.parameter_pyobjects = pynamesdef._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data()
@@ -130,8 +130,8 @@ class PyComprehension(pyobjects.PyComprehension):
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ClassVisitor
-        rope.base.pyobjects.AbstractClass.__init__(self)
-        rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        # rope.base.pyobjects.AbstractClass.__init__(self)
+        rope.base.pyobjects.PyClass.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
 

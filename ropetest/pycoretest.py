@@ -6,7 +6,7 @@ from rope.base import exceptions, libutils
 from rope.base.builtins import BuiltinClass, File
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pynamesdef import AssignedName
-from rope.base.pyobjects import AbstractFunction, get_base_type
+from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
 

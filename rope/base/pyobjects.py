@@ -85,7 +85,7 @@ def get_base_type(name: str) -> PyObject:
         _anchor_types = {
             "Function": PyObject(base_type),
             "Module": PyObject(base_type),
-            "Type": base_type,
+            "Type": base_type,  # a Class.
             "Unknown": PyObject(base_type),
         }
     return _anchor_types[name]
@@ -105,21 +105,6 @@ def get_unknown() -> PyObject:
     we had to check that in many places.
     """
     return get_base_type("Unknown")
-
-
-class AbstractClass(PyObject):
-    def __init__(self):
-        super().__init__(get_base_type("Type"))
-
-
-class AbstractFunction(PyObject):
-    def __init__(self):
-        super().__init__(get_base_type("Function"))
-
-
-class AbstractModule(PyObject):
-    def __init__(self, doc=None):
-        super().__init__(get_base_type("Module"))
 
 
 class PyDefinedObject:
@@ -221,8 +206,13 @@ class PyDefinedObject:
         pass
 
 
-class PyFunction(PyDefinedObject, AbstractFunction):
-    pass
+class PyFunction(PyDefinedObject, PyObject): ###, AbstractFunction):
+    ### pass
+    def __init__(self, pycore, ast_node, parent):
+        PyObject.__init__(self, get_base_type("Function"))
+        PyDefinedObject.__init__(self, pycore, ast_node, parent)
+
+
 
 
 class PyComprehension(PyDefinedObject, PyObject):
@@ -232,8 +222,11 @@ class PyComprehension(PyDefinedObject, PyObject):
         return "<comprehension>"
 
 
-class PyClass(PyDefinedObject, AbstractClass):
-    pass
+class PyClass(PyDefinedObject, PyObject):  ###, AbstractClass):
+    ### pass
+    def __init__(self, pycore, ast_node, parent):
+        PyObject.__init__(self, get_base_type("Type"))
+        PyDefinedObject.__init__(self, pycore, ast_node, parent)
 
 
 class _ConcludedData:
@@ -255,11 +248,12 @@ class _ConcludedData:
         return "<" + str(self.data) + ">"
 
 
-class _PyModule(PyDefinedObject, AbstractModule):
+class _PyModule(PyDefinedObject, PyObject):  ###, AbstractModule):
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
-        AbstractModule.__init__(self)
+        ### AbstractModule.__init__(self)
+        PyObject.__init__(self, get_base_type("Module"))
         PyDefinedObject.__init__(self, pycore, ast_node, None)
 
     @property

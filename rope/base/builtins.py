@@ -4,12 +4,13 @@ import io
 
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
+from rope.base.pyobjects import get_base_type
 from rope.base.utils.predicates import is_abstract_class, is_abstract_function
 
 
-class BuiltinModule(pyobjects.AbstractModule):
+class BuiltinModule(pyobjects.PyObject):  ### (pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
-        super().__init__()
+        pyobjects.PyObject.__init__(self, get_base_type("Module"))  ###
         self.name = name
         self.pycore = pycore
         self.initial = initial
@@ -69,10 +70,10 @@ class _BuiltinElement:
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
+class BuiltinClass(_BuiltinElement, pyobjects.PyObject): ###, pyobjects.AbstractClass):
     def __init__(self, builtin, attributes, parent=None):
+        pyobjects.PyObject.__init__(self, get_base_type("Type"))
         _BuiltinElement.__init__(self, builtin, parent)
-        pyobjects.AbstractClass.__init__(self)
         self.initial = attributes
 
     @utils.saveit
@@ -88,12 +89,13 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
         return []
 
 
-class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
+class BuiltinFunction(_BuiltinElement, pyobjects.PyObject): ###, pyobjects.AbstractFunction):
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
+        pyobjects.PyObject.__init__(self, get_base_type("Function"))
         _BuiltinElement.__init__(self, builtin, parent)
-        pyobjects.AbstractFunction.__init__(self)
+        ### pyobjects.AbstractFunction.__init__(self)
         self.argnames = argnames
         self.returned = returned
         self.function = function
@@ -584,9 +586,9 @@ class BuiltinName(pynames.PyName):
         return (None, None)
 
 
-class Iterator(pyobjects.AbstractClass):
+class Iterator(pyobjects.PyObject):  ###(pyobjects.AbstractClass):
     def __init__(self, holding=None):
-        super().__init__()
+        pyobjects.PyObject.__init__(self, get_base_type("Type"))
         self.holding = holding
         self.attributes = {
             "next": BuiltinName(BuiltinFunction(self.holding)),
@@ -603,9 +605,9 @@ class Iterator(pyobjects.AbstractClass):
 get_iterator = _create_builtin_getter(Iterator)
 
 
-class Generator(pyobjects.AbstractClass):
+class Generator(pyobjects.PyObject):  ###(pyobjects.AbstractClass):
     def __init__(self, holding=None):
-        super().__init__()
+        pyobjects.PyObject.__init__(self, get_base_type("Type"))
         self.holding = holding
         self.attributes = {
             "next": BuiltinName(BuiltinFunction(self.holding)),
@@ -685,9 +687,9 @@ def _property_function(args):
     return pyobjects.PyObject(Property(parameters[0]))
 
 
-class Lambda(pyobjects.AbstractFunction):
+class Lambda(pyobjects.PyObject):  ###(pyobjects.AbstractFunction):
     def __init__(self, node, scope):
-        super().__init__()
+        pyobjects.PyObject.__init__(self, get_base_type("Function"))
         self.node = node
         self.arguments = node.args
         self.scope = scope
