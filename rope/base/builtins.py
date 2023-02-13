@@ -98,6 +98,7 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
 
 class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
     # was (_BuiltinElement, pyobjects.AbstractFunction).
+
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
