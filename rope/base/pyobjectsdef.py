@@ -114,9 +114,7 @@ class PyFunction(pyobjects.PyFunction):
 class PyComprehension(pyobjects.PyComprehension):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ComprehensionVisitor
-        rope.base.pyobjects.PyDefinedObject.__init__(
-            self, pycore, ast_node, parent, type_="Comp"
-        )
+        super().__init__(pycore, ast_node, parent, type_="Comp")
 
     def _create_scope(self):
         return rope.base.pyscopes.ComprehensionScope(
