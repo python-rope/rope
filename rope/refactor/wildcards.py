@@ -1,6 +1,6 @@
 from rope.base import ast, builtins, evaluate
 from rope.refactor import occurrences, patchedast
-from rope.base.utils.predicates import is_abstract_class
+from rope.base.pyobjects import is_abstract_class
 
 
 class Wildcard:

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from rope.base import ast, exceptions, utils
+import rope.base.builtins
 
 
 class PyObject:
@@ -60,6 +61,31 @@ class PyObject:
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
+
+
+def is_abstract_class(obj):
+    return isinstance(
+        obj,
+        (
+            rope.base.builtins.BuiltinClass,
+            rope.base.builtins.Generator,
+            rope.base.builtins.Iterator,
+            PyClass,
+        ),
+    )
+
+
+def is_abstract_function(obj):
+    return isinstance(
+        obj, (rope.base.builtins.BuiltinFunction, rope.base.builtins.Lambda, PyFunction)
+    )
+
+
+def is_abstract_module(obj):
+    return isinstance(
+        obj,
+        (rope.base.builtins.BuiltinModule, _PyModule),
+    )
 
 
 _anchor_types = None

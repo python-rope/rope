@@ -120,7 +120,7 @@ class PyCoreTest(unittest.TestCase):
                 def f():
                     pass
         """)
-        from rope.base.utils.predicates import is_abstract_function
+        from rope.base.pyobjects import is_abstract_function
         mod.write(code)
         mod_element = self.project.get_module("mod")
         sample_class = mod_element["C"].get_object()

@@ -14,7 +14,7 @@ from rope.base import (
     pyobjects,
     utils,
 )
-from rope.base.utils.predicates import is_abstract_module
+from rope.base.pyobjects import is_abstract_module
 
 
 class PyFunction(pyobjects.PyFunction):

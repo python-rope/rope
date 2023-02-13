@@ -13,7 +13,7 @@ from rope.base import (
     pyobjectsdef,
     worder,
 )
-from rope.base.utils.predicates import is_abstract_class, is_abstract_function
+from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 BadIdentifierError = exceptions.BadIdentifierError
 

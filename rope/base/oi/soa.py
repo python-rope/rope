@@ -2,7 +2,7 @@ import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
-from rope.base.utils.predicates import is_abstract_class, is_abstract_function
+from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):

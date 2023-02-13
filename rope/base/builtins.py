@@ -5,7 +5,7 @@ import io
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
-from rope.base.utils.predicates import is_abstract_class, is_abstract_function
+from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 
 class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.

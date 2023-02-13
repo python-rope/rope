@@ -16,7 +16,7 @@ from rope.base import (
 )
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
-from rope.base.utils.predicates import (
+from rope.base.pyobjects import (
     is_abstract_class,
     is_abstract_function,
     is_abstract_module,

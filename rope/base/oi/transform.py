@@ -4,7 +4,7 @@ import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import exceptions
-from rope.base.utils.predicates import is_abstract_class
+from rope.base.pyobjects import is_abstract_class
 
 
 class PyObjectToTextual:

@@ -1,6 +1,6 @@
 import rope.base.evaluate
 from rope.base import ast
-from rope.base.utils.predicates import is_abstract_class
+from rope.base.pyobjects import is_abstract_class
 
 
 class Arguments:
