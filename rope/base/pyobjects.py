@@ -289,6 +289,8 @@ class _ConcludedData:
 
 
 class _PyModule(PyDefinedObject):
+    """The base class for PyModule and PyPackage."""
+
     # 1. was (PyDefinedObject, AbstractModule).
     # 2. Was (PyDefinedObject, PyObject).
 
