@@ -1,15 +1,17 @@
 from __future__ import annotations
 import ast
-from typing import Any, List, Union, TYPE_CHECKING
+from typing import Any, List, TYPE_CHECKING
 import rope.base.evaluate
 from rope.base.utils.predicates import is_abstract_class
 
 if TYPE_CHECKING:
-    from rope.base.pyobjects import AbstractFunction, PyFunction
-    from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
+    from rope.base.pyobjects import PyFunction
+
+    # from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
     from rope.base.pyscopes import Scope
 
-    PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
+    #### PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
+    PyFunc = PyFunction
 Node = ast.AST
 
 

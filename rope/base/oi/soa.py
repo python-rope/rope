@@ -10,12 +10,13 @@ from rope.base.utils.predicates import is_abstract_class, is_abstract_function
 
 if TYPE_CHECKING:
     from rope.base.pycore import PyCore
-    from rope.base.pyobjects import AbstractFunction, PyFunction
+    from rope.base.pyobjects import PyFunction
     from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
     from rope.base.pynames import PyName
 
     Node = ast.AST
-    PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
+    # PyFunc = Union[PyFunction, DefinedPyFunction]
+    PyFunc = PyFunction
 
 
 def analyze_module(
