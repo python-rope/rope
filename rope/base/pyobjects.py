@@ -215,7 +215,7 @@ class PyFunction(PyDefinedObject):
         super().__init__(pycore, ast_node, parent, get_base_type("Function"))
 
 
-class PyComprehension(PyDefinedObject, PyObject):
+class PyComprehension(PyDefinedObject):
     pass
 
     def get_name(self):
