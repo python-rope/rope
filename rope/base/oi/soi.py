@@ -44,8 +44,6 @@ def infer_returned_object(pyfunction: PyFunc, args) -> Optional[PyObject]:
     def report(kind, result):
         if not trace:
             return
-        # from rope.base.arguments import Arguments
-        # if isinstance(args, Arguments): breakpoint()
         try:
             args_s = ",".join([arg_to_string(arg) for arg in args.args])
         except AttributeError:

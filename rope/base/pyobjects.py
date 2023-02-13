@@ -232,6 +232,14 @@ class PyFunction(PyDefinedObject):
     def __init__(self, pycore, ast_node, parent):
         super().__init__(pycore, ast_node, parent, get_base_type("Function"))
 
+    # From AbstractFunction.
+
+    def get_param_names(self, special_args=True):
+        return []
+
+    def get_returned_object(self, args):
+        return get_unknown()
+
 
 class PyComprehension(PyDefinedObject):
     pass
