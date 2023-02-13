@@ -107,10 +107,8 @@ def get_unknown() -> PyObject:
     return get_base_type("Unknown")
 
 
-class PyDefinedObject(PyObject):
+class PyDefinedObject(PyObject):  # was: had no base class.
     """Python defined names that rope can access their sources"""
-
-    # was PyDefinedObject:
 
     def __init__(self, pycore, ast_node, parent, type_):
         super().__init__(type_)

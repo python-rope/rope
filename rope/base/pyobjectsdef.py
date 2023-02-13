@@ -130,8 +130,7 @@ class PyComprehension(pyobjects.PyComprehension):
 class PyClass(pyobjects.PyClass):
     def __init__(self, pycore, ast_node, parent):
         self.visitor_class = _ClassVisitor
-        # rope.base.pyobjects.AbstractClass.__init__(self)
-        rope.base.pyobjects.PyClass.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
 
@@ -401,7 +400,7 @@ class _AssignVisitor(ast.RopeNodeVisitor):
 
 class _ScopeVisitor(_ExpressionVisitor):
     def __init__(self, pycore, owner_object):
-        _ExpressionVisitor.__init__(self, scope_visitor=self)
+        super().__init__(scope_visitor=self)
         self.pycore = pycore
         self.owner_object = owner_object
         self.names = {}
