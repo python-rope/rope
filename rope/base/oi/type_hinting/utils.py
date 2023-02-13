@@ -3,7 +3,7 @@ import logging
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
-from rope.base.pyobjects import PyClass, PyFunction
+from rope.base.pyobjects import PyClass, PyFunction, PyObject
 
 
 def get_super_func(pyfunc):
@@ -71,7 +71,7 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name, pyobject):
+def resolve_type(type_name, pyobject: PyObject) -> PyObject:  # No need for Union.
     """
     Find proper type object from its name.
     """
