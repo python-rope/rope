@@ -1,10 +1,11 @@
 import logging
-from typing import Optional, Union
+### Deleted annotation comment.
+### from typing import Optional, Union
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
-from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
+from rope.base.pyobjects import PyClass, PyFunction  ### PyDefinedObject, PyObject
 
 
 def get_super_func(pyfunc):
@@ -73,7 +74,6 @@ def get_mro(pyclass):
 
 
 def resolve_type(type_name, pyobject):
-    # type: (str, Union[PyDefinedObject, PyObject]) -> Optional[PyDefinedObject, PyObject]
     """
     Find proper type object from its name.
     """

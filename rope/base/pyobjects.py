@@ -107,10 +107,12 @@ def get_unknown() -> PyObject:
     return get_base_type("Unknown")
 
 
-class PyDefinedObject:
+class PyDefinedObject (PyObject):
     """Python defined names that rope can access their sources"""
+    # was PyDefinedObject:
 
-    def __init__(self, pycore, ast_node, parent):
+    def __init__(self, pycore, ast_node, parent, type_):
+        super().__init__(type_)  ###
         self.pycore = pycore
         self.ast_node = ast_node
         self.scope = None
@@ -206,11 +208,13 @@ class PyDefinedObject:
         pass
 
 
-class PyFunction(PyDefinedObject, PyObject):
-    # was (PyDefinedObject, AbstractFunction).
+class PyFunction(PyDefinedObject): ###, PyObject):
+    # 1. was (PyDefinedObject, AbstractFunction).
+    # 2. was (PyDefinedObject)
     def __init__(self, pycore, ast_node, parent):
-        PyObject.__init__(self, get_base_type("Function"))
-        PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        ### PyObject.__init__(self, get_base_type("Function"))
+        ### PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent, get_base_type("Function"))
 
 
 class PyComprehension(PyDefinedObject, PyObject):
@@ -220,13 +224,13 @@ class PyComprehension(PyDefinedObject, PyObject):
         return "<comprehension>"
 
 
-class PyClass(PyDefinedObject, PyObject):
+class PyClass(PyDefinedObject): ###, PyObject):
     # AbstractClass.
 
     def __init__(self, pycore, ast_node, parent):
-        PyObject.__init__(self, get_base_type("Type"))
-        PyDefinedObject.__init__(self, pycore, ast_node, parent)
-
+        ### PyObject.__init__(self, get_base_type("Type"))
+        ### PyDefinedObject.__init__(self, pycore, ast_node, parent)
+        super().__init__(pycore, ast_node, parent, get_base_type("Type"))
 
 class _ConcludedData:
     def __init__(self):
@@ -247,14 +251,17 @@ class _ConcludedData:
         return "<" + str(self.data) + ">"
 
 
-class _PyModule(PyDefinedObject, PyObject):
-    # was (PyDefinedObject, AbstractModule).
-
+class _PyModule(PyDefinedObject): ###, PyObject):
+    # 1. was (PyDefinedObject, AbstractModule).
+    # 2. Was (PyDefinedObject, PyObject).
+    
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
-        PyObject.__init__(self, get_base_type("Module"))
-        PyDefinedObject.__init__(self, pycore, ast_node, None)
+        ### PyObject.__init__(self, get_base_type("Module"))
+        ### PyDefinedObject.__init__(self, pycore, ast_node, None)
+        super().__init__(pycore, ast_node, None, get_base_type("Module"))
+
 
     @property
     def absolute_name(self) -> str:
