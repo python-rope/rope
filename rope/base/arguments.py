@@ -6,12 +6,8 @@ from rope.base.utils.predicates import is_abstract_class
 
 if TYPE_CHECKING:
     from rope.base.pyobjects import PyFunction
-
-    # from rope.base.pyobjectsdef import PyFunction as DefinedPyFunction
     from rope.base.pyscopes import Scope
 
-    #### PyFunc = Union[AbstractFunction, PyFunction, DefinedPyFunction]
-    PyFunc = PyFunction
 Node = ast.AST
 
 
@@ -55,7 +51,7 @@ class Arguments:
 
 
 def create_arguments(
-    primary, pyfunction: PyFunc, call_node: ast.Call, scope: Scope
+    primary, pyfunction: PyFunction, call_node: ast.Call, scope: Scope
 ) -> Arguments:
     """A factory for creating `Arguments`"""
     # Call(expr func, expr* args, keyword* keywords)
@@ -111,7 +107,7 @@ class MixedArguments:
         return self.pyname
 
 
-def _is_method_call(primary: Any, pyfunction: PyFunc) -> bool:
+def _is_method_call(primary: Any, pyfunction: PyFunction) -> bool:
     if primary is None:
         return False
     pyobject = primary.get_object()

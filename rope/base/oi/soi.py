@@ -25,7 +25,7 @@ _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 @_ignore_inferred
 def infer_returned_object(pyfunction: PyFunc, args) -> Optional[PyObject]:
     """Infer the return type of a function."""
-    import ast  ###
+    import ast
 
     trace = False
 
