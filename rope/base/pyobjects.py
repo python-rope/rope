@@ -62,30 +62,26 @@ class PyObject:
         return iter(self.get_attributes())
 
 
-_anchor_types = None
+_base_types = None
 
 
 def get_base_type(name: str) -> PyObject:
     """Return the base type with name `name`.
 
-    The base types are 'Type', 'Function', 'Module' and 'Unknown'.  It
-    was used to check the type of a `PyObject` but currently its use
-    is discouraged.  Use classes defined in this module instead.
-    For example instead of
-    ``pyobject.get_type() == get_base_type('Function')`` use
-    ``isinstance(pyobject, AbstractFunction)``.
+    Use:        ``isinstance(pyobject, AbstractFunction)``
+    instead of: ``pyobject.get_type() == get_base_type('Function')``.
 
     """
-    global _anchor_types
-    if _anchor_types is None:
+    global _base_types
+    if _base_types is None:
         base_type = PyObject(None)
-        _anchor_types = {
+        _base_types = {
             "Function": PyObject(base_type),
             "Module": PyObject(base_type),
             "Type": base_type,  # a Class.
             "Unknown": PyObject(base_type),
         }
-    return _anchor_types[name]
+    return _base_types[name]
 
 
 def get_unknown() -> PyObject:
