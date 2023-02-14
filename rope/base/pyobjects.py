@@ -75,9 +75,6 @@ def get_base_type(name: str) -> PyObject:
     ``pyobject.get_type() == get_base_type('Function')`` use
     ``isinstance(pyobject, AbstractFunction)``.
 
-    You can use `is_abstract_class` for classes, `is_abstract_functions` for
-    functions, and `is_abstract_module` for modules.
-
     """
     global _anchor_types
     if _anchor_types is None:
