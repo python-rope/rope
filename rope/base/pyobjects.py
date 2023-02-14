@@ -61,8 +61,6 @@ class PyObject:
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
 
-    _unknown = None
-
 
 _anchor_types = None
 
