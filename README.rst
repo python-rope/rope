@@ -1,5 +1,5 @@
 .. _Rope: https://github.com/python-rope/rope
-.. _`original readme file`: README.rst
+.. _`original readme file`: README-Original.rst
 
 A fork of `Rope`_ to develop a Theory of Operation.
 
