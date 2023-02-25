@@ -5,7 +5,7 @@ from ast import *  # noqa: F401,F403
 from rope.base import fscommands
 
 try:
-    from ast import _const_node_type_names
+    from ast import _const_node_type_names  # type:ignore
 except ImportError:
     # backported from stdlib `ast`
     assert sys.version_info < (3, 8)

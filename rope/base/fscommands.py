@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import typing
+from typing import Any
 
 FileContent = typing.NewType("FileContent", bytes)
 
@@ -64,7 +65,7 @@ class FileSystemCommands:
 class SubversionCommands:
     def __init__(self, *args):
         self.normal_actions = FileSystemCommands()
-        import pysvn
+        import pysvn  # type:ignore
 
         self.client = pysvn.Client()
 
@@ -113,10 +114,10 @@ class MercurialCommands:
 
         self.repo = self.hg.hg.repository(self.ui, root)
 
-    def _import_mercurial(self):
-        import mercurial.commands
-        import mercurial.hg
-        import mercurial.ui
+    def _import_mercurial(self) -> Any:
+        import mercurial.commands  # type:ignore
+        import mercurial.hg  # type:ignore
+        import mercurial.ui  # type:ignore
 
         return mercurial
 
