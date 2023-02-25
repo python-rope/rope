@@ -730,6 +730,9 @@ class BuiltinObject(BuiltinClass):
     def __init__(self):
         super().__init__(object, {})
 
+    def get_superclasses(self):
+        return []
+
 
 class BuiltinType(BuiltinClass):
     def __init__(self):
