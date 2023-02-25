@@ -83,6 +83,9 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
     def get_module(self):
         return builtins
 
+    def get_superclasses(self):
+        return []
+
 
 class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
     def __init__(
@@ -729,9 +732,6 @@ class Lambda(pyobjects.AbstractFunction):
 class BuiltinObject(BuiltinClass):
     def __init__(self):
         super().__init__(object, {})
-
-    def get_superclasses(self):
-        return []
 
 
 class BuiltinType(BuiltinClass):

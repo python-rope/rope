@@ -119,42 +119,15 @@ class AbstractClass(PyObject):
     def __init__(self):
         super().__init__(get_base_type("Type"))
 
-    # def get_name(self):
-    # pass
-
-    # def get_doc(self):
-    # pass
-
-    # def get_superclasses(self):  # Now in po.PyClass and builtins.BuiltinClass.
-    # return []
-
 
 class AbstractFunction(PyObject):
     def __init__(self):
         super().__init__(get_base_type("Function"))
 
-    # def get_name(self):
-    # pass
-
-    # def get_doc(self):
-    # pass
-
-    # def get_param_names(self, special_args=True):
-    # return []
-
-    # def get_returned_object(self, args):
-    # return get_unknown()
-
 
 class AbstractModule(PyObject):
     def __init__(self, doc=None):
         super().__init__(get_base_type("Module"))
-
-    # def get_doc(self):
-    # pass
-
-    # def get_resource(self):
-    # pass
 
 
 class PyDefinedObject:
