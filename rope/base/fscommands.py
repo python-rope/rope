@@ -11,7 +11,6 @@ import re
 import shutil
 import subprocess
 import typing
-from typing import Any
 
 FileContent = typing.NewType("FileContent", bytes)
 
@@ -114,7 +113,7 @@ class MercurialCommands:
 
         self.repo = self.hg.hg.repository(self.ui, root)
 
-    def _import_mercurial(self) -> Any:
+    def _import_mercurial(self):
         import mercurial.commands  # type:ignore
         import mercurial.hg  # type:ignore
         import mercurial.ui  # type:ignore
