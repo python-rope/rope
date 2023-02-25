@@ -230,7 +230,11 @@ class PyDefinedObject:
 
 
 class PyFunction(PyDefinedObject, AbstractFunction):
-    pass
+    def get_param_names(self, special_args=True):
+        return []
+
+    def get_returned_object(self, args):
+        return get_unknown()
 
 
 class PyComprehension(PyDefinedObject, PyObject):
