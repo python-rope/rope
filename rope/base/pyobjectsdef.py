@@ -15,8 +15,6 @@ from rope.base import (
     utils,
 )
 
-### from rope.base.pyobjects import is_abstract_module
-
 
 class PyFunction(pyobjects.PyFunction):
     def __init__(self, pycore, ast_node, parent):

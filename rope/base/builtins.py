@@ -7,9 +7,7 @@ from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
 
 
-class BuiltinModule(
-    pyobjects.PyObject, pyobjects.AbstractModule
-):  # was pyobjects.AbstractModule.
+class BuiltinModule(pyobjects.PyObject, pyobjects.AbstractModule):
     def __init__(self, name, pycore=None, initial={}):
         super().__init__(get_base_type("Module"))
         self.name = name
@@ -72,7 +70,6 @@ class _BuiltinElement:
 
 
 class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass):
-    # was (_BuiltinElement, pyobjects.AbstractClass).
     def __init__(self, builtin, attributes, parent=None):
         pyobjects.PyObject.__init__(self, get_base_type("Type"))
         _BuiltinElement.__init__(self, builtin, parent)
@@ -92,8 +89,6 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass)
 
 
 class BuiltinFunction(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractFunction):
-    # was (_BuiltinElement, pyobjects.AbstractFunction).
-
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
@@ -589,9 +584,7 @@ class BuiltinName(pynames.PyName):
         return (None, None)
 
 
-class Iterator(
-    pyobjects.PyObject, pyobjects.AbstractClass
-):  # was pyobjects.AbstractClass
+class Iterator(pyobjects.PyObject, pyobjects.AbstractClass):
     def __init__(self, holding=None):
         super().__init__(get_base_type("Type"))
         self.holding = holding
@@ -610,9 +603,7 @@ class Iterator(
 get_iterator = _create_builtin_getter(Iterator)
 
 
-class Generator(
-    pyobjects.PyObject, pyobjects.AbstractClass
-):  # was pyobjects.AbstractClass.
+class Generator(pyobjects.PyObject, pyobjects.AbstractClass):
     def __init__(self, holding=None):
         super().__init__(get_base_type("Type"))
         self.holding = holding
@@ -694,9 +685,7 @@ def _property_function(args):
     return pyobjects.PyObject(Property(parameters[0]))
 
 
-class Lambda(
-    pyobjects.PyObject, pyobjects.AbstractFunction
-):  # was pyobjects.AbstractFunction.
+class Lambda(pyobjects.PyObject, pyobjects.AbstractFunction):
     def __init__(self, node, scope):
         super().__init__(get_base_type("Function"))
         self.node = node

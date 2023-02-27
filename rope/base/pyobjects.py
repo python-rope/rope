@@ -119,7 +119,7 @@ class AbstractModule:
     pass
 
 
-class PyDefinedObject(PyObject):  # was: had no base class.
+class PyDefinedObject(PyObject):
     """Python defined names that rope can access their sources"""
 
     def __init__(self, pycore, ast_node, parent, type_):
@@ -220,9 +220,6 @@ class PyDefinedObject(PyObject):  # was: had no base class.
 
 
 class PyFunction(PyDefinedObject, AbstractFunction):
-    # 1. was (PyDefinedObject, AbstractFunction).
-    # 2. was (PyDefinedObject, PyObject)
-
     def __init__(self, pycore, ast_node, parent):
         super().__init__(pycore, ast_node, parent, get_base_type("Function"))
 
@@ -243,9 +240,6 @@ class PyComprehension(PyDefinedObject):
 
 
 class PyClass(PyDefinedObject, AbstractClass):
-    # 1. Was (PyDefinedObject, AbstractClass).
-    # 2. Was (PyDefinedObject, PyObject).
-
     def __init__(self, pycore, ast_node, parent):
         super().__init__(pycore, ast_node, parent, get_base_type("Type"))
 
@@ -276,9 +270,6 @@ class _ConcludedData:
 
 class _PyModule(PyDefinedObject, AbstractModule):
     """The base class for PyModule and PyPackage."""
-
-    # 1. was (PyDefinedObject, AbstractModule).
-    # 2. Was (PyDefinedObject, PyObject).
 
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
@@ -312,21 +303,3 @@ class PyPackage(_PyModule):
 
 class IsBeingInferredError(exceptions.RopeError):
     pass
-
-
-# AbstractClass = (
-# BuiltinClass,
-# Iterator,
-# Generator,
-# PyClass,
-# )
-# AbstractFunction = (
-# BuiltinFunction,
-# Lambda,
-# PyFunction,
-# )
-
-# AbstractModule = (
-# BuiltinModule,
-# _PyModule,
-# )
