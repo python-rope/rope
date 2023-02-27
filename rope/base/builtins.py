@@ -49,8 +49,9 @@ class BuiltinModule(pyobjects.PyObject, pyobjects.AbstractModule):
             return
 
 
-class _BuiltinElement:
-    def __init__(self, builtin, parent=None):
+class _BuiltinElement(pyobjects.PyObject):
+    def __init__(self, builtin, parent=None, type_=None):
+        super().__init__(type_)
         self.builtin = builtin
         self._parent = parent
 
@@ -69,10 +70,12 @@ class _BuiltinElement:
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass):
+### class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass):
+class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
     def __init__(self, builtin, attributes, parent=None):
-        pyobjects.PyObject.__init__(self, get_base_type("Type"))
-        _BuiltinElement.__init__(self, builtin, parent)
+        super().__init__(builtin, parent, type_=get_base_type("Type"))
+        # pyobjects.PyObject.__init__(self, get_base_type("Type"))
+        # _BuiltinElement.__init__(self, builtin, parent)
         self.initial = attributes
 
     @utils.saveit
@@ -88,12 +91,14 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass)
         return []
 
 
-class BuiltinFunction(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractFunction):
+### class BuiltinFunction(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractFunction):
+class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
-        pyobjects.PyObject.__init__(self, get_base_type("Function"))
-        _BuiltinElement.__init__(self, builtin, parent)
+        super().__init__(builtin, parent, type_=get_base_type("Function"))
+        # pyobjects.PyObject.__init__(self, get_base_type("Function"))
+        # _BuiltinElement.__init__(self, builtin, parent)
         self.argnames = argnames
         self.returned = returned
         self.function = function
