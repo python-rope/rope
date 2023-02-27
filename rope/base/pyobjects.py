@@ -108,14 +108,32 @@ def get_unknown() -> PyObject:
 
 
 class AbstractClass:
+    """
+    A mixin class that marks a class as the base of Rope's type hierarchy.
+
+    Rope contains many tests of the form `isinstance(obj, AbstractClass)
+    """
+
     pass
 
 
 class AbstractFunction:
+    """
+    A mixin class that marks a function as the base of Rope's type hierarchy.
+
+    Rope contains many tests of the form `isinstance(obj, AbstractFunction)
+    """
+
     pass
 
 
 class AbstractModule:
+    """
+    A mixin class that marks a module as the base of Rope's type hierarchy.
+
+    Rope contains many tests of the form `isinstance(obj, AbstractModule).
+    """
+
     pass
 
 
