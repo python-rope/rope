@@ -20,3 +20,12 @@ Release
 7. ``twine upload -s dist/rope-$VERSION.{tar.gz,whl}``
 8. Publish to Discussions Announcement
 9. Close milestone
+
+
+Release Schedule
+================
+
+Rope has a release schedule once a month, usually sometime close to the 15th of
+each month. However, this schedule is not a guaranteed date, if there is a
+particularly urgent change or if there's not enough pull requests for the
+month, there may be additional releases or the release window may be skipped.
