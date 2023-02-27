@@ -6,7 +6,7 @@ from rope.base import exceptions, libutils
 from rope.base.builtins import BuiltinClass, File
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pynamesdef import AssignedName
-from rope.base.pyobjects import get_base_type
+from rope.base.pyobjects import AbstractFunction, get_base_type
 from ropetest import testutils
 
 
@@ -120,12 +120,11 @@ class PyCoreTest(unittest.TestCase):
                 def f():
                     pass
         """)
-        from rope.base.pyobjects import is_abstract_function
         mod.write(code)
         mod_element = self.project.get_module("mod")
         sample_class = mod_element["C"].get_object()
         f = sample_class["f"].get_object()
-        self.assertTrue(is_abstract_function(f))
+        self.assertTrue(isinstance(f, AbstractFunction))
 
     def test_classes_inside_other_classes(self):
         mod = testutils.create_module(self.project, "mod")

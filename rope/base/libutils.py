@@ -1,9 +1,14 @@
-"""A few useful functions for using rope as a library"""
-import os.path
+### import logging
+import os
 
-import rope.base.project
-import rope.base.pycore
-from rope.base import pyobjectsdef, taskhandle, utils
+### from typing import Optional, Union
+
+### import rope.base.utils as base_utils
+import rope  ###
+from rope.base import pyobjectsdef, taskhandle, utils  ###
+
+### from rope.base.exceptions import AttributeNotFoundError
+### from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
 
 
 def path_to_resource(project, path, type=None):

@@ -1,6 +1,5 @@
 import rope.base.evaluate
 from rope.base import ast
-from rope.base.pyobjects import is_abstract_class
 
 
 class Arguments:
@@ -105,8 +104,8 @@ def _is_method_call(primary, pyfunction):
         and isinstance(pyfunction.parent, rope.base.pyobjects.PyClass)
     ):
         return True
-    if is_abstract_class(pyobject.get_type()) and isinstance(
-        pyfunction, rope.base.builtins.BuiltinFunction
-    ):
+    if isinstance(
+        pyobject.get_type(), rope.base.pyobjects.AbstractClass
+    ) and isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
         return True
     return False

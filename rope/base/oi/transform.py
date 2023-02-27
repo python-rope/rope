@@ -4,7 +4,6 @@ import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import exceptions
-from rope.base.pyobjects import is_abstract_class
 
 
 class PyObjectToTextual:
@@ -33,7 +32,7 @@ class PyObjectToTextual:
         return self.transform(pyobject)
 
     def PyObject_to_textual(self, pyobject):
-        if is_abstract_class(pyobject.get_type()):
+        if isinstance(pyobject.get_type(), rope.base.pyobjects.AbstractClass):
             result = self.transform(pyobject.get_type())
             if result[0] == "defined":
                 return ("instance", result)

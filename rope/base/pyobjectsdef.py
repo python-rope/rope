@@ -14,7 +14,8 @@ from rope.base import (
     pyobjects,
     utils,
 )
-from rope.base.pyobjects import is_abstract_module
+
+### from rope.base.pyobjects import is_abstract_module
 
 
 class PyFunction(pyobjects.PyFunction):
@@ -228,8 +229,6 @@ class PyModule(pyobjects.PyModule):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
 
-# PyModule = PyDefinedModule  # Fails
-# PyDefinedModule = PyModule  # Passes.
 class PyPackage(pyobjects.PyPackage):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
@@ -554,7 +553,9 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _is_ignored_import(self, imported_module):
         if not self.pycore.project.prefs.get("ignore_bad_imports", False):
             return False
-        return not is_abstract_module(imported_module.get_object())
+        return not isinstance(
+            imported_module.get_object(), rope.base.pyobjects.AbstractModule
+        )
 
     def _Global(self, node):
         module = self.get_module()

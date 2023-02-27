@@ -5,10 +5,11 @@ import io
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
-from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 
-class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
+class BuiltinModule(
+    pyobjects.PyObject, pyobjects.AbstractModule
+):  # was pyobjects.AbstractModule.
     def __init__(self, name, pycore=None, initial={}):
         super().__init__(get_base_type("Module"))
         self.name = name
@@ -70,7 +71,7 @@ class _BuiltinElement:
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
+class BuiltinClass(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractClass):
     # was (_BuiltinElement, pyobjects.AbstractClass).
     def __init__(self, builtin, attributes, parent=None):
         pyobjects.PyObject.__init__(self, get_base_type("Type"))
@@ -90,8 +91,9 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
         return []
 
 
-class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
+class BuiltinFunction(_BuiltinElement, pyobjects.PyObject, pyobjects.AbstractFunction):
     # was (_BuiltinElement, pyobjects.AbstractFunction).
+
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
@@ -587,7 +589,9 @@ class BuiltinName(pynames.PyName):
         return (None, None)
 
 
-class Iterator(pyobjects.PyObject):  # was pyobjects.AbstractClass
+class Iterator(
+    pyobjects.PyObject, pyobjects.AbstractClass
+):  # was pyobjects.AbstractClass
     def __init__(self, holding=None):
         super().__init__(get_base_type("Type"))
         self.holding = holding
@@ -606,7 +610,9 @@ class Iterator(pyobjects.PyObject):  # was pyobjects.AbstractClass
 get_iterator = _create_builtin_getter(Iterator)
 
 
-class Generator(pyobjects.PyObject):  # was pyobjects.AbstractClass.
+class Generator(
+    pyobjects.PyObject, pyobjects.AbstractClass
+):  # was pyobjects.AbstractClass.
     def __init__(self, holding=None):
         super().__init__(get_base_type("Type"))
         self.holding = holding
@@ -679,7 +685,7 @@ class Property(BuiltinClass):
         super().__init__(property, attributes)
 
     def get_property_object(self, args):
-        if is_abstract_function(self._fget):
+        if isinstance(self._fget, pyobjects.AbstractFunction):
             return self._fget.get_returned_object(args)
 
 
@@ -688,7 +694,9 @@ def _property_function(args):
     return pyobjects.PyObject(Property(parameters[0]))
 
 
-class Lambda(pyobjects.PyObject):  # was pyobjects.AbstractFunction.
+class Lambda(
+    pyobjects.PyObject, pyobjects.AbstractFunction
+):  # was pyobjects.AbstractFunction.
     def __init__(self, node, scope):
         super().__init__(get_base_type("Function"))
         self.node = node
@@ -750,7 +758,7 @@ def _infer_sequence_for_pyname(pyname):
     args = arguments.ObjectArguments([pyname])
     if "__iter__" in seq:
         obj = seq["__iter__"].get_object()
-        if not is_abstract_function(obj):
+        if not isinstance(obj, pyobjects.AbstractFunction):
             return None
         iter = obj.get_returned_object(args)
         if iter is not None and "next" in iter:
@@ -790,12 +798,14 @@ def _super_function(args):
     passed_class, passed_self = args.get_arguments(["type", "self"])
     if passed_self is None:
         return passed_class
-    pyclass = passed_class
-    if is_abstract_class(pyclass):
-        supers = pyclass.get_superclasses()
-        if supers:
-            return pyobjects.PyObject(supers[0])
-    return passed_self
+    else:
+        # pyclass = passed_self.get_type()
+        pyclass = passed_class
+        if isinstance(pyclass, pyobjects.AbstractClass):
+            supers = pyclass.get_superclasses()
+            if supers:
+                return pyobjects.PyObject(supers[0])
+        return passed_self
 
 
 def _zip_function(args):

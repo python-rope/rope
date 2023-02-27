@@ -1,7 +1,6 @@
 from typing import Optional
 
 from rope.base import ast, exceptions, utils
-import rope.base.builtins
 
 
 class PyObject:
@@ -63,31 +62,6 @@ class PyObject:
         return iter(self.get_attributes())
 
 
-def is_abstract_class(obj):
-    return isinstance(
-        obj,
-        (
-            rope.base.builtins.BuiltinClass,
-            rope.base.builtins.Generator,
-            rope.base.builtins.Iterator,
-            PyClass,
-        ),
-    )
-
-
-def is_abstract_function(obj):
-    return isinstance(
-        obj, (rope.base.builtins.BuiltinFunction, rope.base.builtins.Lambda, PyFunction)
-    )
-
-
-def is_abstract_module(obj):
-    return isinstance(
-        obj,
-        (rope.base.builtins.BuiltinModule, _PyModule),
-    )
-
-
 _anchor_types = None
 
 
@@ -131,6 +105,18 @@ def get_unknown() -> PyObject:
     we had to check that in many places.
     """
     return get_base_type("Unknown")
+
+
+class AbstractClass:
+    pass
+
+
+class AbstractFunction:
+    pass
+
+
+class AbstractModule:
+    pass
 
 
 class PyDefinedObject(PyObject):  # was: had no base class.
@@ -233,7 +219,7 @@ class PyDefinedObject(PyObject):  # was: had no base class.
         pass
 
 
-class PyFunction(PyDefinedObject):
+class PyFunction(PyDefinedObject, AbstractFunction):
     # 1. was (PyDefinedObject, AbstractFunction).
     # 2. was (PyDefinedObject, PyObject)
 
@@ -256,7 +242,7 @@ class PyComprehension(PyDefinedObject):
         return "<comprehension>"
 
 
-class PyClass(PyDefinedObject):
+class PyClass(PyDefinedObject, AbstractClass):
     # 1. Was (PyDefinedObject, AbstractClass).
     # 2. Was (PyDefinedObject, PyObject).
 
@@ -288,7 +274,7 @@ class _ConcludedData:
         return "<" + str(self.data) + ">"
 
 
-class _PyModule(PyDefinedObject):
+class _PyModule(PyDefinedObject, AbstractModule):
     """The base class for PyModule and PyPackage."""
 
     # 1. was (PyDefinedObject, AbstractModule).
@@ -326,3 +312,21 @@ class PyPackage(_PyModule):
 
 class IsBeingInferredError(exceptions.RopeError):
     pass
+
+
+# AbstractClass = (
+# BuiltinClass,
+# Iterator,
+# Generator,
+# PyClass,
+# )
+# AbstractFunction = (
+# BuiltinFunction,
+# Lambda,
+# PyFunction,
+# )
+
+# AbstractModule = (
+# BuiltinModule,
+# _PyModule,
+# )

@@ -12,7 +12,6 @@ from rope.base import (
 )
 from rope.base.change import ChangeContents, ChangeSet, MoveResource
 from rope.refactor import occurrences
-from rope.base.pyobjects import is_abstract_module
 
 
 class Rename:
@@ -139,7 +138,7 @@ class Rename:
             return resource in resources
 
     def _is_renaming_a_module(self):
-        return is_abstract_module(self.old_pyname.get_object())
+        return isinstance(self.old_pyname.get_object(), pyobjects.AbstractModule)
 
     def is_method(self):
         pyname = self.old_pyname
