@@ -318,6 +318,10 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
 
 class PyModule(_PyModule):
+    """
+    A "target" class that allows tests of the form `isinstance(obj, pyobjects.PyModule)`.
+    """
+
     pass
 
 
