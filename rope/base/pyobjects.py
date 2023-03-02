@@ -1,10 +1,11 @@
+from __future__ import annotations
 from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
 
 class PyObject:
-    def __init__(self, type_):
+    def __init__(self, type_: PyObject):
         if type_ is None:
             type_ = self
         self.type = type_
@@ -22,7 +23,7 @@ class PyObject:
     def get_module(self):
         return None
 
-    def get_type(self):
+    def get_type(self) -> PyObject:
         return self.type
 
     def __getitem__(self, key):
