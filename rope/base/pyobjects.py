@@ -17,6 +17,9 @@ class PyObject:
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
+    def get_module(self):
+        return None
+
     def get_type(self):
         return self.type
 
@@ -203,6 +206,9 @@ class PyDefinedObject(PyObject):
         while current_object.parent is not None:
             current_object = current_object.parent
         return current_object
+
+    def get_name(self):
+        return None
 
     def get_doc(self) -> Optional[str]:
         if len(self.get_ast().body) > 0:

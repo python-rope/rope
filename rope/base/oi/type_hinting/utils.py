@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 import rope.base.utils as base_utils
@@ -80,6 +82,9 @@ def resolve_type(type_name, pyobject: PyObject) -> PyObject:  # No need for Unio
     logging.debug("Looking for %s", type_name)
     if "." not in type_name:
         try:
+            # XXX: this looks incorrect? It doesn't seem like it would work
+            # correctly if you have a type/class not defined in the
+            # module/global scope
             ret_type = (
                 pyobject.get_module().get_scope().get_name(type_name).get_object()
             )

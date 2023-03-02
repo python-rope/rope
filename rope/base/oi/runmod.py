@@ -4,7 +4,7 @@ def __rope_start_everything():
     import sys
 
     try:
-        import cPickle as pickle
+        import cPickle as pickle  # type:ignore
     except ImportError:
         import pickle
     import base64

@@ -2,6 +2,7 @@
 
 - #650 Install pre-commit hooks on rope repository (@lieryan)
 - #655 Remove unused __init__() methods (@edreamleo, @lieryan)
+- #674 Fix/supress all mypy complaints
 
 
 # Release 1.7.0
