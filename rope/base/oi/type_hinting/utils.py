@@ -1,14 +1,12 @@
 from __future__ import annotations
+
 import logging
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
-
-if TYPE_CHECKING:
-    PyObj = Union[PyDefinedObject, PyObject]
 
 
 def get_super_func(pyfunc):
@@ -76,7 +74,10 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name: str, pyobject: PyObj) -> Optional[PyObj]:
+def resolve_type(
+    type_name: str,
+    pyobject: Union[PyDefinedObject, PyObject],
+) -> Optional[Union[PyDefinedObject, PyObject]]:
     """
     Find proper type object from its name.
     """
