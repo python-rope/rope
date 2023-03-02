@@ -1,9 +1,14 @@
 """This module tries to support builtin types and functions."""
+from __future__ import annotations
 import inspect
 import io
+import typing
 
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
+
+if typing.TYPE_CHECKING:
+    from rope.base.pyobjects import PyObject
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -450,7 +455,7 @@ class Tuple(BuiltinClass):
         }
         super().__init__(tuple, attributes)
 
-    def get_holding_objects(self):
+    def get_holding_objects(self) -> typing.List[PyObject]:
         return self.objects
 
     def _new_tuple(self, args):
