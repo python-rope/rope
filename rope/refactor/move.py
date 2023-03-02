@@ -7,7 +7,7 @@ based on inputs.
 from __future__ import annotations
 
 import typing
-from typing import Union
+from typing import Optional, List, Union
 
 from rope.base import (
     codeanalyze,
@@ -310,8 +310,8 @@ class MoveGlobal:
 
     def get_changes(
         self,
-        dest: Union[None, str, resources.Resource],
-        resources=None,
+        dest: Optional[Union[str, resources.Resource]],
+        resources: Optional[List[resources.File]] = None,
         task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         """Return the changes needed for this refactoring
@@ -324,15 +324,21 @@ class MoveGlobal:
           will be applied to all python files.
 
         """
+        # To do (in another PR): Create a new var: dest_resource: resource.Reource
+        # Doing so should remove the type:ignore below.
         if isinstance(dest, str):
             dest = self.project.find_module(dest)
         if resources is None:
             resources = self.project.get_python_files()
+        # The previous guards protect against this mypy complaint:
+        # "Resource" has no attribute "has_child"
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError("Move destination does not exist.")
-        if dest.is_folder() and dest.has_child("__init__.py"):
-            dest = dest.get_child("__init__.py")
-        if dest.is_folder():
+        if dest.is_folder() and dest.has_child("__init__.py"):  # type:ignore
+            dest = dest.get_child("__init__.py")  # type:ignore
+        # The previous guards protect against this mypy complaint:
+        # Item "None" of "Union[str, Resource, None]" has no attribute "is_folder"
+        if dest.is_folder():  # type:ignore
             raise exceptions.RefactoringError(
                 "Move destination for non-modules should not be folders."
             )
