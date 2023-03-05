@@ -23,15 +23,15 @@ class PyObject:
 
     def is_base_class(self):
         """True if this object is the base of the `Class` hierarchy."""
-        return False
+        return self.type == get_base_type("Type")
         
     def is_base_function(self):
         """True if this object is the base of the `Function` hierarchy."""
-        return False
+        return self.type == get_base_type('Function')
         
     def is_base_module(self):
         """True if this object is the base of the `Module` hierarchy."""
-        return False
+        return self.type == get_base_type('Module')
     def __getitem__(self, key):
         """The same as ``get_attribute(key)``"""
         return self.get_attribute(key)
@@ -72,8 +72,6 @@ class PyObject:
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
-
-    ###
     # def is_abstract_class(obj):
     # return isinstance(
         # obj,
@@ -258,12 +256,6 @@ class PyFunction(PyDefinedObject):
     def get_returned_object(self, args):
         return get_unknown()
     
-    def is_base_function(self):
-        """True if this object is the base of the `Function` hierarchy."""
-        return True
-
-
-
 class PyComprehension(PyDefinedObject):
 
     def get_name(self):
@@ -282,11 +274,6 @@ class PyClass(PyDefinedObject):
     def get_superclasses(self):
         return []
         
-    def is_base_class(self):
-        """True if this object is the base of the `Class` hierarchy."""
-        return True
-
-
 class _ConcludedData:
     def __init__(self):
         self.data_ = None
@@ -316,12 +303,7 @@ class _PyModule(PyDefinedObject):
         self.resource = resource
         self.concluded_data = []
         super().__init__(pycore, ast_node, None, get_base_type("Module"))
-        
-    # From AbstractModule
-        
-    def is_base_module(self):
-        """True if this object is the base of the `Module` hierarchy."""
-        return False
+
 
     @property
     def absolute_name(self) -> str:

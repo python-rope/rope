@@ -15,9 +15,6 @@ class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
         self.pycore = pycore
         self.initial = initial
         
-    def is_base_module(self):
-        """True if this object is the base of the `Module` hierarchy."""
-        return False
 
     parent = None
 
@@ -81,10 +78,6 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
         _BuiltinElement.__init__(self, builtin, parent)
         self.initial = attributes
         
-    def is_base_class(self):
-        """True if this object is the base of the `Class` hierarchy."""
-        return True
-
     @utils.saveit
     def get_attributes(self):
         result = _object_attributes(self.builtin, self)
@@ -109,9 +102,6 @@ class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
         self.returned = returned
         self.function = function
         
-    def is_base_function(self):
-        """True if this object is the base of the `Function` hierarchy."""
-        return True
 
     def get_returned_object(self, args):
         if self.function is not None:
@@ -608,9 +598,6 @@ class Iterator(pyobjects.PyObject):  # was pyobjects.AbstractClass
             "__iter__": BuiltinName(BuiltinFunction(self)),
         }
         
-    def is_base_class(self):
-        """True if this object is the base of the `Class` hierarchy."""
-        return True
 
     def get_attributes(self):
         return self.attributes
@@ -633,12 +620,7 @@ class Generator(pyobjects.PyObject):  # was pyobjects.AbstractClass.
             "send": BuiltinName(BuiltinFunction()),
             "throw": BuiltinName(BuiltinFunction()),
         }
-        
-    def is_base_class(self):
-        """True if this object is the base of the `Module` hierarchy."""
-        return True
-        
-    
+
 
     def get_attributes(self):
         return self.attributes
@@ -718,9 +700,6 @@ class Lambda(pyobjects.PyObject):  # was pyobjects.AbstractFunction.
         self.arguments = node.args
         self.scope = scope
         
-    def is_base_function(self):
-        """True if this object is the base of the `Function` hierarchy."""
-        return True
 
     def get_returned_object(self, args):
         result = rope.base.evaluate.eval_node(self.scope, self.node.body)
