@@ -16,11 +16,12 @@ from rope.base import (
 )
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
-from rope.base.pyobjects import (
-    is_abstract_class,
-    is_abstract_function,
-    is_abstract_module,
-)
+###
+# from rope.base.pyobjects import (
+    # is_abstract_class,
+    # is_abstract_function,
+    # is_abstract_module,
+# )
 
 
 def code_assist(
@@ -260,7 +261,8 @@ class CompletionProposal:
             pyname = pyname._get_imported_pyname()
         if isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()
-            if is_abstract_function(pyobject):
+            ### if is_abstract_function(pyobject):
+            if pyobject.is_base_function():
                 return pyobject.get_param_names()
 
     @property
@@ -282,9 +284,11 @@ class CompletionProposal:
             pyname, pynames.DefinedName
         ):
             pyobject = pyname.get_object()
-            if is_abstract_function(pyobject):
+            ###if is_abstract_function(pyobject):
+            if pyobject.is_base_function():
                 return "function"
-            if is_abstract_class(pyobject):
+            ### if is_abstract_class(pyobject):\
+            if pyobject.is_base_class():
                 return "class"
         return "instance"
 
@@ -520,13 +524,16 @@ class _PythonCodeAssist:
                 return {}
             if function_pyname is not None:
                 pyobject = function_pyname.get_object()
-                if is_abstract_function(pyobject):
+                ### if is_abstract_function(pyobject):
+                if pyobject.is_base_function():
                     pass
-                elif is_abstract_class(pyobject) and "__init__" in pyobject:
+                ### elif is_abstract_class(pyobject) and "__init__" in pyobject:
+                if pyobject.is_base_class() and "__init__" in pyobject:
                     pyobject = pyobject["__init__"].get_object()
                 elif "__call__" in pyobject:
                     pyobject = pyobject["__call__"].get_object()
-                if is_abstract_function(pyobject):
+                ### if is_abstract_function(pyobject):
+                if pyobject.is_base_function():
                     param_names = []
                     param_names.extend(pyobject.get_param_names(special_args=False))
                     result = {}
@@ -592,25 +599,31 @@ class _ProposalSorter:
 
 class PyDocExtractor:
     def get_doc(self, pyobject):
-        if is_abstract_function(pyobject):
+        ### if is_abstract_function(pyobject):
+        if pyobject.is_base_function():
             return self._get_function_docstring(pyobject)
-        if is_abstract_class(pyobject):
+        ### if is_abstract_class(pyobject):
+        if pyobject.is_base_class():
             return self._get_class_docstring(pyobject)
-        if is_abstract_module(pyobject):
+        ### if is_abstract_module(pyobject):
+        if pyobject.is_base_module():
             return self._trim_docstring(pyobject.get_doc())
         return None
 
     def get_calltip(self, pyobject, ignore_unknown=False, remove_self=False):
         try:
-            if is_abstract_class(pyobject):
+            ### if is_abstract_class(pyobject):
+            if pyobject.is_base_class():
                 pyobject = pyobject["__init__"].get_object()
-            if not is_abstract_function(pyobject):
+            ### if not is_abstract_function(pyobject):
+            if not pyobject.is_base_function():
                 pyobject = pyobject["__call__"].get_object()
         except exceptions.AttributeNotFoundError:
             return None
         if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
             return
-        if is_abstract_function(pyobject):
+        #### if is_abstract_function(pyobject):
+        if pyobject.is_base_function():
             result = self._get_function_signature(pyobject, add_module=True)
             if remove_self and self._is_method(pyobject):
                 return result.replace("(self)", "()").replace("(self, ", "(")
@@ -631,7 +644,8 @@ class PyDocExtractor:
 
         if "__init__" in pyclass:
             init = pyclass["__init__"].get_object()
-            if is_abstract_function(init):
+            ### if is_abstract_function(init):
+            if init.is_base_function():
                 doc += "\n\n" + self._get_single_function_docstring(init)
         return doc
 
@@ -660,7 +674,8 @@ class PyDocExtractor:
         for super_class in pyclass.get_superclasses():
             if name in super_class:
                 function = super_class[name].get_object()
-                if is_abstract_function(function):
+                ### if is_abstract_function(function):
+                if function.is_base_function():
                     result.append(function)
             result.extend(self._get_super_methods(super_class, name))
         return result
@@ -679,7 +694,8 @@ class PyDocExtractor:
     def _location(self, pyobject, add_module=False):
         location = []
         parent = pyobject.parent
-        while parent and not is_abstract_module(parent):
+        ### while parent and not is_abstract_module(parent):
+        while parent and not parent.is_base_module():
             location.append(parent.get_name())
             location.append(".")
             parent = parent.parent

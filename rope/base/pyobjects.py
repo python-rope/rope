@@ -1,7 +1,7 @@
 from typing import Optional
 
 from rope.base import ast, exceptions, utils
-import rope.base.builtins
+# import rope.base.builtins
 
 
 class PyObject:
@@ -21,6 +21,17 @@ class PyObject:
     def get_type(self):
         return self.type
 
+    def is_base_class(self):
+        """True if this object is the base of the `Class` hierarchy."""
+        return False
+        
+    def is_base_function(self):
+        """True if this object is the base of the `Function` hierarchy."""
+        return False
+        
+    def is_base_module(self):
+        """True if this object is the base of the `Module` hierarchy."""
+        return False
     def __getitem__(self, key):
         """The same as ``get_attribute(key)``"""
         return self.get_attribute(key)
@@ -62,30 +73,30 @@ class PyObject:
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
 
-
-def is_abstract_class(obj):
-    return isinstance(
-        obj,
-        (
-            rope.base.builtins.BuiltinClass,
-            rope.base.builtins.Generator,
-            rope.base.builtins.Iterator,
-            PyClass,
-        ),
-    )
-
-
-def is_abstract_function(obj):
-    return isinstance(
-        obj, (rope.base.builtins.BuiltinFunction, rope.base.builtins.Lambda, PyFunction)
-    )
+    ###
+    # def is_abstract_class(obj):
+    # return isinstance(
+        # obj,
+        # (
+            # rope.base.builtins.BuiltinClass,
+            # rope.base.builtins.Generator,
+            # rope.base.builtins.Iterator,
+            # PyClass,
+        # ),
+    # )
 
 
-def is_abstract_module(obj):
-    return isinstance(
-        obj,
-        (rope.base.builtins.BuiltinModule, _PyModule),
-    )
+    # def is_abstract_function(obj):
+    # return isinstance(
+        # obj, (rope.base.builtins.BuiltinFunction, rope.base.builtins.Lambda, PyFunction)
+    # )
+
+
+    # def is_abstract_module(obj):
+    # return isinstance(
+        # obj,
+        # (rope.base.builtins.BuiltinModule, _PyModule),
+    # )
 
 
 _anchor_types = None
@@ -98,11 +109,10 @@ def get_base_type(name: str) -> PyObject:
     was used to check the type of a `PyObject` but currently its use
     is discouraged.  Use classes defined in this module instead.
     For example instead of
-    ``pyobject.get_type() == get_base_type('Function')`` use
-    ``is_abstract_function(pyobject)``.
+    ``pyobject.get_type() == get_base_type('Function')`` use ``pyobject.is_base_function()``
 
-    You can use `is_abstract_class` for classes, `is_abstract_functions` for
-    functions, and `is_abstract_module` for modules.
+    You can use `is_base_class` for classes, `is_base_functions` for
+    functions, and `is_base_module` for modules.
 
     """
     global _anchor_types
@@ -247,10 +257,14 @@ class PyFunction(PyDefinedObject):
 
     def get_returned_object(self, args):
         return get_unknown()
+    
+    def is_base_function(self):
+        """True if this object is the base of the `Function` hierarchy."""
+        return True
+
 
 
 class PyComprehension(PyDefinedObject):
-    pass
 
     def get_name(self):
         return "<comprehension>"
@@ -267,6 +281,10 @@ class PyClass(PyDefinedObject):
 
     def get_superclasses(self):
         return []
+        
+    def is_base_class(self):
+        """True if this object is the base of the `Class` hierarchy."""
+        return True
 
 
 class _ConcludedData:
@@ -298,6 +316,12 @@ class _PyModule(PyDefinedObject):
         self.resource = resource
         self.concluded_data = []
         super().__init__(pycore, ast_node, None, get_base_type("Module"))
+        
+    # From AbstractModule
+        
+    def is_base_module(self):
+        """True if this object is the base of the `Module` hierarchy."""
+        return False
 
     @property
     def absolute_name(self) -> str:

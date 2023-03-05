@@ -5,7 +5,7 @@ import io
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
-from rope.base.pyobjects import is_abstract_class, is_abstract_function
+### from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 
 class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
@@ -14,6 +14,10 @@ class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
         self.name = name
         self.pycore = pycore
         self.initial = initial
+        
+    def is_base_module(self):
+        """True if this object is the base of the `Module` hierarchy."""
+        return False
 
     parent = None
 
@@ -76,6 +80,10 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
         pyobjects.PyObject.__init__(self, get_base_type("Type"))
         _BuiltinElement.__init__(self, builtin, parent)
         self.initial = attributes
+        
+    def is_base_class(self):
+        """True if this object is the base of the `Class` hierarchy."""
+        return True
 
     @utils.saveit
     def get_attributes(self):
@@ -100,6 +108,10 @@ class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
         self.argnames = argnames
         self.returned = returned
         self.function = function
+        
+    def is_base_function(self):
+        """True if this object is the base of the `Function` hierarchy."""
+        return True
 
     def get_returned_object(self, args):
         if self.function is not None:
@@ -595,6 +607,10 @@ class Iterator(pyobjects.PyObject):  # was pyobjects.AbstractClass
             "next": BuiltinName(BuiltinFunction(self.holding)),
             "__iter__": BuiltinName(BuiltinFunction(self)),
         }
+        
+    def is_base_class(self):
+        """True if this object is the base of the `Class` hierarchy."""
+        return True
 
     def get_attributes(self):
         return self.attributes
@@ -617,6 +633,12 @@ class Generator(pyobjects.PyObject):  # was pyobjects.AbstractClass.
             "send": BuiltinName(BuiltinFunction()),
             "throw": BuiltinName(BuiltinFunction()),
         }
+        
+    def is_base_class(self):
+        """True if this object is the base of the `Module` hierarchy."""
+        return True
+        
+    
 
     def get_attributes(self):
         return self.attributes
@@ -679,7 +701,8 @@ class Property(BuiltinClass):
         super().__init__(property, attributes)
 
     def get_property_object(self, args):
-        if is_abstract_function(self._fget):
+        ### if is_abstract_function(self._fget):
+        if self._fget.is_base_function():
             return self._fget.get_returned_object(args)
 
 
@@ -694,6 +717,10 @@ class Lambda(pyobjects.PyObject):  # was pyobjects.AbstractFunction.
         self.node = node
         self.arguments = node.args
         self.scope = scope
+        
+    def is_base_function(self):
+        """True if this object is the base of the `Function` hierarchy."""
+        return True
 
     def get_returned_object(self, args):
         result = rope.base.evaluate.eval_node(self.scope, self.node.body)
@@ -750,7 +777,8 @@ def _infer_sequence_for_pyname(pyname):
     args = arguments.ObjectArguments([pyname])
     if "__iter__" in seq:
         obj = seq["__iter__"].get_object()
-        if not is_abstract_function(obj):
+        ### if not is_abstract_function(obj):
+        if not obj.is_base_function():
             return None
         iter = obj.get_returned_object(args)
         if iter is not None and "next" in iter:
@@ -791,7 +819,8 @@ def _super_function(args):
     if passed_self is None:
         return passed_class
     pyclass = passed_class
-    if is_abstract_class(pyclass):
+    ### if is_abstract_class(pyclass):
+    if pyclass.is_base_class():
         supers = pyclass.get_superclasses()
         if supers:
             return pyobjects.PyObject(supers[0])
