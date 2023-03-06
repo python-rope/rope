@@ -77,6 +77,8 @@ class PyObject:
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
+
+
 def get_base_type(name: str) -> PyObject:
     """Return the base type with name `name`.
 
