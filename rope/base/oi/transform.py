@@ -34,7 +34,7 @@ class PyObjectToTextual:
 
     def PyObject_to_textual(self, pyobject):
         ### if is_abstract_class(pyobject.get_type()):
-        if pyobject.is_base_class():
+        if pyobject.get_type().is_base_class():  ###
             result = self.transform(pyobject.get_type())
             if result[0] == "defined":
                 return ("instance", result)
