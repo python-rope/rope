@@ -73,13 +73,11 @@ class _BuiltinElement(pyobjects.PyObject):
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement):
+class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
     # was (_BuiltinElement, pyobjects.AbstractClass).
-    # was (_BuiltinElement, pyobjects.PyObject).
     def __init__(self, builtin, attributes, parent=None):
-        # pyobjects.PyObject.__init__(self, get_base_type("Type"))
-        # _BuiltinElement.__init__(self, builtin, parent)
-        super().__init__(builtin, parent=attributes, type_=get_base_type("Type"))
+        pyobjects.PyObject.__init__(self, get_base_type("Type"))
+        _BuiltinElement.__init__(self, builtin, parent)
         self.initial = attributes
 
     @utils.saveit
@@ -95,15 +93,13 @@ class BuiltinClass(_BuiltinElement):
         return []
 
 
-class BuiltinFunction(_BuiltinElement):
+class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
     # was (_BuiltinElement, pyobjects.AbstractFunction).
-    # was (_BuiltinElement, pyobjects.PyObject).
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
-        # pyobjects.PyObject.__init__(self, get_base_type("Function"))
-        # _BuiltinElement.__init__(self, builtin, parent)
-        super().__init__(builtin, parent=parent, type_=get_base_type("Function"))
+        pyobjects.PyObject.__init__(self, get_base_type("Function"))
+        _BuiltinElement.__init__(self, builtin, parent)
         self.argnames = argnames
         self.returned = returned
         self.function = function
@@ -118,12 +114,10 @@ class BuiltinFunction(_BuiltinElement):
         return self.argnames
 
 
-class BuiltinUnknown(_BuiltinElement):
-    # was (_BuiltinElement, pyobjects.PyObject);
+class BuiltinUnknown(_BuiltinElement, pyobjects.PyObject):
     def __init__(self, builtin):
-        # super().__init__(pyobjects.get_unknown())
-        # self.builtin = builtin
-        super().__init__(builtin, parent=None, type_=pyobjects.get_unknown())
+        super().__init__(pyobjects.get_unknown())
+        self.builtin = builtin
         self.type = pyobjects.get_unknown()
 
     def get_name(self):
