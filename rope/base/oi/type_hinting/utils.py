@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING, Optional, Union
 
 import rope.base.utils as base_utils
 from rope.base import evaluate
 from rope.base.exceptions import AttributeNotFoundError
-from rope.base.pyobjects import PyClass, PyFunction, PyObject
+from rope.base.pyobjects import PyClass, PyDefinedObject, PyFunction, PyObject
 
 
 def get_super_func(pyfunc):
@@ -71,7 +74,10 @@ def get_mro(pyclass):
     return class_list
 
 
-def resolve_type(type_name, pyobject: PyObject) -> PyObject:  # No need for Union.
+def resolve_type(
+    type_name: str,
+    pyobject: Union[PyDefinedObject, PyObject],
+) -> Optional[Union[PyDefinedObject, PyObject]]:
     """
     Find proper type object from its name.
     """
@@ -80,6 +86,9 @@ def resolve_type(type_name, pyobject: PyObject) -> PyObject:  # No need for Unio
     logging.debug("Looking for %s", type_name)
     if "." not in type_name:
         try:
+            # XXX: this looks incorrect? It doesn't seem like it would work
+            # correctly if you have a type/class not defined in the
+            # module/global scope
             ret_type = (
                 pyobject.get_module().get_scope().get_name(type_name).get_object()
             )

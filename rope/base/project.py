@@ -1,3 +1,4 @@
+from __future__ import annotations
 import contextlib
 import json
 import os
@@ -10,13 +11,16 @@ import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
 from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.prefs import Prefs, get_config
+
+# At present rope.base.prefs starts with `# type:ignore`.
+# As a result, mypy knows nothing about Prefs and get_config.
+from rope.base.prefs import Prefs, get_config  # type:ignore
 from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
-    import cPickle as pickle
+    import cPickle as pickle  # type:ignore
 except ImportError:
-    import pickle
+    import pickle  # type:ignore
 
 
 class _Project:
