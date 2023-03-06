@@ -48,8 +48,6 @@ def infer_parameter_objects(pyfunction):
 
 def _handle_first_parameter(pyobject, parameters):
     kind = pyobject.get_kind()
-    if parameters is None or kind not in ["method", "classmethod"]:
-        pass
     if not parameters:
         if not pyobject.get_param_names(special_args=False):
             return
