@@ -44,8 +44,9 @@ class DynamicOITest(unittest.TestCase):
         pymod2 = self.project.get_pymodule(mod2)
         if 1:  # trace
             print('')
-            print('test_module_dti:', self.project.get_pymodule(mod1).__class__.__name__)
-            print('test_module_dti:', pymod2["a_var"].get_object().__class__.__name__)
+            print('test_module_dti...')
+            print('self.project.get_pymodule(mod1):', self.project.get_pymodule(mod1).__class__.__name__)
+            print('   pymod2["a_var"].get_object():', pymod2["a_var"].get_object().__class__.__name__)
         self.assertEqual(self.project.get_pymodule(mod1), pymod2["a_var"].get_object())
 
     def test_class_from_another_module_dti(self):
