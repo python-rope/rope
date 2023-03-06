@@ -2,8 +2,6 @@ from typing import Optional
 
 from rope.base import ast, exceptions, utils
 
-# import rope.base.builtins
-
 
 class PyObject:
     def __init__(self, type_):
@@ -77,6 +75,9 @@ class PyObject:
     def __iter__(self):
         """The same as ``iter(self.get_attributes())``"""
         return iter(self.get_attributes())
+
+
+_anchor_types = None
 
 
 def get_base_type(name: str) -> PyObject:

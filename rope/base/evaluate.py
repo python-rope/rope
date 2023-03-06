@@ -14,7 +14,6 @@ from rope.base import (
     worder,
 )
 
-### from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 BadIdentifierError = exceptions.BadIdentifierError
 
@@ -102,7 +101,6 @@ class ScopeNameFinder:
             if isinstance(pyobject, pyobjectsdef.PyFunction):
                 parameter_name = pyobject.get_parameters().get(keyword_name, None)
                 return (None, parameter_name)
-            ### if is_abstract_function(pyobject):
             if pyobject.is_base_function():
                 parameter_name = rope.base.pynames.ParameterName()
                 return (None, parameter_name)
@@ -141,10 +139,8 @@ class ScopeNameFinder:
             function_pyname = None
         if function_pyname is not None:
             pyobject = function_pyname.get_object()
-            ###if is_abstract_function(pyobject):
             if pyobject.is_base_function():
                 return pyobject
-            ### elif is_abstract_class(pyobject) and "__init__" in pyobject:
             if pyobject.is_base_class() and "__init__" in pyobject:
                 return pyobject["__init__"].get_object()
             if "__call__" in pyobject:
@@ -189,7 +185,6 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             args = arguments.create_arguments(primary, pyobject, node, self.scope)
             return pyobject.get_returned_object(args)
 
-        ###if is_abstract_class(pyobject):
         if pyobject.is_base_class():
             result = None
             if "__new__" in pyobject:
@@ -201,7 +196,6 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             return
 
         pyfunction = None
-        ###if is_abstract_function(pyobject):
         if pyobject.is_base_function():
             pyfunction = pyobject
         elif "__call__" in pyobject:
@@ -349,7 +343,6 @@ class StatementEvaluator(ast.RopeNodeVisitor):
         pyobject = pyname.get_object()
         if function_name in pyobject:
             called = pyobject[function_name].get_object()
-            ### if not called or not is_abstract_function(called):
             if not called or not called.is_base_function():
                 return
             args = [node]

@@ -1,8 +1,6 @@
 from rope.base import ast, builtins, evaluate
 from rope.refactor import occurrences, patchedast
 
-### from rope.base.pyobjects import is_abstract_class
-
 
 class Wildcard:
     def get_name(self):
@@ -119,7 +117,6 @@ class _CheckObject:
 
     def _get_super_classes(self, pyobject):
         result = []
-        ### if is_abstract_class(pyobject):
         if pyobject.is_base_class():
             for superclass in pyobject.get_superclasses():
                 result.append(superclass)

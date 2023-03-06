@@ -3,8 +3,6 @@ import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
 
-### from rope.base.pyobjects import is_abstract_class, is_abstract_function
-
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
     """Analyze `pymodule` for static object inference
@@ -57,11 +55,8 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         if pyname is None:
             return
         pyfunction = pyname.get_object()
-        ### if is_abstract_function(pyfunction):
         if pyfunction.is_abstract_function():
             args = arguments.create_arguments(primary, pyfunction, node, self.scope)
-        # elif isinstance(pyfunction, pyobjects.PyClass):
-        ### elif is_abstract_class(pyfunction):
         elif pyfunction.is_base_class():
             pyclass = pyfunction
             if "__init__" in pyfunction:

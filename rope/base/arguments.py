@@ -1,8 +1,6 @@
 import rope.base.evaluate
 from rope.base import ast
 
-### from rope.base.pyobjects import is_abstract_class
-
 
 class Arguments:
     """A class for evaluating parameters passed to a function

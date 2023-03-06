@@ -6,8 +6,6 @@ import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
 
-### from rope.base.pyobjects import is_abstract_class, is_abstract_function
-
 
 class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
     def __init__(self, name, pycore=None, initial={}):
@@ -680,7 +678,6 @@ class Property(BuiltinClass):
         super().__init__(property, attributes)
 
     def get_property_object(self, args):
-        ### if is_abstract_function(self._fget):
         if self._fget.is_base_function():
             return self._fget.get_returned_object(args)
 
@@ -752,7 +749,6 @@ def _infer_sequence_for_pyname(pyname):
     args = arguments.ObjectArguments([pyname])
     if "__iter__" in seq:
         obj = seq["__iter__"].get_object()
-        ### if not is_abstract_function(obj):
         if not obj.is_base_function():
             return None
         iter = obj.get_returned_object(args)
@@ -794,7 +790,6 @@ def _super_function(args):
     if passed_self is None:
         return passed_class
     pyclass = passed_class
-    ### if is_abstract_class(pyclass):
     if pyclass.is_base_class():
         supers = pyclass.get_superclasses()
         if supers:
