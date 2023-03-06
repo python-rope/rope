@@ -5,6 +5,7 @@ import io
 import rope.base.evaluate
 from rope.base import arguments, ast, pynames, pyobjects, utils
 from rope.base.pyobjects import get_base_type
+
 ### from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 
@@ -14,7 +15,6 @@ class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
         self.name = name
         self.pycore = pycore
         self.initial = initial
-        
 
     parent = None
 
@@ -77,7 +77,7 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
         pyobjects.PyObject.__init__(self, get_base_type("Type"))
         _BuiltinElement.__init__(self, builtin, parent)
         self.initial = attributes
-        
+
     @utils.saveit
     def get_attributes(self):
         result = _object_attributes(self.builtin, self)
@@ -101,7 +101,6 @@ class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
         self.argnames = argnames
         self.returned = returned
         self.function = function
-        
 
     def get_returned_object(self, args):
         if self.function is not None:
@@ -597,7 +596,6 @@ class Iterator(pyobjects.PyObject):  # was pyobjects.AbstractClass
             "next": BuiltinName(BuiltinFunction(self.holding)),
             "__iter__": BuiltinName(BuiltinFunction(self)),
         }
-        
 
     def get_attributes(self):
         return self.attributes
@@ -620,7 +618,6 @@ class Generator(pyobjects.PyObject):  # was pyobjects.AbstractClass.
             "send": BuiltinName(BuiltinFunction()),
             "throw": BuiltinName(BuiltinFunction()),
         }
-
 
     def get_attributes(self):
         return self.attributes
@@ -699,7 +696,6 @@ class Lambda(pyobjects.PyObject):  # was pyobjects.AbstractFunction.
         self.node = node
         self.arguments = node.args
         self.scope = scope
-        
 
     def get_returned_object(self, args):
         result = rope.base.evaluate.eval_node(self.scope, self.node.body)

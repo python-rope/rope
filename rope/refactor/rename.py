@@ -12,6 +12,7 @@ from rope.base import (
 )
 from rope.base.change import ChangeContents, ChangeSet, MoveResource
 from rope.refactor import occurrences
+
 ### from rope.base.pyobjects import is_abstract_module
 
 

@@ -2,6 +2,7 @@ import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import arguments, evaluate, nameanalyze, pyobjects
+
 ### from rope.base.pyobjects import is_abstract_class, is_abstract_function
 
 

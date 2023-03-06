@@ -1,5 +1,6 @@
 from rope.base import ast, builtins, evaluate
 from rope.refactor import occurrences, patchedast
+
 ### from rope.base.pyobjects import is_abstract_class
 
 

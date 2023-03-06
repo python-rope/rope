@@ -7,6 +7,7 @@ package.
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import arguments, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
+
 ### from rope.base.pyobjects import is_abstract_function
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)

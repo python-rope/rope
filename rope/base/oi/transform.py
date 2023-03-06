@@ -4,6 +4,7 @@ import re
 
 import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import exceptions
+
 ### from rope.base.pyobjects import is_abstract_class
 
 

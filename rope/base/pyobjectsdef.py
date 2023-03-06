@@ -14,6 +14,7 @@ from rope.base import (
     pyobjects,
     utils,
 )
+
 ### from rope.base.pyobjects import is_abstract_module
 
 
@@ -227,9 +228,10 @@ class PyModule(pyobjects.PyModule):
     def get_name(self):
         return rope.base.libutils.modname(self.resource) if self.resource else ""
 
-
     # PyModule = PyDefinedModule  # Fails
     # PyDefinedModule = PyModule  # Passes.
+
+
 class PyPackage(pyobjects.PyPackage):
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
