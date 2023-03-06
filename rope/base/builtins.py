@@ -51,8 +51,10 @@ class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
             return
 
 
-class _BuiltinElement:
-    def __init__(self, builtin, parent=None):
+class _BuiltinElement(pyobjects.PyObject):
+    # Was (no base class)
+    def __init__(self, builtin, parent=None, type_=None):
+        super().__init__(type_)
         self.builtin = builtin
         self._parent = parent
 
@@ -71,11 +73,13 @@ class _BuiltinElement:
         return self._parent
 
 
-class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
+class BuiltinClass(_BuiltinElement):
     # was (_BuiltinElement, pyobjects.AbstractClass).
+    # was (_BuiltinElement, pyobjects.PyObject).
     def __init__(self, builtin, attributes, parent=None):
-        pyobjects.PyObject.__init__(self, get_base_type("Type"))
-        _BuiltinElement.__init__(self, builtin, parent)
+        # pyobjects.PyObject.__init__(self, get_base_type("Type"))
+        # _BuiltinElement.__init__(self, builtin, parent)
+        super().__init__(builtin, parent=attributes, type_=get_base_type("Type"))
         self.initial = attributes
 
     @utils.saveit
@@ -91,13 +95,15 @@ class BuiltinClass(_BuiltinElement, pyobjects.PyObject):
         return []
 
 
-class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
+class BuiltinFunction(_BuiltinElement):
     # was (_BuiltinElement, pyobjects.AbstractFunction).
+    # was (_BuiltinElement, pyobjects.PyObject).
     def __init__(
         self, returned=None, function=None, builtin=None, argnames=[], parent=None
     ):
-        pyobjects.PyObject.__init__(self, get_base_type("Function"))
-        _BuiltinElement.__init__(self, builtin, parent)
+        # pyobjects.PyObject.__init__(self, get_base_type("Function"))
+        # _BuiltinElement.__init__(self, builtin, parent)
+        super().__init__(builtin, parent=parent, type_=get_base_type("Function"))
         self.argnames = argnames
         self.returned = returned
         self.function = function
@@ -112,10 +118,12 @@ class BuiltinFunction(_BuiltinElement, pyobjects.PyObject):
         return self.argnames
 
 
-class BuiltinUnknown(_BuiltinElement, pyobjects.PyObject):
+class BuiltinUnknown(_BuiltinElement):
+    # was (_BuiltinElement, pyobjects.PyObject);
     def __init__(self, builtin):
-        super().__init__(pyobjects.get_unknown())
-        self.builtin = builtin
+        # super().__init__(pyobjects.get_unknown())
+        # self.builtin = builtin
+        super().__init__(builtin, parent=None, type_=pyobjects.get_unknown())
         self.type = pyobjects.get_unknown()
 
     def get_name(self):
