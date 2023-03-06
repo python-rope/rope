@@ -51,10 +51,8 @@ class BuiltinModule(pyobjects.PyObject):  # was pyobjects.AbstractModule.
             return
 
 
-class _BuiltinElement(pyobjects.PyObject):
-    # Was (no base class)
-    def __init__(self, builtin, parent=None, type_=None):
-        super().__init__(type_)
+class _BuiltinElement:
+    def __init__(self, builtin, parent=None):
         self.builtin = builtin
         self._parent = parent
 
