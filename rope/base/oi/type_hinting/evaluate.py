@@ -69,7 +69,7 @@ class SymbolTable:
             s.lbp = max(bp, s.lbp)
         return s
 
-    @multi
+    @multi  # type:ignore
     def infix(self, name, bp):
         symbol = self.symbol(name, bp)
 
@@ -79,7 +79,7 @@ class SymbolTable:
             self.second = parser.expression(bp)
             return self
 
-    @multi
+    @multi  # type:ignore
     def infix_r(self, name, bp):
         symbol = self.symbol(name, bp)
 
@@ -101,8 +101,8 @@ class SymbolTable:
             self.third = parser.expression(symbol2.lbp + 0.1)
             return self
 
-    @multi
-    def prefix(self, name, bp):
+    @multi  # type:ignore
+    def prefix(self, name, bp):  # type:ignore
         symbol = self.symbol(name, bp)
 
         @method(symbol)
@@ -110,7 +110,7 @@ class SymbolTable:
             self.first = parser.expression(bp)
             return self
 
-    @multi
+    @multi  # type:ignore
     def postfix(self, name, bp):
         symbol = self.symbol(name, bp)
 
@@ -237,18 +237,18 @@ symbol("(name)")
 symbol("(end)")
 
 
-@method(symbol("(name)"))
+@method(symbol("(name)"))  # type:ignore
 def nud(self, parser):
     return self
 
 
-@method(symbol("(name)"))
+@method(symbol("(name)"))  # type:ignore
 def evaluate(self, pyobject):
     return utils.resolve_type(self.value, pyobject)
 
 
 # Parametrized objects
-@method(symbol("["))
+@method(symbol("["))  # type:ignore
 def led(self, left, parser):
     self.first = left
     self.second = []
@@ -264,7 +264,7 @@ def led(self, left, parser):
     return self
 
 
-@method(symbol("["))
+@method(symbol("["))  # type:ignore
 def evaluate(self, pyobject):
     return utils.parametrize_type(
         self.first.evaluate(pyobject), *[i.evaluate(pyobject) for i in self.second]
@@ -272,7 +272,7 @@ def evaluate(self, pyobject):
 
 
 # Anonymous Function Calls
-@method(symbol("("))
+@method(symbol("("))  # type:ignore
 def nud(self, parser):
     self.second = []
     if parser.token.name != ")":
@@ -288,7 +288,7 @@ def nud(self, parser):
 
 
 # Function Calls
-@method(symbol("("))
+@method(symbol("("))  # type:ignore
 def led(self, left, parser):
     self.first = left
     self.second = []
@@ -304,13 +304,13 @@ def led(self, left, parser):
     return self
 
 
-@method(symbol("("))
+@method(symbol("("))  # type:ignore
 def evaluate(self, pyobject):
     # TODO: Implement me
     raise NotImplementedError
 
 
-@method(symbol("or"))
+@method(symbol("or"))  # type:ignore
 @method(symbol("|"))
 def evaluate(self, pyobject):
     # TODO: Implement me
