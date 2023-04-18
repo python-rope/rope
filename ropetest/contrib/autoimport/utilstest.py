@@ -1,5 +1,7 @@
 """Tests for autoimport utility functions, written in pytest"""
 
+from pathlib import Path
+
 from rope.contrib.autoimport import utils
 from rope.contrib.autoimport.defs import Package, PackageType, Source
 
@@ -57,3 +59,13 @@ def test_get_package_tuple_compiled(compiled_lib):
     assert Package(
         lib_name, Source.STANDARD, lib_path, PackageType.COMPILED
     ) == utils.get_package_tuple(lib_path)
+
+
+def test_get_files(project, mod1, pkg1, mod2):
+    root: Package = utils.get_package_tuple(project.root.pathlib)
+    paths = [m.filepath.relative_to(project.root.pathlib) for m in utils.get_files(root)]
+    assert paths == [
+        Path("mod1.py"),
+        Path("pkg1/__init__.py"),
+        Path("pkg1/mod2.py"),
+    ]
