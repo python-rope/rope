@@ -50,8 +50,11 @@ dev = [
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
     'pre-commit>=2.20.0',
-    'pip-tools>=6.12.1',
+]
+release = [
     'toml>=0.10.2',
+    'twine>=4.0.2',
+    'pip-tools>=6.12.1',
 ]
 [tool.setuptools]
 packages = [
