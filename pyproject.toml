@@ -51,6 +51,7 @@ dev = [
     'build>=0.7.0',
     'pre-commit>=2.20.0',
     'pip-tools>=6.12.1',
+    'toml>=0.10.2',
 ]
 [tool.setuptools]
 packages = [
