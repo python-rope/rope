@@ -5,7 +5,7 @@ Pre-Release
 -----------
 
 1. Update :ref:`gha-cache-key.txt <gha-cache-key>`:
-   ``pip-compile --extra dev --generate-hashes -o gha-cache-key.txt``
+   ``pip-compile --extra dev --generate-hashes -o gha-cache-key.txt --resolver=backtracking``
 
 Release
 -------
