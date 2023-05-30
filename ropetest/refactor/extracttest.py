@@ -3105,6 +3105,175 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extraction_with_nonlocal_variable(self):
+        code = dedent("""\
+            def outer():
+                a = 0
+                def inner():
+                    nonlocal a
+                    a = 3
+        """)
+        extract_target = "a = 3"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+            def outer():
+                a = 0
+                def inner():
+                    nonlocal a
+                    extracted()
+
+                def extracted():
+                    nonlocal a
+                    a = 3
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_method_with_nonlocal_variable_and_nonlocal_declaration(self):
+        code = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    g = 2
+
+                inner()
+                print(g)
+        """)
+        start, end = 52, 78
+        refactored = self.do_extract_method(code, start, end, "_g")
+        expected = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    _g()
+
+                def _g():
+                    nonlocal g
+
+                    g = 2
+
+                inner()
+                print(g)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extraction_one_line_with_nonlocal_variable_read_only(self):
+        code = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    a = g
+
+                inner()
+                print(g)
+        """)
+        extract_target = "= g"
+        start, end = code.index(extract_target) + 2, code.index(extract_target) + 3
+        refactored = self.do_extract_method(code, start, end, "_g")
+        expected = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    a = _g()
+
+                def _g():
+                    return g
+
+                inner()
+                print(g)
+        """)
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.8")
+    def test_extraction_one_line_with_nonlocal_variable(self):
+        code = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    while g := 4:
+                        pass
+
+                inner()
+                print(g)
+        """)
+        extract_target = "g := 4"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_g")
+        expected = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    while _g():
+                        pass
+
+                def _g():
+                    nonlocal g
+                    return (g := 4)
+
+                inner()
+                print(g)
+        """)
+        self.assertEqual(expected, refactored)
+
+    @testutils.only_for_versions_higher("3.8")
+    def test_extraction_one_line_with_nonlocal_variable_has_postread(self):
+        code = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    while g := 4:
+                        print(g)
+
+                inner()
+                print(g)
+        """)
+        extract_target = "g := 4"
+        start, end = code.index(extract_target), code.index(extract_target) + len(
+            extract_target
+        )
+        refactored = self.do_extract_method(code, start, end, "_g")
+        expected = dedent("""\
+            def outer():
+                g = None
+
+                def inner():
+                    nonlocal g
+
+                    while g := _g():
+                        print(g)
+
+                def _g():
+                    nonlocal g
+                    return (g := 4)
+
+                inner()
+                print(g)
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_method_with_nested_double_with_as(self):
         code = dedent("""\
             with open("test") as file1:

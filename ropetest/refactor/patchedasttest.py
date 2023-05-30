@@ -737,6 +737,13 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region("Global", 0, len(source) - 1)
         checker.check_children("Global", ["global", " ", "a", "", ",", " ", "b"])
 
+    def test_nonlocal_node(self):
+        source = "nonlocal a, b\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region("Nonlocal", 0, len(source) - 1)
+        checker.check_children("Nonlocal", ["nonlocal", " ", "a", "", ",", " ", "b"])
+
     def test_if_node(self):
         source = "if True:\n    pass\nelse:\n    pass\n"
         ast_frag = patchedast.get_patched_ast(source, True)

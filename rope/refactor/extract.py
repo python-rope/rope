@@ -1,7 +1,7 @@
 import re
-from typing import Dict
 from contextlib import contextmanager
 from itertools import chain
+from typing import Dict
 
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeContents, ChangeSet
@@ -729,6 +729,7 @@ class _ExtractMethodParts(ast.RopeNodeVisitor):
     def _get_multiline_function_body(self, returns):
         unindented_body = sourceutils.fix_indentation(self.info.extracted, 0)
         unindented_body = self._insert_globals(unindented_body)
+        unindented_body = self._insert_nonlocals(unindented_body)
         if returns:
             unindented_body += "\nreturn %s" % self._get_comma_form(returns)
         return unindented_body
@@ -736,7 +737,9 @@ class _ExtractMethodParts(ast.RopeNodeVisitor):
     def _get_single_expression_function_body(self):
         extracted = _get_single_expression_body(self.info.extracted, info=self.info)
         body = "return " + extracted
-        return self._insert_globals(body)
+        body = self._insert_globals(body)
+        body = self._insert_nonlocals(body)
+        return body
 
     def _insert_globals(self, unindented_body):
         globals_in_body = self._get_globals_in_body(unindented_body)
@@ -751,12 +754,32 @@ class _ExtractMethodParts(ast.RopeNodeVisitor):
             )
         return unindented_body
 
+    def _insert_nonlocals(self, unindented_body):
+        nonlocals_in_body = self._get_nonlocals_in_body(unindented_body)
+        nonlocals_ = self.info_collector.nonlocals_ & (
+            self.info_collector.written | self.info_collector.maybe_written
+        )
+        nonlocals_ = nonlocals_ - nonlocals_in_body
+
+        if nonlocals_:
+            unindented_body = "nonlocal {}\n{}".format(
+                ", ".join(nonlocals_), unindented_body
+            )
+        return unindented_body
+
     @staticmethod
     def _get_globals_in_body(unindented_body):
         node = _parse_text(unindented_body)
         visitor = _GlobalFinder()
         visitor.visit(node)
         return visitor.globals_
+
+    @staticmethod
+    def _get_nonlocals_in_body(unindented_body):
+        node = _parse_text(unindented_body)
+        visitor = _NonlocalFinder()
+        visitor.visit(node)
+        return visitor.nonlocals_
 
 
 class _ExtractVariableParts:
@@ -791,6 +814,7 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
         self.host_function = True
         self.conditional = False
         self.globals_ = OrderedSet()
+        self.nonlocals_ = OrderedSet()
         self.surrounded_by_loop = 0
         self.loop_depth = 0
 
@@ -833,6 +857,9 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
 
     def _Global(self, node):
         self.globals_.add(*node.names)
+
+    def _Nonlocal(self, node):
+        self.nonlocals_.add(*node.names)
 
     def _AsyncFunctionDef(self, node):
         self._FunctionDef(node)
@@ -1072,6 +1099,14 @@ class _GlobalFinder(ast.RopeNodeVisitor):
 
     def _Global(self, node):
         self.globals_.add(*node.names)
+
+
+class _NonlocalFinder(ast.RopeNodeVisitor):
+    def __init__(self):
+        self.nonlocals_ = OrderedSet()
+
+    def _Nonlocal(self, node):
+        self.nonlocals_.add(*node.names)
 
 
 def _get_function_kind(scope):
