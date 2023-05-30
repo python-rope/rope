@@ -557,6 +557,10 @@ class _PatchingASTWalker:
         children = ["global", *self._child_nodes(node.names, ",")]
         self._handle(node, children)
 
+    def _Nonlocal(self, node):
+        children = ["nonlocal", *self._child_nodes(node.names, ",")]
+        self._handle(node, children)
+
     def _If(self, node):
         children = ["elif"] if self._is_elif(node) else ["if"]
         children.extend([node.test, ":"])
