@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #624 Implement `nonlocal` keyword (@lieryan)
+
 # Release 1.8.0
 
 - #650 Install pre-commit hooks on rope repository (@lieryan)
