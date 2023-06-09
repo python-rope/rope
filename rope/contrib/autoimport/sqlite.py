@@ -1,6 +1,7 @@
 """AutoImport module for rope."""
 
 import contextlib
+import json
 import re
 import sqlite3
 import sys
@@ -11,7 +12,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
-from rope.base import exceptions, libutils, resourceobserver, taskhandle
+from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
@@ -157,9 +158,13 @@ class AutoImport:
         return sqlite3.connect(db_path)
 
     def _setup_db(self):
-        models.Name.create_table(self.connection)
-        models.Package.create_table(self.connection)
-        self.connection.commit()
+        models.Metadata.create_table(self.connection)
+        version_hash = list(
+            self._execute(models.Metadata.objects.select("version_hash"))
+        )
+        current_version_hash = versioning.calculate_version_hash(self.project)
+        if not version_hash or version_hash[0][0] != current_version_hash:
+            self.clear_cache()
 
     def import_assist(self, starting: str):
         """
@@ -426,10 +431,21 @@ class AutoImport:
         regenerating global names.
 
         """
-        self._execute(models.Name.objects.drop_table())
-        self._execute(models.Package.objects.drop_table())
-        self._setup_db()
-        self.connection.commit()
+        with self.connection:
+            self._execute(models.Name.objects.drop_table())
+            self._execute(models.Package.objects.drop_table())
+            self._execute(models.Metadata.objects.drop_table())
+            models.Name.create_table(self.connection)
+            models.Package.create_table(self.connection)
+            models.Metadata.create_table(self.connection)
+            data = (
+                versioning.calculate_version_hash(self.project),
+                json.dumps(versioning.get_version_hash_data(self.project)),
+            )
+            assert models.Metadata.columns == ["version_hash", "hash_data"]
+            self._execute(models.Metadata.objects.insert_into(), data)
+
+            self.connection.commit()
 
     def find_insertion_line(self, code):
         """Guess at what line the new import should be inserted."""

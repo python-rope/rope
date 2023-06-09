@@ -1,11 +1,12 @@
-from contextlib import closing
+from contextlib import closing, contextmanager
 from textwrap import dedent
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
 from rope.base.project import Project
 from rope.base.resources import File, Folder
+from rope.contrib.autoimport import models
 from rope.contrib.autoimport.sqlite import AutoImport
 
 
@@ -82,3 +83,59 @@ def test_init_py(
     autoimport.generate_cache([mod1_init])
     results = autoimport.search("foo", True)
     assert [("from pkg1 import foo", "foo")] == results
+
+
+@contextmanager
+def assert_database_is_reset(conn):
+    conn.execute("ALTER TABLE names ADD COLUMN deprecated_column")
+    names_ddl, = [ddl for ddl in conn.iterdump() if "CREATE TABLE names" in ddl]
+    assert "deprecated_column" in names_ddl
+
+    yield
+
+    names_ddl, = [ddl for ddl in conn.iterdump() if "CREATE TABLE names" in ddl]
+    assert "deprecated_column" not in names_ddl, "Database did not get reset"
+
+
+@contextmanager
+def assert_database_is_preserved(conn):
+    conn.execute("ALTER TABLE names ADD COLUMN deprecated_column")
+    names_ddl, = [ddl for ddl in conn.iterdump() if "CREATE TABLE names" in ddl]
+    assert "deprecated_column" in names_ddl
+
+    yield
+
+    names_ddl, = [ddl for ddl in conn.iterdump() if "CREATE TABLE names" in ddl]
+    assert "deprecated_column" in names_ddl, "Database was reset unexpectedly"
+
+
+def test_setup_db_metadata_table_is_missing(autoimport):
+    conn = autoimport.connection
+    conn.execute("DROP TABLE metadata")
+    with assert_database_is_reset(conn):
+        autoimport._setup_db()
+
+
+def test_setup_db_metadata_table_is_outdated(autoimport):
+    conn = autoimport.connection
+    data = ("outdated", "")  # (version_hash, hash_data)
+    autoimport._execute(models.Metadata.objects.insert_into(), data)
+
+    with assert_database_is_reset(conn), \
+            patch("rope.base.versioning.calculate_version_hash", return_value="up-to-date-value"):
+        autoimport._setup_db()
+
+    with assert_database_is_preserved(conn), \
+            patch("rope.base.versioning.calculate_version_hash", return_value="up-to-date-value"):
+        autoimport._setup_db()
+
+
+def test_setup_db_metadata_table_is_current(autoimport):
+    conn = autoimport.connection
+    data = ("up-to-date-value", "")  # (version_hash, hash_data)
+    autoimport._execute(models.Metadata.objects.delete_from())
+    autoimport._execute(models.Metadata.objects.insert_into(), data)
+
+    with assert_database_is_preserved(conn), \
+            patch("rope.base.versioning.calculate_version_hash", return_value="up-to-date-value"):
+        autoimport._setup_db()
