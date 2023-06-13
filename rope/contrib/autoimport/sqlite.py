@@ -8,6 +8,7 @@ import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+from datetime import datetime
 from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
@@ -441,8 +442,13 @@ class AutoImport:
             data = (
                 versioning.calculate_version_hash(self.project),
                 json.dumps(versioning.get_version_hash_data(self.project)),
+                datetime.utcnow().isoformat(),
             )
-            assert models.Metadata.columns == ["version_hash", "hash_data"]
+            assert models.Metadata.columns == [
+                "version_hash",
+                "hash_data",
+                "created_at",
+            ]
             self._execute(models.Metadata.objects.insert_into(), data)
 
             self.connection.commit()

@@ -118,7 +118,7 @@ def test_setup_db_metadata_table_is_missing(autoimport):
 
 def test_setup_db_metadata_table_is_outdated(autoimport):
     conn = autoimport.connection
-    data = ("outdated", "")  # (version_hash, hash_data)
+    data = ("outdated", "", "2020-01-01T00:00:00")  # (version_hash, hash_data, created_at)
     autoimport._execute(models.Metadata.objects.insert_into(), data)
 
     with assert_database_is_reset(conn), \
@@ -132,7 +132,7 @@ def test_setup_db_metadata_table_is_outdated(autoimport):
 
 def test_setup_db_metadata_table_is_current(autoimport):
     conn = autoimport.connection
-    data = ("up-to-date-value", "")  # (version_hash, hash_data)
+    data = ("up-to-date-value", "", "2020-01-01T00:00:00")  # (version_hash, hash_data, created_at)
     autoimport._execute(models.Metadata.objects.delete_from())
     autoimport._execute(models.Metadata.objects.insert_into(), data)
 

@@ -79,6 +79,7 @@ class Metadata(Model):
     schema = {
         "version_hash": "TEXT",
         "hash_data": "TEXT",
+        "created_at": "TEXT",
     }
     columns = list(schema.keys())
     objects = Query(table_name, columns)
