@@ -844,9 +844,11 @@ autoimport will be removed in the future.
 `rope.contrib.autoimport.sqlite`
 --------------------------------
 
-By default, the sqlite3-based only stores autoimport cache in an in-memory
+Currently, the sqlite3-based only stores autoimport cache in an in-memory
 sqlite3 database, you can make it write the import cache to persistent storage
-by passing memory=False to AutoImport constructor.
+by passing memory=False to AutoImport constructor. This default will change in
+the future, if you want to always store the autoimport cache in-memory, then
+you need to explicitly pass memory=True.
 
 It must be closed when done with the ``AutoImport.close()`` method.
 

@@ -1,16 +1,19 @@
 """AutoImport module for rope."""
 
 import contextlib
+import json
 import re
 import sqlite3
 import sys
+import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+from datetime import datetime
 from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
-from rope.base import exceptions, libutils, resourceobserver, taskhandle
+from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
@@ -63,6 +66,9 @@ def filter_packages(
     return filter(filter_package, packages)
 
 
+_deprecated_default: bool = object()  # type: ignore
+
+
 class AutoImport:
     """A class for finding the module that provides a name.
 
@@ -76,7 +82,13 @@ class AutoImport:
     project: Project
     project_package: Package
 
-    def __init__(self, project: Project, observe=True, underlined=False, memory=True):
+    def __init__(
+        self,
+        project: Project,
+        observe: bool = True,
+        underlined: bool = False,
+        memory: bool = _deprecated_default,
+    ):
         """Construct an AutoImport object.
 
         Parameters
@@ -87,8 +99,14 @@ class AutoImport:
             if true, listen for project changes and update the cache.
         underlined : bool
             If `underlined` is `True`, underlined names are cached, too.
-        memory : bool
-            if true, don't persist to disk
+        memory:
+            If true, don't persist to disk
+
+            DEPRECATION NOTICE: The default value will change to use an on-disk
+            database by default in the future. If you want to use an in-memory
+            database, you need to pass `memory=True` explicitly:
+
+                autoimport = AutoImport(..., memory=True)
         """
         self.project = project
         project_package = get_package_tuple(Path(project.root.real_path), project)
@@ -96,12 +114,19 @@ class AutoImport:
         assert project_package.path is not None
         self.project_package = project_package
         self.underlined = underlined
-        db_path: str
-        if memory or project.ropefolder is None:
-            db_path = ":memory:"
-        else:
-            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        self.connection = sqlite3.connect(db_path)
+        if memory is _deprecated_default:
+            memory = True
+            warnings.warn(
+                "The default value for `AutoImport(memory)` argument will "
+                "change to use an on-disk database by default in the future. "
+                "If you want to use an in-memory database, you need to pass "
+                "`AutoImport(memory=True)` explicitly.",
+                DeprecationWarning,
+            )
+        self.connection = self.create_database_connection(
+            project=project,
+            memory=memory,
+        )
         self._setup_db()
         if observe:
             observer = resourceobserver.ResourceObserver(
@@ -109,10 +134,38 @@ class AutoImport:
             )
             project.add_observer(observer)
 
+    @classmethod
+    def create_database_connection(
+        cls,
+        *,
+        project: Optional[Project] = None,
+        memory: bool = False,
+    ) -> sqlite3.Connection:
+        """
+        Create an sqlite3 connection
+
+        project : rope.base.project.Project
+            the project to use for project imports
+        memory : bool
+            if true, don't persist to disk
+        """
+        if not memory and project is None:
+            raise Exception("if memory=False, project must be provided")
+        db_path: str
+        if memory or project is None or project.ropefolder is None:
+            db_path = ":memory:"
+        else:
+            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
+        return sqlite3.connect(db_path)
+
     def _setup_db(self):
-        models.Name.create_table(self.connection)
-        models.Package.create_table(self.connection)
-        self.connection.commit()
+        models.Metadata.create_table(self.connection)
+        version_hash = list(
+            self._execute(models.Metadata.objects.select("version_hash"))
+        )
+        current_version_hash = versioning.calculate_version_hash(self.project)
+        if not version_hash or version_hash[0][0] != current_version_hash:
+            self.clear_cache()
 
     def import_assist(self, starting: str):
         """
@@ -379,10 +432,26 @@ class AutoImport:
         regenerating global names.
 
         """
-        self._execute(models.Name.objects.drop_table())
-        self._execute(models.Package.objects.drop_table())
-        self._setup_db()
-        self.connection.commit()
+        with self.connection:
+            self._execute(models.Name.objects.drop_table())
+            self._execute(models.Package.objects.drop_table())
+            self._execute(models.Metadata.objects.drop_table())
+            models.Name.create_table(self.connection)
+            models.Package.create_table(self.connection)
+            models.Metadata.create_table(self.connection)
+            data = (
+                versioning.calculate_version_hash(self.project),
+                json.dumps(versioning.get_version_hash_data(self.project)),
+                datetime.utcnow().isoformat(),
+            )
+            assert models.Metadata.columns == [
+                "version_hash",
+                "hash_data",
+                "created_at",
+            ]
+            self._execute(models.Metadata.objects.insert_into(), data)
+
+            self.connection.commit()
 
     def find_insertion_line(self, code):
         """Guess at what line the new import should be inserted."""

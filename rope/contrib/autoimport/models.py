@@ -44,7 +44,7 @@ class Query:
         )
 
     def drop_table(self) -> FinalQuery:
-        return FinalQuery(f"DROP TABLE {self.query}")
+        return FinalQuery(f"DROP TABLE IF EXISTS {self.query}")
 
     def delete_from(self) -> FinalQuery:
         return FinalQuery(f"DELETE FROM {self.query}")
@@ -71,6 +71,18 @@ class Model(ABC):
         connection.execute(
             f"CREATE TABLE IF NOT EXISTS {cls.table_name}({metadata_table_definition})"
         )
+
+
+class Metadata(Model):
+    table_name = "metadata"
+
+    schema = {
+        "version_hash": "TEXT",
+        "hash_data": "TEXT",
+        "created_at": "TEXT",
+    }
+    columns = list(schema.keys())
+    objects = Query(table_name, columns)
 
 
 class Name(Model):
