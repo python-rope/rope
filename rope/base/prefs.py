@@ -143,7 +143,14 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
     prefer_module_from_imports: bool = field(
         default=False,
         description=dedent("""
-            If `True`, rope will insert new module imports as `from <package> import <module>`by default.
+            If `True`, rope will insert new module imports as `from <package> import <module>` by default.
+        """),
+    )
+
+    prefer_global_from_imports: bool = field(
+        default=False,
+        description=dedent("""
+            If `True`, rope will insert new global imports as `from <module> import <global>` by default.
         """),
     )
 

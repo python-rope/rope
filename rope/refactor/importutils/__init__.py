@@ -305,19 +305,23 @@ def add_import(project, pymodule, module_name, name=None):
     # from mod import name
     if name is not None:
         from_import = FromImport(module_name, 0, [(name, None)])
+        if project.prefs.get("prefer_global_from_imports"):
+            selected_import = from_import
         names.append(name)
         candidates.append(from_import)
+
     # from pkg import mod
     if "." in module_name:
         pkg, mod = module_name.rsplit(".", 1)
         from_import = FromImport(pkg, 0, [(mod, None)])
-        if project.prefs.get("prefer_module_from_imports"):
+        if project.prefs.get("prefer_module_from_imports") and not selected_import:
             selected_import = from_import
         candidates.append(from_import)
         if name:
             names.append(mod + "." + name)
         else:
             names.append(mod)
+
     # import mod
     normal_import = NormalImport([(module_name, None)])
     if name:

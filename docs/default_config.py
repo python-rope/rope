@@ -112,6 +112,12 @@ def set_prefs(prefs):
     #
     #     prefs["prefer_module_from_imports"] = False
 
+    # If `True`, rope will insert new name imports as
+    # `from <module> import <global>` by default.
+    #
+    #     prefs["prefer_global_from_imports"] = False
+
+
     # If `True`, rope will transform a comma list of imports into
     # multiple separate import statements when organizing
     # imports.

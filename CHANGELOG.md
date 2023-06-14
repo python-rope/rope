@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #624 Implement `nonlocal` keyword (@lieryan)
+- #696 Introduce the `prefer_global_from_imports` configuration (@nicoolas25)
 
 # Release 1.8.0
 

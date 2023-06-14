@@ -177,6 +177,52 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod3.read(),
         )
 
+    def test_adding_imports_prefer_from_global(self):
+        self.project.prefs["prefer_global_from_imports"] = True
+        self.mod1.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            import mod1
+            a_var = mod1.AClass()
+            mod1.a_function()"""))
+        # Move to mod4 which is in a different package
+        self._move(self.mod1, self.mod1.read().index("AClass") + 1, self.mod4)
+        self.assertEqual(
+            dedent("""\
+                import mod1
+                from pkg.mod4 import AClass
+                a_var = AClass()
+                mod1.a_function()"""),
+            self.mod3.read(),
+        )
+
+    def test_adding_imports_noprefer_from_global(self):
+        self.project.prefs["prefer_global_from_imports"] = False
+        self.mod1.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            import mod1
+            a_var = mod1.AClass()
+            mod1.a_function()"""))
+        # Move to mod4 which is in a different package
+        self._move(self.mod1, self.mod1.read().index("AClass") + 1, self.mod4)
+        self.assertEqual(
+            dedent("""\
+                import mod1
+                import pkg.mod4
+                a_var = pkg.mod4.AClass()
+                mod1.a_function()"""),
+            self.mod3.read(),
+        )
+
     def test_adding_imports_prefer_from_module(self):
         self.project.prefs["prefer_module_from_imports"] = True
         self.mod1.write(dedent("""\
