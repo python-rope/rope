@@ -1,6 +1,9 @@
 # **Upcoming release**
 
-- #624 Implement `nonlocal` keyword (@lieryan)
+# Release 1.9.0
+
+- #624, #693 Implement `nonlocal` keyword (@lieryan)
+- #697, #565 Automatically purge autoimport.db when there is schema change
 
 # Release 1.8.0
 
