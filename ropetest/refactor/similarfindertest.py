@@ -131,7 +131,7 @@ class SimilarFinderTest(unittest.TestCase):
         source = "b = 1 + 1\n"
         finder = self._create_finder(source)
         result = list(finder.get_matches("b = ${x} + ${x}"))
-        self.assertEqual(1, result[0].get_ast("x").n)
+        self.assertEqual(1, result[0].get_ast("x").value)
 
     def test_matching_any_patterns_not_matching_different_nodes(self):
         source = "b = 1 + 2\n"

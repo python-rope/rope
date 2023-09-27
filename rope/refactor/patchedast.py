@@ -414,10 +414,7 @@ class _PatchingASTWalker:
         if node.format_spec:
             children.append(":")
             for val in node.format_spec.values:
-                if isinstance(val, ast.FormattedValue):
-                    children.append(val.value)
-                else:
-                    children.append(val.s)
+                children.append(val.value)
         children.append("}")
         self._handle(node, children)
 

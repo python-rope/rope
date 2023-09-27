@@ -216,7 +216,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
         self.result = self._get_builtin_name(type_name)
 
     def _Constant(self, node):
-        type_name = type(node.n).__name__
+        type_name = type(node.value).__name__
         try:
             self.result = self._get_builtin_name(type_name)
         except exceptions.AttributeNotFoundError:

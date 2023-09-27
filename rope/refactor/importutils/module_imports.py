@@ -85,7 +85,7 @@ class ModuleImports:
                                         av.ast_node.value,
                                         str,
                                     ):
-                                        result.add(av.ast_node.s)
+                                        result.add(av.ast_node.value)
             elif isinstance(assignment, ast.Name):
                 try:
                     name = pymodule.get_attribute(assignment.id)
