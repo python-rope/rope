@@ -1,5 +1,8 @@
 # **Upcoming release**
 
+- #708, #709 Add support for Python 3.12
+
+
 # Release 1.9.0
 
 - #624, #693 Implement `nonlocal` keyword (@lieryan)
