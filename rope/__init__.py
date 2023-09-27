@@ -5,6 +5,7 @@ import importlib.metadata
 try:
     VERSION = importlib.metadata.version("rope")
 except importlib.metadata.PackageNotFoundError:
+
     def get_fallback_version():
         import pathlib
         import re
