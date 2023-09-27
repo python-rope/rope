@@ -19,7 +19,7 @@
 import rope
 
 project = "rope"
-copyright = "2022, Rope Contributors"
+copyright = "2023, Rope Contributors"
 author = "Rope Contributors"
 
 # The full version, including alpha/beta/rc tags
