@@ -234,7 +234,11 @@ class PyDefinedObject:
     def get_doc(self) -> Optional[str]:
         if len(self.get_ast().body) > 0:
             expr = self.get_ast().body[0]
-            if isinstance(expr, ast.Expr) and isinstance(expr.value, ast.Constant) and isinstance(expr.value.value, str):
+            if (
+                isinstance(expr, ast.Expr)
+                and isinstance(expr.value, ast.Constant)
+                and isinstance(expr.value.value, str)
+            ):
                 return expr.value.value
         return None
 

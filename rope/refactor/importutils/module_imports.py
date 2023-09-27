@@ -78,7 +78,13 @@ class ModuleImports:
                                 continue
                             else:
                                 for av in _resolve_name(name):
-                                    if isinstance(av.ast_node, ast.Constant) and isinstance(av.ast_node.value, str):
+                                    if isinstance(
+                                        av.ast_node,
+                                        ast.Constant,
+                                    ) and isinstance(
+                                        av.ast_node.value,
+                                        str,
+                                    ):
                                         result.add(av.ast_node.s)
             elif isinstance(assignment, ast.Name):
                 try:
