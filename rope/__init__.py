@@ -1,11 +1,10 @@
 """rope, a python refactoring library"""
 
-from pkg_resources import DistributionNotFound, get_distribution
+import importlib.metadata
 
 try:
-    VERSION = get_distribution("rope").version
-except DistributionNotFound:
-
+    VERSION = importlib.metadata.version("rope")
+except importlib.metadata.PackageNotFoundError:
     def get_fallback_version():
         import pathlib
         import re
