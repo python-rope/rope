@@ -1,7 +1,8 @@
 # **Upcoming release**
 
-- #708, #709 Add support for Python 3.12
+# Release 1.10.0
 
+- #708, #709 Add support for Python 3.12
 
 # Release 1.9.0
 
