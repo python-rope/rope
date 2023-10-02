@@ -705,6 +705,9 @@ class _PatchingASTWalker:
         else:
             self._TryExcept(node)
 
+    def _TryStar(self, node):
+        self._Try(node)
+
     def _ExceptHandler(self, node):
         self._excepthandler(node)
 
