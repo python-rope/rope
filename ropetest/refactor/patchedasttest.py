@@ -1154,6 +1154,7 @@ class PatchedASTTest(unittest.TestCase):
         expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "ExceptHandler", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
+    @testutils.only_for_versions_higher("3.11")
     def test_try_except_group_node(self):
         source = dedent("""\
             try:

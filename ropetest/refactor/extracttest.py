@@ -1809,6 +1809,7 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher("3.11")
     def test_extract_method_and_try_except_star_block_1(self):
         code = dedent("""\
             def f():
