@@ -1809,6 +1809,29 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    @testutils.only_for_versions_higher("3.11")
+    def test_extract_method_and_try_except_star_block_1(self):
+        code = dedent("""\
+            def f():
+                try:
+                    pass
+                except* Exception:
+                    pass
+        """)
+        start, end = self._convert_line_range_to_offset(code, 2, 5)
+        refactored = self.do_extract_method(code, start, end, "g")
+        expected = dedent("""\
+            def f():
+                g()
+
+            def g():
+                try:
+                    pass
+                except* Exception:
+                    pass
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_method_and_augmented_assignment_nested_1(self):
         code = dedent("""\
             def f():

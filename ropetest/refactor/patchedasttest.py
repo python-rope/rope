@@ -1154,6 +1154,28 @@ class PatchedASTTest(unittest.TestCase):
         expected_children = ["try", "", ":", "\n    ", "Pass", "\n", "ExceptHandler", "\n", "finally", "", ":", "\n    ", "Pass"]
         checker.check_children(node_to_test, expected_children)
 
+    @testutils.only_for_versions_higher("3.11")
+    def test_try_except_group_node(self):
+        source = dedent("""\
+            try:
+                pass
+            except* (ValueError, IOError) as e:
+                pass
+            except* ZeroDivisionError as e:
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "TryStar",
+            ["try", "", ":", "\n    ", "Pass", "\n", "ExceptHandler", "\n", "ExceptHandler"],
+        )
+        expected_child = "e"
+        checker.check_children(
+            "ExceptHandler",
+            ["except", "* ", "Name", " ", "as", " ", expected_child, "", ":", "\n    ", "Pass"],
+        )
+
     def test_ignoring_comments(self):
         source = "#1\n1\n"
         ast_frag = patchedast.get_patched_ast(source, True)
