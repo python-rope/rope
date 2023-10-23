@@ -2,6 +2,7 @@
 
 - #710, #561 Implement `except*` syntax (@lieryan)
 - #711 allow building documentation without having rope module installed (@kloczek)
+- #714 allow autoimport db connection to be used by mutliple threads (@tkrabel)
 
 # Release 1.10.0
 
