@@ -156,7 +156,7 @@ class AutoImport:
             db_path = ":memory:"
         else:
             db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        return sqlite3.connect(db_path)
+        return sqlite3.connect(db_path, check_same_thread=False)
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
