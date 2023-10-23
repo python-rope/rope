@@ -42,6 +42,14 @@ def test_autoimport_connection_parameter_with_project(
     assert not is_in_memory_database(connection)
 
 
+def test_autoimport_connection_parameter_with_threadsafe(
+    project: Project,
+    autoimport: AutoImport,
+):
+    connection = AutoImport.create_database_connection(project=project, threadsafe=False)
+    assert not is_in_memory_database(connection)
+
+
 def test_autoimport_create_database_connection_conflicting_parameter(
     project: Project,
     autoimport: AutoImport,
