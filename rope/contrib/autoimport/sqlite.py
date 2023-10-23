@@ -87,6 +87,7 @@ class AutoImport:
         project: Project,
         observe: bool = True,
         underlined: bool = False,
+        threadsafe: bool = True,
         memory: bool = _deprecated_default,
     ):
         """Construct an AutoImport object.
@@ -94,11 +95,13 @@ class AutoImport:
         Parameters
         ___________
         project : rope.base.project.Project
-            the project to use for project imports
+            The project to use for project imports
         observe : bool
-            if true, listen for project changes and update the cache.
+            If true, listen for project changes and update the cache.
         underlined : bool
             If `underlined` is `True`, underlined names are cached, too.
+        threadsafe : bool
+            If true, sqlite3 connection can only be used in the thread it was created in.
         memory:
             If true, don't persist to disk
 
@@ -126,6 +129,7 @@ class AutoImport:
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
+            threadsafe=threadsafe,
         )
         self._setup_db()
         if observe:
@@ -140,14 +144,17 @@ class AutoImport:
         *,
         project: Optional[Project] = None,
         memory: bool = False,
+        threadsafe: bool = True,
     ) -> sqlite3.Connection:
         """
-        Create an sqlite3 connection
+        Create an sqlite3 connection.
 
         project : rope.base.project.Project
-            the project to use for project imports
+            The project to use for project imports.
         memory : bool
-            if true, don't persist to disk
+            If true, don't persist to disk.
+        threadsafe : bool
+            If true, sqlite3 connection can only be used in the thread it was created in.
         """
         if not memory and project is None:
             raise Exception("if memory=False, project must be provided")
@@ -156,7 +163,7 @@ class AutoImport:
             db_path = ":memory:"
         else:
             db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        return sqlite3.connect(db_path, check_same_thread=False)
+        return sqlite3.connect(db_path, check_same_thread=threadsafe)
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
