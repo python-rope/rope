@@ -87,7 +87,7 @@ class AutoImport:
         project: Project,
         observe: bool = True,
         underlined: bool = False,
-        threadsafe: bool = True,
+        check_same_thread: bool = True,
         memory: bool = _deprecated_default,
     ):
         """Construct an AutoImport object.
@@ -100,7 +100,7 @@ class AutoImport:
             If true, listen for project changes and update the cache.
         underlined : bool
             If `underlined` is `True`, underlined names are cached, too.
-        threadsafe : bool
+        check_same_thread : bool
             If true, sqlite3 connection can only be used in the thread it was created in.
         memory:
             If true, don't persist to disk
@@ -129,7 +129,7 @@ class AutoImport:
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
-            threadsafe=threadsafe,
+            check_same_thread=check_same_thread,
         )
         self._setup_db()
         if observe:
@@ -144,7 +144,7 @@ class AutoImport:
         *,
         project: Optional[Project] = None,
         memory: bool = False,
-        threadsafe: bool = True,
+        check_same_thread: bool = True,
     ) -> sqlite3.Connection:
         """
         Create an sqlite3 connection.
@@ -153,7 +153,7 @@ class AutoImport:
             The project to use for project imports.
         memory : bool
             If true, don't persist to disk.
-        threadsafe : bool
+        check_same_thread : bool
             If true, sqlite3 connection can only be used in the thread it was created in.
         """
         if not memory and project is None:
@@ -163,7 +163,7 @@ class AutoImport:
             db_path = ":memory:"
         else:
             db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        return sqlite3.connect(db_path, check_same_thread=threadsafe)
+        return sqlite3.connect(db_path, check_same_thread=check_same_thread)
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
