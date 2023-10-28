@@ -1,5 +1,3 @@
-import sqlite3
-
 from contextlib import closing, contextmanager
 from textwrap import dedent
 from unittest.mock import ANY, patch
@@ -21,31 +19,11 @@ def autoimport(project: Project):
 def is_in_memory_database(connection):
     db_list = database_list(connection)
     assert db_list == [(0, "main", ANY)]
-    return db_list[0][2].endswith("mode=memory&cache=shared")
+    return db_list[0][2] == ""
 
 
 def database_list(connection):
     return list(connection.execute("PRAGMA database_list"))
-
-
-def get_database_name(connection: sqlite3.Connection):
-    return database_list(connection)[0][2]
-
-
-def test_autoimport_database_name(
-    project: Project,
-):
-    # project is None
-    connection1 = AutoImport.create_database_connection(memory=True, project=None)
-    connection2 = AutoImport.create_database_connection(memory=True, project=None)
-    assert get_database_name(connection1) == get_database_name(connection2)
-
-    # project is not None
-    connection3 = AutoImport.create_database_connection(memory=True, project=project)
-    connection4 = AutoImport.create_database_connection(memory=True, project=project)
-    assert get_database_name(connection3) == get_database_name(connection4)
-
-    assert get_database_name(connection1) != get_database_name(connection3)
 
 
 def test_autoimport_connection_parameter_with_in_memory(
