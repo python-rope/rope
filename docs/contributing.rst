@@ -134,7 +134,7 @@ submission.
 
 All required packages for development could be installed with::
 
-    pip install -e .[dev]
+    pip install -e ".[dev]"
 
 .. _GitHub: http://github.com/
 .. _`python-rope/rope`: https://github.com/python-rope/rope
