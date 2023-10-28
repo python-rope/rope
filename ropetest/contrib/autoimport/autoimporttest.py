@@ -26,6 +26,17 @@ def database_list(connection):
     return list(connection.execute("PRAGMA database_list"))
 
 
+def test_in_memory_database_share_cache(project):
+    ai1 = AutoImport(project, memory=True)
+    ai2 = AutoImport(project, memory=True)
+
+    with ai1.connection:
+        ai1.connection.execute("CREATE TABLE shared(data)")
+        ai1.connection.execute("INSERT INTO shared VALUES(28)")
+    res = ai2.connection.execute("SELECT data FROM shared")
+    assert res.fetchone() == (28,)
+
+
 def test_autoimport_connection_parameter_with_in_memory(
     project: Project,
     autoimport: AutoImport,
