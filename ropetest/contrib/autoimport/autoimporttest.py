@@ -1,3 +1,5 @@
+import sqlite3
+
 from contextlib import closing, contextmanager
 from textwrap import dedent
 from unittest.mock import ANY, patch
@@ -26,15 +28,18 @@ def database_list(connection):
     return list(connection.execute("PRAGMA database_list"))
 
 
-def test_in_memory_database_share_cache(project):
+def test_in_memory_database_share_cache(project, project2):
     ai1 = AutoImport(project, memory=True)
     ai2 = AutoImport(project, memory=True)
+
+    ai3 = AutoImport(project2, memory=True)
 
     with ai1.connection:
         ai1.connection.execute("CREATE TABLE shared(data)")
         ai1.connection.execute("INSERT INTO shared VALUES(28)")
-    res = ai2.connection.execute("SELECT data FROM shared")
-    assert res.fetchone() == (28,)
+    assert ai2.connection.execute("SELECT data FROM shared").fetchone() == (28,)
+    with pytest.raises(sqlite3.OperationalError, match="no such table: shared"):
+        ai3.connection.execute("SELECT data FROM shared").fetchone()
 
 
 def test_autoimport_connection_parameter_with_in_memory(

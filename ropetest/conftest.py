@@ -14,6 +14,13 @@ def project():
 
 
 @pytest.fixture
+def project2():
+    project = testutils.sample_project("another_project")
+    yield project
+    testutils.remove_project(project)
+
+
+@pytest.fixture
 def project_path(project):
     yield pathlib.Path(project.address)
 
