@@ -153,7 +153,10 @@ class AutoImport:
             raise Exception("if memory=False, project must be provided")
         db_path: str
         if memory or project is None or project.ropefolder is None:
-            db_path = ":memory:"
+            # Allows the in-memory db to be shared across threads
+            # See https://www.sqlite.org/inmemorydb.html
+            project_hash = hash(project and project.ropefolder and project.ropefolder.real_path)
+            db_path = f"file:memdb{project_hash}:?mode=memory&cache=shared"
         else:
             db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
         return sqlite3.connect(db_path)
