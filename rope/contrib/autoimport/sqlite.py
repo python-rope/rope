@@ -154,10 +154,16 @@ class AutoImport:
         if memory or project is None or project.ropefolder is None:
             # Allows the in-memory db to be shared across threads
             # See https://www.sqlite.org/inmemorydb.html
-            project_hash = hash(project and project.ropefolder and project.ropefolder.real_path)
-            return sqlite3.connect(f"file:memdb{project_hash}:?mode=memory&cache=shared", uri=True)
+            project_hash = hash(
+                project and project.ropefolder and project.ropefolder.real_path
+            )
+            return sqlite3.connect(
+                f"file:memdb{project_hash}:?mode=memory&cache=shared", uri=True
+            )
         else:
-            return sqlite3.connect(str(Path(project.ropefolder.real_path) / "autoimport.db"))
+            return sqlite3.connect(
+                str(Path(project.ropefolder.real_path) / "autoimport.db")
+            )
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
