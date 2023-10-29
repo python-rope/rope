@@ -164,7 +164,8 @@ class AutoImport:
 
     @property
     def connection(self):
-        """Creates a new connection if called from a new thread.
+        """
+        Creates a new connection if called from a new thread.
 
         This makes sure AutoImport can be shared across threads.
         """
