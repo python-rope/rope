@@ -2,7 +2,7 @@
 
 - #710, #561 Implement `except*` syntax (@lieryan)
 - #711 allow building documentation without having rope module installed (@kloczek)
-- #719 Allow in-memory databases being shared across threads (@tkrabel)
+- #719 Allows the in-memory db to be shared across threads (@tkrabel)
 
 # Release 1.10.0
 
