@@ -2,6 +2,7 @@
 
 import contextlib
 import json
+import random
 import re
 import sqlite3
 import sys
@@ -154,9 +155,13 @@ class AutoImport:
         if memory or project is None or project.ropefolder is None:
             # Allows the in-memory db to be shared across threads
             # See https://www.sqlite.org/inmemorydb.html
-            project_hash = hash(
-                project and project.ropefolder and project.ropefolder.real_path
-            )
+            project_hash: int
+            if project is None:
+                project_hash = random.randint(100_000_000, 999_999_999)
+            elif project.ropefolder is None:
+                project_hash = hash(project.address)
+            else:
+                project_hash = hash(project.ropefolder.real_path)
             return sqlite3.connect(
                 f"file:memdb{project_hash}:?mode=memory&cache=shared", uri=True
             )
