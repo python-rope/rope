@@ -68,7 +68,6 @@ def filter_packages(
 
 
 _deprecated_default: bool = object()  # type: ignore
-thread_local = local()
 
 
 class AutoImport:
@@ -127,6 +126,7 @@ class AutoImport:
                 "`AutoImport(memory=True)` explicitly.",
                 DeprecationWarning,
             )
+        self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
@@ -169,16 +169,16 @@ class AutoImport:
 
         This makes sure AutoImport can be shared across threads.
         """
-        if not hasattr(thread_local, "connection"):
-            thread_local.connection = self.create_database_connection(
+        if not hasattr(self.thread_local, "connection"):
+            self.thread_local.connection = self.create_database_connection(
                 project=self.project,
                 memory=self.memory,
             )
-        return thread_local.connection
+        return self.thread_local.connection
 
     @connection.setter
     def connection(self, value: sqlite3.Connection):
-        thread_local.connection = value
+        self.thread_local.connection = value
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)

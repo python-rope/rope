@@ -108,6 +108,15 @@ def test_multithreading(
     assert [("from pkg1 import foo", "foo")] == results
 
 
+def test_connection(project: Project, project2: Project):
+    ai1 = AutoImport(project)
+    ai2 = AutoImport(project)
+    ai3 = AutoImport(project2)
+
+    assert ai1.connection is not ai2.connection
+    assert ai1.connection is not ai3.connection
+
+
 @contextmanager
 def assert_database_is_reset(conn):
     conn.execute("ALTER TABLE names ADD COLUMN deprecated_column")

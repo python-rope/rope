@@ -18,6 +18,13 @@ def project_path(project):
     yield pathlib.Path(project.address)
 
 
+@pytest.fixture
+def project2():
+    project = testutils.sample_project("sample_project2")
+    yield project
+    testutils.remove_project(project)
+
+
 """
 Standard project structure for pytest fixtures
 /mod1.py            -- mod1
