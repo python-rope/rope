@@ -111,6 +111,7 @@ class Name(Model):
 
     search_by_name_like = objects.where("name LIKE (?)")
 
+    search_by_name = objects.where("name IS (?)")
     delete_by_module_name = objects.where("module = ?").delete_from()
 
 
