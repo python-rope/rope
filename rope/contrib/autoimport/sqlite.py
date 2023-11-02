@@ -529,7 +529,6 @@ class AutoImport:
             chain(*self._execute(models.Package.objects.select_star()).fetchall())
         )
         existing.append(self.project_package.name)
-        existing.append("site-packages")
         return existing
 
     def _removed(self, resource):
