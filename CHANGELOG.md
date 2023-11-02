@@ -1,8 +1,8 @@
 # **Upcoming release**
 
 - #710, #561 Implement `except*` syntax (@lieryan)
-- #711 allow building documentation without having rope module installed (@kloczek)
-- #722 speed up module cache generation by factor of 2 (@tkrabel)
+- #711 Allow building documentation without having rope module installed (@kloczek)
+- #722 Speed up module cache generation by factor of 2 (@tkrabel)
 
 # Release 1.10.0
 
