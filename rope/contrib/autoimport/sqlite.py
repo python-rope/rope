@@ -319,7 +319,7 @@ class AutoImport:
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
         results = self._execute(
-            models.Name.search_by_name_like.select("module", "source"), (name,)
+            models.Name.search_by_name.select("module", "source"), (name,)
         ).fetchall()
         return sort_and_deduplicate(results)
 
