@@ -2,6 +2,7 @@
 
 - #710, #561 Implement `except*` syntax (@lieryan)
 - #711 allow building documentation without having rope module installed (@kloczek)
+- #720 create one sqlite3.Connection per thread using a thread local (@tkrabel)
 
 # Release 1.10.0
 

@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from textwrap import dedent
 from unittest.mock import ANY, patch
@@ -83,6 +84,37 @@ def test_init_py(
     autoimport.generate_cache([mod1_init])
     results = autoimport.search("foo", True)
     assert [("from pkg1 import foo", "foo")] == results
+
+
+def test_multithreading(
+    autoimport: AutoImport,
+    project: Project,
+    pkg1: Folder,
+    mod1: File,
+):
+    mod1_init = pkg1.get_child("__init__.py")
+    mod1_init.write(dedent("""\
+        def foo():
+            pass
+    """))
+    mod1.write(dedent("""\
+        foo
+    """))
+    autoimport = AutoImport(project, memory=False)
+    autoimport.generate_cache([mod1_init])
+
+    tp = ThreadPoolExecutor(1)
+    results = tp.submit(autoimport.search, "foo", True).result()
+    assert [("from pkg1 import foo", "foo")] == results
+
+
+def test_connection(project: Project, project2: Project):
+    ai1 = AutoImport(project)
+    ai2 = AutoImport(project)
+    ai3 = AutoImport(project2)
+
+    assert ai1.connection is not ai2.connection
+    assert ai1.connection is not ai3.connection
 
 
 @contextmanager
