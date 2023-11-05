@@ -4,6 +4,7 @@
 - #711 allow building documentation without having rope module installed (@kloczek)
 - #719 Allows the in-memory db to be shared across threads (@tkrabel)
 - #720 create one sqlite3.Connection per thread using a thread local (@tkrabel)
+- #715 change AutoImport's `get_modules` to be case sensitive (@bagel897)
 
 # Release 1.10.0
 
