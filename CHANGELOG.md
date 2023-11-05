@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+# Release 1.11.0
+
 - #710, #561 Implement `except*` syntax (@lieryan)
 - #711 allow building documentation without having rope module installed (@kloczek)
 - #719 Allows the in-memory db to be shared across threads (@tkrabel)
