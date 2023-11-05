@@ -155,6 +155,7 @@ class AutoImport:
         memory : bool
             if true, don't persist to disk
         """
+
         def calculate_project_hash(data: str) -> str:
             return sha256(data.encode()).hexdigest()
 
@@ -171,7 +172,7 @@ class AutoImport:
             else:
                 project_hash = calculate_project_hash(project.ropefolder.real_path)
             return sqlite3.connect(
-                f"file:memdb{project_hash}:?mode=memory&cache=shared", uri=True
+                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
             )
         else:
             return sqlite3.connect(
