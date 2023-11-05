@@ -2,6 +2,8 @@
 
 import contextlib
 import json
+from hashlib import sha256
+import secrets
 import re
 import sqlite3
 import sys
@@ -153,14 +155,29 @@ class AutoImport:
         memory : bool
             if true, don't persist to disk
         """
+
+        def calculate_project_hash(data: str) -> str:
+            return sha256(data.encode()).hexdigest()
+
         if not memory and project is None:
             raise Exception("if memory=False, project must be provided")
-        db_path: str
         if memory or project is None or project.ropefolder is None:
-            db_path = ":memory:"
+            # Allows the in-memory db to be shared across threads
+            # See https://www.sqlite.org/inmemorydb.html
+            project_hash: str
+            if project is None:
+                project_hash = secrets.token_hex()
+            elif project.ropefolder is None:
+                project_hash = calculate_project_hash(project.address)
+            else:
+                project_hash = calculate_project_hash(project.ropefolder.real_path)
+            return sqlite3.connect(
+                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+            )
         else:
-            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        return sqlite3.connect(db_path)
+            return sqlite3.connect(
+                str(Path(project.ropefolder.real_path) / "autoimport.db")
+            )
 
     @property
     def connection(self):

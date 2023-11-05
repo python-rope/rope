@@ -1,3 +1,4 @@
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from textwrap import dedent
@@ -25,6 +26,20 @@ def is_in_memory_database(connection):
 
 def database_list(connection):
     return list(connection.execute("PRAGMA database_list"))
+
+
+def test_in_memory_database_share_cache(project, project2):
+    ai_1 = AutoImport(project, memory=True)
+    ai_2 = AutoImport(project, memory=True)
+
+    ai_3 = AutoImport(project2, memory=True)
+
+    with ai_1.connection:
+        ai_1.connection.execute("CREATE TABLE shared(data)")
+        ai_1.connection.execute("INSERT INTO shared VALUES(28)")
+    assert ai_2.connection.execute("SELECT data FROM shared").fetchone() == (28,)
+    with pytest.raises(sqlite3.OperationalError, match="no such table: shared"):
+        ai_3.connection.execute("SELECT data FROM shared").fetchone()
 
 
 def test_autoimport_connection_parameter_with_in_memory(
