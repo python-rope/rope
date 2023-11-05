@@ -528,11 +528,21 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "tkrabel",
+      "name": "Tobias Krabel",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13402027?v=4",
+      "profile": "https://bamboolib.8080labs.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
   "projectOwner": "python-rope",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "commitConvention": "none"
+  "commitConvention": "none",
+  "commitType": "docs"
 }
