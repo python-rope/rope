@@ -128,8 +128,10 @@ class AutoImportTest(unittest.TestCase):
     def test_search_alias(self):
         self.mod2.write("myvar = None\n")
         self.importer.update_resource(self.mod2)
-        self.importer.add_aliases([("noMatch", "does_not_exists_this")])
-        self.importer.add_aliases([("hasMatch", "pkg.mod2")])
+        self.importer.add_aliases([
+            ("noMatch", "does_not_exists_this"),
+            ("hasMatch", "pkg.mod2"),
+        ])
 
         self.assertEqual([], self.importer.search("noMatch", exact_match=True))
 
