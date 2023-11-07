@@ -1,6 +1,7 @@
 import unittest
 
 from rope.contrib.autoimport import sqlite as autoimport
+from rope.contrib.autoimport.defs import Alias
 from ropetest import testutils
 
 
@@ -123,6 +124,19 @@ class AutoImportTest(unittest.TestCase):
         self.assertIn(import_statement, self.importer.search("os", exact_match=True))
         self.assertIn(import_statement, self.importer.search("os"))
         self.assertIn(import_statement, self.importer.search("o"))
+
+    def test_search_alias(self):
+        self.mod2.write("myvar = None\n")
+        self.importer.update_resource(self.mod2)
+        self.importer.add_aliases([("noMatch", "does_not_exists_this")])
+        self.importer.add_aliases([("hasMatch", "pkg.mod2")])
+
+        self.assertEqual([], self.importer.search("noMatch", exact_match=True))
+
+        import_statement = ("import pkg.mod2 as hasMatch", "hasMatch")
+        self.assertIn(import_statement, self.importer.search("hasMatch", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("hasM"))
+        self.assertIn(import_statement, self.importer.search("h"))
 
     def test_search(self):
         self.importer.update_module("typing")

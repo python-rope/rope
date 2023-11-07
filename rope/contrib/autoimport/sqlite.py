@@ -19,6 +19,7 @@ from rope.base.resources import Resource
 from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
     ModuleFile,
+    Alias,
     Name,
     NameType,
     Package,
@@ -293,6 +294,12 @@ class AutoImport:
             yield SearchResult(
                 f"import {module}", module, source, NameType.Module.value
             )
+        for alias, module, source in self._execute(
+            models.Alias.search_modules_with_alias.select("alias", "module", "source"), (name,)
+        ):
+            yield SearchResult(
+                f"import {module} as {alias}", alias, source, NameType.Module.value
+            )
 
     def get_modules(self, name) -> List[str]:
         """Get the list of modules that have global `name`."""
@@ -434,9 +441,11 @@ class AutoImport:
         """
         with self.connection:
             self._execute(models.Name.objects.drop_table())
+            self._execute(models.Alias.objects.drop_table())
             self._execute(models.Package.objects.drop_table())
             self._execute(models.Metadata.objects.drop_table())
             models.Name.create_table(self.connection)
+            models.Alias.create_table(self.connection)
             models.Package.create_table(self.connection)
             models.Metadata.create_table(self.connection)
             data = (
@@ -548,6 +557,10 @@ class AutoImport:
             name.source.value,
             name.name_type.value,
         )
+        
+    def add_aliases(self, aliases: Iterable[Alias]):
+        if aliases is not None:
+            self._executemany(models.Alias.objects.insert_into(), aliases)
 
     def _add_names(self, names: Iterable[Name]):
         if names is not None:

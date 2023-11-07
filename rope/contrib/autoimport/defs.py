@@ -92,6 +92,12 @@ class Package(NamedTuple):
     type: PackageType
 
 
+class Alias(NamedTuple):
+    """A module alias to be added to the database."""
+    alias: str
+    modname: str
+
+
 class Name(NamedTuple):
     """A Name to be added to the database."""
 
