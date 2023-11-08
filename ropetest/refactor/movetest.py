@@ -598,6 +598,21 @@ class MoveRefactoringTest(unittest.TestCase):
             print(pkg2.pkg3.pkg4.mod4)""")
         self.assertEqual(expected, self.mod1.read())
 
+    def test_moving_modules_lazy_import(self):
+        pkg2 = testutils.create_package(self.project, "pkg2")
+        pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
+        pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
+        code = dedent("""\
+            def import_later():
+                import pkg.mod4""")
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        expected = dedent("""\
+            def import_later():
+                import pkg2.pkg3.pkg4.mod4""")
+        self.assertEqual(expected, self.mod1.read())
+
     def test_moving_package_with_from_and_normal_imports(self):
         pkg2 = testutils.create_package(self.project, "pkg2")
         code = dedent("""\
