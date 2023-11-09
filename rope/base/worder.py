@@ -136,6 +136,18 @@ class _RealFinder:
         self.code = code
         self.raw = raw
 
+    def _find_next_word_start(self, offset):
+        current_offset = offset
+
+        try:
+            end = self.code.index("\n", offset + 1)
+        except ValueError:
+            end = len(self.code)
+
+        while current_offset < end and not self._is_id_char(current_offset):
+            current_offset += 1
+        return current_offset
+
     def _find_word_start(self, offset):
         current_offset = offset
         while current_offset >= 0 and self._is_id_char(current_offset):
@@ -341,7 +353,7 @@ class _RealFinder:
         line_start = self._get_line_start(last_import)
         return (
             self._find_import_end(last_import + 7) >= offset
-            and self._find_word_start(line_start) == last_import
+            and self._find_next_word_start(line_start) == last_import
         )
 
     def is_from_statement(self, offset):
