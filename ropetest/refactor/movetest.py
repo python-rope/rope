@@ -604,23 +604,6 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
             def import_later():
-                import pkg.mod4""")
-        self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
-        expected = dedent("""\
-            def import_later():
-                import pkg2.pkg3.pkg4.mod4""")
-        self.assertEqual(expected, self.mod1.read())
-
-    # The previous test has only one occurrence of "lazy", which is inside an
-    # import statement. This test has an extra reference
-    def test_moving_modules_lazy_import_used(self):
-        pkg2 = testutils.create_package(self.project, "pkg2")
-        pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
-        pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
-        code = dedent("""\
-            def import_later():
                 import pkg.mod4
                 pkg.mod4""")
         self.mod1.write(code)
@@ -630,6 +613,29 @@ class MoveRefactoringTest(unittest.TestCase):
             def import_later():
                 import pkg2.pkg3.pkg4.mod4
                 pkg2.pkg3.pkg4.mod4""")
+        self.assertEqual(expected, self.mod1.read())
+
+    def test_moving_modules_lazy_from_import(self):
+        pkg2 = testutils.create_package(self.project, "pkg2")
+        pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
+        pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
+        code = dedent("""\
+            def import_later():
+                from pkg import mod4
+                from pkg.mod4 import thing
+
+                mod4
+                thing""")
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        expected = dedent("""\
+            def import_later():
+                from pkg2.pkg3.pkg4 import mod4
+                from pkg2.pkg3.pkg4.mod4 import thing
+
+                mod4
+                thing""")
         self.assertEqual(expected, self.mod1.read())
 
 
