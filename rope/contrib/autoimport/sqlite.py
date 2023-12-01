@@ -546,13 +546,24 @@ class AutoImport:
         folder_paths = filter(filter_folders, folder_paths)  # type:ignore
         return list(OrderedDict.fromkeys(folder_paths))
 
+    def _safe_iterdir(self, folder: Path):
+        print(type(folder))
+        dirs = folder.iterdir()
+        while True:
+            try:
+                yield next(dirs)
+            except PermissionError:
+                pass
+            except StopIteration:
+                break
+
     def _get_available_packages(self) -> List[Package]:
         packages: List[Package] = [
             Package(module, Source.BUILTIN, None, PackageType.BUILTIN)
             for module in sys.builtin_module_names
         ]
         for folder in self._get_python_folders():
-            for package in folder.iterdir():
+            for package in self._safe_iterdir(folder):
                 package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
@@ -602,7 +613,7 @@ class AutoImport:
         if target_name in sys.builtin_module_names:
             return Package(target_name, Source.BUILTIN, None, PackageType.BUILTIN)
         for folder in self._get_python_folders():
-            for package in folder.iterdir():
+            for package in self._safe_iterdir(folder):
                 package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
