@@ -140,6 +140,22 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         """),
     )
 
+    import_aliases: List[Tuple[str, str]] = field(
+        default_factory=lambda : [
+            ("np", "numpy"),
+            ("pd", "pandas"),
+            ("plt", "matplotlib.pyplot"),
+            ("sns", "seaborn"),
+            ("tf", "tensorflow"),
+            ("sk", "sklearn"),
+            ("sm", "statsmodels"),
+        ],
+        description=dedent("""
+            Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recomend 
+            ``import numpy as np``.
+        """),
+    )
+
     prefer_module_from_imports: bool = field(
         default=False,
         description=dedent("""
