@@ -444,8 +444,10 @@ class _ExceptionalConditionChecker:
     def base_conditions(self, info):
         if info.region[1] > info.scope_region[1]:
             raise RefactoringError("Bad region selected for extract method")
+
         end_line = info.region_lines[1]
         end_scope = info.global_scope.get_inner_scope_for_line(end_line)
+
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError("Bad region selected for extract method")
         try:
@@ -497,6 +499,33 @@ class _ExceptionalConditionChecker:
             raise RefactoringError(
                 "Extracted piece should contain complete statements."
             )
+
+        if self._is_region_incomplete_block(info):
+            raise RefactoringError(
+                "Extracted piece cannot contain the start of a block without the end"
+            )
+
+    def _is_region_incomplete_block(self, info):
+        """
+        Is end more indented than start, and does that level continue outside the region?
+        If so, this is an incomplete block that cannot be extracted.
+        """
+
+        def get_effective_indent(lines, line):
+            if found_line := sourceutils.find_nonblank_line(lines, line):
+                return sourceutils.get_indents(info.pymodule.lines, found_line)
+            return None
+
+        start_line = info.region_lines[0]
+        end_line = info.region_lines[1]
+        start_indent = get_effective_indent(info.pymodule.lines, start_line)
+        end_indent = get_effective_indent(info.pymodule.lines, end_line)
+        end_next_indent = get_effective_indent(info.pymodule.lines, end_line + 1)
+        return (
+            end_next_indent is not None
+            and start_indent < end_indent
+            and end_next_indent >= end_indent
+        )
 
     def _is_region_on_a_word(self, info):
         if (
