@@ -1,3 +1,5 @@
+import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from textwrap import dedent
 from unittest.mock import ANY, patch
@@ -24,6 +26,20 @@ def is_in_memory_database(connection):
 
 def database_list(connection):
     return list(connection.execute("PRAGMA database_list"))
+
+
+def test_in_memory_database_share_cache(project, project2):
+    ai_1 = AutoImport(project, memory=True)
+    ai_2 = AutoImport(project, memory=True)
+
+    ai_3 = AutoImport(project2, memory=True)
+
+    with ai_1.connection:
+        ai_1.connection.execute("CREATE TABLE shared(data)")
+        ai_1.connection.execute("INSERT INTO shared VALUES(28)")
+    assert ai_2.connection.execute("SELECT data FROM shared").fetchone() == (28,)
+    with pytest.raises(sqlite3.OperationalError, match="no such table: shared"):
+        ai_3.connection.execute("SELECT data FROM shared").fetchone()
 
 
 def test_autoimport_connection_parameter_with_in_memory(
@@ -83,6 +99,37 @@ def test_init_py(
     autoimport.generate_cache([mod1_init])
     results = autoimport.search("foo", True)
     assert [("from pkg1 import foo", "foo")] == results
+
+
+def test_multithreading(
+    autoimport: AutoImport,
+    project: Project,
+    pkg1: Folder,
+    mod1: File,
+):
+    mod1_init = pkg1.get_child("__init__.py")
+    mod1_init.write(dedent("""\
+        def foo():
+            pass
+    """))
+    mod1.write(dedent("""\
+        foo
+    """))
+    autoimport = AutoImport(project, memory=False)
+    autoimport.generate_cache([mod1_init])
+
+    tp = ThreadPoolExecutor(1)
+    results = tp.submit(autoimport.search, "foo", True).result()
+    assert [("from pkg1 import foo", "foo")] == results
+
+
+def test_connection(project: Project, project2: Project):
+    ai1 = AutoImport(project)
+    ai2 = AutoImport(project)
+    ai3 = AutoImport(project2)
+
+    assert ai1.connection is not ai2.connection
+    assert ai1.connection is not ai3.connection
 
 
 @contextmanager

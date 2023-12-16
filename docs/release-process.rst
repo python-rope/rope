@@ -17,7 +17,7 @@ Release
 5. Tag the release with the tag annotation containing the release information,
    ``python bin/tag-release.py``
 6. ``python3 -m build``
-7. ``twine upload -s dist/rope-$VERSION.{tar.gz,whl}``
+7. ``twine upload dist/rope-$VERSION.{tar.gz,whl}``
 8. Publish to Discussions Announcement
 9. Close milestone
 

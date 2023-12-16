@@ -2,6 +2,8 @@
 
 import contextlib
 import json
+from hashlib import sha256
+import secrets
 import re
 import sqlite3
 import sys
@@ -11,6 +13,7 @@ from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import chain
 from pathlib import Path
+from threading import local
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
@@ -78,9 +81,10 @@ class AutoImport:
     """
 
     connection: sqlite3.Connection
-    underlined: bool
+    memory: bool
     project: Project
     project_package: Package
+    underlined: bool
 
     def __init__(
         self,
@@ -114,8 +118,9 @@ class AutoImport:
         assert project_package.path is not None
         self.project_package = project_package
         self.underlined = underlined
+        self.memory = memory
         if memory is _deprecated_default:
-            memory = True
+            self.memory = True
             warnings.warn(
                 "The default value for `AutoImport(memory)` argument will "
                 "change to use an on-disk database by default in the future. "
@@ -123,6 +128,7 @@ class AutoImport:
                 "`AutoImport(memory=True)` explicitly.",
                 DeprecationWarning,
             )
+        self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
@@ -149,14 +155,47 @@ class AutoImport:
         memory : bool
             if true, don't persist to disk
         """
+
+        def calculate_project_hash(data: str) -> str:
+            return sha256(data.encode()).hexdigest()
+
         if not memory and project is None:
             raise Exception("if memory=False, project must be provided")
-        db_path: str
         if memory or project is None or project.ropefolder is None:
-            db_path = ":memory:"
+            # Allows the in-memory db to be shared across threads
+            # See https://www.sqlite.org/inmemorydb.html
+            project_hash: str
+            if project is None:
+                project_hash = secrets.token_hex()
+            elif project.ropefolder is None:
+                project_hash = calculate_project_hash(project.address)
+            else:
+                project_hash = calculate_project_hash(project.ropefolder.real_path)
+            return sqlite3.connect(
+                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+            )
         else:
-            db_path = str(Path(project.ropefolder.real_path) / "autoimport.db")
-        return sqlite3.connect(db_path)
+            return sqlite3.connect(
+                str(Path(project.ropefolder.real_path) / "autoimport.db")
+            )
+
+    @property
+    def connection(self):
+        """
+        Creates a new connection if called from a new thread.
+
+        This makes sure AutoImport can be shared across threads.
+        """
+        if not hasattr(self.thread_local, "connection"):
+            self.thread_local.connection = self.create_database_connection(
+                project=self.project,
+                memory=self.memory,
+            )
+        return self.thread_local.connection
+
+    @connection.setter
+    def connection(self, value: sqlite3.Connection):
+        self.thread_local.connection = value
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
