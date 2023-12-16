@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- Remove site-packages from packages search tree (@tkrabel)
+
 # Release 1.11.0
 
 - #710, #561 Implement `except*` syntax (@lieryan)
