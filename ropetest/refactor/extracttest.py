@@ -1208,6 +1208,39 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
+    def test_no_incomplete_error_for_weird_indentation(self):
+        code = dedent("""\
+            def foo():
+                if foo:
+                    s = \"""
+            blah blah
+            blah
+            \"""
+                    print(
+            a, b, c
+                    )
+        """)
+        start = code.index("s =") + 3
+        after_first_triple_quote = code.index('"""') + 3
+        end = code.index('"""', after_first_triple_quote) + 3
+        self.do_extract_method(code, start, end, "new_func")
+
+    def test_no_incomplete_error_for_weird_indentation2(self):
+        code = dedent("""\
+            def foo():
+                print(
+            a, [
+                    3,
+                    4
+                    ],
+                    c
+                    )
+        """)
+        start = code.index("[")
+        end = code.index(']') + 1
+        print(code[start:end])
+        self.do_extract_method(code, start, end, "new_func")
+
     def test_extract_method_and_extra_blank_lines(self):
         code = dedent("""\
 
