@@ -144,7 +144,8 @@ class AutoImportTest(unittest.TestCase):
 
     def test_generate_full_cache(self):
         # The single thread test takes much longer than the multithread test but is easier to debug
-        self.importer.generate_modules_cache(single_thread=False)
+        single_thread = False
+        self.importer.generate_modules_cache(single_thread=single_thread)
         
         # Create a temporary directory and set permissions to 000
         import tempfile, sys
