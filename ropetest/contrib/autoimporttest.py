@@ -153,7 +153,7 @@ class AutoImportTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as dir:
             import os
             os.chmod(dir, 0)
-            sys.path.append(dir)
+            self.importer.project.prefs.python_path = [dir]
             self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
         self.assertTrue(len(self.importer._dump_all()) > 0)

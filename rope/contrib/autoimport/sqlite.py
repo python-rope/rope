@@ -547,7 +547,6 @@ class AutoImport:
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _safe_iterdir(self, folder: Path):
-        print(type(folder))
         dirs = folder.iterdir()
         while True:
             try:
