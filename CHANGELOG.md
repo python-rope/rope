@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #733 skip directories with perm error when building autoimport index (@MrBago)
+
 # Release 1.11.0
 
 - #710, #561 Implement `except*` syntax (@lieryan)
