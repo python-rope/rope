@@ -75,7 +75,7 @@ class Resource:
         return self.project.get_folder(parent)
 
     @property
-    def path(self):
+    def path(self) -> str:
         """Return the path of this resource relative to the project root
 
         The path is the list of parent directories separated by '/' followed
@@ -84,17 +84,17 @@ class Resource:
         return self._path
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this resource"""
         return self.path.split("/")[-1]
 
     @property
-    def real_path(self):
+    def real_path(self) -> str:
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.path)
 
     @property
-    def pathlib(self):
+    def pathlib(self) -> Path:
         """Return the file as a pathlib path."""
         return Path(self.real_path)
 
