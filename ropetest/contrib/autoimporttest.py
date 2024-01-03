@@ -138,9 +138,9 @@ class AutoImportTest(unittest.TestCase):
         single_thread = False
         self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
-        self.assertTrue(len(self.importer._dump_all()) > 0)
+        self.assertGreater(len(self.importer._dump_all()), 0)
         for table in self.importer._dump_all():
-            self.assertTrue(len(table) > 0)
+            self.assertGreater(len(table), 0)
 
     def test_skipping_directories_not_accessible_because_of_permission_error(self):
         # The single thread test takes much longer than the multithread test but is easier to debug
@@ -155,7 +155,7 @@ class AutoImportTest(unittest.TestCase):
             self.importer.project.prefs.python_path = [dir]
             self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
-        self.assertTrue(len(self.importer._dump_all()) > 0)
+        self.assertGreater(len(self.importer._dump_all()), 0)
 
 
 class AutoImportObservingTest(unittest.TestCase):
