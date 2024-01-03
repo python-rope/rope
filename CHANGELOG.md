@@ -2,6 +2,7 @@
 
 - #733 skip directories with perm error when building autoimport index (@MrBago)
 - #722, #723 Remove site-packages from packages search tree (@tkrabel)
+- #738 Implement os.PathLike on Resource (@lieryan)
 
 # Release 1.11.0
 
