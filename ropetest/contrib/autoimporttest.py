@@ -142,7 +142,7 @@ class AutoImportTest(unittest.TestCase):
         for table in self.importer._dump_all():
             self.assertTrue(len(table) > 0)
 
-    def test_generate_full_cache(self):
+    def test_skipping_directories_not_accessible_because_of_permission_error(self):
         # The single thread test takes much longer than the multithread test but is easier to debug
         single_thread = False
         self.importer.generate_modules_cache(single_thread=single_thread)
