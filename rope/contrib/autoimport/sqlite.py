@@ -540,8 +540,7 @@ class AutoImport:
             return folder.is_dir() and folder.as_posix() != "/usr/bin"
 
         folders = self.project.get_python_path_folders()
-        folder_paths = map(lambda folder: Path(folder.real_path), folders)
-        folder_paths = filter(filter_folders, folder_paths)  # type:ignore
+        folder_paths = filter(filter_folders, map(Path, folders))
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _safe_iterdir(self, folder: Path):
