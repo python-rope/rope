@@ -64,8 +64,11 @@ class Resource(os.PathLike):
         """Remove resource from the project"""
         self._perform_change(change.RemoveResource(self), "Removing <%s>" % self.path)
 
+    def is_dir(self):
+        """Alias for `is_folder()`"""
+
     def is_folder(self):
-        """Return true if the resource is a folder"""
+        """Return True if the resource is a Folder"""
 
     def create(self):
         """Create this resource"""
