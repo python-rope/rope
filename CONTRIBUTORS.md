@@ -81,6 +81,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/apmorton"><img src="https://avatars.githubusercontent.com/u/63636?v=4?s=100" width="100px;" alt="Austin Morton"/><br /><sub><b>Austin Morton</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=apmorton" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://bamboolib.8080labs.com"><img src="https://avatars.githubusercontent.com/u/13402027?v=4?s=100" width="100px;" alt="Tobias Krabel"/><br /><sub><b>Tobias Krabel</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=tkrabel" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MrBago"><img src="https://avatars.githubusercontent.com/u/223219?v=4?s=100" width="100px;" alt="Bago Amirbekian"/><br /><sub><b>Bago Amirbekian</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=MrBago" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
