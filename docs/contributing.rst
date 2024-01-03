@@ -95,6 +95,13 @@ Source Repository
 Rope uses GitHub_. The repository exists at
 `python-rope/rope`_.
 
+Setting up for local development
+================================
+
+#. Clone repository: ``git clone https://github.com/python-rope/rope.git``
+#. Create a virtualenv: ``python -m venv rope-venv``
+#. Activate the virtualenv
+#. Install the project into the venv: ``pip install -e '.[doc,dev]'``
 
 Submitting pull requests
 ========================

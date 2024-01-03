@@ -20,7 +20,7 @@ def get_package_tuple(
     """
     package_name = package_path.name
     package_type: PackageType
-    if package_name.startswith(".") or package_name == "__pycache__":
+    if package_name.startswith(".") or package_name in ["__pycache__", "site-packages"]:
         return None
     if package_name.endswith((".egg-info", ".dist-info")):
         return None
