@@ -134,7 +134,7 @@ class AutoImportTest(unittest.TestCase):
         self.assertIn(import_statement, self.importer.search("D"))
 
     def test_generate_full_cache(self):
-        """The single thread test takes much longer than the multithread test but is easier to debug"""
+        # The single thread test takes much longer than the multithread test but is easier to debug
         single_thread = False
         self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
@@ -151,7 +151,7 @@ class AutoImportTest(unittest.TestCase):
         import tempfile, sys
         with tempfile.TemporaryDirectory() as dir:
             import os
-            os.chmod(dir, 0)
+            os.chmod(dir, 0o000)
             self.importer.project.prefs.python_path = [dir]
             self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
