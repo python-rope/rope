@@ -113,7 +113,7 @@ class AutoImport:
                 autoimport = AutoImport(..., memory=True)
         """
         self.project = project
-        project_package = get_package_tuple(Path(project.root.real_path), project)
+        project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None
         self.project_package = project_package
@@ -175,9 +175,7 @@ class AutoImport:
                 f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
             )
         else:
-            return sqlite3.connect(
-                str(Path(project.ropefolder.real_path) / "autoimport.db")
-            )
+            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
 
     @property
     def connection(self):
@@ -627,7 +625,7 @@ class AutoImport:
     ) -> ModuleFile:
         assert self.project_package.path
         underlined = underlined if underlined else self.underlined
-        resource_path: Path = Path(resource.real_path)
+        resource_path: Path = resource.pathlib
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False
