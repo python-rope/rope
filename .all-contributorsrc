@@ -537,6 +537,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "MrBago",
+      "name": "Bago Amirbekian",
+      "avatar_url": "https://avatars.githubusercontent.com/u/223219?v=4",
+      "profile": "https://github.com/MrBago",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
