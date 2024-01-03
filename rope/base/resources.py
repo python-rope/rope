@@ -34,7 +34,7 @@ from pathlib import Path
 from rope.base import change, exceptions, fscommands
 
 
-class Resource:
+class Resource(os.PathLike):
     """Represents files and folders in a project"""
 
     def __init__(self, project, path):
@@ -48,6 +48,10 @@ class Resource:
             self.path,
             hex(id(self)),
         )
+
+    def __fspath__(self) -> str:
+        """Return the file system path of this resource"""
+        return self.project._get_resource_path(self.path)
 
     def move(self, new_location):
         """Move resource to `new_location`"""
@@ -67,7 +71,7 @@ class Resource:
         """Create this resource"""
 
     def exists(self):
-        return os.path.exists(self.real_path)
+        return os.path.exists(self)
 
     @property
     def parent(self):
@@ -90,13 +94,12 @@ class Resource:
 
     @property
     def real_path(self) -> str:
-        """Return the file system path of this resource"""
-        return self.project._get_resource_path(self.path)
+        return os.fspath(self)
 
     @property
     def pathlib(self) -> Path:
         """Return the file as a pathlib path."""
-        return Path(self.real_path)
+        return Path(self)
 
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
@@ -135,7 +138,7 @@ class File(Resource):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            with open(self.real_path, "rb") as handle:
+            with open(self, "rb") as handle:
                 return handle.read()
         return self.project.fscommands.read(self.real_path)
 
@@ -165,7 +168,7 @@ class Folder(Resource):
     def get_children(self):
         """Return the children of this folder"""
         try:
-            children = os.listdir(self.real_path)
+            children = os.listdir(self)
         except OSError:
             return []
         result = []
