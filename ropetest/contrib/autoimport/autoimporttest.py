@@ -186,3 +186,33 @@ def test_setup_db_metadata_table_is_current(autoimport):
     with assert_database_is_preserved(conn), \
             patch("rope.base.versioning.calculate_version_hash", return_value="up-to-date-value"):
         autoimport._setup_db()
+
+
+class TestQueryUsesIndexes:
+    def test_search_by_name_uses_index(self, autoimport):
+        query = models.Name.search_by_name.select_star().explain()
+        assert (
+            list(autoimport._execute(query, ("abc",)))[0][-1]
+            == "SEARCH names USING INDEX names_name (name=?)"
+        )
+
+    def test_search_by_name_like_uses_index(self, autoimport):
+        query = models.Name.search_by_name_like.select_star().explain()
+        assert (
+            list(autoimport._execute(query, ("abc",)))[0][-1]
+            == "SEARCH names USING INDEX names_name_nocase (name>? AND name<?)"
+        )
+
+    def test_search_module_like_uses_index(self, autoimport):
+        query = models.Name.search_module_like.select_star().explain()
+        assert (
+            list(autoimport._execute(query, ("abc",)))[0][-1]
+            == "SEARCH names USING INDEX names_module_nocase (module>? AND module<?)"
+        )
+
+    def test_search_submodule_like_uses_index(self, autoimport):
+        query = models.Name.search_submodule_like.select_star().explain()
+        assert (
+            list(autoimport._execute(query, ("abc",)))[0][-1]
+            == "SCAN names" # FIXME: avoid full table scan
+        )

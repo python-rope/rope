@@ -9,6 +9,9 @@ class FinalQuery:
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._query}")'
 
+    def explain(self):
+        return FinalQuery("EXPLAIN QUERY PLAN " + self._query)
+
 
 class Query:
     def __init__(self, query: str, columns: List[str]):
