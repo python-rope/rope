@@ -499,33 +499,14 @@ class _ExceptionalConditionChecker:
             raise RefactoringError(
                 "Extracted piece should contain complete statements."
             )
-
-        if self._is_region_incomplete_block(info):
-            raise RefactoringError(
-                "Extracted piece cannot contain the start of a block without the end"
-            )
-
-    def _is_region_incomplete_block(self, info):
-        """
-        Is end more indented than start, and does that level continue outside the region?
-        If so, this is an incomplete block that cannot be extracted.
-        """
-
-        def get_effective_indent(lines, line):
-            if found_line := sourceutils.find_nonblank_line(lines, line):
-                return sourceutils.get_indents(info.pymodule.lines, found_line)
-            return None
-
-        start_line = info.region_lines[0]
-        end_line = info.region_lines[1]
-        start_indent = get_effective_indent(info.pymodule.lines, start_line)
-        end_indent = get_effective_indent(info.pymodule.lines, end_line)
-        end_next_indent = get_effective_indent(info.pymodule.lines, end_line + 1)
-        return (
-            end_next_indent is not None
-            and start_indent < end_indent
-            and end_next_indent >= end_indent
+        unbalanced_region_finder = _UnbalancedRegionFinder(
+            info.region_lines[0], info.region_lines[1]
         )
+        unbalanced_region_finder.visit(info.pymodule.ast_node)
+        if unbalanced_region_finder.error:
+            raise RefactoringError(
+                "Extracted piece cannot contain the start of a block without the end."
+            )
 
     def _is_region_on_a_word(self, info):
         if (
@@ -1120,6 +1101,34 @@ class _AsyncStatementFinder(_BaseErrorFinder):
 
     def _ClassDef(self, node):
         pass
+
+
+class _UnbalancedRegionFinder(_BaseErrorFinder):
+    """
+    Flag an error if we are including the start of a block without the end.
+    We detect this by ensuring there is no AST node that starts inside the
+    selected range but ends outside of it.
+    """
+
+    def __init__(self, line_start: int, line_end: int):
+        self.error = False
+        self.line_start = line_start
+        self.line_end = line_end
+
+    def generic_visit(self, node: ast.AST):
+        if not hasattr(node, "end_lineno"):
+            super().generic_visit(node)  # Visit children
+            return
+        ends_before_range_starts = node.end_lineno < self.line_start
+        starts_after_range_ends = node.lineno > self.line_end
+        if ends_before_range_starts or starts_after_range_ends:
+            return  # Don't visit children
+        starts_on_or_after_range_start = node.lineno >= self.line_start
+        ends_after_range_ends = node.end_lineno > self.line_end
+        if starts_on_or_after_range_start and ends_after_range_ends:
+            self.error = True
+            return  # Don't visit children
+        super().generic_visit(node)  # Visit children
 
 
 class _GlobalFinder(ast.RopeNodeVisitor):

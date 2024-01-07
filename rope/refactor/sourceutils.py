@@ -1,5 +1,4 @@
 from rope.base import codeanalyze
-from typing import Optional
 
 
 def get_indents(lines, lineno):
@@ -92,16 +91,3 @@ def get_body_region(defined):
 
 def get_indent(project):
     return project.prefs.get("indent_size", 4)
-
-
-def find_nonblank_line(
-    lines, start_line: int, skip_comments: bool = True
-) -> Optional[int]:
-    """Return index of first non-blank line starting with start_line, None if not found"""
-    next_line = start_line
-    while next_line < lines.length():
-        line_code = lines.get_line(next_line).strip()
-        if line_code and (not skip_comments or not line_code.startswith("#")):
-            return next_line
-        next_line = next_line + 1
-    return None
