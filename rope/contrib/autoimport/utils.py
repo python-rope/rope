@@ -119,7 +119,7 @@ def get_files(
     else:
         assert package.path
         for file in package.path.rglob("*.py"):
-            if "site-packages" in file.parts:
+            if "site-packages" in file.relative_to(package.path).parts:
                 continue
             if file.name == "__init__.py":
                 yield ModuleFile(
