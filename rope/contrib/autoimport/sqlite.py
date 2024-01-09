@@ -141,15 +141,14 @@ class AutoImport:
             self.prefs.underlined = underlined
         self.project_package = project_package
         if memory is _deprecated_default:
-            if self.prefs.memory is None:
-                self.prefs.memory = True
-                warnings.warn(
-                    "The default value for `AutoImport(memory)` argument will "
-                    "change to use an on-disk database by default in the future. "
-                    "If you want to use an in-memory database, you need to pass "
-                    "`AutoImport(memory=True)` explicitly or set it in the config file.",
-                    DeprecationWarning,
-                )
+            self.prefs.memory = True
+            warnings.warn(
+                "The default value for `AutoImport(memory)` argument will "
+                "change to use an on-disk database by default in the future. "
+                "If you want to use an in-memory database, you need to pass "
+                "`AutoImport(memory=True)` explicitly or set it in the config file.",
+                DeprecationWarning,
+            )
         else:
             self.prefs.memory = memory
         self.thread_local = local()
@@ -211,7 +210,7 @@ class AutoImport:
         if not hasattr(self.thread_local, "connection"):
             self.thread_local.connection = self.create_database_connection(
                 project=self.project,
-                memory=self.memory,
+                memory=self.prefs.memory,
             )
         return self.thread_local.connection
 
