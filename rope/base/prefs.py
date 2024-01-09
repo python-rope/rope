@@ -13,6 +13,14 @@ from rope.base.resources import Folder
 
 
 @dataclass
+class AutoimportPrefs:
+    underlined: bool = field(
+        default=False, description="Cache underlined (private) modules")
+    memory: bool = field(default=None, description="Cache in memory instead of disk")
+    parallel: bool = field(default=True, description="Use multiple processes to parse")
+
+
+@dataclass
 class Prefs:
     """Class to store rope preferences."""
 
@@ -206,6 +214,8 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             Can only be set in config.py.
         """),
     )
+    autoimport: AutoimportPrefs = field(
+        default_factory=lambda: AutoimportPrefs(), description="Preferences for Autoimport")
 
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""
