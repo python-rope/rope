@@ -11,7 +11,7 @@ class AutoImportTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
-        self.importer = autoimport.AutoImport(self.project, observe=False)
+        self.importer = autoimport.AutoImport(self.project, observe=False, memory=True)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -86,7 +86,7 @@ class AutoImportTest(unittest.TestCase):
         self.assertEqual(["mod1"], self.importer.get_modules("_myvar"))
 
     def test_caching_underlined_names_passing_to_the_constructor(self):
-        importer = autoimport.AutoImport(self.project, False, True)
+        importer = autoimport.AutoImport(self.project, False, True, memory=True)
         self.mod1.write("_myvar = None\n")
         importer.update_resource(self.mod1)
         self.assertEqual(["mod1"], importer.get_modules("_myvar"))
@@ -165,7 +165,7 @@ class AutoImportObservingTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
-        self.importer = autoimport.AutoImport(self.project, observe=True)
+        self.importer = autoimport.AutoImport(self.project, observe=True, memory=True)
 
     def tearDown(self):
         testutils.remove_project(self.project)

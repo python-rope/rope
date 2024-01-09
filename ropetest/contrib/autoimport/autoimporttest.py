@@ -14,7 +14,7 @@ from rope.contrib.autoimport.sqlite import AutoImport
 
 @pytest.fixture
 def autoimport(project: Project):
-    with closing(AutoImport(project)) as ai:
+    with closing(AutoImport(project, memory=True)) as ai:
         yield ai
 
 
@@ -124,9 +124,9 @@ def test_multithreading(
 
 
 def test_connection(project: Project, project2: Project):
-    ai1 = AutoImport(project)
-    ai2 = AutoImport(project)
-    ai3 = AutoImport(project2)
+    ai1 = AutoImport(project, memory=True)
+    ai2 = AutoImport(project, memory=True)
+    ai3 = AutoImport(project2, memory=True)
 
     assert ai1.connection is not ai2.connection
     assert ai1.connection is not ai3.connection
