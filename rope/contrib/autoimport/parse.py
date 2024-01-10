@@ -42,6 +42,7 @@ def get_names_from_file(
     package_name: str = "",
     underlined: bool = False,
     process_imports: bool = False,
+    get_docstring: bool = False,
 ) -> Generator[PartialName, None, None]:
     """Get all the names from a given file using ast."""
     try:
@@ -49,26 +50,27 @@ def get_names_from_file(
     except SyntaxError as error:
         print(error)
         return
-    mod_desc: str = ast.get_docstring(root_node) or ""
+    mod_desc: str = ast.get_docstring(root_node) or "" if get_docstring else ""
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
                     assert isinstance(target, ast.Name)
                     if underlined or not target.id.startswith("_"):
-                        try:
-                            doc = ast.get_docstring(node.value, clean=True)
-                        except:
-                            logger.debug(
-                                "failed to get doc for %r, a value for %r",
-                                node.value,
-                                target.id,
-                            )
-                            doc = ""
+                        doc = ""
+                        if get_docstring:
+                            try:
+                                doc = ast.get_docstring(node.value, clean=True)
+                            except:
+                                logger.debug(
+                                    "failed to get doc for %r, a value for %r",
+                                    node.value,
+                                    target.id,
+                                )
                         yield PartialName(
                             target.id,
                             get_type_ast(node),
-                            doc,
+                            doc or "",
                             mod_desc,
                         )
                 except (AttributeError, AssertionError):
@@ -114,11 +116,15 @@ def get_type_object(imported_object) -> NameType:
     return NameType.Variable
 
 
-def get_names(module: ModuleInfo, package: Package) -> List[Name]:
+def get_names(
+    module: ModuleInfo, package: Package, get_docstring: bool = False
+) -> List[Name]:
     """Get all names from a module and package."""
     if isinstance(module, ModuleCompiled):
         return list(
-            get_names_from_compiled(package.name, package.source, module.underlined)
+            get_names_from_compiled(
+                package.name, package.source, module.underlined, get_docstring
+            )
         )
     if isinstance(module, ModuleFile):
         return [
@@ -137,6 +143,7 @@ def get_names_from_compiled(
     package: str,
     source: Source,
     underlined: bool = False,
+    get_docstring: bool = False,
 ) -> Generator[Name, None, None]:
     """
     Get the names from a compiled module.
@@ -162,7 +169,7 @@ def get_names_from_compiled(
         logger.error(f"{package} could not be imported for autoimport analysis")
         return
     else:
-        mod_desc: str = inspect.getdoc(module) or ""
+        mod_desc: str = inspect.getdoc(module) or "" if get_docstring else ""
         for name, value in inspect.getmembers(module):
             if underlined or not name.startswith("_"):
                 if (
@@ -176,7 +183,7 @@ def get_names_from_compiled(
                         package,
                         source,
                         get_type_object(value),
-                        inspect.getdoc(value) or "",
+                        inspect.getdoc(value) or "" if get_docstring else "",
                         mod_desc,
                     )
 

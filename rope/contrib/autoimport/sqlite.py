@@ -19,7 +19,7 @@ from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 from packaging.requirements import Requirement
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
-from rope.base.prefs import AutoimportPrefs
+from rope.base.prefs import AutoimportPrefs, DocumentationMode
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
@@ -44,7 +44,10 @@ from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
+    packages: List[Package],
+    underlined: bool,
+    job_set: taskhandle.BaseJobSet,
+    get_docstring: bool,
 ) -> Generator[Future, None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
@@ -52,7 +55,7 @@ def get_future_names(
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
                 job_set.increment()
-                yield executor.submit(get_names, module, package)
+                yield executor.submit(get_names, module, package, get_docstring)
 
 
 def filter_packages(
@@ -457,12 +460,16 @@ class AutoImport:
             for package in packages:
                 for module in get_files(package, underlined):
                     job_set.started_job(module.modname)
-                    for name in get_names(module, package):
+                    for name in get_names(
+                        module, package, self._should_preproccess_docstring
+                    ):
                         self._add_name(name)
                         job_set.finished_job()
         else:
             for future_name in as_completed(
-                get_future_names(packages, underlined, job_set)
+                get_future_names(
+                    packages, underlined, job_set, self._should_preproccess_docstring
+                )
             ):
                 self._add_names(future_name.result())
                 job_set.finished_job()
@@ -560,7 +567,9 @@ class AutoImport:
         underlined = underlined if underlined else self.prefs.underlined
         module = self._resource_to_module(resource, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
-        for name in get_names(module, self.project_package):
+        for name in get_names(
+            module, self.project_package, self._should_preproccess_docstring
+        ):
             self._add_name(name)
         if commit:
             self.connection.commit()
@@ -697,3 +706,7 @@ class AutoImport:
     def _executemany(self, query: models.FinalQuery, *args, **kwargs):
         assert isinstance(query, models.FinalQuery)
         return self.connection.executemany(query._query, *args, **kwargs)
+
+    @property
+    def _should_preproccess_docstring(self) -> bool:
+        return self.prefs.documentation is DocumentationMode.ENABLED
