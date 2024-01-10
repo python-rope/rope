@@ -49,24 +49,38 @@ def get_names_from_file(
     except SyntaxError as error:
         print(error)
         return
+    mod_desc: str = ast.get_docstring(root_node) or ""
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 try:
                     assert isinstance(target, ast.Name)
                     if underlined or not target.id.startswith("_"):
+                        try:
+                            doc = ast.get_docstring(node.value, clean=True)
+                        except:
+                            logger.debug(
+                                "failed to get doc for %r, a value for %r",
+                                node.value,
+                                target.id,
+                            )
+                            doc = ""
                         yield PartialName(
                             target.id,
                             get_type_ast(node),
+                            doc,
+                            mod_desc,
                         )
                 except (AttributeError, AssertionError):
                     # TODO handle tuple assignment
                     pass
-        elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+        elif isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
             if underlined or not node.name.startswith("_"):
                 yield PartialName(
                     node.name,
                     get_type_ast(node),
+                    ast.get_docstring(node, clean=True) or "",
+                    mod_desc,
                 )
         elif process_imports and isinstance(node, ast.ImportFrom):
             # When we process imports, we want to include names in it's own package.
@@ -83,7 +97,12 @@ def get_names_from_file(
                 else:
                     real_name = name
                 if underlined or not real_name.startswith("_"):
-                    yield PartialName(real_name, get_type_ast(node))
+                    yield PartialName(
+                        real_name,
+                        get_type_ast(node),
+                        "",
+                        mod_desc,
+                    )
 
 
 def get_type_object(imported_object) -> NameType:
@@ -143,6 +162,7 @@ def get_names_from_compiled(
         logger.error(f"{package} could not be imported for autoimport analysis")
         return
     else:
+        mod_desc: str = inspect.getdoc(module) or ""
         for name, value in inspect.getmembers(module):
             if underlined or not name.startswith("_"):
                 if (
@@ -151,10 +171,24 @@ def get_names_from_compiled(
                     or inspect.isbuiltin(value)
                 ):
                     yield Name(
-                        str(name), package, package, source, get_type_object(value)
+                        str(name),
+                        package,
+                        package,
+                        source,
+                        get_type_object(value),
+                        inspect.getdoc(value) or "",
+                        mod_desc,
                     )
 
 
 def combine(package: Package, module: ModuleFile, name: PartialName) -> Name:
     """Combine information to form a full name."""
-    return Name(name.name, module.modname, package.name, package.source, name.name_type)
+    return Name(
+        name.name,
+        module.modname,
+        package.name,
+        package.source,
+        name.name_type,
+        name.description,
+        name.mod_desc,
+    )

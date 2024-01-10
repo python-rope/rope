@@ -96,6 +96,8 @@ class Name(Model):
         "package": "TEXT",
         "source": "INTEGER",
         "type": "INTEGER",
+        "description": "TEXT",
+        "mod_desc": "TEXT",
     }
     columns = list(schema.keys())
     objects = Query(table_name, columns)

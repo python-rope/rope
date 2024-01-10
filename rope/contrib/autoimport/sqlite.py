@@ -257,10 +257,8 @@ class AutoImport:
         Returns a sorted list of import statement, modname pairs
         """
         results: List[Tuple[str, str, int]] = [
-            (statement, import_name, source)
-            for statement, import_name, source, type in self.search_full(
-                name, exact_match
-            )
+            (suggestion.import_statement, suggestion.name, suggestion.source)
+            for suggestion in self.search_full(name, exact_match)
         ]
         return sort_and_deduplicate_tuple(results)
 
@@ -305,16 +303,26 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for import_name, module, source, name_type in self._execute(
-            models.Name.search_by_name_like.select("name", "module", "source", "type"),
+        for (
+            import_name,
+            module,
+            source,
+            name_type,
+            description,
+        ) in self._execute(
+            models.Name.search_by_name_like.select(
+                "name", "module", "source", "type", "description"
+            ),
             (name,),
         ):
             yield (
                 SearchResult(
                     f"from {module} import {import_name}",
                     import_name,
+                    module,
                     source,
                     name_type,
+                    description,
                 )
             )
 
@@ -328,8 +336,9 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for module, source in self._execute(
-            models.Name.search_submodule_like.select("module", "source"), (name,)
+        for module, source, mod_desc in self._execute(
+            models.Name.search_submodule_like.select("module", "source", "mod_desc"),
+            (name,),
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -341,17 +350,25 @@ class AutoImport:
                 SearchResult(
                     f"from {remaining} import {import_name}",
                     import_name,
+                    module,
                     source,
                     NameType.Module.value,
+                    mod_desc,
                 )
             )
-        for module, source in self._execute(
-            models.Name.search_module_like.select("module", "source"), (name,)
+        for module, source, mod_desc in self._execute(
+            models.Name.search_module_like.select("module", "source", "mod_desc"),
+            (name,),
         ):
             if "." in module:
                 continue
             yield SearchResult(
-                f"import {module}", module, source, NameType.Module.value
+                f"import {module}",
+                module,
+                module,
+                source,
+                NameType.Module.value,
+                mod_desc,
             )
 
     def get_modules(self, name) -> List[str]:
@@ -625,6 +642,8 @@ class AutoImport:
             name.package,
             name.source.value,
             name.name_type.value,
+            name.description,
+            name.mod_desc,
         )
 
     def _add_names(self, names: Iterable[Name]):
@@ -668,6 +687,7 @@ class AutoImport:
             resource_modname,
             underlined,
             resource_path.name == "__init__.py",
+            "",
         )
 
     def _execute(self, query: models.FinalQuery, *args, **kwargs):

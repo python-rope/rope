@@ -111,11 +111,11 @@ def get_files(
     """Find all files to parse in a given path using __init__.py."""
     if package.type in (PackageType.COMPILED, PackageType.BUILTIN):
         if package.source in (Source.STANDARD, Source.BUILTIN):
-            yield ModuleCompiled(None, package.name, underlined, True)
+            yield ModuleCompiled(None, package.name, underlined, True, "")
     elif package.type == PackageType.SINGLE_FILE:
         assert package.path
         assert package.path.suffix == ".py"
-        yield ModuleFile(package.path, package.path.stem, underlined, False)
+        yield ModuleFile(package.path, package.path.stem, underlined, False, "")
     else:
         assert package.path
         for file in package.path.rglob("*.py"):
@@ -127,8 +127,13 @@ def get_files(
                     get_modname_from_path(file.parent, package.path),
                     underlined,
                     True,
+                    "",
                 )
             elif should_parse(file, underlined):
                 yield ModuleFile(
-                    file, get_modname_from_path(file, package.path), underlined, False
+                    file,
+                    get_modname_from_path(file, package.path),
+                    underlined,
+                    False,
+                    "",
                 )
