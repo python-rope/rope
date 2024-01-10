@@ -1,5 +1,7 @@
 # **Upcoming release**
+
 - #516 Autoimport Now automatically detects project dependencies and can read TOML configuration
+- #515 Autoimport now gathers docstrings of imported names and modules (@bagel897).
 - #733 skip directories with perm error when building autoimport index (@MrBago)
 - #722, #723 Remove site-packages from packages search tree (@tkrabel)
 - #738 Implement os.PathLike on Resource (@lieryan)
@@ -25,10 +27,10 @@
 # Release 1.8.0
 
 - #650 Install pre-commit hooks on rope repository (@lieryan)
-- #655 Remove unused __init__() methods (@edreamleo, @lieryan)
+- #655 Remove unused **init**() methods (@edreamleo, @lieryan)
 - #656 Reformat using black 23.1.0 (@edreamleo)
 - #674 Fix/supress all mypy complaints (@edreamleo)
-- #680 Remove a do-nothing statement in soi._handle_first_parameter (@edreamleo)
+- #680 Remove a do-nothing statement in soi.\_handle_first_parameter (@edreamleo)
 - #687, #688 Fix autoimport not scanning packages recursively (@lieryan)
 
 # Release 1.7.0
@@ -42,15 +44,17 @@
 - #627 Fix parsing of octal literal (@lieryan)
 - #643, #435 Fix fstrings with mismatched parens (@apmorton)
 - #646 Fix renaming kwargs when refactoring from imports (@apmorton)
-- #648 Remove __init__ from import statement when using sqlite autoimport (@bagel897)
+- #648 Remove **init** from import statement when using sqlite autoimport (@bagel897)
 
 ## Improvements
 
 - rope.contrib.generate improvements
+
   - #640 Remove unnecessary eval in generate.py (@edreamleo)
   - #641 Add type annotations for rope.contrib.generate.create_generate() (@edreamleo)
 
 - call_for_nodes() improvements
+
   - #634 Remove call_for_nodes(recursive) argument (@edreamleo)
   - #642 Add comments & docstrings related to call_for_nodes (@edreamleo, @lieryan)
 
@@ -73,7 +77,6 @@
 - #620 Remove unused import in occurrences.py (@edreamleo)
 - #625 Remove support for deprecated ast nodes (@lieryan)
 
-
 ## Tests/Dev
 
 - #626 Install pre-commit hooks on rope repository (@lieryan)
@@ -83,7 +86,6 @@
 ## Docs
 
 - #636 Update readme to reflect 1.0 has been released. (@maxnoe)
-
 
 # Release 1.6.0
 
@@ -117,7 +119,6 @@
 - pynames and pyobjects
   - #569, #572 rename pynames to pynamesdef in pyobjectsdef.ph (@edreamleo)
 
-
 # Release 1.5.1
 
 - #531 Add alternative way to retrieve version number from pyproject.toml
@@ -132,7 +133,6 @@ Date: 2022-11-23
 - #522 Implement patchedast parsing of MatchMapping (@lieryan)
 - #514 Fix inlining dictionary with inline comment (@lieryan)
 
-
 # Release 1.4.0
 
 Date: 2022-10-22
@@ -142,7 +142,6 @@ Date: 2022-10-22
 - #506, #507 Fix issue with parsing function call args list
 - #411, #505 Fix extracting generator without parens
 - #18, #510 When the function is a builtin function, the call parameter's name was sometimes incorrectly identified as an AssignedName. This led to rename refactoring incorrectly renaming these parameters.
-
 
 # Release 1.3.0
 
@@ -156,7 +155,6 @@ Date: 2022-07-29
 ## Improvement
 
 - #501, #502 Autoimport improvements
-
 
 # Release 1.2.0
 
@@ -172,16 +170,14 @@ Date: 2022-04-22
 
 - #479 Add ABC and type hints for TaskHandle and JobSet (@bageljrkhanofemus)
 - #486 Drop Python 2 support (@bageljrkhanofemus, @lieryan)
-- #487 Improved value inference of __all__ declaration (@lieryan)
-- #424 Add some basic __repr__ to make it easier for debugging (@lieryan)
-
+- #487 Improved value inference of **all** declaration (@lieryan)
+- #424 Add some basic **repr** to make it easier for debugging (@lieryan)
 
 # Release 1.1.1
 
 ## Bug fixes
 
 - #476 Fix rope.contrib.autoimport package missing from release (@bageljrkhanofemus)
-
 
 # Release 1.1.0
 
@@ -202,7 +198,6 @@ Date: 2022-05-25
 
 - The pickle-based autoimport implementation is still the default, but will be deprecated sometime in the future.
 
-
 # Release 1.0.0
 
 Date: 2022-04-08
@@ -215,7 +210,6 @@ Date: 2022-04-08
 
 - #459 Fix bug while extracting method with augmented assignment to subscript in try block (@dryobates)
 
-
 # Release 0.23.0
 
 ## Syntax support
@@ -226,14 +220,13 @@ Date: 2022-04-08
 
 ## Bug fixes
 
-- #134, #453 Preserve newline format when writing files  (@lieryan)
+- #134, #453 Preserve newline format when writing files (@lieryan)
 - #457 Fix extract info collection for list comprehension with multiple targets
   (@lieryan)
 
 ## Documentation
 
 - #455 Fix typo (@Jasha10)
-
 
 # Release 0.22.0
 
@@ -252,7 +245,6 @@ Date: 2021-11-23
 
 - #447 Add Python 3.10 to tests
 
-
 # Release 0.21.1
 
 Date: 2021-11-11
@@ -260,7 +252,6 @@ Date: 2021-11-11
 ## Bug fixes
 
 - #441. Start publishing wheel packages to allow offline installs
-
 
 # Release 0.21.0
 
@@ -299,7 +290,6 @@ Date: 2021-10-18
 - #399 Add Github Actions to enforce black code style (@lieryan)
 - #403 Remove plain 'unittest' only runner (@lieryan)
 
-
 # Release 0.20.1
 
 Date: 2021-09-18
@@ -308,7 +298,6 @@ Date: 2021-09-18
 
 - Fix caller of `_namedexpr_last()` throwing exception due to returning unexpected list
   instead of boolean
-
 
 # Release 0.20.0
 
@@ -330,7 +319,6 @@ Date: 2021-09-18
 ## Bug fixes
 
 - #380 Fix list of variables that are returned and/or turned into argument when extracting method in a loop
-
 
 # Previous releases
 
