@@ -1,5 +1,4 @@
 """AutoImport module for rope."""
-import sqlite3
 import contextlib
 import re
 import sys
@@ -16,6 +15,7 @@ from rope.base.resources import Resource
 from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
     ModuleFile,
+    ModuleInfo,
     NameType,
     Package,
     PackageType,
@@ -35,15 +35,15 @@ from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
+    modules: Iterable[Tuple[Package, ModuleInfo]],
+    job_set: taskhandle.BaseJobSet,
 ) -> Generator[Future, None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
-        for package in packages:
-            for module in get_files(package, underlined):
-                job_set.started_job(module.modname)
-                job_set.increment()
-                yield executor.submit(get_names, module, package)
+        for package, module in modules:
+            job_set.started_job(module.modname)
+            job_set.increment()
+            yield executor.submit(get_names, module, package)
 
 
 def filter_packages(
@@ -281,20 +281,35 @@ class AutoImport:
         """
         if resources is None:
             resources = self.project.get_python_files()
-        job_set = task_handle.create_jobset(
-            "Generating autoimport cache", len(resources)
-        )
         self.database.delete_package(self.project_package.name)
-        futures = []
-        with ProcessPoolExecutor() as executor:
+
+        def get_modules():
             for file in resources:
-                job_set.started_job(f"Working on {file.path}")
                 module = self._resource_to_module(file, underlined)
-                futures.append(executor.submit(get_names, module, self.project_package))
-        for future in as_completed(futures):
-            self.database.add_names(future.result())
-            job_set.finished_job()
-        self.database.commit()
+                yield (self.project_package, module)
+
+        self._index(get_modules(), task_handle, False)
+
+    def _index(
+        self,
+        modules: Iterable[Tuple[Package, ModuleInfo]],
+        task_handle: taskhandle.BaseTaskHandle = taskhandle.DEFAULT_TASK_HANDLE,
+        single_thread: bool = False,
+        commit: bool = True,
+    ):
+        job_set = task_handle.create_jobset("Generating autoimport cache", 0)
+        if single_thread:
+            for package, module in modules:
+                job_set.started_job(module.modname)
+                for name in get_names(module, package):
+                    self.database.add_name(name)
+                    job_set.finished_job()
+        else:
+            for future_name in as_completed(get_future_names(modules, job_set)):
+                self.database.add_names(future_name.result())
+                job_set.finished_job()
+        if commit:
+            self.database.commit()
 
     def generate_modules_cache(
         self,
@@ -324,22 +339,13 @@ class AutoImport:
         if not packages:
             return
         self.database.add_packages(packages)
-        job_set = task_handle.create_jobset("Generating autoimport cache", 0)
-        if single_thread:
+
+        def get_modules():
             for package in packages:
                 for module in get_files(package, underlined):
-                    job_set.started_job(module.modname)
-                    for name in get_names(module, package):
-                        self.database.add_name(name)
-                        job_set.finished_job()
-        else:
-            for future_name in as_completed(
-                get_future_names(packages, underlined, job_set)
-            ):
-                self.database.add_names(future_name.result())
-                job_set.finished_job()
+                    yield package, module
 
-        self.database.commit()
+        self._index(get_modules(), task_handle, single_thread)
 
     def _get_packages_from_modules(self, modules: List[str]) -> Iterator[Package]:
         for modname in modules:
@@ -403,10 +409,7 @@ class AutoImport:
         underlined = underlined if underlined else self.underlined
         module = self._resource_to_module(resource, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
-        for name in get_names(module, self.project_package):
-            self.database.add_name(name)
-        if commit:
-            self.database.commit()
+        self._index([(self.project_package, module)], single_thread=True, commit=commit)
 
     def _changed(self, resource):
         if not resource.is_folder():
@@ -467,9 +470,6 @@ class AutoImport:
         if not resource.is_folder():
             modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
-
-    def _add_future_names(self, names: Future):
-        self.database.add_names(names.result())
 
     def _find_package_path(self, target_name: str) -> Optional[Package]:
         if target_name in sys.builtin_module_names:
