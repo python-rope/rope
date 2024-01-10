@@ -2,6 +2,7 @@
 # type: ignore
 """Rope preferences."""
 from dataclasses import asdict, dataclass
+from enum import Enum, unique
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -10,7 +11,11 @@ from pytoolconfig import PyToolConfig, UniversalKey, field
 from pytoolconfig.sources import Source
 
 from rope.base.resources import Folder
-
+@unique
+class DocumentationMode(Enum):
+    DISABLED = False 
+    ENABLED = True 
+    LAZY = "lazy"
 
 @dataclass
 class AutoimportPrefs:
@@ -18,6 +23,7 @@ class AutoimportPrefs:
         default=False, description="Cache underlined (private) modules")
     memory: bool = field(default=None, description="Cache in memory instead of disk")
     parallel: bool = field(default=True, description="Use multiple processes to parse")
+    documentation: DocumentationMode = field(default=DocumentationMode.DISABLED, description="Cache documentation")
 
 
 @dataclass
