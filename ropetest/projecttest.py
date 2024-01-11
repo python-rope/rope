@@ -9,6 +9,7 @@ from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
 from rope.base.project import NoProject, Project, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
+from rope.base.resources import File, Folder
 from ropetest import testutils
 
 
@@ -609,6 +610,18 @@ class ProjectTest(unittest.TestCase):
         source_folders = self.project.get_source_folders()
         self.assertEqual(2, len(source_folders))
         self.assertTrue(self.project.root in source_folders and src in source_folders)
+
+    def test_folder_is_pathlike(self):
+        resource = self.project.root.create_folder("src")
+        self.assertIsInstance(resource, Folder)
+
+        self.assertIsInstance(os.fspath(resource), str)
+
+    def test_file_is_pathlike(self):
+        resource = self.project.root.create_file("mod.py")
+        self.assertIsInstance(resource, File)
+
+        self.assertIsInstance(os.fspath(resource), str)
 
 
 class ResourceObserverTest(unittest.TestCase):

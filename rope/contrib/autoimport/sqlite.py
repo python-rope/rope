@@ -113,7 +113,7 @@ class AutoImport:
                 autoimport = AutoImport(..., memory=True)
         """
         self.project = project
-        project_package = get_package_tuple(Path(project.root.real_path), project)
+        project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None
         self.project_package = project_package
@@ -175,9 +175,7 @@ class AutoImport:
                 f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
             )
         else:
-            return sqlite3.connect(
-                str(Path(project.ropefolder.real_path) / "autoimport.db")
-            )
+            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
 
     @property
     def connection(self):
@@ -542,9 +540,18 @@ class AutoImport:
             return folder.is_dir() and folder.as_posix() != "/usr/bin"
 
         folders = self.project.get_python_path_folders()
-        folder_paths = map(lambda folder: Path(folder.real_path), folders)
-        folder_paths = filter(filter_folders, folder_paths)  # type:ignore
+        folder_paths = filter(filter_folders, map(Path, folders))
         return list(OrderedDict.fromkeys(folder_paths))
+
+    def _safe_iterdir(self, folder: Path):
+        dirs = folder.iterdir()
+        while True:
+            try:
+                yield next(dirs)
+            except PermissionError:
+                pass
+            except StopIteration:
+                break
 
     def _get_available_packages(self) -> List[Package]:
         packages: List[Package] = [
@@ -552,7 +559,7 @@ class AutoImport:
             for module in sys.builtin_module_names
         ]
         for folder in self._get_python_folders():
-            for package in folder.iterdir():
+            for package in self._safe_iterdir(folder):
                 package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
@@ -602,7 +609,7 @@ class AutoImport:
         if target_name in sys.builtin_module_names:
             return Package(target_name, Source.BUILTIN, None, PackageType.BUILTIN)
         for folder in self._get_python_folders():
-            for package in folder.iterdir():
+            for package in self._safe_iterdir(folder):
                 package_tuple = get_package_tuple(package, self.project)
                 if package_tuple is None:
                     continue
@@ -617,7 +624,7 @@ class AutoImport:
     ) -> ModuleFile:
         assert self.project_package.path
         underlined = underlined if underlined else self.underlined
-        resource_path: Path = Path(resource.real_path)
+        resource_path: Path = resource.pathlib
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
         # so we set add_package_name to False

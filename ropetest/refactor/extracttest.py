@@ -1149,6 +1149,64 @@ class ExtractMethodTest(unittest.TestCase):
         end = code.rindex(")") + 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
+    
+    def test_raising_exception_on_incomplete_block(self):
+        code = dedent("""\
+            if True:
+                a = 1
+                b = 2
+        """)
+        start = code.index("if")
+        end = code.index("1") + 1
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "new_func")
+
+    def test_raising_exception_on_incomplete_block_2(self):
+        code = dedent("""\
+            if True:
+                a = 1
+            #
+                b = 2
+        """)
+        start = code.index("if")
+        end = code.index("1") + 1
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "new_func")
+
+    def test_raising_exception_on_incomplete_block_3(self):
+        code = dedent("""\
+            if True:
+                a = 1
+            
+                b = 2
+        """)
+        start = code.index("if")
+        end = code.index("1") + 1
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "new_func")
+
+    def test_raising_exception_on_incomplete_block_4(self):
+        code = dedent("""\
+                #
+            if True:
+                a = 1
+                b = 2
+        """)
+        start = code.index("#")
+        end = code.index("1") + 1
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "new_func")
+
+    def test_raising_exception_on_incomplete_block_5(self):
+        code = dedent("""\
+            if True:
+                if 0:
+                    a = 1
+        """)
+        start = code.index("if")
+        end = code.index("0:") + 2
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "new_func")
 
     def test_extract_method_and_extra_blank_lines(self):
         code = dedent("""\
