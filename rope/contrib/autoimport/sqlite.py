@@ -17,7 +17,7 @@ from threading import local
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
 from packaging.requirements import Requirement
-
+from copy import deepcopy
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.prefs import AutoimportPrefs
 from rope.base.project import Project
@@ -133,7 +133,7 @@ class AutoImport:
                 autoimport = AutoImport(..., memory=True)
         """
         self.project = project
-        self.prefs = self.project.prefs.autoimport
+        self.prefs = deepcopy(self.project.prefs.autoimport)
         project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None

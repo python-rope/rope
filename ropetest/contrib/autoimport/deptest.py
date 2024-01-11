@@ -13,7 +13,6 @@ def project(request, tmp_path: Path) -> Iterable[Project]:
     if doc is not None:
         file = tmp_path / "pyproject.toml"
         file.write_text(doc, encoding="utf-8")
-        print(file, doc)
     project = Project(tmp_path)
     yield project
     project.close()

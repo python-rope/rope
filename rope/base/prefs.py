@@ -215,7 +215,7 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         """),
     )
     autoimport: AutoimportPrefs = field(
-        default_factory=lambda: AutoimportPrefs(), description="Preferences for Autoimport")
+        default_factory=AutoimportPrefs, description="Preferences for Autoimport")
 
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""
