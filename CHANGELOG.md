@@ -12,6 +12,7 @@
 - #719 Allows the in-memory db to be shared across threads (@tkrabel)
 - #720 create one sqlite3.Connection per thread using a thread local (@tkrabel)
 - #715 change AutoImport's `get_modules` to be case sensitive (@bagel897)
+- #734 raise exception when extracting the start of a block without the end
 
 # Release 1.10.0
 

@@ -444,8 +444,10 @@ class _ExceptionalConditionChecker:
     def base_conditions(self, info):
         if info.region[1] > info.scope_region[1]:
             raise RefactoringError("Bad region selected for extract method")
+
         end_line = info.region_lines[1]
         end_scope = info.global_scope.get_inner_scope_for_line(end_line)
+
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError("Bad region selected for extract method")
         try:
@@ -496,6 +498,14 @@ class _ExceptionalConditionChecker:
         if info.region != info.lines_region:
             raise RefactoringError(
                 "Extracted piece should contain complete statements."
+            )
+        unbalanced_region_finder = _UnbalancedRegionFinder(
+            info.region_lines[0], info.region_lines[1]
+        )
+        unbalanced_region_finder.visit(info.pymodule.ast_node)
+        if unbalanced_region_finder.error:
+            raise RefactoringError(
+                "Extracted piece cannot contain the start of a block without the end."
             )
 
     def _is_region_on_a_word(self, info):
@@ -1091,6 +1101,34 @@ class _AsyncStatementFinder(_BaseErrorFinder):
 
     def _ClassDef(self, node):
         pass
+
+
+class _UnbalancedRegionFinder(_BaseErrorFinder):
+    """
+    Flag an error if we are including the start of a block without the end.
+    We detect this by ensuring there is no AST node that starts inside the
+    selected range but ends outside of it.
+    """
+
+    def __init__(self, line_start: int, line_end: int):
+        self.error = False
+        self.line_start = line_start
+        self.line_end = line_end
+
+    def generic_visit(self, node: ast.AST):
+        if not hasattr(node, "end_lineno"):
+            super().generic_visit(node)  # Visit children
+            return
+        ends_before_range_starts = node.end_lineno < self.line_start
+        starts_after_range_ends = node.lineno > self.line_end
+        if ends_before_range_starts or starts_after_range_ends:
+            return  # Don't visit children
+        starts_on_or_after_range_start = node.lineno >= self.line_start
+        ends_after_range_ends = node.end_lineno > self.line_end
+        if starts_on_or_after_range_start and ends_after_range_ends:
+            self.error = True
+            return  # Don't visit children
+        super().generic_visit(node)  # Visit children
 
 
 class _GlobalFinder(ast.RopeNodeVisitor):
