@@ -24,6 +24,7 @@ class ModuleInfo(NamedTuple):
     modname: str
     underlined: bool
     process_imports: bool
+    description: str
 
 
 class ModuleFile(ModuleInfo):
@@ -100,6 +101,8 @@ class Name(NamedTuple):
     package: str
     source: Source
     name_type: NameType
+    description: str
+    mod_desc: str
 
 
 class PartialName(NamedTuple):
@@ -107,6 +110,8 @@ class PartialName(NamedTuple):
 
     name: str
     name_type: NameType
+    description: str
+    mod_desc: str
 
 
 class SearchResult(NamedTuple):
@@ -114,5 +119,7 @@ class SearchResult(NamedTuple):
 
     import_statement: str
     name: str
+    modname: str
     source: int
     itemkind: int
+    description: str

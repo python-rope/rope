@@ -16,7 +16,10 @@ from pathlib import Path
 from threading import local
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
+from packaging.requirements import Requirement
+
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
+from rope.base.prefs import AutoimportPrefs, DocumentationMode
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
@@ -41,7 +44,10 @@ from rope.refactor import importutils
 
 
 def get_future_names(
-    packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
+    packages: List[Package],
+    underlined: bool,
+    job_set: taskhandle.BaseJobSet,
+    get_docstring: bool,
 ) -> Generator[Future, None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
@@ -49,22 +55,40 @@ def get_future_names(
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
                 job_set.increment()
-                yield executor.submit(get_names, module, package)
+                yield executor.submit(get_names, module, package, get_docstring)
 
 
 def filter_packages(
-    packages: Iterable[Package], underlined: bool, existing: List[str]
+    packages: Iterable[Package],
+    underlined: bool,
+    existing: List[str],
+    dependencies: Optional[List[Requirement]],
 ) -> Iterable[Package]:
     """Filter list of packages to parse."""
+    parsed_deps = (
+        [dep.name for dep in dependencies] if dependencies is not None else None
+    )
+
+    def is_dep(package) -> bool:
+        return (
+            parsed_deps is None
+            or package.name in parsed_deps
+            or package.source is not Source.SITE_PACKAGE
+        )
+
     if underlined:
 
         def filter_package(package: Package) -> bool:
-            return package.name not in existing
+            return package.name not in existing and is_dep(package)
 
     else:
 
         def filter_package(package: Package) -> bool:
-            return package.name not in existing and not package.name.startswith("_")
+            return (
+                package.name not in existing
+                and not package.name.startswith("_")
+                and is_dep(package)
+            )
 
     return filter(filter_package, packages)
 
@@ -81,16 +105,15 @@ class AutoImport:
     """
 
     connection: sqlite3.Connection
-    memory: bool
     project: Project
     project_package: Package
-    underlined: bool
+    prefs: AutoimportPrefs
 
     def __init__(
         self,
         project: Project,
         observe: bool = True,
-        underlined: bool = False,
+        underlined: Optional[bool] = None,
         memory: bool = _deprecated_default,
     ):
         """Construct an AutoImport object.
@@ -113,25 +136,28 @@ class AutoImport:
                 autoimport = AutoImport(..., memory=True)
         """
         self.project = project
+        self.prefs = self.project.prefs.autoimport
         project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None
+        if underlined is not None:
+            self.prefs.underlined = underlined
         self.project_package = project_package
-        self.underlined = underlined
-        self.memory = memory
         if memory is _deprecated_default:
-            self.memory = True
+            self.prefs.memory = True
             warnings.warn(
                 "The default value for `AutoImport(memory)` argument will "
                 "change to use an on-disk database by default in the future. "
                 "If you want to use an in-memory database, you need to pass "
-                "`AutoImport(memory=True)` explicitly.",
+                "`AutoImport(memory=True)` explicitly or set it in the config file.",
                 DeprecationWarning,
             )
+        else:
+            self.prefs.memory = memory
         self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
-            memory=memory,
+            memory=self.prefs.memory,
         )
         self._setup_db()
         if observe:
@@ -187,7 +213,7 @@ class AutoImport:
         if not hasattr(self.thread_local, "connection"):
             self.thread_local.connection = self.create_database_connection(
                 project=self.project,
-                memory=self.memory,
+                memory=self.prefs.memory,
             )
         return self.thread_local.connection
 
@@ -234,10 +260,8 @@ class AutoImport:
         Returns a sorted list of import statement, modname pairs
         """
         results: List[Tuple[str, str, int]] = [
-            (statement, import_name, source)
-            for statement, import_name, source, type in self.search_full(
-                name, exact_match
-            )
+            (suggestion.import_statement, suggestion.name, suggestion.source)
+            for suggestion in self.search_full(name, exact_match)
         ]
         return sort_and_deduplicate_tuple(results)
 
@@ -282,16 +306,26 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for import_name, module, source, name_type in self._execute(
-            models.Name.search_by_name_like.select("name", "module", "source", "type"),
+        for (
+            import_name,
+            module,
+            source,
+            name_type,
+            description,
+        ) in self._execute(
+            models.Name.search_by_name_like.select(
+                "name", "module", "source", "type", "description"
+            ),
             (name,),
         ):
             yield (
                 SearchResult(
                     f"from {module} import {import_name}",
                     import_name,
+                    module,
                     source,
                     name_type,
+                    description,
                 )
             )
 
@@ -305,8 +339,9 @@ class AutoImport:
         """
         if not exact_match:
             name = name + "%"  # Makes the query a starts_with query
-        for module, source in self._execute(
-            models.Name.search_submodule_like.select("module", "source"), (name,)
+        for module, source, mod_desc in self._execute(
+            models.Name.search_submodule_like.select("module", "source", "mod_desc"),
+            (name,),
         ):
             parts = module.split(".")
             import_name = parts[-1]
@@ -318,17 +353,25 @@ class AutoImport:
                 SearchResult(
                     f"from {remaining} import {import_name}",
                     import_name,
+                    module,
                     source,
                     NameType.Module.value,
+                    mod_desc,
                 )
             )
-        for module, source in self._execute(
-            models.Name.search_module_like.select("module", "source"), (name,)
+        for module, source, mod_desc in self._execute(
+            models.Name.search_module_like.select("module", "source", "mod_desc"),
+            (name,),
         ):
             if "." in module:
                 continue
             yield SearchResult(
-                f"import {module}", module, source, NameType.Module.value
+                f"import {module}",
+                module,
+                module,
+                source,
+                NameType.Module.value,
+                mod_desc,
             )
 
     def get_modules(self, name) -> List[str]:
@@ -389,12 +432,13 @@ class AutoImport:
         """
         Generate global name cache for external modules listed in `modules`.
 
-        If no modules are provided, it will generate a cache for every module available.
+        If modules is not specified, uses PEP 621 metadata.
+        If modules aren't specified and PEP 621 is not present, caches every package
         This method searches in your sys.path and configured python folders.
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        underlined = self.underlined if underlined is None else underlined
+        underlined = self.prefs.underlined if underlined is None else underlined
 
         packages: List[Package] = (
             self._get_available_packages()
@@ -403,21 +447,29 @@ class AutoImport:
         )
 
         existing = self._get_packages_from_cache()
-        packages = list(filter_packages(packages, underlined, existing))
-        if not packages:
+        packages = list(
+            filter_packages(
+                packages, underlined, existing, self.project.prefs.dependencies
+            )
+        )
+        if len(packages) == 0:
             return
         self._add_packages(packages)
         job_set = task_handle.create_jobset("Generating autoimport cache", 0)
-        if single_thread:
+        if single_thread or not self.prefs.parallel:
             for package in packages:
                 for module in get_files(package, underlined):
                     job_set.started_job(module.modname)
-                    for name in get_names(module, package):
+                    for name in get_names(
+                        module, package, self._should_preproccess_docstring
+                    ):
                         self._add_name(name)
                         job_set.finished_job()
         else:
             for future_name in as_completed(
-                get_future_names(packages, underlined, job_set)
+                get_future_names(
+                    packages, underlined, job_set, self._should_preproccess_docstring
+                )
             ):
                 self._add_names(future_name.result())
                 job_set.finished_job()
@@ -512,10 +564,12 @@ class AutoImport:
         self, resource: Resource, underlined: bool = False, commit: bool = True
     ):
         """Update the cache for global names in `resource`."""
-        underlined = underlined if underlined else self.underlined
+        underlined = underlined if underlined else self.prefs.underlined
         module = self._resource_to_module(resource, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
-        for name in get_names(module, self.project_package):
+        for name in get_names(
+            module, self.project_package, self._should_preproccess_docstring
+        ):
             self._add_name(name)
         if commit:
             self.connection.commit()
@@ -537,7 +591,11 @@ class AutoImport:
 
     def _get_python_folders(self) -> List[Path]:
         def filter_folders(folder: Path) -> bool:
-            return folder.is_dir() and folder.as_posix() != "/usr/bin"
+            return (
+                folder.is_dir()
+                and folder.as_posix() != "/usr/bin"
+                and str(folder) != self.project.address
+            )
 
         folders = self.project.get_python_path_folders()
         folder_paths = filter(filter_folders, map(Path, folders))
@@ -593,6 +651,8 @@ class AutoImport:
             name.package,
             name.source.value,
             name.name_type.value,
+            name.description,
+            name.mod_desc,
         )
 
     def _add_names(self, names: Iterable[Name]):
@@ -623,7 +683,7 @@ class AutoImport:
         self, resource: Resource, underlined: bool = False
     ) -> ModuleFile:
         assert self.project_package.path
-        underlined = underlined if underlined else self.underlined
+        underlined = underlined if underlined else self.prefs.underlined
         resource_path: Path = resource.pathlib
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
@@ -636,6 +696,7 @@ class AutoImport:
             resource_modname,
             underlined,
             resource_path.name == "__init__.py",
+            "",
         )
 
     def _execute(self, query: models.FinalQuery, *args, **kwargs):
@@ -645,3 +706,7 @@ class AutoImport:
     def _executemany(self, query: models.FinalQuery, *args, **kwargs):
         assert isinstance(query, models.FinalQuery)
         return self.connection.executemany(query._query, *args, **kwargs)
+
+    @property
+    def _should_preproccess_docstring(self) -> bool:
+        return self.prefs.documentation is DocumentationMode.ENABLED

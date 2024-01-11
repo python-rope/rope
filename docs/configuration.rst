@@ -14,6 +14,8 @@ Will be used if [tool.rope] is configured.
 
     [tool.rope]
     split_imports = true
+    [tool.rope.autoimport]
+    underlined = false
 
 config.py
 ---------
@@ -56,8 +58,13 @@ It follows the exact same syntax of the pyproject.toml.
 
 
 Options
--------
+=======
 .. autopytoolconfigtable:: rope.base.prefs.Prefs
+
+Autoimport Options
+------------------
+.. autopytoolconfigtable:: rope.base.prefs.AutoimportPrefs
+
 
 Old Configuration File
 ----------------------
