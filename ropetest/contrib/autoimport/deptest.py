@@ -1,21 +1,10 @@
-from pathlib import Path
 from typing import Iterable
 
 import pytest
 
-from rope.base.project import Project
 from rope.contrib.autoimport.sqlite import AutoImport
 
 
-@pytest.fixture
-def project(request, tmp_path: Path) -> Iterable[Project]:
-    doc = request.param
-    if doc is not None:
-        file = tmp_path / "pyproject.toml"
-        file.write_text(doc, encoding="utf-8")
-    project = Project(tmp_path)
-    yield project
-    project.close()
 
 
 @pytest.fixture

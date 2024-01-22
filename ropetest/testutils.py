@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-
+from typing import Optional
 import rope.base.project
 from rope.contrib import generate
 
@@ -14,10 +14,14 @@ logging.basicConfig(format="%(levelname)s:%(funcName)s:%(message)s", level=loggi
 RUN_TMP_DIR = tempfile.mkdtemp(prefix="ropetest-run-")
 
 
-def sample_project(foldername=None, **kwds):
+def sample_project(foldername=None, pyproject: Optional[str] = None, **kwds):
     root = Path(tempfile.mkdtemp(prefix="project-", dir=RUN_TMP_DIR))
     root /= foldername if foldername else "sample_project"
     logging.debug("Using %s as root of the project.", root)
+    root.mkdir(exist_ok=True)
+    if pyproject is not None:
+        file = root / "pyproject.toml"
+        file.write_text(pyproject, encoding="utf-8")
     # Using these prefs for faster tests
     prefs = {
         "save_objectdb": False,
