@@ -546,6 +546,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "raymyers",
+      "name": "Ray Myers",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3324?v=4",
+      "profile": "http://mender.ai",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
