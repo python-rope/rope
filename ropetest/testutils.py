@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Optional
+
 import rope.base.project
 from rope.contrib import generate
 

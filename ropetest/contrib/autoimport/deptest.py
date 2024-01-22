@@ -5,8 +5,6 @@ import pytest
 from rope.contrib.autoimport.sqlite import AutoImport
 
 
-
-
 @pytest.fixture
 def autoimport(project) -> Iterable[AutoImport]:
     autoimport = AutoImport(project, memory=True)
