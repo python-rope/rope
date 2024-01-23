@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- Check for ast.Attributes when finding occurrences in fstrings (@sandratsy)
 
 # Release 1.12.0
 
