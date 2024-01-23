@@ -335,14 +335,16 @@ class _TextualFinder:
                 yield match.start("occurrence")
             elif match.groupdict()["fstring"]:
                 f_string = match.groupdict()["fstring"]
-                for occurrence_node in self._search_in_f_string(f_string):
-                    yield match.start("fstring") + occurrence_node.col_offset
+                for offset in self._search_in_f_string(f_string):
+                    yield match.start("fstring") + offset
 
     def _search_in_f_string(self, f_string):
         tree = ast.parse(f_string)
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == self.name:
-                yield node
+                yield node.col_offset
+            elif isinstance(node, ast.Attribute) and node.attr == self.name:
+                yield node.end_col_offset - len(self.name)
 
     def _normal_search(self, source):
         current = 0
