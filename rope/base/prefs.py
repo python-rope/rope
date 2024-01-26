@@ -151,7 +151,7 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             ("sm", "statsmodels"),
         ],
         description=dedent("""
-            Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recomend 
+            Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recommend 
             ``import numpy as np``.
         """),
     )

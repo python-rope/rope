@@ -140,7 +140,7 @@ class AutoImportTest(unittest.TestCase):
         self.assertIn(import_statement, self.importer.search("hasM"))
         self.assertIn(import_statement, self.importer.search("h"))
 
-    def test_alias_updated_frpom_prefs(self):
+    def test_alias_updated_from_prefs(self):
         self.mod2.write("myvar = None\n")
         self.project.prefs.import_aliases = [("mod2_alias", "pkg.mod2")]
         self.importer.clear_cache()
