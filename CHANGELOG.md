@@ -1,7 +1,22 @@
 # **Upcoming release**
 
+- ...
+
+# Release 1.12.0
+
+- #733 skip directories with perm error when building autoimport index (@MrBago)
+- #722, #723 Remove site-packages from packages search tree (@tkrabel)
+- #738 Implement os.PathLike on Resource (@lieryan)
+- #739, #736 Ensure autoimport requests uses indexes (@lieryan)
+- #734, #735 raise exception when extracting the start of a block without the end
+
+# Release 1.11.0
+
 - #710, #561 Implement `except*` syntax (@lieryan)
 - #711 allow building documentation without having rope module installed (@kloczek)
+- #719 Allows the in-memory db to be shared across threads (@tkrabel)
+- #720 create one sqlite3.Connection per thread using a thread local (@tkrabel)
+- #715 change AutoImport's `get_modules` to be case sensitive (@bagel897)
 
 # Release 1.10.0
 

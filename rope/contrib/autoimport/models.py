@@ -9,6 +9,9 @@ class FinalQuery:
     def __repr__(self):
         return f'{self.__class__.__name__}("{self._query}")'
 
+    def explain(self):
+        return FinalQuery("EXPLAIN QUERY PLAN " + self._query)
+
 
 class Query:
     def __init__(self, query: str, columns: List[str]):
@@ -121,9 +124,14 @@ class Name(Model):
     @classmethod
     def create_table(cls, connection):
         super().create_table(connection)
-        connection.execute("CREATE INDEX IF NOT EXISTS name ON names(name)")
-        connection.execute("CREATE INDEX IF NOT EXISTS module ON names(module)")
-        connection.execute("CREATE INDEX IF NOT EXISTS package ON names(package)")
+        # fmt: off
+        connection.execute("CREATE INDEX IF NOT EXISTS names_name ON names(name)")
+        connection.execute("CREATE INDEX IF NOT EXISTS names_module ON names(module)")
+        connection.execute("CREATE INDEX IF NOT EXISTS names_package ON names(package)")
+        connection.execute("CREATE INDEX IF NOT EXISTS names_name_nocase ON names(name COLLATE NOCASE)")
+        connection.execute("CREATE INDEX IF NOT EXISTS names_module_nocase ON names(module COLLATE NOCASE)")
+        connection.execute("CREATE INDEX IF NOT EXISTS names_package_nocase ON names(package COLLATE NOCASE)")
+        # fmt: on
 
     search_submodule_like = objects.where('module LIKE ("%." || ?)')
     search_module_like = objects.where("module LIKE (?)")

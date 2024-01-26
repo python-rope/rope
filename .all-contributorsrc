@@ -528,11 +528,39 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "tkrabel",
+      "name": "Tobias Krabel",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13402027?v=4",
+      "profile": "https://bamboolib.8080labs.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "MrBago",
+      "name": "Bago Amirbekian",
+      "avatar_url": "https://avatars.githubusercontent.com/u/223219?v=4",
+      "profile": "https://github.com/MrBago",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "raymyers",
+      "name": "Ray Myers",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3324?v=4",
+      "profile": "http://mender.ai",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
   "projectOwner": "python-rope",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "commitConvention": "none"
+  "commitConvention": "none",
+  "commitType": "docs"
 }
