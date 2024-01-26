@@ -100,7 +100,7 @@ class Alias(Model):
     @classmethod
     def create_table(cls, connection):
         super().create_table(connection)
-        connection.execute("CREATE INDEX IF NOT EXISTS alias ON aliases(alias)")
+        connection.execute("CREATE INDEX IF NOT EXISTS aliases_alias_nocase ON aliases(alias COLLATE NOCASE)")
 
     modules = Query(
         "(SELECT DISTINCT aliases.*, package, source, type FROM aliases INNER JOIN names on aliases.module = names.module)",
