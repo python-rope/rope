@@ -332,7 +332,8 @@ class AutoImport:
                 f"import {module}", module, source, NameType.Module.value
             )
         for alias, module, source in self._execute(
-            models.Alias.search_modules_with_alias.select("alias", "module", "source"), (name,)
+            models.Alias.search_modules_with_alias.select("alias", "module", "source"),
+            (name,)
         ):
             yield SearchResult(
                 f"import {module} as {alias}", alias, source, NameType.Module.value
@@ -604,7 +605,7 @@ class AutoImport:
             name.source.value,
             name.name_type.value,
         )
-        
+
     def add_aliases(self, aliases: Iterable[Alias]):
         if aliases:
             self._executemany(models.Alias.objects.insert_into(), aliases)
