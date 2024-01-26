@@ -333,7 +333,7 @@ class AutoImport:
             )
         for alias, module, source in self._execute(
             models.Alias.search_modules_with_alias.select("alias", "module", "source"),
-            (name,)
+            (name,),
         ):
             yield SearchResult(
                 f"import {module} as {alias}", alias, source, NameType.Module.value
