@@ -81,7 +81,6 @@ class AutoImport:
 
     """
 
-    connection: sqlite3.Connection
     memory: bool
     project: Project
     project_package: Package
@@ -179,7 +178,7 @@ class AutoImport:
             return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
 
     @property
-    def connection(self):
+    def connection(self) -> sqlite3.Connection:
         """
         Creates a new connection if called from a new thread.
 
