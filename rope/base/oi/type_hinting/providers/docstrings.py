@@ -21,6 +21,7 @@ Discussions:
     - https://groups.google.com/d/topic/rope-dev/LCFNN98vckI/discussion
 
 """
+
 import re
 
 from rope.base.oi.type_hinting import utils

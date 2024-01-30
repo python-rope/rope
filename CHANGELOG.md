@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #730 Match on module aliases for autoimport suggestions
 
 # Release 1.12.0
 

@@ -14,6 +14,11 @@ Will be used if [tool.rope] is configured.
 
     [tool.rope]
     split_imports = true
+    autoimport.aliases = [
+        ['dt', 'datetime'],
+        ['mp', 'multiprocessing'],
+    ]
+
 
 config.py
 ---------
@@ -48,9 +53,9 @@ Additionally, you can run an executable function at startup of rope.
 pytool.toml
 -----------
 If neither a config.py or a pyproject.toml is present, rope will use a pytool.toml.
-It follows the exact same syntax of the pyproject.toml.
+It follows the exact same syntax as ``pyproject.toml``.
 
-- Mac OS X: ``~/Library/Application Support/pytool.toml.``
+- Mac OS X: ``~/Library/Application Support/pytool.toml``.
 - Unix: ``~/.config/pytool.toml``` or in $XDG_CONFIG_HOME, if defined
 - Windows: ``C:\Users\<username>\AppData\Local\pytool.toml``
 
