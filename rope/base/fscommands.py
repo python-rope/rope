@@ -6,6 +6,7 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 `MercurialCommands` for example.
 
 """
+
 import os
 import re
 import shutil

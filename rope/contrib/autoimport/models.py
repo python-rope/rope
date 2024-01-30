@@ -56,13 +56,11 @@ class Query:
 class Model(ABC):
     @property
     @abstractmethod
-    def table_name(self) -> str:
-        ...
+    def table_name(self) -> str: ...
 
     @property
     @abstractmethod
-    def schema(self) -> Dict[str, str]:
-        ...
+    def schema(self) -> Dict[str, str]: ...
 
     @classmethod
     def create_table(cls, connection):

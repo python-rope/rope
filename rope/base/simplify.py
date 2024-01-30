@@ -2,6 +2,7 @@
 
 This module is here to help source code analysis.
 """
+
 import re
 
 from rope.base import codeanalyze, utils

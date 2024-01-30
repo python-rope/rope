@@ -1,4 +1,5 @@
 """Definitions of types for the Autoimport program."""
+
 import pathlib
 from enum import Enum
 from typing import NamedTuple, Optional
