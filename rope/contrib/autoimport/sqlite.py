@@ -43,7 +43,7 @@ from rope.refactor import importutils
 
 def get_future_names(
     packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
-) -> Generator[Future, None, None]:
+) -> Generator[Future[Iterable[Name]], None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
         for package in packages:
@@ -593,7 +593,7 @@ class AutoImport:
             modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
 
-    def _add_future_names(self, names: Future):
+    def _add_future_names(self, names: Future[Iterable[Name]]):
         self._add_names(names.result())
 
     @staticmethod
