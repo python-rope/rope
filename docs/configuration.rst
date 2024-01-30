@@ -14,7 +14,7 @@ Will be used if [tool.rope] is configured.
 
     [tool.rope]
     split_imports = true
-    import_aliases = [
+    autoimport.aliases = [
         ['dt', 'datetime'],
         ['mp', 'multiprocessing'],
     ]

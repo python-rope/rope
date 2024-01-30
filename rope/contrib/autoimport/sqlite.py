@@ -486,7 +486,7 @@ class AutoImport:
             models.Alias.create_table(self.connection)
             models.Package.create_table(self.connection)
             models.Metadata.create_table(self.connection)
-            self.add_aliases(self.project.prefs.import_aliases)
+            self.add_aliases(self.project.prefs.autoimport.aliases)
             data = (
                 versioning.calculate_version_hash(self.project),
                 json.dumps(versioning.get_version_hash_data(self.project)),

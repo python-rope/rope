@@ -13,6 +13,30 @@ from rope.base.resources import Folder
 
 
 @dataclass
+class AutoimportPrefs:
+    # underlined: bool = field(
+    #     default=False, description="Cache underlined (private) modules")
+    # memory: bool = field(default=None, description="Cache in memory instead of disk")
+    # parallel: bool = field(default=True, description="Use multiple processes to parse")
+
+    aliases: List[Tuple[str, str]] = field(
+        default_factory=lambda : [
+            ("np", "numpy"),
+            ("pd", "pandas"),
+            ("plt", "matplotlib.pyplot"),
+            ("sns", "seaborn"),
+            ("tf", "tensorflow"),
+            ("sk", "sklearn"),
+            ("sm", "statsmodels"),
+        ],
+        description=dedent("""
+            Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recommend
+            ``import numpy as np``.
+        """),
+    )
+
+
+@dataclass
 class Prefs:
     """Class to store rope preferences."""
 
@@ -139,23 +163,6 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             appear in the importing namespace.
         """),
     )
-
-    import_aliases: List[Tuple[str, str]] = field(
-        default_factory=lambda : [
-            ("np", "numpy"),
-            ("pd", "pandas"),
-            ("plt", "matplotlib.pyplot"),
-            ("sns", "seaborn"),
-            ("tf", "tensorflow"),
-            ("sk", "sklearn"),
-            ("sm", "statsmodels"),
-        ],
-        description=dedent("""
-            Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recommend 
-            ``import numpy as np``.
-        """),
-    )
-
     prefer_module_from_imports: bool = field(
         default=False,
         description=dedent("""
@@ -222,6 +229,8 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             Can only be set in config.py.
         """),
     )
+    autoimport: AutoimportPrefs = field(
+        default_factory=AutoimportPrefs, description="Preferences for Autoimport")
 
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""
