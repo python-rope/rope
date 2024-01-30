@@ -593,9 +593,6 @@ class AutoImport:
             modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
 
-    def _add_future_names(self, names: Future[List[Name]]):
-        self._add_names(names.result())
-
     @staticmethod
     def _convert_name(name: Name) -> tuple:
         return (
