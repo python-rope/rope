@@ -2,16 +2,15 @@
 
 import contextlib
 import json
-import re
+from hashlib import sha256
 import secrets
+import re
 import sqlite3
 import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
-from copy import deepcopy
 from datetime import datetime
-from hashlib import sha256
 from itertools import chain
 from pathlib import Path
 from threading import local
@@ -671,7 +670,7 @@ class AutoImport:
         self, resource: Resource, underlined: bool = False
     ) -> ModuleFile:
         assert self.project_package.path
-        underlined = underlined if underlined else self.prefs.underlined
+        underlined = underlined if underlined else self.underlined
         resource_path: Path = resource.pathlib
         # The project doesn't need its name added to the path,
         # since the standard python file layout accounts for that
