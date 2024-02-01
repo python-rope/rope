@@ -2,15 +2,15 @@
 
 import contextlib
 import json
-from hashlib import sha256
-import secrets
 import re
+import secrets
 import sqlite3
 import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from datetime import datetime
+from hashlib import sha256
 from itertools import chain
 from pathlib import Path
 from threading import local
@@ -21,8 +21,8 @@ from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
-    ModuleFile,
     Alias,
+    ModuleFile,
     Name,
     NameType,
     Package,
