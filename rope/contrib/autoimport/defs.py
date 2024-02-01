@@ -1,4 +1,5 @@
 """Definitions of types for the Autoimport program."""
+
 import pathlib
 from enum import Enum
 from typing import NamedTuple, Optional
@@ -90,6 +91,13 @@ class Package(NamedTuple):
     source: Source
     path: Optional[pathlib.Path]
     type: PackageType
+
+
+class Alias(NamedTuple):
+    """A module alias to be added to the database."""
+
+    alias: str
+    modname: str
 
 
 class Name(NamedTuple):

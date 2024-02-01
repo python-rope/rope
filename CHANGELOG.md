@@ -1,6 +1,8 @@
 # **Upcoming release**
 
+- ...
 - #516 Autoimport Now automatically detects project dependencies and can read TOML configuration
+- #730 Match on module aliases for autoimport suggestions
 
 # Release 1.12.0
 

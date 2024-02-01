@@ -1,4 +1,5 @@
 """Utility functions for the autoimport code."""
+
 import pathlib
 import sys
 from collections import OrderedDict
