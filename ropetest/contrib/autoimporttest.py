@@ -171,9 +171,10 @@ class AutoImportTest(unittest.TestCase):
         # The single thread test takes much longer than the multithread test but is easier to debug
         single_thread = False
         self.importer.generate_modules_cache(single_thread=single_thread)
-        
+
         # Create a temporary directory and set permissions to 000
-        import tempfile, sys
+        import sys
+        import tempfile
         with tempfile.TemporaryDirectory() as dir:
             import os
             os.chmod(dir, 0o000)
