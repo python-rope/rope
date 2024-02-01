@@ -2,30 +2,31 @@
 
 import contextlib
 import json
-from hashlib import sha256
-import secrets
 import re
+import secrets
 import sqlite3
 import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+from copy import deepcopy
 from datetime import datetime
+from hashlib import sha256
 from itertools import chain
 from pathlib import Path
 from threading import local
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
 from packaging.requirements import Requirement
-from copy import deepcopy
+
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.prefs import AutoimportPrefs
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
 from rope.contrib.autoimport.defs import (
-    ModuleFile,
     Alias,
+    ModuleFile,
     Name,
     NameType,
     Package,
