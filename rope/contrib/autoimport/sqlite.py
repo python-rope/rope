@@ -103,15 +103,17 @@ class AutoImport:
     """
 
     connection: sqlite3.Connection
+    memory: bool
     project: Project
     project_package: Package
     prefs: AutoimportPrefs
+    underlined: bool
 
     def __init__(
         self,
         project: Project,
         observe: bool = True,
-        underlined: Optional[bool] = None,
+        underlined: bool = False,
         memory: bool = _deprecated_default,
     ):
         """Construct an AutoImport object.
@@ -138,24 +140,22 @@ class AutoImport:
         project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None
-        if underlined is not None:
-            self.prefs.underlined = underlined
         self.project_package = project_package
+        self.underlined = underlined
+        self.memory = memory
         if memory is _deprecated_default:
-            self.prefs.memory = True
+            self.memory = True
             warnings.warn(
                 "The default value for `AutoImport(memory)` argument will "
                 "change to use an on-disk database by default in the future. "
                 "If you want to use an in-memory database, you need to pass "
-                "`AutoImport(memory=True)` explicitly or set it in the config file.",
+                "`AutoImport(memory=True)` explicitly.",
                 DeprecationWarning,
             )
-        else:
-            self.prefs.memory = memory
         self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
-            memory=self.prefs.memory,
+            memory=memory,
         )
         self._setup_db()
         if observe:
@@ -211,7 +211,7 @@ class AutoImport:
         if not hasattr(self.thread_local, "connection"):
             self.thread_local.connection = self.create_database_connection(
                 project=self.project,
-                memory=self.prefs.memory,
+                memory=self.memory,
             )
         return self.thread_local.connection
 
@@ -440,11 +440,11 @@ class AutoImport:
                 packages, underlined, existing, self.project.prefs.dependencies
             )
         )
-        if len(packages) == 0:
+        if not packages:
             return
         self._add_packages(packages)
         job_set = task_handle.create_jobset("Generating autoimport cache", 0)
-        if single_thread or not self.prefs.parallel:
+        if single_thread:
             for package in packages:
                 for module in get_files(package, underlined):
                     job_set.started_job(module.modname)
