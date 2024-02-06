@@ -1,4 +1,6 @@
 import pathlib
+import sys
+from subprocess import check_call
 
 import pytest
 
@@ -45,3 +47,10 @@ def pkg1(project) -> resources.Folder:
 @pytest.fixture
 def mod2(project, pkg1) -> resources.Folder:
     return testutils.create_module(project, "mod2", pkg1)
+
+
+@pytest.fixture(scope="session")
+def example_external_package():
+    check_call([sys.executable, "-m", "pip", "install", "--force-reinstall", "ropetest-package-fixtures/example-external-package/dist/example_external_package-1.0.0-py3-none-any.whl"])
+    yield
+    check_call([sys.executable, "-m", "pip", "uninstall", "--yes", "example-external-package"])
