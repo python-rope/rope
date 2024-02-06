@@ -18,7 +18,7 @@ def test_get_package_source_pytest(example_external_package_path):
     # pytest is not installed as part of the standard library
     # but should be installed into site_packages,
     # so it should return Source.SITE_PACKAGE
-    source = utils.get_package_source(example_external_package_path, None, "example_module")
+    source = utils.get_package_source(example_external_package_path, None, "mod1")
     assert source == Source.SITE_PACKAGE
 
 
@@ -42,7 +42,7 @@ def test_get_modname_folder(
         example_external_package_module_path,
         example_external_package_path,
     )
-    assert modname == "example_external_package.example_module"
+    assert modname == "external_fixturepkg.mod1"
 
 
 def test_get_package_tuple_sample(project_path):

@@ -50,7 +50,14 @@ def mod2(project, pkg1) -> resources.Folder:
 
 
 @pytest.fixture(scope="session")
-def example_external_package():
-    check_call([sys.executable, "-m", "pip", "install", "--force-reinstall", "ropetest-package-fixtures/example-external-package/dist/example_external_package-1.0.0-py3-none-any.whl"])
+def external_fixturepkg():
+    check_call([
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--force-reinstall",
+        "ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0-py3-none-any.whl",
+    ])
     yield
-    check_call([sys.executable, "-m", "pip", "uninstall", "--yes", "example-external-package"])
+    check_call([sys.executable, "-m", "pip", "uninstall", "--yes", "external-fixturepkg"])

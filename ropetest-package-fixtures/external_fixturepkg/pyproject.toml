@@ -3,7 +3,7 @@ requires = ["flit-core >= 3.8"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "example_external_package"
+name = "external_fixturepkg"
 version = "1.0.0"
 description = "Just an example project built with build/flit for testing purpose"
 readme = "README.md"

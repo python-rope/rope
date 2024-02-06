@@ -177,14 +177,14 @@ class AutoImportTest(unittest.TestCase):
         self.assertGreater(len(self.importer._dump_all()), 0)
 
 
-def test_search_submodule(example_external_package):
+def test_search_submodule(external_fixturepkg):
     project = testutils.sample_project(extension_modules=["sys"])
     importer = autoimport.AutoImport(project, observe=False)
-    importer.update_module("example_external_package")
-    import_statement = ("from example_external_package import example_module", "example_module")
-    assert import_statement in importer.search("example_module", exact_match=True)
-    assert import_statement in importer.search("exam")
-    assert import_statement in importer.search("example_module")
+    importer.update_module("external_fixturepkg")
+    import_statement = ("from external_fixturepkg import mod1", "mod1")
+    assert import_statement in importer.search("mod1", exact_match=True)
+    assert import_statement in importer.search("mo")
+    assert import_statement in importer.search("mod1")
 
 
 class AutoImportObservingTest(unittest.TestCase):
