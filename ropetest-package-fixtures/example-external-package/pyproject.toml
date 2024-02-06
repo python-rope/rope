@@ -8,7 +8,6 @@ version = "1.0.0"
 description = "Just an example project built with build/flit for testing purpose"
 readme = "README.md"
 requires-python = ">= 3.7"
-license.file = "LICENSE"
 
 dependencies = [ ]
 
@@ -16,5 +15,4 @@ dependencies = [ ]
 pyproject-build = "build.__main__:entrypoint"
 
 [tool.flit.sdist]
-include = ["CHANGELOG.rst"]
 exclude = ["**/__pycache__", "**/*.egg-info"]
