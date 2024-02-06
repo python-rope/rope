@@ -22,17 +22,14 @@ def test_get_package_source_pytest(build_path):
 
 
 def test_get_package_source_typing(typing_path):
-
     assert utils.get_package_source(typing_path, None, "typing") == Source.STANDARD
 
 
 def test_get_modname_project_no_add(mod1_path, project_path):
-
     assert utils.get_modname_from_path(mod1_path, project_path, False) == "mod1"
 
 
 def test_get_modname_single_file(typing_path):
-
     assert utils.get_modname_from_path(typing_path, typing_path) == "typing"
 
 
