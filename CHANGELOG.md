@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #730 Match on module aliases for autoimport suggestions
+- #755 Remove dependency on `build` package being installed while running tests
 
 # Release 1.12.0
 
