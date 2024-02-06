@@ -54,7 +54,7 @@ def get_package_source(
     if "site-packages" in package.parts:
         return Source.SITE_PACKAGE
     if sys.version_info < (3, 10, 0):
-        if str(package).startswith(sys.prefix):
+        if str(package).startswith(sys.base_prefix):
             return Source.STANDARD
     else:
         if name in sys.stdlib_module_names:
