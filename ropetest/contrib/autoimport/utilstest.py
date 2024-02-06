@@ -14,11 +14,12 @@ def test_get_package_source_not_project(mod1_path):
     assert utils.get_package_source(mod1_path, None, "") == Source.UNKNOWN
 
 
-def test_get_package_source_pytest(build_path):
+def test_get_package_source_pytest(example_external_package_path):
     # pytest is not installed as part of the standard library
     # but should be installed into site_packages,
     # so it should return Source.SITE_PACKAGE
-    assert utils.get_package_source(build_path, None, "build") == Source.SITE_PACKAGE
+    source = utils.get_package_source(example_external_package_path, None, "example_module")
+    assert source == Source.SITE_PACKAGE
 
 
 def test_get_package_source_typing(typing_path):
@@ -33,9 +34,15 @@ def test_get_modname_single_file(typing_path):
     assert utils.get_modname_from_path(typing_path, typing_path) == "typing"
 
 
-def test_get_modname_folder(build_path, build_env_path):
-
-    assert utils.get_modname_from_path(build_env_path, build_path) == "build.env"
+def test_get_modname_folder(
+    example_external_package_path,
+    example_external_package_module_path,
+):
+    modname = utils.get_modname_from_path(
+        example_external_package_module_path,
+        example_external_package_path,
+    )
+    assert modname == "example_external_package.example_module"
 
 
 def test_get_package_tuple_sample(project_path):

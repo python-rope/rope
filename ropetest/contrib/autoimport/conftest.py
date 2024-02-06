@@ -24,19 +24,18 @@ def typing_path():
 
 
 @pytest.fixture
-def build_env_path():
-    from build import env
-
-    yield pathlib.Path(env.__file__)
+def example_external_package_module_path(example_external_package):
+    from example_external_package import example_module
+    yield pathlib.Path(example_module.__file__)
 
 
 @pytest.fixture
-def build_path():
-    import build
+def example_external_package_path(example_external_package):
+    import example_external_package
 
     # Uses __init__.py so we need the parent
 
-    yield pathlib.Path(build.__file__).parent
+    yield pathlib.Path(example_external_package.__file__).parent
 
 
 @pytest.fixture

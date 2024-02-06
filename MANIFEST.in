@@ -1,4 +1,4 @@
-include README.rst COPYING setup.py MANIFEST.in CHANGELOG.md
+include README.rst COPYING setup.py MANIFEST.in CHANGELOG.md ropetest-package-fixtures/example-external-package/dist/example_external_package-1.0.0.tar.gz ropetest-package-fixtures/example-external-package/dist/example_external_package-1.0.0-py3-none-any.whl
 recursive-include rope *.py
 recursive-include docs *.rst
 recursive-include ropetest *.py

@@ -111,13 +111,6 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module("sys")
         self.assertIn("sys", self.importer.get_modules("exit"))
 
-    def test_search_submodule(self):
-        self.importer.update_module("build")
-        import_statement = ("from build import env", "env")
-        self.assertIn(import_statement, self.importer.search("env", exact_match=True))
-        self.assertIn(import_statement, self.importer.search("en"))
-        self.assertIn(import_statement, self.importer.search("env"))
-
     def test_search_module(self):
         self.importer.update_module("os")
         import_statement = ("import os", "os")
@@ -182,6 +175,16 @@ class AutoImportTest(unittest.TestCase):
             self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
         self.assertGreater(len(self.importer._dump_all()), 0)
+
+
+def test_search_submodule(example_external_package):
+    project = testutils.sample_project(extension_modules=["sys"])
+    importer = autoimport.AutoImport(project, observe=False)
+    importer.update_module("example_external_package")
+    import_statement = ("from example_external_package import example_module", "example_module")
+    assert import_statement in importer.search("example_module", exact_match=True)
+    assert import_statement in importer.search("exam")
+    assert import_statement in importer.search("example_module")
 
 
 class AutoImportObservingTest(unittest.TestCase):
