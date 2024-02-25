@@ -69,6 +69,13 @@ def get_modname_from_path(
     package_name: str = package_path.stem
     rel_path_parts = modpath.relative_to(package_path).parts
     modname = ""
+    try:
+        site_packages_index = rel_path_parts.index("site-packages")
+    except ValueError:
+        pass
+    else:
+        # If path includes "site-packages", we're interested in part after this.
+        rel_path_parts = rel_path_parts[site_packages_index + 1:]
     if len(rel_path_parts) > 0:
         for part in rel_path_parts[:-1]:
             modname += part
