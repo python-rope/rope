@@ -369,10 +369,7 @@ class AutoImport:
         project are cached.
         """
         if resources is None:
-            resources = [
-                f for f in self.project.get_python_files()
-                if "site-packages" not in f.pathlib.parts
-            ]
+            resources = self.project.get_python_files()
         job_set = task_handle.create_jobset(
             "Generating autoimport cache", len(resources)
         )
