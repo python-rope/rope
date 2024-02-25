@@ -97,6 +97,8 @@ def get_type_object(imported_object) -> NameType:
 
 def get_names(module: ModuleInfo, package: Package) -> List[Name]:
     """Get all names from a module and package."""
+    if "site-packages" in module.modname:
+        return []
     if isinstance(module, ModuleCompiled):
         return list(
             get_names_from_compiled(package.name, package.source, module.underlined)
