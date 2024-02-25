@@ -71,6 +71,7 @@ def get_modname_from_path(
     modname = ""
     try:
         site_packages_index = rel_path_parts.index("site-packages")
+        raise RuntimeError("No site-packages allowed here.", modpath)
     except ValueError:
         pass
     else:
