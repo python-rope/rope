@@ -18,11 +18,11 @@ class RenameTestMixin:
         testutils.remove_project(self.project)
         super().tearDown()
 
-    def _local_rename(self, source_code, offset, new_name):
+    def _local_rename(self, source_code, offset, new_name, **kwds):
         testmod = testutils.create_module(self.project, "testmod")
         testmod.write(source_code)
         changes = Rename(self.project, testmod, offset).get_changes(
-            new_name, resources=[testmod]
+            new_name, resources=[testmod], **kwds
         )
         self.project.do(changes)
         return testmod.read()
@@ -1392,6 +1392,85 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
 
 
 class RenameRefactoringWithSuperclassTest(RenameTestMixin, unittest.TestCase):
+    ORIGINAL_CODE = dedent("""\
+        class Parent:
+            def a_method(self):
+                pass
+
+        class Child(Parent):
+            def a_method(self, strg):
+                return super(Child, self).a_method(strg, *args, **kwargs)
+    """)
+    BOTH_RENAMED = dedent("""\
+        class Parent:
+            def new_method(self):
+                pass
+
+        class Child(Parent):
+            def new_method(self, strg):
+                return super(Child, self).new_method(strg, *args, **kwargs)
+    """)
+
+    PARENT_RENAMED = dedent("""\
+        class Parent:
+            def new_method(self):
+                pass
+
+        class Child(Parent):
+            def a_method(self, strg):
+                return super(Child, self).new_method(strg, *args, **kwargs)
+    """)
+
+    CHILD_RENAMED = dedent("""\
+        class Parent:
+            def a_method(self):
+                pass
+
+        class Child(Parent):
+            def new_method(self, strg):
+                return super(Child, self).a_method(strg, *args, **kwargs)
+    """)
+
+    FROM_PARENT = "a_method(self)"  # from Parent.a_method
+    FROM_CHILD = "a_method(self, strg"  # from Child.a_method
+    FROM_CALLER = "a_method(strg, *args"  # from super() line
+
+    def test_rename_with_superclass_in_hierarchy_from_parent(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_PARENT)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=True)
+        self.assertEqual(refactored, self.BOTH_RENAMED)
+
+    def test_rename_with_superclass_not_in_hierarchy_from_parent(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_PARENT)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=False)
+        self.assertEqual(refactored, self.PARENT_RENAMED)
+
+    def test_rename_with_superclass_in_hierarchy_from_child(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_CHILD)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=True)
+        self.assertEqual(refactored, self.BOTH_RENAMED)
+
+    def test_rename_with_superclass_not_in_hierarchy_from_child(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_CHILD)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=False)
+        self.assertEqual(refactored, self.CHILD_RENAMED)
+
+    def test_rename_with_superclass_in_hierarchy_from_caller(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_CALLER)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=True)
+        self.assertEqual(refactored, self.BOTH_RENAMED)
+
+    def test_rename_with_superclass_not_in_hierarchy_from_caller(self):
+        code = self.ORIGINAL_CODE
+        offset = code.index(self.FROM_CALLER)
+        refactored = self._local_rename(code, offset, "new_method", in_hierarchy=False)
+        self.assertEqual(refactored, self.PARENT_RENAMED)
+
     def test_renaming_methods_in_subclasses(self):
         mod = testutils.create_module(self.project, "mod1")
         mod.write(dedent("""\
