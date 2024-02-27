@@ -9,7 +9,7 @@ from rope.refactor.rename import Rename
 from ropetest import testutils
 
 
-class RenameRefactoringTest(unittest.TestCase):
+class RenameTestMixin:
     def setUp(self):
         super().setUp()
         self.project = testutils.sample_project()
@@ -31,6 +31,8 @@ class RenameRefactoringTest(unittest.TestCase):
         changes = Rename(self.project, resource, offset).get_changes(new_name, **kwds)
         self.project.do(changes)
 
+
+class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
     def test_local_variable_but_not_parameter(self):
         code = dedent("""\
             a = 10
@@ -726,90 +728,6 @@ class RenameRefactoringTest(unittest.TestCase):
             mod2.read(),
         )
 
-    def test_renaming_methods_in_subclasses(self):
-        mod = testutils.create_module(self.project, "mod1")
-        mod.write(dedent("""\
-            class A(object):
-                def a_method(self):
-                    pass
-            class B(A):
-                def a_method(self):
-                    pass
-        """))
-
-        self._rename(
-            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
-        )
-        self.assertEqual(
-            dedent("""\
-                class A(object):
-                    def new_method(self):
-                        pass
-                class B(A):
-                    def new_method(self):
-                        pass
-            """),
-            mod.read(),
-        )
-
-    def test_renaming_methods_in_sibling_classes(self):
-        mod = testutils.create_module(self.project, "mod1")
-        mod.write(dedent("""\
-            class A(object):
-                def a_method(self):
-                    pass
-            class B(A):
-                def a_method(self):
-                    pass
-            class C(A):
-                def a_method(self):
-                    pass
-        """))
-
-        self._rename(
-            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
-        )
-        self.assertEqual(
-            dedent("""\
-                class A(object):
-                    def new_method(self):
-                        pass
-                class B(A):
-                    def new_method(self):
-                        pass
-                class C(A):
-                    def new_method(self):
-                        pass
-            """),
-            mod.read(),
-        )
-
-    def test_not_renaming_methods_in_hierarchies(self):
-        mod = testutils.create_module(self.project, "mod1")
-        mod.write(dedent("""\
-            class A(object):
-                def a_method(self):
-                    pass
-            class B(A):
-                def a_method(self):
-                    pass
-        """))
-
-        self._rename(
-            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=False
-        )
-        self.assertEqual(
-            dedent("""\
-                class A(object):
-                    def a_method(self):
-                        pass
-                class B(A):
-                    def new_method(self):
-                        pass
-            """),
-            mod.read(),
-        )
-
     def test_undoing_refactorings(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(dedent("""\
@@ -1471,6 +1389,92 @@ class RenameRefactoringTest(unittest.TestCase):
             not mod1.exists() and self.project.find_module("new_json.utils") is not None
         )
         self.assertEqual("import new_json.utils.a as stdlib_json_utils\n", mod2.read())
+
+
+class RenameRefactoringWithSuperclassTest(RenameTestMixin, unittest.TestCase):
+    def test_renaming_methods_in_subclasses(self):
+        mod = testutils.create_module(self.project, "mod1")
+        mod.write(dedent("""\
+            class A(object):
+                def a_method(self):
+                    pass
+            class B(A):
+                def a_method(self):
+                    pass
+        """))
+
+        self._rename(
+            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
+        )
+        self.assertEqual(
+            dedent("""\
+                class A(object):
+                    def new_method(self):
+                        pass
+                class B(A):
+                    def new_method(self):
+                        pass
+            """),
+            mod.read(),
+        )
+
+    def test_renaming_methods_in_sibling_classes(self):
+        mod = testutils.create_module(self.project, "mod1")
+        mod.write(dedent("""\
+            class A(object):
+                def a_method(self):
+                    pass
+            class B(A):
+                def a_method(self):
+                    pass
+            class C(A):
+                def a_method(self):
+                    pass
+        """))
+
+        self._rename(
+            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=True
+        )
+        self.assertEqual(
+            dedent("""\
+                class A(object):
+                    def new_method(self):
+                        pass
+                class B(A):
+                    def new_method(self):
+                        pass
+                class C(A):
+                    def new_method(self):
+                        pass
+            """),
+            mod.read(),
+        )
+
+    def test_not_renaming_methods_in_hierarchies(self):
+        mod = testutils.create_module(self.project, "mod1")
+        mod.write(dedent("""\
+            class A(object):
+                def a_method(self):
+                    pass
+            class B(A):
+                def a_method(self):
+                    pass
+        """))
+
+        self._rename(
+            mod, mod.read().rindex("a_method") + 1, "new_method", in_hierarchy=False
+        )
+        self.assertEqual(
+            dedent("""\
+                class A(object):
+                    def a_method(self):
+                        pass
+                class B(A):
+                    def new_method(self):
+                        pass
+            """),
+            mod.read(),
+        )
 
 
 class ChangeOccurrencesTest(unittest.TestCase):
