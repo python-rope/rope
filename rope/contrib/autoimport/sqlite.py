@@ -16,7 +16,10 @@ from pathlib import Path
 from threading import local
 from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
 
+from packaging.requirements import Requirement
+
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
+from rope.base.prefs import AutoimportPrefs
 from rope.base.project import Project
 from rope.base.resources import Resource
 from rope.contrib.autoimport import models
@@ -54,18 +57,36 @@ def get_future_names(
 
 
 def filter_packages(
-    packages: Iterable[Package], underlined: bool, existing: List[str]
+    packages: Iterable[Package],
+    underlined: bool,
+    existing: List[str],
+    dependencies: Optional[List[Requirement]],
 ) -> Iterable[Package]:
     """Filter list of packages to parse."""
+    parsed_deps = (
+        [dep.name for dep in dependencies] if dependencies is not None else None
+    )
+
+    def is_dep(package) -> bool:
+        return (
+            parsed_deps is None
+            or package.name in parsed_deps
+            or package.source is not Source.SITE_PACKAGE
+        )
+
     if underlined:
 
         def filter_package(package: Package) -> bool:
-            return package.name not in existing
+            return package.name not in existing and is_dep(package)
 
     else:
 
         def filter_package(package: Package) -> bool:
-            return package.name not in existing and not package.name.startswith("_")
+            return (
+                package.name not in existing
+                and not package.name.startswith("_")
+                and is_dep(package)
+            )
 
     return filter(filter_package, packages)
 
@@ -85,6 +106,7 @@ class AutoImport:
     memory: bool
     project: Project
     project_package: Package
+    prefs: AutoimportPrefs
     underlined: bool
 
     def __init__(
@@ -114,6 +136,7 @@ class AutoImport:
                 autoimport = AutoImport(..., memory=True)
         """
         self.project = project
+        self.prefs = deepcopy(self.project.prefs.autoimport)
         project_package = get_package_tuple(project.root.pathlib, project)
         assert project_package is not None
         assert project_package.path is not None
@@ -397,12 +420,13 @@ class AutoImport:
         """
         Generate global name cache for external modules listed in `modules`.
 
-        If no modules are provided, it will generate a cache for every module available.
+        If modules is not specified, uses PEP 621 metadata.
+        If modules aren't specified and PEP 621 is not present, caches every package
         This method searches in your sys.path and configured python folders.
         Do not use this for generating your own project's internal names,
         use generate_resource_cache for that instead.
         """
-        underlined = self.underlined if underlined is None else underlined
+        underlined = self.prefs.underlined if underlined is None else underlined
 
         packages: List[Package] = (
             self._get_available_packages()
@@ -411,7 +435,11 @@ class AutoImport:
         )
 
         existing = self._get_packages_from_cache()
-        packages = list(filter_packages(packages, underlined, existing))
+        packages = list(
+            filter_packages(
+                packages, underlined, existing, self.project.prefs.dependencies
+            )
+        )
         if not packages:
             return
         self._add_packages(packages)
@@ -523,7 +551,7 @@ class AutoImport:
         self, resource: Resource, underlined: bool = False, commit: bool = True
     ):
         """Update the cache for global names in `resource`."""
-        underlined = underlined if underlined else self.underlined
+        underlined = underlined if underlined else self.prefs.underlined
         module = self._resource_to_module(resource, underlined)
         self._del_if_exist(module_name=module.modname, commit=False)
         for name in get_names(module, self.project_package):
@@ -548,7 +576,11 @@ class AutoImport:
 
     def _get_python_folders(self) -> List[Path]:
         def filter_folders(folder: Path) -> bool:
-            return folder.is_dir() and folder.as_posix() != "/usr/bin"
+            return (
+                folder.is_dir()
+                and folder.as_posix() != "/usr/bin"
+                and str(folder) != self.project.address
+            )
 
         folders = self.project.get_python_path_folders()
         folder_paths = filter(filter_folders, map(Path, folders))

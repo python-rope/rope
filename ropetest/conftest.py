@@ -9,8 +9,9 @@ from ropetest import testutils
 
 
 @pytest.fixture
-def project():
-    project = testutils.sample_project()
+def project(request):
+    pyproject = request.param if hasattr(request, "param") else None
+    project = testutils.sample_project(pyproject=pyproject)
     yield project
     testutils.remove_project(project)
 
@@ -33,6 +34,7 @@ Standard project structure for pytest fixtures
 /pkg1/__init__.py   -- pkg1
 /pkg1/mod2.py       -- mod2
 """
+
 
 @pytest.fixture
 def mod1(project) -> resources.File:

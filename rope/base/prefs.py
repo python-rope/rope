@@ -14,13 +14,13 @@ from rope.base.resources import Folder
 
 @dataclass
 class AutoimportPrefs:
-    # underlined: bool = field(
-    #     default=False, description="Cache underlined (private) modules")
+    underlined: bool = field(
+        default=False, description="Cache underlined (private) modules")
     # memory: bool = field(default=None, description="Cache in memory instead of disk")
     # parallel: bool = field(default=True, description="Use multiple processes to parse")
 
     aliases: List[Tuple[str, str]] = field(
-        default_factory=lambda : [
+        default_factory=lambda: [
             ("np", "numpy"),
             ("pd", "pandas"),
             ("plt", "matplotlib.pyplot"),

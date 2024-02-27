@@ -18,7 +18,7 @@ Will be used if [tool.rope] is configured.
         ['dt', 'datetime'],
         ['mp', 'multiprocessing'],
     ]
-
+    autoimport.underlined = false
 
 config.py
 ---------
@@ -63,6 +63,11 @@ It follows the exact same syntax as ``pyproject.toml``.
 Options
 -------
 .. autopytoolconfigtable:: rope.base.prefs.Prefs
+
+Autoimport Options
+------------------
+.. autopytoolconfigtable:: rope.base.prefs.AutoimportPrefs
+
 
 Old Configuration File
 ----------------------
