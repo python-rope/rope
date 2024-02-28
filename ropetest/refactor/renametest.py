@@ -1,6 +1,7 @@
 import sys
 import unittest
 from textwrap import dedent
+from rope.base import exceptions
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences
@@ -1389,6 +1390,10 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             not mod1.exists() and self.project.find_module("new_json.utils") is not None
         )
         self.assertEqual("import new_json.utils.a as stdlib_json_utils\n", mod2.read())
+
+    def test_rename_refuses_renaming_to_python_keyword(self):
+        with self.assertRaises(exceptions.RefactoringError, msg="Invalid refactoring target name. 'class' is a Python keyword."):
+            self._local_rename("a_var = 20\n", 2, "class")
 
 
 class RenameRefactoringWithSuperclassTest(RenameTestMixin, unittest.TestCase):

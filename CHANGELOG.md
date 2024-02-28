@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #777, #698 add validation to refuse Rename refactoring to a python keyword
 - #730 Match on module aliases for autoimport suggestions
 - #755 Remove dependency on `build` package being installed while running tests
 
