@@ -331,6 +331,28 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_attribute_occurrences_in_f_string(self):
+        code = dedent("""\
+            class MyClass:
+                def __init__(self):
+                    self.abc = 123
+
+                def func(obj):
+                    print(f'{obj.abc}')
+                    return obj.abc
+        """)
+        expected = dedent("""\
+            class MyClass:
+                def __init__(self):
+                    self.new_var = 123
+
+                def func(obj):
+                    print(f'{obj.new_var}')
+                    return obj.new_var
+        """)
+        refactored = self._local_rename(code, code.index('abc'), "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_not_renaming_string_contents_in_f_string(self):
         refactored = self._local_rename(
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"

@@ -37,6 +37,7 @@ calling the `create_finder()` function.
 
 import contextlib
 import re
+from typing import Iterator
 
 from rope.base import (
     ast,
@@ -319,7 +320,7 @@ class _TextualFinder:
         )
         self.pattern = self._get_occurrence_pattern(self.name)
 
-    def find_offsets(self, source):
+    def find_offsets(self, source: str) -> Iterator[int]:
         if not self._fast_file_query(source):
             return
         if self.docs:
@@ -328,22 +329,25 @@ class _TextualFinder:
             searcher = self._re_search
         yield from searcher(source)
 
-    def _re_search(self, source):
+    def _re_search(self, source: str) -> Iterator[int]:
         for match in self.pattern.finditer(source):
             if match.groupdict()["occurrence"]:
                 yield match.start("occurrence")
             elif match.groupdict()["fstring"]:
                 f_string = match.groupdict()["fstring"]
-                for occurrence_node in self._search_in_f_string(f_string):
-                    yield match.start("fstring") + occurrence_node.col_offset
+                for offset in self._search_in_f_string(f_string):
+                    yield match.start("fstring") + offset
 
-    def _search_in_f_string(self, f_string):
+    def _search_in_f_string(self, f_string: str) -> Iterator[int]:
         tree = ast.parse(f_string)
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == self.name:
-                yield node
+                yield node.col_offset
+            elif isinstance(node, ast.Attribute) and node.attr == self.name:
+                assert node.end_col_offset is not None
+                yield node.end_col_offset - len(self.name)
 
-    def _normal_search(self, source):
+    def _normal_search(self, source: str) -> Iterator[int]:
         current = 0
         while True:
             try:
