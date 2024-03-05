@@ -1149,7 +1149,7 @@ class ExtractMethodTest(unittest.TestCase):
         end = code.rindex(")") + 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
-    
+
     def test_raising_exception_on_incomplete_block(self):
         code = dedent("""\
             if True:
@@ -1177,7 +1177,7 @@ class ExtractMethodTest(unittest.TestCase):
         code = dedent("""\
             if True:
                 a = 1
-            
+
                 b = 2
         """)
         start = code.index("if")

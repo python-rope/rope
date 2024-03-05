@@ -1,4 +1,5 @@
 """This module can be used for finding similar code"""
+
 import re
 
 import rope.base.builtins  # Use full qualification for clarity.

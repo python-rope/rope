@@ -87,6 +87,7 @@ profile = "black"
 
 [tool.pytest.ini_options]
 
+testpaths = "ropetest"
 python_files = [
     "*test.py",
     "__init__.py",

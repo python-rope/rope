@@ -1,6 +1,7 @@
 import unittest
 
 from rope.contrib.autoimport import sqlite as autoimport
+from rope.contrib.autoimport.defs import Alias
 from ropetest import testutils
 
 
@@ -110,19 +111,36 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module("sys")
         self.assertIn("sys", self.importer.get_modules("exit"))
 
-    def test_search_submodule(self):
-        self.importer.update_module("build")
-        import_statement = ("from build import env", "env")
-        self.assertIn(import_statement, self.importer.search("env", exact_match=True))
-        self.assertIn(import_statement, self.importer.search("en"))
-        self.assertIn(import_statement, self.importer.search("env"))
-
     def test_search_module(self):
         self.importer.update_module("os")
         import_statement = ("import os", "os")
         self.assertIn(import_statement, self.importer.search("os", exact_match=True))
         self.assertIn(import_statement, self.importer.search("os"))
         self.assertIn(import_statement, self.importer.search("o"))
+
+    def test_search_alias(self):
+        self.mod2.write("myvar = None\n")
+        self.importer.update_resource(self.mod2)
+        self.importer.add_aliases([
+            ("noMatch", "does_not_exists_this"),
+            ("hasMatch", "pkg.mod2"),
+        ])
+
+        self.assertEqual([], self.importer.search("noMatch", exact_match=True))
+
+        import_statement = ("import pkg.mod2 as hasMatch", "hasMatch")
+        self.assertIn(import_statement, self.importer.search("hasMatch", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("hasM"))
+        self.assertIn(import_statement, self.importer.search("h"))
+
+    def test_alias_updated_from_prefs(self):
+        self.mod2.write("myvar = None\n")
+        self.project.prefs.autoimport.aliases = [("mod2_alias", "pkg.mod2")]
+        self.importer.clear_cache()
+        self.importer.update_resource(self.mod2)
+        import_statement = ("import pkg.mod2 as mod2_alias", "mod2_alias")
+        self.assertIn(import_statement, self.importer.search("mod2_alias", exact_match=True))
+        self.assertIn(import_statement, self.importer.search("mod2", exact_match=False))
 
     def test_search(self):
         self.importer.update_module("typing")
@@ -146,9 +164,10 @@ class AutoImportTest(unittest.TestCase):
         # The single thread test takes much longer than the multithread test but is easier to debug
         single_thread = False
         self.importer.generate_modules_cache(single_thread=single_thread)
-        
+
         # Create a temporary directory and set permissions to 000
-        import tempfile, sys
+        import sys
+        import tempfile
         with tempfile.TemporaryDirectory() as dir:
             import os
             os.chmod(dir, 0o000)
@@ -156,6 +175,16 @@ class AutoImportTest(unittest.TestCase):
             self.importer.generate_modules_cache(single_thread=single_thread)
         self.assertIn(("from typing import Dict", "Dict"), self.importer.search("Dict"))
         self.assertGreater(len(self.importer._dump_all()), 0)
+
+
+def test_search_submodule(external_fixturepkg):
+    project = testutils.sample_project(extension_modules=["sys"])
+    importer = autoimport.AutoImport(project, observe=False)
+    importer.update_module("external_fixturepkg")
+    import_statement = ("from external_fixturepkg import mod1", "mod1")
+    assert import_statement in importer.search("mod1", exact_match=True)
+    assert import_statement in importer.search("mo")
+    assert import_statement in importer.search("mod1")
 
 
 class AutoImportObservingTest(unittest.TestCase):

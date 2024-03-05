@@ -10,7 +10,6 @@ If you are still using this module, you should migrate to the new and improved
 sqlite-based storage backend (rope.contrib.autoimport.sqlite.AutoImport).
 """
 
-
 import contextlib
 import re
 

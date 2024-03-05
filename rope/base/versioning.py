@@ -1,3 +1,4 @@
+import dataclasses
 import hashlib
 import importlib.util
 import json
@@ -31,7 +32,9 @@ def _get_prefs_data(project) -> str:
     del prefs_data["project_opened"]
     del prefs_data["callbacks"]
     del prefs_data["dependencies"]
-    return json.dumps(prefs_data, sort_keys=True, indent=2)
+    return json.dumps(
+        prefs_data, sort_keys=True, indent=2, default=lambda o: o.__dict__
+    )
 
 
 def _get_file_content(module_name: str) -> str:

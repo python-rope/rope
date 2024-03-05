@@ -1,4 +1,5 @@
 import warnings
+from keyword import iskeyword
 
 from rope.base import (
     codeanalyze,
@@ -105,6 +106,7 @@ class Rename:
             resources = [self.resource]
         if resources is None:
             resources = self.project.get_python_files()
+        self.validate_changes(new_name)
         changes = ChangeSet(f"Renaming <{self.old_name}> to <{new_name}>")
         finder = occurrences.create_finder(
             self.project,
@@ -127,6 +129,16 @@ class Rename:
             if self._is_allowed_to_move(resources, resource):
                 self._rename_module(resource, new_name, changes)
         return changes
+
+    def validate_changes(
+        self,
+        new_name: str,
+        **_unused,
+    ):
+        if iskeyword(new_name):
+            raise exceptions.RefactoringError(
+                f"Invalid refactoring target name. '{new_name}' is a Python keyword."
+            )
 
     def _is_allowed_to_move(self, resources, resource):
         if resource.is_folder():

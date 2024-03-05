@@ -56,13 +56,11 @@ class Query:
 class Model(ABC):
     @property
     @abstractmethod
-    def table_name(self) -> str:
-        ...
+    def table_name(self) -> str: ...
 
     @property
     @abstractmethod
-    def schema(self) -> Dict[str, str]:
-        ...
+    def schema(self) -> Dict[str, str]: ...
 
     @classmethod
     def create_table(cls, connection):
@@ -86,6 +84,29 @@ class Metadata(Model):
     }
     columns = list(schema.keys())
     objects = Query(table_name, columns)
+
+
+class Alias(Model):
+    table_name = "aliases"
+    schema = {
+        "alias": "TEXT",
+        "module": "TEXT",
+    }
+    columns = list(schema.keys())
+    objects = Query(table_name, columns)
+
+    @classmethod
+    def create_table(cls, connection):
+        super().create_table(connection)
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS aliases_alias_nocase ON aliases(alias COLLATE NOCASE)"
+        )
+
+    modules = Query(
+        "(SELECT DISTINCT aliases.*, package, source, type FROM aliases INNER JOIN names on aliases.module = names.module)",
+        columns + ["package", "source", "type"],
+    )
+    search_modules_with_alias = modules.where("alias LIKE (?)")
 
 
 class Name(Model):

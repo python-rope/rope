@@ -35,7 +35,6 @@ calling the `create_finder()` function.
     arguments
 """
 
-
 import contextlib
 import re
 from typing import Iterator

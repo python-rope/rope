@@ -406,9 +406,9 @@ class _DefinitionGenerator:
                 "Cannot inline functions with list and keyword arguments."
             )
         if self.pyfunction.get_kind() == "classmethod":
-            paramdict[
-                definition_info.args_with_defaults[0][0]
-            ] = self.pyfunction.parent.get_name()
+            paramdict[definition_info.args_with_defaults[0][0]] = (
+                self.pyfunction.parent.get_name()
+            )
         return paramdict
 
     def get_function_name(self):

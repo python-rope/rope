@@ -4,10 +4,11 @@
 based on inputs.
 
 """
+
 from __future__ import annotations
 
 import typing
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from rope.base import (
     codeanalyze,
