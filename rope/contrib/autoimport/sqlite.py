@@ -1,5 +1,7 @@
 """AutoImport module for rope."""
 
+from __future__ import annotations
+
 import contextlib
 import json
 import re
@@ -14,7 +16,16 @@ from hashlib import sha256
 from itertools import chain
 from pathlib import Path
 from threading import local
-from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
+from typing import (
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+)
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.project import Project
@@ -41,9 +52,13 @@ from rope.contrib.autoimport.utils import (
 from rope.refactor import importutils
 
 
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+
 def get_future_names(
     packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
-) -> Generator[Future, None, None]:
+) -> Generator[Future[Collection[Name]], None, None]:
     """Get all names as futures."""
     with ProcessPoolExecutor() as executor:
         for package in packages:
@@ -81,7 +96,6 @@ class AutoImport:
 
     """
 
-    connection: sqlite3.Connection
     memory: bool
     project: Project
     project_package: Package
@@ -179,7 +193,7 @@ class AutoImport:
             return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
 
     @property
-    def connection(self):
+    def connection(self) -> sqlite3.Connection:
         """
         Creates a new connection if called from a new thread.
 
@@ -593,9 +607,6 @@ class AutoImport:
             modname = self._resource_to_module(resource).modname
             self._del_if_exist(modname)
 
-    def _add_future_names(self, names: Future):
-        self._add_names(names.result())
-
     @staticmethod
     def _convert_name(name: Name) -> tuple:
         return (
@@ -606,12 +617,12 @@ class AutoImport:
             name.name_type.value,
         )
 
-    def add_aliases(self, aliases: Iterable[Alias]):
+    def add_aliases(self, aliases: Collection[Alias]):
         if aliases:
             self._executemany(models.Alias.objects.insert_into(), aliases)
 
-    def _add_names(self, names: Iterable[Name]):
-        if names is not None:
+    def _add_names(self, names: Collection[Name]):
+        if names:
             self._executemany(
                 models.Name.objects.insert_into(),
                 [self._convert_name(name) for name in names],
