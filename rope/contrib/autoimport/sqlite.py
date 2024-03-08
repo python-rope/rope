@@ -1,5 +1,7 @@
 """AutoImport module for rope."""
 
+from __future__ import annotations
+
 import contextlib
 import json
 import re
@@ -14,8 +16,16 @@ from hashlib import sha256
 from itertools import chain
 from pathlib import Path
 from threading import local
-from collections.abc import Collection
-from typing import Generator, Iterable, Iterator, List, Optional, Set, Tuple
+from typing import (
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+)
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
 from rope.base.project import Project
@@ -40,6 +50,10 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
+
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
 
 
 def get_future_names(
