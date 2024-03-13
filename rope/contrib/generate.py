@@ -401,7 +401,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
             start, end = finder.get_primary_range(self.offset)
             parens_start, parens_end = finder.get_word_parens_range(end - 1)
             call = source[start:parens_end]
-            parser = functionutils._FunctionParser(call, False)
+            parser = functionutils._FunctionCallParser(call, False)
             args, keywords = parser.get_parameters()
             for arg in args:
                 if self._is_id(arg):

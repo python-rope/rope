@@ -1425,3 +1425,99 @@ class InlineTest(unittest.TestCase):
             })
         """)
         self.assertEqual(expected, refactored)
+
+    def test_function_call_with_callsite_inline_comment(self):
+        code = dedent("""\
+            def a_func(arg1, arg2):
+                return arg1 + arg2 + 1
+            myvar = a_func(
+                1,  # some comment
+                2,  # another comment
+            )
+        """)
+        refactored = self._inline(code, code.index("a_func") + 1)
+        expected = dedent("""\
+            myvar = 1 + 2 + 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_function_call_with_callsite_interline_comment(self):
+        code = dedent("""\
+            def a_func(arg1, arg2):
+                return arg1 + arg2 + 1
+            myvar = a_func(
+                # some comment
+                1,
+                # another comment
+                2,
+                # another comment
+            )
+        """)
+        refactored = self._inline(code, code.index("a_func") + 1)
+        expected = dedent("""\
+            myvar = 1 + 2 + 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_function_call_with_defsite_inline_comment(self):
+        code = dedent("""\
+            def a_func(
+                arg1,   # noqa
+                arg2,
+            ):
+                return arg1 + arg2 + 1
+            myvar = a_func(1, 2)
+        """)
+        refactored = self._inline(code, code.index("a_func") + 1)
+        expected = dedent("""\
+            myvar = 1 + 2 + 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_function_call_with_defsite_interline_comment(self):
+        code = dedent("""\
+            def a_func(
+                # blah
+                arg1,
+                # blah blah
+                arg2,
+                # blah blah
+            ):
+                return arg1 + arg2 + 1
+            myvar = a_func(1, 2)
+        """)
+        refactored = self._inline(code, code.index("a_func") + 1)
+        expected = dedent("""\
+            myvar = 1 + 2 + 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_function_call_with_posonlyargs(self):
+        code = dedent("""\
+            def a_func(arg1, /, arg2):
+                return arg1 + arg2 + 1
+            myvar = a_func(1, 2)
+        """)
+        refactored = self._inline(code, code.index("a_func") + 1)
+        expected = dedent("""\
+            myvar = 1 + 2 + 1
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_function_call_with_kwonlyargs(self):
+        code = dedent("""\
+            def a_func(arg1, *, arg2):
+                return arg1 + arg2 + 1
+            myvar = a_func(1, arg2=2)
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index("a_func") + 1)
+
+    def test_function_call_with_kwonlyargs2(self):
+        code = dedent("""\
+            def a_func(arg1, *, arg2=2):
+                return arg1 + arg2 + 1
+            myvar = a_func(1)
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index("a_func") + 1)
