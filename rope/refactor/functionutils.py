@@ -1,5 +1,9 @@
+import ast
+from typing import Tuple, List
+
 from rope.base import pyobjects, worder
 from rope.base.builtins import Lambda
+from rope.base.codeanalyze import SourceLinesAdapter
 
 
 class DefinitionInfo:
@@ -33,7 +37,7 @@ class DefinitionInfo:
         kind = pyfunction.get_kind()
         is_method = kind == "method"
         is_lambda = kind == "lambda"
-        info = _FunctionParser(code, is_method, is_lambda)
+        info = _FunctionDefParser(code, is_method, is_lambda)
         args, keywords = info.get_parameters()
         args_arg = None
         keywords_arg = None
@@ -108,7 +112,7 @@ class CallInfo:
         is_method_call = CallInfo._is_method_call(primary, pyname)
         is_constructor = CallInfo._is_class(pyname)
         is_classmethod = CallInfo._is_classmethod(pyname)
-        info = _FunctionParser(code, is_method_call or is_classmethod)
+        info = _FunctionCallParser(code, is_method_call or is_classmethod)
         args, keywords = info.get_parameters()
         args_arg = None
         keywords_arg = None
@@ -202,8 +206,11 @@ class ArgumentMapping:
         )
 
 
-class _FunctionParser:
-    def __init__(self, call, implicit_arg, is_lambda=False):
+class _BaseFunctionParser:
+    call: str
+    implicit_arg: bool
+
+    def __init__(self, call: str, implicit_arg: bool, is_lambda: bool = False):
         self.call = call
         self.implicit_arg = implicit_arg
         self.word_finder = worder.Worder(self.call)
@@ -213,21 +220,6 @@ class _FunctionParser:
             self.last_parens = self.call.rindex(")")
         self.first_parens = self.word_finder._find_parens_start(self.last_parens)
 
-    def get_parameters(self):
-        args, keywords = self.word_finder.get_parameters(
-            self.first_parens, self.last_parens
-        )
-        if self.is_called_as_a_method():
-            instance = self.call[: self.call.rindex(".", 0, self.first_parens)]
-            args.insert(0, instance.strip())
-        return args, keywords
-
-    def get_instance(self):
-        if self.is_called_as_a_method():
-            return self.word_finder.get_primary_at(
-                self.call.rindex(".", 0, self.first_parens) - 1
-            )
-
     def get_function_name(self):
         if self.is_called_as_a_method():
             return self.word_finder.get_word_at(self.first_parens - 1)
@@ -236,3 +228,75 @@ class _FunctionParser:
 
     def is_called_as_a_method(self):
         return self.implicit_arg and "." in self.call[: self.first_parens]
+
+    def _get_source_range(self, tree):
+        start = self._lines.get_line_start(tree.lineno) + tree.col_offset
+        end = self._lines.get_line_start(tree.end_lineno) + tree.end_col_offset
+        return self._lines.code[start:end]
+
+    def get_instance(self):
+        # UNUSED
+        if self.is_called_as_a_method():
+            return self.word_finder.get_primary_at(
+                self.call.rindex(".", 0, self.first_parens) - 1
+            )
+
+
+class _FunctionDefParser(_BaseFunctionParser):
+    _lines: SourceLinesAdapter
+    def __init__(self, call, implicit_arg, is_lambda=False):
+        super().__init__(call, implicit_arg, is_lambda=False)
+        _modified_call = "def " + call.rstrip(":") + ": pass"
+        self._lines = SourceLinesAdapter(_modified_call)
+        self.ast = ast.parse(_modified_call).body[0]
+        assert isinstance(self.ast, ast.FunctionDef)
+
+    def get_parameters(self) -> Tuple[List[str], List[Tuple[str, str]]]:
+        # FIXME: the weird parsing here is because we're replicating what
+        # _FunctionParser originally did, which was designed before the
+        # existence of posonlyargs and kwonlyargs, we'll want to rewrite this
+        # properly to handle them properly at some point
+        args = []
+        kwargs = []
+        args += [arg.arg for arg in self.ast.args.posonlyargs]
+        args += [arg.arg for arg in self.ast.args.args]
+        if self.ast.args.vararg is not None:
+            args += ["*" + self.ast.args.vararg.arg]
+        if len(self.ast.args.defaults) > 0:
+            defaults = self.ast.args.defaults
+            kwargs += [(name, self._get_source_range(value)) for name, value in zip(args[-len(defaults):], defaults)]
+            del args[-len(self.ast.args.defaults):]
+        if self.ast.args.kwarg is not None:
+            args += ["**" + self.ast.args.kwarg.arg]
+        if self.ast.args.kwonlyargs:
+            args += ["*"] + [arg.arg for arg in self.ast.args.kwonlyargs]
+        if len(self.ast.args.kw_defaults) > 0:
+            kw_defaults = self.ast.args.kw_defaults
+            kwargs += [(name, self._get_source_range(value)) for name, value in zip(kwargs[-len(kw_defaults):], kw_defaults)]
+            del args[-len(self.ast.args.kw_defaults):]
+        return args, kwargs
+
+
+class _FunctionCallParser(_BaseFunctionParser):
+    _lines: SourceLinesAdapter
+    ast: ast.Call
+    def __init__(self, call, implicit_arg, is_lambda=False):
+        super().__init__(call, implicit_arg, is_lambda=False)
+        self._lines = SourceLinesAdapter(call)
+        self.ast = ast.parse(call).body[0].value
+        assert isinstance(self.ast, ast.Call)
+
+    def get_parameters(self) -> Tuple[List[str], List[Tuple[str, str]]]:
+        args = []
+        for arg in self.ast.args:
+            arg_value = self._get_source_range(arg)
+            args.append(arg_value)
+        kwargs = []
+        for kw in self.ast.keywords:
+            kw_value = self._get_source_range(kw.value)
+            assert kw.arg
+            kwargs.append((kw.arg, kw_value))
+        if self.is_called_as_a_method():
+            instance = self.call[: self.call.rindex(".", 0, self.first_parens)]
+            args.insert(0, instance.strip())
+        return args, kwargs
