@@ -237,6 +237,7 @@ class _BaseFunctionParser:
 
 class _FunctionDefParser(_BaseFunctionParser):
     _lines: SourceLinesAdapter
+
     def __init__(self, call, implicit_arg, is_lambda=False):
         super().__init__(call, implicit_arg, is_lambda=False)
         _modified_call = "def " + call.rstrip(":") + ": pass"
@@ -257,22 +258,29 @@ class _FunctionDefParser(_BaseFunctionParser):
             args += ["*" + self.ast.args.vararg.arg]
         if len(self.ast.args.defaults) > 0:
             defaults = self.ast.args.defaults
-            kwargs += [(name, self._get_source_range(value)) for name, value in zip(args[-len(defaults):], defaults)]
-            del args[-len(self.ast.args.defaults):]
+            kwargs += [
+                (name, self._get_source_range(value))
+                for name, value in zip(args[-len(defaults) :], defaults)
+            ]
+            del args[-len(self.ast.args.defaults) :]
         if self.ast.args.kwarg is not None:
             args += ["**" + self.ast.args.kwarg.arg]
         if self.ast.args.kwonlyargs:
             args += ["*"] + [arg.arg for arg in self.ast.args.kwonlyargs]
         if len(self.ast.args.kw_defaults) > 0:
             kw_defaults = self.ast.args.kw_defaults
-            kwargs += [(name, self._get_source_range(value)) for name, value in zip(kwargs[-len(kw_defaults):], kw_defaults)]
-            del args[-len(self.ast.args.kw_defaults):]
+            kwargs += [
+                (name, self._get_source_range(value))
+                for name, value in zip(kwargs[-len(kw_defaults) :], kw_defaults)
+            ]
+            del args[-len(self.ast.args.kw_defaults) :]
         return args, kwargs
 
 
 class _FunctionCallParser(_BaseFunctionParser):
     _lines: SourceLinesAdapter
     ast: ast.Call
+
     def __init__(self, call, implicit_arg, is_lambda=False):
         super().__init__(call, implicit_arg, is_lambda=False)
         self._lines = SourceLinesAdapter(call)
