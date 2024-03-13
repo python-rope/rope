@@ -234,13 +234,6 @@ class _BaseFunctionParser:
         end = self._lines.get_line_start(tree.end_lineno) + tree.end_col_offset
         return self._lines.code[start:end]
 
-    def get_instance(self):
-        # UNUSED
-        if self.is_called_as_a_method():
-            return self.word_finder.get_primary_at(
-                self.call.rindex(".", 0, self.first_parens) - 1
-            )
-
 
 class _FunctionDefParser(_BaseFunctionParser):
     _lines: SourceLinesAdapter
