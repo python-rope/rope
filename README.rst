@@ -6,7 +6,7 @@
  rope -- the world's most advanced open source Python refactoring library
 =========================================================================
 
-|Build status badge| |Latest version badge| |Download count badge| |ReadTheDocs status badge|
+|Build status badge| |Latest version badge| |Download count badge| |ReadTheDocs status badge| |Codecov badge|
 
 .. |Build status badge| image:: https://github.com/python-rope/rope/actions/workflows/main.yml/badge.svg
    :target: https://github.com/python-rope/rope/actions/workflows/main.yml
@@ -22,6 +22,10 @@
 .. |ReadTheDocs status badge| image:: https://readthedocs.org/projects/rope/badge/?version=latest
    :target: https://rope.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+
+.. |Codecov badge| image:: https://codecov.io/gh/python-rope/rope/graph/badge.svg?token=pU08MBXFIS
+   :target: https://codecov.io/gh/python-rope/rope
+   :alt: Codecov 
 
 Overview
 ========
