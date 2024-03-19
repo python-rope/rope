@@ -292,6 +292,10 @@ class WordRangeFinderTest(unittest.TestCase):
 
             result = a.b.c.d.f()
 
+            def import_later():
+
+                import lazy
+                       +++++
         """))
         word_finder = worder.Worder(code)
         self.assert_equal_annotation(
