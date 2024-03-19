@@ -48,6 +48,7 @@ doc = [
 ]
 dev = [
     'pytest>=7.0.1',
+    'pytest-cov>=4.1.0',
     'pytest-timeout>=2.1.0',
     'build>=0.7.0',
     'pre-commit>=2.20.0',
