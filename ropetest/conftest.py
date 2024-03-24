@@ -29,8 +29,11 @@ def session_venv_pyvenv_cfg(session_venv):
 
 @pytest.fixture(scope="session")
 def session_venv_site_packages(session_venv, session_venv_pyvenv_cfg):
-    major, minor, patch = session_venv_pyvenv_cfg["version"].split(".")
-    return session_venv / f"lib/python{major}.{minor}/site-packages"
+    if os.name == 'nt':
+        return session_venv / f"Lib/site-packages"
+    else:
+        major, minor, patch = session_venv_pyvenv_cfg["version"].split(".")
+        return session_venv / f"lib/python{major}.{minor}/site-packages"
 
 
 @pytest.fixture(scope='session')
