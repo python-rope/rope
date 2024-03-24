@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+- ...
+
+# Release 1.13.0
+
 - #781, #783 Isolate tests that uses external_fixturepkg into a venv (@lieryan)
 - #751 Check for ast.Attributes when finding occurrences in fstrings (@sandratsy)
 - #777, #698 add validation to refuse Rename refactoring to a python keyword (@lieryan)
