@@ -1,10 +1,12 @@
 # **Upcoming release**
 
 - #751 Check for ast.Attributes when finding occurrences in fstrings (@sandratsy)
-- #777, #698 add validation to refuse Rename refactoring to a python keyword
-- #730 Match on module aliases for autoimport suggestions
-- #755 Remove dependency on `build` package being installed while running tests
-- #780 Improved function parser to use ast parser instead of Worder
+- #777, #698 add validation to refuse Rename refactoring to a python keyword (@lieryan)
+- #730 Match on module aliases for autoimport suggestions (@MrBago)
+- #755 Remove dependency on `build` package being installed while running tests (@lieryan)
+- #780 Improved function parser to use ast parser instead of Worder (@lieryan)
+- #752 Update pre-commit (@bagel897)
+- #782 Integrate codecov with GHA (@lieryan)
 
 # Release 1.12.0
 
