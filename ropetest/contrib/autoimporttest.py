@@ -177,8 +177,7 @@ class AutoImportTest(unittest.TestCase):
         self.assertGreater(len(self.importer._dump_all()), 0)
 
 
-def test_search_submodule(external_fixturepkg):
-    project = testutils.sample_project(extension_modules=["sys"])
+def test_search_submodule(project, external_fixturepkg):
     importer = autoimport.AutoImport(project, observe=False)
     importer.update_module("external_fixturepkg")
     import_statement = ("from external_fixturepkg import mod1", "mod1")
