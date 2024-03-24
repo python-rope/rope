@@ -8,6 +8,7 @@
 - #780 Improved function parser to use ast parser instead of Worder (@lieryan)
 - #752 Update pre-commit (@bagel897)
 - #782 Integrate codecov with GHA (@lieryan)
+- #754 Minor type hint improvements (@lieryan)
 
 # Release 1.12.0
 
