@@ -17,10 +17,8 @@ Release
 5. `git commit && git push`
 6. Tag the release with the tag annotation containing the release information,
    ``python bin/tag-release.py``
-7. ``python3 -m build``
-8. ``twine upload dist/rope-$VERSION.{tar.gz,whl}``
-9. Publish to Discussions Announcement
-10. Create Github Release
+7. Create Github Release
+8. Publish release announcements to GitHub Discussions
 
 
 Release Schedule
