@@ -1,4 +1,4 @@
-name: rope
+name: Run tests
 
 on: [push, pull_request]
 
