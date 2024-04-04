@@ -73,6 +73,9 @@ class ImportInfo:
             primary.split(".")[0] for primary in self.get_imported_primaries(context)
         ]
 
+    def __repr__(self):
+        return f'<{self.__class__.__name__} "{self.get_import_statement()}">'
+
     def get_import_statement(self):
         pass
 
