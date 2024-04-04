@@ -72,7 +72,9 @@ autoimport.* Options
 
 Old Configuration File
 ----------------------
-This is a sample config.py. While this config.py works and all options here should be supported, the above documentation reflects the latest version of rope.
+This is a sample config.py. While this config.py works and all options here
+should be supported, the above documentation reflects the recommended way to
+do configuration in the latest version of rope.
 
 .. literalinclude:: default_config.py
    :language: python3
