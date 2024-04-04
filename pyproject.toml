@@ -87,6 +87,7 @@ force-exclude = 'ropetest|rope/base/prefs.py'
 [tool.coverage.report]
 exclude_also = [
     "if TYPE_CHECKING:",
+    "raise NotImplementedError()",
 ]
 
 [tool.isort]

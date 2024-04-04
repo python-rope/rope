@@ -10,6 +10,7 @@ from rope.base.project import Project
 from rope.contrib import findit
 from rope.contrib.autoimport import models
 from rope.refactor import occurrences
+from rope.refactor.importutils import importinfo
 from ropetest import testutils
 
 
@@ -164,4 +165,25 @@ def test_autoimport_models_finalquery(project, mod1):
     expected_repr = '''FinalQuery("DELETE FROM packages WHERE package = ?")'''
     obj = models.Package.delete_by_package_name
     assert isinstance(obj, models.FinalQuery)
+    assert repr(obj) == expected_repr
+
+
+def test_repr_normal_import(project):
+    obj = importinfo.NormalImport([("abc", None), ("ghi", "jkl")])
+    expected_repr = '<NormalImport "import abc, ghi as jkl">'
+    assert isinstance(obj, importinfo.NormalImport)
+    assert repr(obj) == expected_repr
+
+
+def test_repr_from_import(project):
+    obj = importinfo.FromImport("pkg1.pkg2", 0, [("abc", None), ("ghi", "jkl")])
+    expected_repr = '<FromImport "from pkg1.pkg2 import abc, ghi as jkl">'
+    assert isinstance(obj, importinfo.FromImport)
+    assert repr(obj) == expected_repr
+
+
+def test_repr_from_import_with_level(project):
+    obj = importinfo.FromImport("pkg1.pkg2", 3, [("abc", None), ("ghi", "jkl")])
+    expected_repr = '<FromImport "from ...pkg1.pkg2 import abc, ghi as jkl">'
+    assert isinstance(obj, importinfo.FromImport)
     assert repr(obj) == expected_repr
