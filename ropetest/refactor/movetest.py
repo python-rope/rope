@@ -549,19 +549,18 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, moved.read())
 
     def test_moving_packages(self):
-        pkg2 = testutils.create_package(self.project, "pkg2")
         code = dedent("""\
             import pkg.mod4
             print(pkg.mod4)""")
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("pkg") + 1, pkg2)
+        self._move(self.origin_module, code.index("pkg") + 1, self.destination_pkg_root)
         self.assertFalse(self.pkg.exists())
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod4") is not None)
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod4") is not None)
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod5") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod4") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod4") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod5") is not None)
         expected = dedent("""\
-            import pkg2.pkg.mod4
-            print(pkg2.pkg.mod4)""")
+            import destination_pkg_root.pkg.mod4
+            print(destination_pkg_root.pkg.mod4)""")
         self.assertEqual(expected, self.origin_module.read())
 
     def test_moving_modules_with_self_imports(self):
@@ -583,17 +582,16 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_moving_modules_with_from_imports(self):
-        pkg2 = testutils.create_package(self.project, "pkg2")
         code = dedent("""\
             from pkg import mod4
             print(mod4)""")
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("pkg") + 1, pkg2)
+        self._move(self.origin_module, code.index("pkg") + 1, self.destination_pkg_root)
         self.assertFalse(self.pkg.exists())
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod4") is not None)
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod5") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod4") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod5") is not None)
         expected = dedent("""\
-            from pkg2.pkg import mod4
+            from destination_pkg_root.pkg import mod4
             print(mod4)""")
         self.assertEqual(expected, self.origin_module.read())
 
@@ -697,40 +695,38 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_package_with_from_and_normal_imports(self):
-        pkg2 = testutils.create_package(self.project, "pkg2")
         code = dedent("""\
             from pkg import mod4
             import pkg.mod4
             print(pkg.mod4)
             print(mod4)""")
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("pkg") + 1, pkg2)
+        self._move(self.origin_module, code.index("pkg") + 1, self.destination_pkg_root)
         self.assertFalse(self.pkg.exists())
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod4") is not None)
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod5") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod4") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod5") is not None)
         expected = dedent("""\
-            from pkg2.pkg import mod4
-            import pkg2.pkg.mod4
-            print(pkg2.pkg.mod4)
+            from destination_pkg_root.pkg import mod4
+            import destination_pkg_root.pkg.mod4
+            print(destination_pkg_root.pkg.mod4)
             print(mod4)""")
         self.assertEqual(expected, self.origin_module.read())
 
     def test_moving_package_with_from_and_normal_imports2(self):
-        pkg2 = testutils.create_package(self.project, "pkg2")
         code = dedent("""\
             import pkg.mod4
             from pkg import mod4
             print(pkg.mod4)
             print(mod4)""")
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("pkg") + 1, pkg2)
+        self._move(self.origin_module, code.index("pkg") + 1, self.destination_pkg_root)
         self.assertFalse(self.pkg.exists())
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod4") is not None)
-        self.assertTrue(self.project.find_module("pkg2.pkg.mod5") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod4") is not None)
+        self.assertTrue(self.project.find_module("destination_pkg_root.pkg.mod5") is not None)
         expected = dedent("""\
-            import pkg2.pkg.mod4
-            from pkg2.pkg import mod4
-            print(pkg2.pkg.mod4)
+            import destination_pkg_root.pkg.mod4
+            from destination_pkg_root.pkg import mod4
+            print(destination_pkg_root.pkg.mod4)
             print(mod4)""")
         self.assertEqual(expected, self.origin_module.read())
 
@@ -799,30 +795,28 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write(dedent("""\
             import pkg
             my_pkg = pkg"""))
-        pkg2 = testutils.create_package(self.project, "pkg2")
         mover = move.create_move(self.project, self.pkg)
-        mover.get_changes(pkg2).do()
+        mover.get_changes(self.destination_pkg_root).do()
         expected = dedent("""\
-            import pkg2.pkg
-            my_pkg = pkg2.pkg""")
+            import destination_pkg_root.pkg
+            my_pkg = destination_pkg_root.pkg""")
         self.assertEqual(expected, self.mod1.read())
-        self.assertTrue(pkg2.get_child("pkg") is not None)
+        self.assertTrue(self.destination_pkg_root.get_child("pkg") is not None)
 
     def test_moving_resources_using_move_module_for_init_dot_py(self):
         self.mod1.write(dedent("""\
             import pkg
             my_pkg = pkg"""))
-        pkg2 = testutils.create_package(self.project, "pkg2")
         init = self.pkg.get_child("__init__.py")
         mover = move.create_move(self.project, init)
-        mover.get_changes(pkg2).do()
+        mover.get_changes(self.destination_pkg_root).do()
         self.assertEqual(
             dedent("""\
-                import pkg2.pkg
-                my_pkg = pkg2.pkg"""),
+                import destination_pkg_root.pkg
+                my_pkg = destination_pkg_root.pkg"""),
             self.mod1.read(),
         )
-        self.assertTrue(pkg2.get_child("pkg") is not None)
+        self.assertTrue(self.destination_pkg_root.get_child("pkg") is not None)
 
     def test_moving_module_and_star_imports(self):
         self.origin_module.write("a_var = 1")
