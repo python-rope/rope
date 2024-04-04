@@ -82,9 +82,9 @@ class MoveMethod:
 
     def get_changes(
         self,
-        dest_attr,
-        new_name=None,
-        resources=None,
+        dest_attr: str,
+        new_name: Optional[str] = None,
+        resources: Optional[List[resources.File]] = None,
         task_handle=taskhandle.DEFAULT_TASK_HANDLE,  # FIXME: this is unused
     ):
         """Return the changes needed for this refactoring
@@ -519,7 +519,10 @@ class MoveModule:
         self.import_tools = self.tools.import_tools
 
     def get_changes(
-        self, dest, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE
+        self,
+        dest: resources.Resource,
+        resources: Optional[List[resources.File]] = None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
     ):
         if resources is None:
             resources = self.project.get_python_files()

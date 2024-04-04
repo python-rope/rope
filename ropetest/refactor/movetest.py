@@ -59,11 +59,12 @@ class MoveRefactoringTest(unittest.TestCase):
         self,
         resource: Union[resources.File, resources.Folder],
         offset: Union[int, None],
-        dest_attr: Union[str, resources.File, resources.Folder],
+        dest_attr: str,
         *,
         new_name: str,
     ):
         mover = move.create_move(self.project, resource, offset)
+        assert isinstance(mover, move.MoveMethod)
         changes = mover.get_changes(dest_attr, new_name=new_name)
         self.project.do(changes)
 
