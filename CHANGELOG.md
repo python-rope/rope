@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #787 Add type hints to importinfo.py and add repr to ImportInfo (@lieryan)
 - #786 Upgrade Actions used in Github Workflows (@lieryan)
 - #785 Refactoring movetest.py (@lieryan)
 
