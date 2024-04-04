@@ -69,6 +69,10 @@ autoimport.* Options
 
 .. autopytoolconfigtable:: rope.base.prefs.AutoimportPrefs
 
+import.* Options
+----------------
+
+.. autopytoolconfigtable:: rope.base.prefs.ImportPrefs
 
 Old Configuration File
 ----------------------
