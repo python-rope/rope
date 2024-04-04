@@ -1328,15 +1328,16 @@ class MoveRefactoringTest(unittest.TestCase):
             move.create_move(self.project, dir)
 
     def test_moving_to_a_module_with_encoding_cookie(self) -> None:
-        code1 = "# -*- coding: utf-8 -*-"
-        self.destination_module.write(code1)
-        code2 = dedent("""\
+        code = dedent("""\
             def f(): pass
         """)
-        self.mod2.write(code2)
-        mover = move.create_move(self.project, self.mod2, code2.index("f()") + 1)
-        self.project.do(mover.get_changes(self.destination_module))
-        expected = f"{code1}\n{code2}"
+        self.origin_module.write(code)
+        self.destination_module.write("# -*- coding: utf-8 -*-")
+        self._move(self.origin_module, code.index("f()") + 1, self.destination_module)
+        expected = dedent("""\
+            # -*- coding: utf-8 -*-
+            def f(): pass
+        """)
         self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_decorated_function(self) -> None:
