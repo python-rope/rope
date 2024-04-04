@@ -1,5 +1,3 @@
-# mypy reports many problems.
-# type: ignore
 """Rope preferences."""
 from dataclasses import asdict, dataclass
 from textwrap import dedent
