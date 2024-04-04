@@ -75,13 +75,19 @@ packages = [
 
 [tool.black]
 target-version = [
-    'py36',
-    'py37',
     'py38',
     'py39',
+    'py310',
+    'py311',
+    'py312',
 ]
 include = 'rope/.*\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]
 
 [tool.isort]
 profile = "black"

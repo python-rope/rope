@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Literal, Optional
 
     from rope.base.project import Project
-    from rope.base.resources import Resource
+    from rope.base.resources import Resource, File, Folder
 
     GenerateKind = Literal[
         "variable",
@@ -51,7 +51,7 @@ def create_generate(
     return generate(project, resource, offset, goal_resource=goal_resource)
 
 
-def create_module(project, name, sourcefolder=None):
+def create_module(project, name, sourcefolder=None) -> File:
     """Creates a module and returns a `rope.base.resources.File`"""
     if sourcefolder is None:
         sourcefolder = project.root
@@ -62,7 +62,7 @@ def create_module(project, name, sourcefolder=None):
     return parent.create_file(packages[-1] + ".py")
 
 
-def create_package(project, name, sourcefolder=None):
+def create_package(project, name, sourcefolder=None) -> Folder:
     """Creates a package and returns a `rope.base.resources.Folder`"""
     if sourcefolder is None:
         sourcefolder = project.root
