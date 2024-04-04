@@ -11,6 +11,7 @@ class MoveRefactoringTest(unittest.TestCase):
         super().setUp()
         self.project = testutils.sample_project()
         self.origin_module = testutils.create_module(self.project, "origin_module")
+        self.destination_module = testutils.create_module(self.project, "destination_module")
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.mod2 = testutils.create_module(self.project, "mod2")
         self.mod3 = testutils.create_module(self.project, "mod3")
@@ -30,21 +31,21 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_move_constant(self):
         self.origin_module.write("foo = 123\n")
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
-        self.assertEqual("foo = 123\n", self.mod2.read())
+        self.assertEqual("foo = 123\n", self.destination_module.read())
 
     def test_move_constant_2(self):
         self.origin_module.write("bar = 321\nfoo = 123\n")
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual("bar = 321\n", self.origin_module.read())
-        self.assertEqual("foo = 123\n", self.mod2.read())
+        self.assertEqual("foo = 123\n", self.destination_module.read())
 
     def test_move_target_is_module_name(self):
         self.origin_module.write("foo = 123\n")
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, "mod2")
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, "destination_module")
         self.assertEqual("", self.origin_module.read())
-        self.assertEqual("foo = 123\n", self.mod2.read())
+        self.assertEqual("foo = 123\n", self.destination_module.read())
 
     def test_move_target_is_package_name(self):
         self.origin_module.write("foo = 123\n")
@@ -58,7 +59,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 123
             )
         """))
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
         self.assertEqual(
             dedent("""\
@@ -66,7 +67,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     123
                 )
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_move_constant_multiple_statements(self):
@@ -75,16 +76,16 @@ class MoveRefactoringTest(unittest.TestCase):
             foo += 3
             foo = 4
         """))
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
-                import mod2
-                mod2.foo += 3
-                mod2.foo = 4
+                import destination_module
+                destination_module.foo += 3
+                destination_module.foo = 4
             """),
             self.origin_module.read(),
         )
-        self.assertEqual("foo = 123\n", self.mod2.read())
+        self.assertEqual("foo = 123\n", self.destination_module.read())
 
     def test_simple_moving(self):
         """Move a global class definition"""
@@ -92,14 +93,14 @@ class MoveRefactoringTest(unittest.TestCase):
             class AClass(object):
                 pass
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
         self.assertEqual(
             dedent("""\
                 class AClass(object):
                     pass
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_moving_with_comment_prefix(self):
@@ -111,7 +112,7 @@ class MoveRefactoringTest(unittest.TestCase):
             class AClass(object):
                 pass
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual("a = 1\n", self.origin_module.read())
         self.assertEqual(
             dedent("""\
@@ -120,7 +121,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 class AClass(object):
                     pass
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_moving_with_comment_prefix_imports(self):
@@ -132,7 +133,7 @@ class MoveRefactoringTest(unittest.TestCase):
             class AClass(foo.FooClass):
                 pass
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual("a = 1\n", self.origin_module.read())
         self.assertEqual(
             dedent("""\
@@ -144,11 +145,15 @@ class MoveRefactoringTest(unittest.TestCase):
                 class AClass(foo.FooClass):
                     pass
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_changing_other_modules_replacing_normal_imports(self):
-        """When moving a class from origin_module to mod2, references to the class in mod3 is updated to point to mod2"""
+        """
+        When moving a class from origin_module to destination_module,
+        references to the class in mod3 is updated to point to
+        destination_module
+        """
         self.origin_module.write(dedent("""\
             class AClass(object):
                 pass
@@ -157,11 +162,11 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             a_var = origin_module.AClass()
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
-                import mod2
-                a_var = mod2.AClass()
+                import destination_module
+                a_var = destination_module.AClass()
             """),
             self.mod3.read(),
         )
@@ -177,12 +182,12 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             a_var = origin_module.AClass()
             origin_module.a_function()"""))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
                 import origin_module
-                import mod2
-                a_var = mod2.AClass()
+                import destination_module
+                a_var = destination_module.AClass()
                 origin_module.a_function()"""),
             self.mod3.read(),
         )
@@ -245,12 +250,12 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             a_var = origin_module.AClass()
             origin_module.a_function()"""))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
                 import origin_module
-                import mod2
-                a_var = mod2.AClass()
+                import destination_module
+                a_var = destination_module.AClass()
                 origin_module.a_function()"""),
             self.mod3.read(),
         )
@@ -264,11 +269,11 @@ class MoveRefactoringTest(unittest.TestCase):
             from origin_module import AClass
             a_var = AClass()
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
-                import mod2
-                a_var = mod2.AClass()
+                import destination_module
+                a_var = destination_module.AClass()
             """),
             self.mod3.read(),
         )
@@ -276,18 +281,18 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_changing_source_module(self):
         """
         Add import statements to the source module as the moved class now lives
-        in mod2.
+        in destination_module.
         """
         self.origin_module.write(dedent("""\
             class AClass(object):
                 pass
             a_var = AClass()
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
-                import mod2
-                a_var = mod2.AClass()
+                import destination_module
+                a_var = destination_module.AClass()
             """),
             self.origin_module.read(),
         )
@@ -295,24 +300,24 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_changing_destination_module(self):
         """
         Remove import statements in the destination module as the moved class
-        can now be referenced from mod2 without import.
+        can now be referenced from destination_module without import.
         """
         self.origin_module.write(dedent("""\
             class AClass(object):
                 pass
         """))
-        self.mod2.write(dedent("""\
+        self.destination_module.write(dedent("""\
             from origin_module import AClass
             a_var = AClass()
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
                 class AClass(object):
                     pass
                 a_var = AClass()
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_folder_destination(self):
@@ -337,7 +342,7 @@ class MoveRefactoringTest(unittest.TestCase):
             exceptions.RefactoringError,
             r"Move only works on global classes/functions/variables, modules and methods\.",
         ):
-            self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+            self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
 
     def test_raising_an_exception_for_moving_non_global_variable(self):
         code = dedent("""\
@@ -377,7 +382,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(mod3, a_var)
         """)
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("a_func") + 1, self.mod2)
+        self._move(self.origin_module, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             import mod3
             from mod3 import a_var
@@ -386,7 +391,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 print(mod3, a_var)
         """)
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_used_names_to_destination_module2(self):
         """
@@ -399,7 +404,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(a_var)
         """)
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("a_func") + 1, self.mod2)
+        self._move(self.origin_module, code.index("a_func") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
                 a_var = 10
@@ -413,7 +418,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 print(a_var)
         """)
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_used_underlined_names_to_destination_module(self):
         code = dedent("""\
@@ -422,7 +427,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(_var)
         """)
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("a_func") + 1, self.mod2)
+        self._move(self.origin_module, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             from origin_module import _var
 
@@ -430,7 +435,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 print(_var)
         """)
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_and_used_relative_imports(self):
         """Move global function where the source module is in a package"""
@@ -1207,7 +1212,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def f():
                 print(sys.version)
         """))
-        self.mod2.write(dedent('''\
+        self.destination_module.write(dedent('''\
             """doc
 
             More docs ...
@@ -1217,7 +1222,7 @@ class MoveRefactoringTest(unittest.TestCase):
         mover = move.create_move(
             self.project, self.origin_module, self.origin_module.read().index("f()") + 1
         )
-        self.project.do(mover.get_changes(self.mod2))
+        self.project.do(mover.get_changes(self.destination_module))
         self.assertEqual(
             dedent('''\
                 """doc
@@ -1231,7 +1236,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 def f():
                     print(sys.version)
             '''),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_moving_globals_to_a_module_with_only_docstrings2(self):
@@ -1244,7 +1249,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(sys.version, os.path)
         """)
         self.origin_module.write(code)
-        self.mod2.write(dedent('''\
+        self.destination_module.write(dedent('''\
             """doc
 
             More docs ...
@@ -1254,7 +1259,7 @@ class MoveRefactoringTest(unittest.TestCase):
         mover = move.create_move(
             self.project, self.origin_module, self.origin_module.read().index("f()") + 1
         )
-        self.project.do(mover.get_changes(self.mod2))
+        self.project.do(mover.get_changes(self.destination_module))
         expected = dedent('''\
             """doc
 
@@ -1268,7 +1273,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def f():
                 print(sys.version, os.path)
         ''')
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_a_global_when_it_is_used_after_a_multiline_str(self):
         code = dedent('''\
@@ -1280,12 +1285,12 @@ class MoveRefactoringTest(unittest.TestCase):
         ''')
         self.origin_module.write(code)
         mover = move.create_move(self.project, self.origin_module, code.index("f()") + 1)
-        self.project.do(mover.get_changes(self.mod2))
+        self.project.do(mover.get_changes(self.destination_module))
         expected = dedent('''\
-            import mod2
+            import destination_module
             s = """\\
             """
-            r = mod2.f()
+            r = destination_module.f()
         ''')
         self.assertEqual(expected, self.origin_module.read())
 
@@ -1317,7 +1322,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def foo():
                 pass
         """))
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual(
             dedent("""\
                 def hello(func):
@@ -1334,7 +1339,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 def foo():
                     pass
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
 
     def test_moving_decorated_class(self):
@@ -1344,7 +1349,7 @@ class MoveRefactoringTest(unittest.TestCase):
             class AClass:
                 pass
         """))
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod2)
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
         self.assertEqual(
             dedent("""\
@@ -1355,5 +1360,5 @@ class MoveRefactoringTest(unittest.TestCase):
                 class AClass:
                     pass
             """),
-            self.mod2.read(),
+            self.destination_module.read(),
         )
