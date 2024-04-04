@@ -335,7 +335,7 @@ class MoveGlobal:
         # "Resource" has no attribute "has_child"
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError("Move destination does not exist.")
-        if dest.is_folder() and dest.has_child("__init__.py"):  # type:ignore
+        if dest.is_folder() and dest.has_child("__init__.py"):  # type: ignore[attr-defined]
             dest = dest.get_child("__init__.py")  # type:ignore
         # The previous guards protect against this mypy complaint:
         # Item "None" of "Union[str, Resource, None]" has no attribute "is_folder"
