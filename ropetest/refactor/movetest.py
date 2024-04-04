@@ -27,9 +27,13 @@ class MoveRefactoringTest(unittest.TestCase):
         super().tearDown()
 
     def _move(self, resource, offset, dest_resource):
-        changes = move.create_move(self.project, resource, offset).get_changes(
-            dest_resource
-        )
+        mover = move.create_move(self.project, resource, offset)
+        changes = mover.get_changes(dest_resource)
+        self.project.do(changes)
+
+    def _move_to_attr(self, resource, offset, dest_attr, *, new_name):
+        mover = move.create_move(self.project, resource, offset)
+        changes = mover.get_changes(dest_attr, new_name=new_name)
         self.project.do(changes)
 
     def test_move_constant(self):
@@ -782,8 +786,9 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             my_var = origin_module.a_var
         """))
-        mover = move.create_move(self.project, self.origin_module)
-        mover.get_changes(self.destination_pkg_root).do()
+        resource = self.origin_module
+        dest_resource = self.destination_pkg_root
+        self._move(resource, None, dest_resource)
         expected = dedent("""\
             import destination_pkg_root.origin_module
             my_var = destination_pkg_root.origin_module.a_var
@@ -795,8 +800,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write(dedent("""\
             import pkg
             my_pkg = pkg"""))
-        mover = move.create_move(self.project, self.pkg)
-        mover.get_changes(self.destination_pkg_root).do()
+        self._move(self.pkg, None, self.destination_pkg_root)
         expected = dedent("""\
             import destination_pkg_root.pkg
             my_pkg = destination_pkg_root.pkg""")
@@ -808,8 +812,7 @@ class MoveRefactoringTest(unittest.TestCase):
             import pkg
             my_pkg = pkg"""))
         init = self.pkg.get_child("__init__.py")
-        mover = move.create_move(self.project, init)
-        mover.get_changes(self.destination_pkg_root).do()
+        self._move(init, None, self.destination_pkg_root)
         self.assertEqual(
             dedent("""\
                 import destination_pkg_root.pkg
@@ -824,8 +827,7 @@ class MoveRefactoringTest(unittest.TestCase):
             from origin_module import *
             a = a_var
         """))
-        mover = move.create_move(self.project, self.origin_module)
-        mover.get_changes(self.destination_pkg_root).do()
+        self._move(self.origin_module, None, self.destination_pkg_root)
         self.assertEqual(
             dedent("""\
                 from destination_pkg_root.origin_module import *
@@ -843,8 +845,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
             print(origin_module_in_pkg.a_var)
         """))
-        mover = move.create_move(self.project, self.origin_module_in_pkg)
-        mover.get_changes(self.project.root).do()
+        self._move(self.origin_module_in_pkg, None, self.project.root)
         self.assertEqual(
             dedent("""\
                 import os
@@ -869,8 +870,7 @@ class MoveRefactoringTest(unittest.TestCase):
             exceptions.RefactoringError,
             r"Move destination for modules should be packages.",
         ):
-            mover = move.create_move(self.project, self.origin_module_in_pkg)
-            mover.get_changes(None).do()
+            self._move(self.origin_module_in_pkg, None, None)
 
     def test_moving_methods_choosing_the_correct_class(self):
         code = dedent("""\
@@ -1028,8 +1028,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         expected = dedent("""\
             import mod2
 
@@ -1054,8 +1053,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         expected = dedent("""\
             class B(object):
                 var = 1
@@ -1077,8 +1075,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         self.assertEqual(
             dedent("""\
                 class B(object):
@@ -1107,8 +1104,7 @@ class MoveRefactoringTest(unittest.TestCase):
             exceptions.RefactoringError,
             r"Destination attribute <x> not found",
         ):
-            mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-            mover.get_changes("x", "new_method")
+            self._move_to_attr(self.origin_module, code.index("a_method"), "x", new_name="new_method")
 
     def test_unknown_attribute_type(self):
         code = dedent("""\
@@ -1122,8 +1118,7 @@ class MoveRefactoringTest(unittest.TestCase):
             exceptions.RefactoringError,
             r"Unknown class type for attribute <attr>",
         ):
-            mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-            mover.get_changes("attr", "new_method")
+            self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
 
     def test_moving_methods_and_moving_used_imports(self):
         self.mod2.write(dedent("""\
@@ -1140,8 +1135,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return sys.version
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         code = dedent("""\
             import sys
             class B(object):
@@ -1167,8 +1161,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         expected = dedent("""\
             class B(object):
 
@@ -1191,8 +1184,7 @@ class MoveRefactoringTest(unittest.TestCase):
                     return p
         """)
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
-        mover.get_changes("attr", "new_method").do()
+        self._move_to_attr(self.origin_module, code.index("a_method"), "attr", new_name="new_method")
         expected1 = dedent("""\
             import mod2
 
@@ -1225,10 +1217,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
             """
         '''))
-        mover = move.create_move(
-            self.project, self.origin_module, self.origin_module.read().index("f()") + 1
-        )
-        self.project.do(mover.get_changes(self.destination_module))
+        self._move(self.origin_module, self.origin_module.read().index("f()") + 1, self.destination_module)
         self.assertEqual(
             dedent('''\
                 """doc
@@ -1262,10 +1251,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
             """
         '''))
-        mover = move.create_move(
-            self.project, self.origin_module, self.origin_module.read().index("f()") + 1
-        )
-        self.project.do(mover.get_changes(self.destination_module))
+        self._move(self.origin_module, self.origin_module.read().index("f()") + 1, self.destination_module)
         expected = dedent('''\
             """doc
 
@@ -1290,8 +1276,7 @@ class MoveRefactoringTest(unittest.TestCase):
             r = f()
         ''')
         self.origin_module.write(code)
-        mover = move.create_move(self.project, self.origin_module, code.index("f()") + 1)
-        self.project.do(mover.get_changes(self.destination_module))
+        self._move(self.origin_module, code.index("f()") + 1, self.destination_module)
         expected = dedent('''\
             import destination_module
             s = """\\
