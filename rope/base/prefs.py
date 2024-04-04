@@ -1,4 +1,5 @@
 """Rope preferences."""
+from enum import Enum
 from dataclasses import asdict, dataclass
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -30,6 +31,20 @@ class AutoimportPrefs:
         description=dedent("""
             Aliases for module names.  For example, `[('np', 'numpy')]` makes rope recommend
             ``import numpy as np``.
+        """),
+    )
+
+
+@dataclass
+class ImportPrefs:
+    preferred_import_style: str = field(
+        default="default",
+        description=dedent("""
+            Controls how rope inserts new import statements. If set to
+            ``"normal-import"`` (default) will insert ``import <package>``; if
+            set to ``"from-module"`` will insert ``from <package> import
+            <module>``; if set to ``"from-global"`` rope will insert ``from
+            <package>.<module> import <object>``.
         """),
     )
 
@@ -149,7 +164,7 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         default=False,
         description=dedent("""
             If ``True`` modules with syntax errors are considered to be empty.
-            The default value is ``False``; When ``False`` syntax errors raise
+            The default value is ``False``; when ``False`` syntax errors raise
             ``rope.base.exceptions.ModuleSyntaxError`` exception.
         """),
     )
@@ -164,8 +179,8 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
     prefer_module_from_imports: bool = field(
         default=False,
         description=dedent("""
-            If ``True``, rope will insert new module imports as ``from
-            <package> import <module>`` by default.
+            **Deprecated**. ``imports.preferred_import_style`` takes
+            precedence over ``prefer_module_from_imports``.
         """),
     )
 
@@ -232,7 +247,13 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         """),
     )
     autoimport: AutoimportPrefs = field(
-        default_factory=AutoimportPrefs, description="Preferences for Autoimport")
+        default_factory=AutoimportPrefs,
+        description="Preferences for Autoimport",
+    )
+    imports: ImportPrefs = field(
+        default_factory=ImportPrefs,
+        description="Preferences for Import Organiser",
+    )
 
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""
@@ -320,3 +341,21 @@ def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
         global_config=True,
     )
     return config
+
+
+class ImportStyle(Enum):  # FIXME: Use StrEnum once we're on minimum Python 3.11
+    normal_import = "normal-import"
+    from_module = "from-module"
+    from_global = "from-global"
+
+
+DEFAULT_IMPORT_STYLE = ImportStyle.normal_import
+
+
+def get_preferred_import_style(prefs: Prefs) -> ImportStyle:
+    try:
+        return ImportStyle(prefs.imports.preferred_import_style)
+    except ValueError:
+        if prefs.imports.preferred_import_style == "default" and prefs.prefer_module_from_imports:
+            return ImportStyle.from_module
+        return DEFAULT_IMPORT_STYLE
