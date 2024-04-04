@@ -2,9 +2,8 @@
 .. _GitHub python-rope / rope: https://github.com/python-rope/rope
 
 
-=========================================================================
- rope -- the world's most advanced open source Python refactoring library
-=========================================================================
+rope -- the world's most advanced open source Python refactoring library
+========================================================================
 
 |Build status badge| |Latest version badge| |Download count badge| |ReadTheDocs status badge| |Codecov badge|
 
