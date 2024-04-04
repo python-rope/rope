@@ -86,6 +86,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual("foo = 123\n", self.mod2.read())
 
     def test_simple_moving(self):
+        """Move a global class definition"""
         self.mod1.write(dedent("""\
             class AClass(object):
                 pass
@@ -101,6 +102,7 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_moving_with_comment_prefix(self):
+        """Comments above the moved class are moved to the destination module"""
         self.mod1.write(dedent("""\
             a = 1
             # 1
@@ -145,6 +147,7 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_changing_other_modules_replacing_normal_imports(self):
+        """When moving a class from mod1 to mod2, references to the class in mod3 is updated to point to mod2"""
         self.mod1.write(dedent("""\
             class AClass(object):
                 pass
@@ -270,6 +273,10 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_changing_source_module(self):
+        """
+        Add import statements to the source module as the moved class now lives
+        in mod2.
+        """
         self.mod1.write(dedent("""\
             class AClass(object):
                 pass
@@ -285,6 +292,10 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_changing_destination_module(self):
+        """
+        Remove import statements in the destination module as the moved class
+        can now be referenced from mod2 without import.
+        """
         self.mod1.write(dedent("""\
             class AClass(object):
                 pass
@@ -309,7 +320,10 @@ class MoveRefactoringTest(unittest.TestCase):
             class AClass(object):
                 pass
         """))
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Move destination for non-modules should not be folders\.",
+        ) as e:
             self._move(self.mod1, self.mod1.read().index("AClass") + 1, folder)
 
     def test_raising_exception_for_moving_non_global_elements(self):
@@ -318,7 +332,10 @@ class MoveRefactoringTest(unittest.TestCase):
                 class AClass(object):
                     pass
         """))
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Move only works on global classes/functions/variables, modules and methods\.",
+        ):
             self._move(self.mod1, self.mod1.read().index("AClass") + 1, self.mod2)
 
     def test_raising_an_exception_for_moving_non_global_variable(self):
@@ -327,7 +344,10 @@ class MoveRefactoringTest(unittest.TestCase):
                 CONSTANT = 5
         """)
         self.mod1.write(code)
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            "Move refactoring should be performed on a global class, function or variable\.",
+        ):
             mover = move.create_move(
                 self.project, self.mod1, code.index("CONSTANT") + 1
             )
@@ -337,10 +357,17 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 pass
         """))
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            "Moving global elements to the same module\.",
+        ):
             self._move(self.mod1, self.mod1.read().index("a_func"), self.mod1)
 
     def test_moving_used_imports_to_destination_module(self):
+        """
+        Add import statements for imported references used by the moved
+        function to the destination module.
+        """
         self.mod3.write("a_var = 10")
         code = dedent("""\
             import mod3
@@ -361,6 +388,10 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, self.mod2.read())
 
     def test_moving_used_names_to_destination_module2(self):
+        """
+        Add import statements for references to globals in the source module
+        used by the moved function to the destination module.
+        """
         code = dedent("""\
             a_var = 10
             def a_func():
@@ -401,6 +432,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):
+        """Move global function where the source module is in a package"""
         code = dedent("""\
             import mod5
             def a_func():
@@ -418,7 +450,8 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, self.mod1.read())
         self.assertEqual("", self.mod4.read())
 
-    def test_moving_modules(self):
+    def test_moving_modules_into_package(self):
+        """Move global function where the destination module is in a package"""
         code = dedent("""\
             import mod1
             print(mod1)"""
@@ -1257,7 +1290,10 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_raising_an_exception_when_moving_non_package_folders(self):
         dir = self.project.root.create_folder("dir")
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Cannot move non-package folder\.",
+        ):
             move.create_move(self.project, dir)
 
     def test_moving_to_a_module_with_encoding_cookie(self):
