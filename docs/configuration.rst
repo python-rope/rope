@@ -64,6 +64,12 @@ Options
 -------
 .. autopytoolconfigtable:: rope.base.prefs.Prefs
 
+autoimport.* Options
+--------------------
+
+.. autopytoolconfigtable:: rope.base.prefs.AutoimportPrefs
+
+
 Old Configuration File
 ----------------------
 This is a sample config.py. While this config.py works and all options here should be supported, the above documentation reflects the latest version of rope.
