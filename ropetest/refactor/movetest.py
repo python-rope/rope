@@ -462,13 +462,13 @@ class MoveRefactoringTest(unittest.TestCase):
             import mod1
             print(mod1)"""
         )
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("mod1") + 1, self.pkg)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("mod1") + 1, self.pkg)
         expected = dedent("""\
             import pkg.mod1
             print(pkg.mod1)"""
         )
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.origin_module.read())
         self.assertTrue(
             not self.mod1.exists() and self.project.find_module("pkg.mod1") is not None
         )
@@ -477,26 +477,26 @@ class MoveRefactoringTest(unittest.TestCase):
         code = dedent("""\
             import pkg.mod4
             print(pkg.mod4)""")
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("mod4") + 1, self.project.root)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("mod4") + 1, self.project.root)
         expected = dedent("""\
             import mod4
             print(mod4)""")
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.origin_module.read())
         self.assertTrue(self.project.find_module("mod4") is not None)
 
     def test_moving_modules_and_removing_out_of_date_froms(self):
         code = dedent("""\
             from pkg import mod4
             print(mod4)""")
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("mod4") + 1, self.project.root)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("mod4") + 1, self.project.root)
         self.assertEqual(
             dedent("""\
                 import mod4
                 print(mod4)"""
             ), 
-            self.mod2.read(),
+            self.origin_module.read(),
         )
 
     def test_moving_modules_and_removing_out_of_date_froms2(self):
@@ -505,13 +505,13 @@ class MoveRefactoringTest(unittest.TestCase):
             from pkg.mod4 import a_var
             print(a_var)
         """)
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("mod4") + 1, self.project.root)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("mod4") + 1, self.project.root)
         expected = dedent("""\
             from mod4 import a_var
             print(a_var)
         """)
-        self.assertEqual(expected, self.mod2.read())
+        self.assertEqual(expected, self.origin_module.read())
 
     def test_moving_modules_and_relative_import(self):
         self.mod4.write(dedent("""\
@@ -521,8 +521,8 @@ class MoveRefactoringTest(unittest.TestCase):
         code = dedent("""\
             import pkg.mod4
             print(pkg.mod4)""")
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("mod4") + 1, self.project.root)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("mod4") + 1, self.project.root)
         moved = self.project.find_module("mod4")
         expected = dedent("""\
             import pkg.mod5
@@ -566,10 +566,10 @@ class MoveRefactoringTest(unittest.TestCase):
             import mod1
             print(mod1)
         """))
-        self.mod2.write(dedent("""\
+        self.origin_module.write(dedent("""\
             import mod1
         """))
-        self._move(self.mod2, self.mod2.read().index("mod1") + 1, self.pkg)
+        self._move(self.origin_module, self.origin_module.read().index("mod1") + 1, self.pkg)
         moved = self.project.find_module("pkg.mod1")
         self.assertEqual(
             dedent("""\
@@ -768,8 +768,8 @@ class MoveRefactoringTest(unittest.TestCase):
                 var = destination_module.a_var
         """)
         self.destination_module.write("a_var = 1\n")
-        self.mod2.write(code)
-        self._move(self.mod2, code.index("a_func") + 1, self.destination_module)
+        self.origin_module.write(code)
+        self._move(self.origin_module, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             def a_func():
                 var = a_var
