@@ -445,7 +445,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(mod5)
         """)
         self.mod4.write(code)
-        self._move(self.mod4, code.index("a_func") + 1, self.mod1)
+        self._move(self.mod4, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             import pkg.mod5
 
@@ -453,7 +453,7 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 print(pkg.mod5)
         """)
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEqual(expected, self.destination_module.read())
         self.assertEqual("", self.mod4.read())
 
     def test_moving_modules_into_package(self):
@@ -763,19 +763,19 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_functions_to_imported_module(self):
         code = dedent("""\
-            import mod1
+            import destination_module
             def a_func():
-                var = mod1.a_var
+                var = destination_module.a_var
         """)
-        self.mod1.write("a_var = 1\n")
+        self.destination_module.write("a_var = 1\n")
         self.mod2.write(code)
-        self._move(self.mod2, code.index("a_func") + 1, self.mod1)
+        self._move(self.mod2, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             def a_func():
                 var = a_var
             a_var = 1
         """)
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_resources_using_move_module_refactoring(self):
         self.origin_module.write("a_var = 1")
@@ -1304,15 +1304,15 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_to_a_module_with_encoding_cookie(self):
         code1 = "# -*- coding: utf-8 -*-"
-        self.mod1.write(code1)
+        self.destination_module.write(code1)
         code2 = dedent("""\
             def f(): pass
         """)
         self.mod2.write(code2)
         mover = move.create_move(self.project, self.mod2, code2.index("f()") + 1)
-        self.project.do(mover.get_changes(self.mod1))
+        self.project.do(mover.get_changes(self.destination_module))
         expected = f"{code1}\n{code2}"
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEqual(expected, self.destination_module.read())
 
     def test_moving_decorated_function(self):
         self.origin_module.write(dedent("""\
