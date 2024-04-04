@@ -20,6 +20,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.destination_module = testutils.create_module(self.project, "destination_module")
         self.origin_module_in_pkg = testutils.create_module(self.project, "origin_module_in_pkg", self.pkg)
         self.destination_module_in_pkg = testutils.create_module(self.project, "destination_module_in_pkg", self.pkg)
+        self.destination_pkg_root = testutils.create_package(self.project, "destination_pkg_root")
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -465,14 +466,14 @@ class MoveRefactoringTest(unittest.TestCase):
             print(mod1)"""
         )
         self.origin_module.write(code)
-        self._move(self.origin_module, code.index("mod1") + 1, self.pkg)
+        self._move(self.origin_module, code.index("mod1") + 1, self.destination_pkg_root)
         expected = dedent("""\
-            import pkg.mod1
-            print(pkg.mod1)"""
+            import destination_pkg_root.mod1
+            print(destination_pkg_root.mod1)"""
         )
         self.assertEqual(expected, self.origin_module.read())
         self.assertTrue(
-            not self.mod1.exists() and self.project.find_module("pkg.mod1") is not None
+            not self.mod1.exists() and self.project.find_module("destination_pkg_root.mod1") is not None
         )
 
     def test_moving_modules_and_removing_out_of_date_imports(self):
@@ -540,11 +541,11 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             origin_module.foo(origin_module=1)""")
         self.mod2.write(code)
-        self._move(self.origin_module, None, self.pkg)
+        self._move(self.origin_module, None, self.destination_pkg_root)
         moved = self.project.find_module("mod2")
         expected = dedent("""\
-            import pkg.origin_module
-            pkg.origin_module.foo(origin_module=1)""")
+            import destination_pkg_root.origin_module
+            destination_pkg_root.origin_module.foo(origin_module=1)""")
         self.assertEqual(expected, moved.read())
 
     def test_moving_packages(self):
@@ -571,12 +572,12 @@ class MoveRefactoringTest(unittest.TestCase):
         self.origin_module.write(dedent("""\
             import mod1
         """))
-        self._move(self.origin_module, self.origin_module.read().index("mod1") + 1, self.pkg)
-        moved = self.project.find_module("pkg.mod1")
+        self._move(self.origin_module, self.origin_module.read().index("mod1") + 1, self.destination_pkg_root)
+        moved = self.project.find_module("destination_pkg_root.mod1")
         self.assertEqual(
             dedent("""\
-                import pkg.mod1
-                print(pkg.mod1)
+                import destination_pkg_root.mod1
+                print(destination_pkg_root.mod1)
             """),
             moved.read(),
         )
@@ -786,13 +787,13 @@ class MoveRefactoringTest(unittest.TestCase):
             my_var = origin_module.a_var
         """))
         mover = move.create_move(self.project, self.origin_module)
-        mover.get_changes(self.pkg).do()
+        mover.get_changes(self.destination_pkg_root).do()
         expected = dedent("""\
-            import pkg.origin_module
-            my_var = pkg.origin_module.a_var
+            import destination_pkg_root.origin_module
+            my_var = destination_pkg_root.origin_module.a_var
         """)
         self.assertEqual(expected, self.mod2.read())
-        self.assertTrue(self.pkg.get_child("origin_module.py") is not None)
+        self.assertTrue(self.destination_pkg_root.get_child("origin_module.py") is not None)
 
     def test_moving_resources_using_move_module_for_packages(self):
         self.mod1.write(dedent("""\
@@ -830,10 +831,10 @@ class MoveRefactoringTest(unittest.TestCase):
             a = a_var
         """))
         mover = move.create_move(self.project, self.origin_module)
-        mover.get_changes(self.pkg).do()
+        mover.get_changes(self.destination_pkg_root).do()
         self.assertEqual(
             dedent("""\
-                from pkg.origin_module import *
+                from destination_pkg_root.origin_module import *
                 a = a_var
             """),
             self.mod2.read(),
