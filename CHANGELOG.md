@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #786 Upgrade Actions used in Github Workflows (@lieryan)
 - #785 Refactoring movetest.py (@lieryan)
 
 # Release 1.13.0
