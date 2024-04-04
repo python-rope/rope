@@ -10,14 +10,15 @@ class MoveRefactoringTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.project = testutils.sample_project()
-        self.origin_module = testutils.create_module(self.project, "origin_module")
-        self.destination_module = testutils.create_module(self.project, "destination_module")
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.mod2 = testutils.create_module(self.project, "mod2")
         self.mod3 = testutils.create_module(self.project, "mod3")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod4 = testutils.create_module(self.project, "mod4", self.pkg)
         self.mod5 = testutils.create_module(self.project, "mod5", self.pkg)
+        self.origin_module = testutils.create_module(self.project, "origin_module")
+        self.destination_module = testutils.create_module(self.project, "destination_module")
+        self.destination_module_in_pkg = testutils.create_module(self.project, "destination_module_in_pkg", self.pkg)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -49,9 +50,9 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_move_target_is_package_name(self):
         self.origin_module.write("foo = 123\n")
-        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, "pkg.mod4")
+        self._move(self.origin_module, self.origin_module.read().index("foo") + 1, "pkg.destination_module_in_pkg")
         self.assertEqual("", self.origin_module.read())
-        self.assertEqual("foo = 123\n", self.mod4.read())
+        self.assertEqual("foo = 123\n", self.destination_module_in_pkg.read())
 
     def test_move_constant_multiline(self):
         self.origin_module.write(dedent("""\
@@ -204,13 +205,13 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             a_var = origin_module.AClass()
             origin_module.a_function()"""))
-        # Move to mod4 which is in a different package
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod4)
+        # Move to destination_module_in_pkg which is in a different package
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module_in_pkg)
         self.assertEqual(
             dedent("""\
                 import origin_module
-                from pkg import mod4
-                a_var = mod4.AClass()
+                from pkg import destination_module_in_pkg
+                a_var = destination_module_in_pkg.AClass()
                 origin_module.a_function()"""),
             self.mod3.read(),
         )
@@ -227,13 +228,13 @@ class MoveRefactoringTest(unittest.TestCase):
             import origin_module
             a_var = origin_module.AClass()
             origin_module.a_function()"""))
-        # Move to mod4 which is in a different package
-        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.mod4)
+        # Move to destination_module_in_pkg which is in a different package
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module_in_pkg)
         self.assertEqual(
             dedent("""\
                 import origin_module
-                import pkg.mod4
-                a_var = pkg.mod4.AClass()
+                import pkg.destination_module_in_pkg
+                a_var = pkg.destination_module_in_pkg.AClass()
                 origin_module.a_function()"""),
             self.mod3.read(),
         )
