@@ -865,7 +865,10 @@ class MoveRefactoringTest(unittest.TestCase):
 
             print(origin_module_in_pkg.a_var)
         """))
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Move destination for modules should be packages.",
+        ):
             mover = move.create_move(self.project, self.origin_module_in_pkg)
             mover.get_changes(None).do()
 
@@ -1100,7 +1103,10 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Destination attribute <x> not found",
+        ):
             mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
             mover.get_changes("x", "new_method")
 
@@ -1112,7 +1118,10 @@ class MoveRefactoringTest(unittest.TestCase):
                     return 1
         """)
         self.origin_module.write(code)
-        with self.assertRaises(exceptions.RefactoringError):
+        with self.assertRaisesRegex(
+            exceptions.RefactoringError,
+            r"Unknown class type for attribute <attr>",
+        ):
             mover = move.create_move(self.project, self.origin_module, code.index("a_method"))
             mover.get_changes("attr", "new_method")
 
