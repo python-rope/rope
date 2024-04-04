@@ -18,6 +18,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod5 = testutils.create_module(self.project, "mod5", self.pkg)
         self.origin_module = testutils.create_module(self.project, "origin_module")
         self.destination_module = testutils.create_module(self.project, "destination_module")
+        self.origin_module_in_pkg = testutils.create_module(self.project, "origin_module_in_pkg", self.pkg)
         self.destination_module_in_pkg = testutils.create_module(self.project, "destination_module_in_pkg", self.pkg)
 
     def tearDown(self):
@@ -445,8 +446,8 @@ class MoveRefactoringTest(unittest.TestCase):
             def a_func():
                 print(mod5)
         """)
-        self.mod4.write(code)
-        self._move(self.mod4, code.index("a_func") + 1, self.destination_module)
+        self.origin_module_in_pkg.write(code)
+        self._move(self.origin_module_in_pkg, code.index("a_func") + 1, self.destination_module)
         expected = dedent("""\
             import pkg.mod5
 
@@ -455,7 +456,7 @@ class MoveRefactoringTest(unittest.TestCase):
                 print(pkg.mod5)
         """)
         self.assertEqual(expected, self.destination_module.read())
-        self.assertEqual("", self.mod4.read())
+        self.assertEqual("", self.origin_module_in_pkg.read())
 
     def test_moving_modules_into_package(self):
         """Move global function where the destination module is in a package"""
@@ -600,14 +601,14 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            from pkg import mod4
-            print(mod4)""")
+            from pkg import origin_module_in_pkg
+            print(origin_module_in_pkg)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
-            from pkg2.pkg3.pkg4 import mod4
-            print(mod4)""")
+            from pkg2.pkg3.pkg4 import origin_module_in_pkg
+            print(origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_modules_with_multi_from_imports(self):
@@ -615,15 +616,15 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            from pkg import mod4, mod5
-            print(mod4)""")
+            from pkg import origin_module_in_pkg, mod5
+            print(origin_module_in_pkg)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
             from pkg import mod5
-            from pkg2.pkg3.pkg4 import mod4
-            print(mod4)""")
+            from pkg2.pkg3.pkg4 import origin_module_in_pkg
+            print(origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_modules_with_from_and_normal_imports(self):
@@ -631,18 +632,18 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            from pkg import mod4
-            import pkg.mod4
-            print(mod4)
-            print(pkg.mod4)""")
+            from pkg import origin_module_in_pkg
+            import pkg.origin_module_in_pkg
+            print(origin_module_in_pkg)
+            print(pkg.origin_module_in_pkg)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
-            import pkg2.pkg3.pkg4.mod4
-            from pkg2.pkg3.pkg4 import mod4
-            print(mod4)
-            print(pkg2.pkg3.pkg4.mod4)""")
+            import pkg2.pkg3.pkg4.origin_module_in_pkg
+            from pkg2.pkg3.pkg4 import origin_module_in_pkg
+            print(origin_module_in_pkg)
+            print(pkg2.pkg3.pkg4.origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_modules_with_normal_and_from_imports(self):
@@ -650,18 +651,18 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            import pkg.mod4
-            from pkg import mod4
-            print(mod4)
-            print(pkg.mod4)""")
+            import pkg.origin_module_in_pkg
+            from pkg import origin_module_in_pkg
+            print(origin_module_in_pkg)
+            print(pkg.origin_module_in_pkg)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
-            import pkg2.pkg3.pkg4.mod4
-            from pkg2.pkg3.pkg4 import mod4
-            print(mod4)
-            print(pkg2.pkg3.pkg4.mod4)""")
+            import pkg2.pkg3.pkg4.origin_module_in_pkg
+            from pkg2.pkg3.pkg4 import origin_module_in_pkg
+            print(origin_module_in_pkg)
+            print(pkg2.pkg3.pkg4.origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_modules_from_import_variable(self):
@@ -669,13 +670,13 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            from pkg.mod4 import foo
+            from pkg.origin_module_in_pkg import foo
             print(foo)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
-            from pkg2.pkg3.pkg4.mod4 import foo
+            from pkg2.pkg3.pkg4.origin_module_in_pkg import foo
             print(foo)""")
         self.assertEqual(expected, self.mod1.read())
 
@@ -684,14 +685,14 @@ class MoveRefactoringTest(unittest.TestCase):
         pkg3 = testutils.create_package(self.project, "pkg3", pkg2)
         pkg4 = testutils.create_package(self.project, "pkg4", pkg3)
         code = dedent("""\
-            import pkg.mod4
-            print(pkg.mod4)""")
+            import pkg.origin_module_in_pkg
+            print(pkg.origin_module_in_pkg)""")
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg4)
-        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.mod4") is not None)
+        self._move(self.origin_module_in_pkg, None, pkg4)
+        self.assertTrue(self.project.find_module("pkg2.pkg3.pkg4.origin_module_in_pkg") is not None)
         expected = dedent("""\
-            import pkg2.pkg3.pkg4.mod4
-            print(pkg2.pkg3.pkg4.mod4)""")
+            import pkg2.pkg3.pkg4.origin_module_in_pkg
+            print(pkg2.pkg3.pkg4.origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_package_with_from_and_normal_imports(self):
@@ -737,29 +738,29 @@ class MoveRefactoringTest(unittest.TestCase):
         code = dedent('''\
             """Docstring followed by blank lines."""
 
-            import pkg.mod4
+            import pkg.origin_module_in_pkg
 
-            from pkg import mod4
+            from pkg import origin_module_in_pkg
             from x import y
             from y import z
             from a import b
             from b import c
-            print(pkg.mod4)
-            print(mod4)''')
+            print(pkg.origin_module_in_pkg)
+            print(origin_module_in_pkg)''')
         self.mod1.write(code)
-        self._move(self.mod4, None, pkg2)
+        self._move(self.origin_module_in_pkg, None, pkg2)
         expected = dedent('''\
             """Docstring followed by blank lines."""
 
-            import pkg.pkg2.mod4
+            import pkg.pkg2.origin_module_in_pkg
 
             from x import y
             from y import z
             from a import b
             from b import c
-            from pkg.pkg2 import mod4
-            print(pkg.pkg2.mod4)
-            print(mod4)''')
+            from pkg.pkg2 import origin_module_in_pkg
+            print(pkg.pkg2.origin_module_in_pkg)
+            print(origin_module_in_pkg)''')
         self.assertEqual(expected, self.mod1.read())
 
     def test_moving_functions_to_imported_module(self):
@@ -839,38 +840,38 @@ class MoveRefactoringTest(unittest.TestCase):
         )
 
     def test_moving_module_and_not_removing_blanks_after_imports(self):
-        self.mod4.write("a_var = 1")
+        self.origin_module_in_pkg.write("a_var = 1")
         self.mod2.write(dedent("""\
-            from pkg import mod4
+            from pkg import origin_module_in_pkg
             import os
 
 
-            print(mod4.a_var)
+            print(origin_module_in_pkg.a_var)
         """))
-        mover = move.create_move(self.project, self.mod4)
+        mover = move.create_move(self.project, self.origin_module_in_pkg)
         mover.get_changes(self.project.root).do()
         self.assertEqual(
             dedent("""\
                 import os
-                import mod4
+                import origin_module_in_pkg
 
 
-                print(mod4.a_var)
+                print(origin_module_in_pkg.a_var)
             """),
             self.mod2.read(),
         )
 
     def test_moving_module_refactoring_and_nonexistent_destinations(self):
-        self.mod4.write("a_var = 1")
+        self.origin_module_in_pkg.write("a_var = 1")
         self.mod2.write(dedent("""\
-            from pkg import mod4
+            from pkg import origin_module_in_pkg
             import os
 
 
-            print(mod4.a_var)
+            print(origin_module_in_pkg.a_var)
         """))
         with self.assertRaises(exceptions.RefactoringError):
-            mover = move.create_move(self.project, self.mod4)
+            mover = move.create_move(self.project, self.origin_module_in_pkg)
             mover.get_changes(None).do()
 
     def test_moving_methods_choosing_the_correct_class(self):
