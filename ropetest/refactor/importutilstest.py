@@ -1,8 +1,66 @@
 import unittest
 from textwrap import dedent
 
+from rope.base.prefs import get_preferred_import_style, ImportStyle, Prefs, ImportPrefs
+from rope.base.prefs import DEFAULT_IMPORT_STYLE
 from rope.refactor.importutils import ImportTools, add_import, importinfo
 from ropetest import testutils
+
+
+class TestImportPrefs:
+    def test_preferred_import_style_is_normal_import(self, project):
+        pref = Prefs(imports=ImportPrefs(preferred_import_style="normal-import"))
+        assert pref.imports.preferred_import_style == "normal-import"
+        assert get_preferred_import_style(pref) == ImportStyle.normal_import
+
+    def test_preferred_import_style_is_from_module(self, project):
+        pref = Prefs(imports=ImportPrefs(preferred_import_style="from-module"))
+        assert pref.imports.preferred_import_style == "from-module"
+        assert get_preferred_import_style(pref) == ImportStyle.from_module
+
+    def test_preferred_import_style_is_from_global(self, project):
+        pref = Prefs(imports=ImportPrefs(preferred_import_style="from-global"))
+        assert pref.imports.preferred_import_style == "from-global"
+        assert get_preferred_import_style(pref) == ImportStyle.from_global
+
+    def test_invalid_preferred_import_style_is_default(self, project):
+        pref = Prefs(imports=ImportPrefs(preferred_import_style="invalid-value"))
+        assert pref.imports.preferred_import_style == "invalid-value"
+        assert get_preferred_import_style(pref) == DEFAULT_IMPORT_STYLE
+        assert get_preferred_import_style(pref) == ImportStyle.normal_import
+
+    def test_default_preferred_import_style_default_is_normal_imports(self, project):
+        pref = Prefs()
+        assert pref.imports.preferred_import_style == "default"
+        assert get_preferred_import_style(pref) == ImportStyle.normal_import
+
+    def test_default_preferred_import_style_default_and_prefer_module_from_imports(self, project):
+        pref = Prefs(
+            prefer_module_from_imports=True,
+            imports=ImportPrefs(preferred_import_style="default"),
+        )
+        assert get_preferred_import_style(pref) == ImportStyle.from_module
+
+    def test_preferred_import_style_is_normal_import_takes_precedence_over_prefer_module_from_imports(self, project):
+        pref = Prefs(
+            prefer_module_from_imports=True,
+            imports=ImportPrefs(preferred_import_style="normal_import"),
+        )
+        assert get_preferred_import_style(pref) == ImportStyle.normal_import
+
+    def test_preferred_import_style_is_from_module_takes_precedence_over_prefer_module_from_imports(self, project):
+        pref = Prefs(
+            prefer_module_from_imports=True,
+            imports=ImportPrefs(preferred_import_style="from-module"),
+        )
+        assert get_preferred_import_style(pref) == ImportStyle.from_module
+
+    def test_preferred_import_style_is_from_global_takes_precedence_over_prefer_module_from_imports(self, project):
+        pref = Prefs(
+            prefer_module_from_imports=True,
+            imports=ImportPrefs(preferred_import_style="from-global"),
+        )
+        assert get_preferred_import_style(pref) == ImportStyle.from_global
 
 
 class ImportUtilsTest(unittest.TestCase):

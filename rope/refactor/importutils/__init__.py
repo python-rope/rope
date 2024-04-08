@@ -8,6 +8,8 @@ refactorings or as a separate task.
 import rope.base.codeanalyze
 import rope.base.evaluate
 from rope.base import libutils
+from rope.base.prefs import get_preferred_import_style
+from rope.base.prefs import ImportStyle
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, rename
 from rope.refactor.importutils import actions, module_imports
@@ -299,6 +301,7 @@ def get_module_imports(project, pymodule):
 
 
 def add_import(project, pymodule, module_name, name=None):
+    preferred_import_style = get_preferred_import_style(project.prefs)
     imports = get_module_imports(project, pymodule)
     candidates = []
     names = []
@@ -306,13 +309,15 @@ def add_import(project, pymodule, module_name, name=None):
     # from mod import name
     if name is not None:
         from_import = FromImport(module_name, 0, [(name, None)])
+        if preferred_import_style == ImportStyle.from_global:
+            selected_import = from_import
         names.append(name)
         candidates.append(from_import)
     # from pkg import mod
     if "." in module_name:
         pkg, mod = module_name.rsplit(".", 1)
         from_import = FromImport(pkg, 0, [(mod, None)])
-        if project.prefs.get("prefer_module_from_imports"):
+        if preferred_import_style == ImportStyle.from_module:
             selected_import = from_import
         candidates.append(from_import)
         if name:

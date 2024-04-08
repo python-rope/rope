@@ -107,10 +107,13 @@ def set_prefs(prefs):
     #
     #     prefs["ignore_bad_imports"] = False
 
-    # If `True`, rope will insert new module imports as
-    # `from <package> import <module>` by default.
+    # Controls how rope inserts new import statements. Must be one of:
+    # 
+    # - "normal-import" will insert `import <package>`
+    # - "from-module" will insert `from <package> import <module>`
+    # - "from-global" insert insert `from <package>.<module> import <object>`
     #
-    #     prefs["prefer_module_from_imports"] = False
+    #     prefs.imports.preferred_import_style = "normal-import"
 
     # If `True`, rope will transform a comma list of imports into
     # multiple separate import statements when organizing
