@@ -874,7 +874,9 @@ class _Source:
         return self._consume_pattern(repattern)
 
     def consume_empty_tuple(self):
-        return self._consume_pattern(re.compile(r"\(\s*\)"))
+        s, _ = self.consume("(")
+        _, e = self.consume(")")
+        return (s, e)
 
     def consume_with_or_comma_context_manager(self):
         repattern = re.compile(r"with|,")
