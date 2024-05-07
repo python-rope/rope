@@ -110,3 +110,6 @@ requires = [
     'setuptools',
 ]
 build-backend = 'setuptools.build_meta'
+
+[tool.rope]
+imports.preferred_import_style = "normal-import"

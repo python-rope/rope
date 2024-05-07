@@ -253,7 +253,10 @@ class _GenerationInfo:
             if self.goal_resource:
                 return self.pycore.project.get_pymodule(self.goal_resource).get_scope()
             else:
-                return self._get_source_scope()
+                scope = self._get_source_scope()
+                # if scope.get_kind() == "Comprehension":
+                # open("/tmp/xxx", "a").write('--->' + str(scope))
+                return scope
         pyobject = self.primary.get_object()
         if isinstance(pyobject, pyobjects.PyDefinedObject):
             return pyobject.get_scope()
@@ -275,6 +278,7 @@ class _GenerationInfo:
     def get_insertion_lineno(self):
         lines = self.goal_pymodule.lines
         if self.goal_scope == self.source_scope:
+            # open("/tmp/xxx", "a").write(str(self.goal_scope) + ' -- ' + str(self.source_scope))
             line_finder = self.goal_pymodule.logical_lines
             lineno = lines.get_line_number(self.offset)
             lineno = line_finder.logical_line_in(lineno)[0]
@@ -319,6 +323,8 @@ class _GenerationInfo:
         if self.goal_scope.get_kind() == "Class":
             base_blanks = 1
         if self.goal_scope.get_kind() == "Function":
+            base_blanks = 0
+        if self.goal_scope.get_kind() == "Comprehension":
             base_blanks = 0
         if self.goal_scope == self.source_scope:
             return (0, base_blanks)

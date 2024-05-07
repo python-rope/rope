@@ -339,6 +339,7 @@ def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
         bases=[".ropefolder"],
         recursive=False,
         global_config=True,
+        # fall_through=True,
     )
     return config
 

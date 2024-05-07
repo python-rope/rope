@@ -96,6 +96,7 @@ class Scope:
     end = property(get_end)
     logical_end = property(get_logical_end)
 
+    # this should be abstract method
     def get_kind(self):
         pass
 
@@ -172,6 +173,9 @@ class ComprehensionScope(Scope):
         self.returned_asts = None
         self.defineds = None
         self.visitor = visitor
+
+    def get_kind(self):
+        return "Comprehension"
 
     def _get_names(self):
         if self.names is None:

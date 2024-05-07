@@ -210,6 +210,25 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod3.read(),
         )
 
+    def test_changing_other_modules_replacing_from_imports(self) -> None:
+        """When moving a class from origin_module to destination_module, references to the class in mod3 is updated to point to destination_module"""
+        self.origin_module.write(dedent("""\
+            class AClass(object):
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from origin_module import AClass
+            a_var = AClass()
+        """))
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
+        self.assertEqual(
+            dedent("""\
+                from destination_module import AClass
+                a_var = AClass()
+            """),
+            self.mod3.read(),
+        )
+
     def test_changing_other_modules_adding_normal_imports(self) -> None:
         self.origin_module.write(dedent("""\
             class AClass(object):
@@ -231,7 +250,28 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod3.read(),
         )
 
-    def test_adding_imports_prefer_from_module(self) -> None:
+    def test_changing_other_modules_adding_from_imports(self) -> None:
+        self.origin_module.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from origin_module import AClass, a_function
+            a_var = AClass()
+            a_function()"""))
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module)
+        self.assertEqual(
+            dedent("""\
+                from origin_module import a_function
+                from destination_module import AClass
+                a_var = AClass()
+                a_function()"""),
+            self.mod3.read(),
+        )
+
+    def test_adding_imports_prefer_from_module_imports(self) -> None:
         self.project.prefs["prefer_module_from_imports"] = True
         self.origin_module.write(dedent("""\
             class AClass(object):
