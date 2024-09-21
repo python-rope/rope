@@ -1,0 +1,13 @@
+name: Type completeness ratchet
+
+on: [pull_request]
+
+jobs:
+  completeness:
+    name: Type completeness ratchet
+    runs-on: ubuntu-latest
+    steps:
+    - id: completeness
+      uses: smheidrich/pyright-type-completeness@fix-gh-5-approach-2-ii
+      with:
+        package-name: rope
