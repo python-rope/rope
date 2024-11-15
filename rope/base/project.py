@@ -224,9 +224,22 @@ class Project(_Project):
         super().__init__(fscommands)
         self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
+
+        extra_ignores = [
+            p.pathlib.relative_to(self.root.pathlib)
+            for p in self.get_python_path_folders()
+            if p.pathlib.is_relative_to(self.root.pathlib)
+            and "site-packages" in p.pathlib.parts
+        ]
+        for p in extra_ignores:
+            # I'm using this approach, because self.prefs.add after _init_prefs
+            # does not work for some reason.
+            prefs["ignored_resources"].append(str(p))
+
         self._init_prefs(prefs)
         if ropefolder is not None:
             self.prefs.add("ignored_resources", ropefolder)
+
         self._init_source_folders()
 
     def __repr__(self):
@@ -281,7 +294,7 @@ class Project(_Project):
         # Forcing the creation of `self.pycore` to register observers
         self.pycore  # pylint: disable=pointless-statement
 
-    def is_ignored(self, resource):
+    def is_ignored(self, resource: Resource):
         return self.ignored.does_match(resource)
 
     def sync(self):
