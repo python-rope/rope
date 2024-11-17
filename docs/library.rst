@@ -523,12 +523,15 @@ Refactorings
 ============
 
 Have a look at ``rope.refactor`` package and its sub-modules.  For
-example for performing a move refactoring you can create a ``Move``
-object like this:
+example for performing a move refactoring you can create an object
+representing this operation (which will be an instance of e.g.
+`MoveMethod`, `MoveModule`, ...) like this:
 
 .. code-block:: python
 
-  mover = Move(project, resource, offset)
+  from rope.refactor.move import create_move
+
+  mover = create_move(project, resource, offset)
 
 Where ``resource`` and ``offset`` is the location to perform the
 refactoring.
