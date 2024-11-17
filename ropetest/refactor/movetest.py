@@ -254,6 +254,75 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod3.read(),
         )
 
+    def test_adding_imports_preferred_import_style_is_normal_import(self) -> None:
+        self.project.prefs.imports.preferred_import_style = "normal-import"
+        self.origin_module.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            import origin_module
+            a_var = origin_module.AClass()
+            origin_module.a_function()"""))
+        # Move to destination_module_in_pkg which is in a different package
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module_in_pkg)
+        self.assertEqual(
+            dedent("""\
+                import origin_module
+                import pkg.destination_module_in_pkg
+                a_var = pkg.destination_module_in_pkg.AClass()
+                origin_module.a_function()"""),
+            self.mod3.read(),
+        )
+
+    def test_adding_imports_preferred_import_style_is_from_module(self) -> None:
+        self.project.prefs.imports.preferred_import_style = "from-module"
+        self.origin_module.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            import origin_module
+            a_var = origin_module.AClass()
+            origin_module.a_function()"""))
+        # Move to destination_module_in_pkg which is in a different package
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module_in_pkg)
+        self.assertEqual(
+            dedent("""\
+                import origin_module
+                from pkg import destination_module_in_pkg
+                a_var = destination_module_in_pkg.AClass()
+                origin_module.a_function()"""),
+            self.mod3.read(),
+        )
+
+    def test_adding_imports_preferred_import_style_is_from_global(self) -> None:
+        self.project.prefs.imports.preferred_import_style = "from-global"
+        self.origin_module.write(dedent("""\
+            class AClass(object):
+                pass
+            def a_function():
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            import origin_module
+            a_var = origin_module.AClass()
+            origin_module.a_function()"""))
+        # Move to destination_module_in_pkg which is in a different package
+        self._move(self.origin_module, self.origin_module.read().index("AClass") + 1, self.destination_module_in_pkg)
+        self.assertEqual(
+            dedent("""\
+                import origin_module
+                from pkg.destination_module_in_pkg import AClass
+                a_var = AClass()
+                origin_module.a_function()"""),
+            self.mod3.read(),
+        )
+
     def test_adding_imports_noprefer_from_module(self) -> None:
         self.project.prefs["prefer_module_from_imports"] = False
         self.origin_module.write(dedent("""\
