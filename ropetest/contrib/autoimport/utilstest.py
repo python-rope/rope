@@ -1,5 +1,6 @@
 """Tests for autoimport utility functions, written in pytest"""
 
+import venv
 from pathlib import Path
 
 from rope.contrib.autoimport import utils
@@ -19,6 +20,29 @@ def test_get_package_source_pytest(example_external_package_path):
     # but should be installed into site_packages,
     # so it should return Source.SITE_PACKAGE
     source = utils.get_package_source(example_external_package_path, None, "mod1")
+    assert source == Source.SITE_PACKAGE
+
+
+def test_get_package_source_venv_in_project_dir(example_external_package_path, project):
+    # Many Python dev tools create .venv folders inside the project directory.
+    # Modules in such folders should count as SITE_PACKAGE files despite
+    # technically being inside the project folder.
+
+    # Set up actual venv in project folder:
+    project_venv_path = project.root.pathlib/".venv"
+    venv.create(project_venv_path)
+
+    # Crude approximation of a package installed into this venv:
+    project_venv_site_packages_path = next(project_venv_path.glob("lib/python*/site-packages"))
+    project.prefs["python_path"].append(project_venv_site_packages_path)
+    module_path = project_venv_site_packages_path / "foo.py"
+    module_path.touch()
+
+    # Such directories are normally part of `ignored_resources` (e.g. `.venv`
+    # is in there by default):
+    project.prefs["ignored_resources"] += [".venv"]
+
+    source = utils.get_package_source(module_path, project, "foo")
     assert source == Source.SITE_PACKAGE
 
 
