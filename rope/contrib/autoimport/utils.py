@@ -49,7 +49,11 @@ def get_package_source(
     """Detect the source of a given package. Rudimentary implementation."""
     if name in sys.builtin_module_names:
         return Source.BUILTIN
-    if project is not None and project.address in str(package):
+    if (
+        project is not None
+        and project.address in str(package)
+        and not project.is_ignored(project.get_file(str(package)))
+    ):
         return Source.PROJECT
     if "site-packages" in package.parts:
         return Source.SITE_PACKAGE
