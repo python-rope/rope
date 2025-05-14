@@ -33,7 +33,7 @@ def test_get_package_source_venv_in_project_dir(example_external_package_path, p
     venv.create(project_venv_path)
 
     # Crude approximation of a package installed into this venv:
-    project_venv_site_packages_path = next(project_venv_path.glob("lib/python*/site-packages"))
+    project_venv_site_packages_path = next(project_venv_path.glob("**/*site-packages"))
     project.prefs["python_path"].append(project_venv_site_packages_path)
     module_path = project_venv_site_packages_path / "foo.py"
     module_path.touch()
