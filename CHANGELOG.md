@@ -4,6 +4,7 @@
 - #786 Upgrade Actions used in Github Workflows (@lieryan)
 - #785 Refactoring movetest.py (@lieryan)
 - #788 Introduce the `preferred_import_style` configuration (@nicoolas25, @lieryan)
+- #814 Treat `ignored_resources` as non-project files for autoimport purposes (@smheidrich)
 
 # Release 1.13.0
 
