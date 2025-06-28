@@ -1425,6 +1425,78 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_or(self):
+        source = dedent(
+            """\
+            match x:
+                case 'v'|'z':
+                    print(x)
+        """
+        )
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchOr")
+        checker.check_children("MatchOr", ["MatchValue", "", "|", "", "MatchValue"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_singleton_true(self):
+        source = dedent(
+            """\
+            match x:
+                case True:
+                    print(x)
+        """
+        )
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSingleton")
+        checker.check_children("MatchSingleton", ["True"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_singleton_none(self):
+        source = dedent(
+            """\
+            match x:
+                case None:
+                    print(x)
+        """
+        )
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSingleton")
+        checker.check_children("MatchSingleton", ["None"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_star(self):
+        source = dedent(
+            """\
+            match x:
+                case [*_]:
+                    print(x)
+        """
+        )
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", ["[", "", "MatchStar", "", "]"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_star_and_value(self):
+        source = dedent(
+            """\
+            match x:
+                case [*_, "something"]:
+                    print(x)
+        """
+        )
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children(
+            "MatchSequence", ["[", "", "MatchStar", "", ",", " ", "MatchValue", "", "]"]
+        )
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_as_capture_pattern(self):
         source = dedent("""\
             match x:
