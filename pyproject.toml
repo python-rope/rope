@@ -21,7 +21,7 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
     'Topic :: Software Development',
 ]
-version = '1.13.0'
+version = '1.14.0'
 dependencies = ['pytoolconfig[global] >= 1.2.2']
 
 [[project.authors]]
