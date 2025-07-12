@@ -1,9 +1,17 @@
 # **Upcoming release**
 
+- ...
+
+# Release 1.13.0
+
 - #787 Add type hints to importinfo.py and add repr to ImportInfo (@lieryan)
 - #786 Upgrade Actions used in Github Workflows (@lieryan)
 - #785 Refactoring movetest.py (@lieryan)
 - #788 Introduce the `preferred_import_style` configuration (@nicoolas25, @lieryan)
+- #820 Add explicit sphinx.configuration key (@lieryan)
+- #805 Update GHA Python versions by (@lieryan)
+- #809 Python3.13 compat (@Nowa-Ammerlaan)
+- #818 Adapt conditional for Python 3.14 (@penguinpee)
 
 # Release 1.13.0
 
