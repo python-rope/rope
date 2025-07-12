@@ -31,7 +31,7 @@ class ModuleImports:
 
     def _get_all_star_list(self, pymodule):
         def _resolve_name(
-            name: Union[pynamesdef.AssignedName, pynames.ImportedName]
+            name: Union[pynamesdef.AssignedName, pynames.ImportedName],
         ) -> List:
             while isinstance(name, pynames.ImportedName):
                 try:
