@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from typing import TYPE_CHECKING, Optional, Union
 
 import rope.base.utils as base_utils
@@ -81,7 +82,10 @@ def resolve_type(
     """
     Find proper type object from its name.
     """
-    deprecated_aliases = {"collections": "collections.abc"}
+    if sys.version_info < (3, 13):
+        deprecated_aliases = {"collections": "collections.abc"}
+    else:
+        deprecated_aliases = {"collections": "_collections_abc"}
     ret_type = None
     logging.debug("Looking for %s", type_name)
     if "." not in type_name:
