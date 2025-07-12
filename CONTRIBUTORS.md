@@ -87,6 +87,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="http://n.zermati.eu"><img src="https://avatars.githubusercontent.com/u/163953?v=4?s=100" width="100px;" alt="Nicolas Zermati"/><br /><sub><b>Nicolas Zermati</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=nicoolas25" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Nowa-Ammerlaan"><img src="https://avatars.githubusercontent.com/u/8460628?v=4?s=100" width="100px;" alt="Nowa Ammerlaan"/><br /><sub><b>Nowa Ammerlaan</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=Nowa-Ammerlaan" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/penguinpee"><img src="https://avatars.githubusercontent.com/u/98259694?v=4?s=100" width="100px;" alt="Sandro"/><br /><sub><b>Sandro</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=penguinpee" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 
