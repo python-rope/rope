@@ -2,7 +2,7 @@
 
 - ...
 
-# Release 1.13.0
+# Release 1.14.0
 
 - #787 Add type hints to importinfo.py and add repr to ImportInfo (@lieryan)
 - #786 Upgrade Actions used in Github Workflows (@lieryan)
