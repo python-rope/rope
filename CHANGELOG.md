@@ -4,6 +4,7 @@
 - #786 Upgrade Actions used in Github Workflows (@lieryan)
 - #785 Refactoring movetest.py (@lieryan)
 - #788 Introduce the `preferred_import_style` configuration (@nicoolas25, @lieryan)
+- #819 supports MatchOr, MatchSequence, MatchStar (@jheld)
 
 # Release 1.13.0
 
