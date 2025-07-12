@@ -92,7 +92,7 @@ def sort_and_deduplicate(results: List[Tuple[str, int]]) -> List[str]:
 
 
 def sort_and_deduplicate_tuple(
-    results: List[Tuple[str, str, int]]
+    results: List[Tuple[str, str, int]],
 ) -> List[Tuple[str, str]]:
     """Sort and deduplicate a list of name, module, source entries."""
     results = sorted(results, key=lambda y: y[-1])

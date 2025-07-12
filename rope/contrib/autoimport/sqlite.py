@@ -569,14 +569,17 @@ class AutoImport:
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _safe_iterdir(self, folder: Path):
-        dirs = folder.iterdir()
-        while True:
-            try:
-                yield next(dirs)
-            except PermissionError:
-                pass
-            except StopIteration:
-                break
+        try:
+            dirs = folder.iterdir()
+            while True:
+                try:
+                    yield next(dirs)
+                except PermissionError:
+                    pass
+                except StopIteration:
+                    break
+        except PermissionError:
+            pass
 
     def _get_available_packages(self) -> List[Package]:
         packages: List[Package] = [
