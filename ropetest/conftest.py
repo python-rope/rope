@@ -105,4 +105,11 @@ def external_fixturepkg(session_venv, session_venv_python_executable):
         "ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0-py3-none-any.whl",
     ])
     yield
-    check_call([sys.executable, "-m", "pip", "uninstall", "--yes", "external-fixturepkg"])
+    check_call([
+        session_venv_python_executable,
+        "-m",
+        "pip",
+        "uninstall",
+        "--yes",
+        "external-fixturepkg"
+    ])
