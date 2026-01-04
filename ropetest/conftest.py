@@ -1,6 +1,5 @@
 import os
 import pathlib
-import sys
 from subprocess import check_call
 from venv import EnvBuilder
 
