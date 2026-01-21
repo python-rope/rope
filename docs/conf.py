@@ -37,9 +37,11 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
     "pytoolconfig.documentation",
     "sphinx_rtd_theme",
+    "autoapi.extension",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -66,3 +68,12 @@ html_css_files = ["rope.css"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
+
+# Automatically-generated API docs:
+autoapi_dirs = ["../rope"]
+
+# Automatic role selection for cross-references without one specified:
+default_role = "any"
+
+# Intersphinx (link to external projects' docs)
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
