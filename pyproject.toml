@@ -19,6 +19,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
     'Topic :: Software Development',
 ]
 version = '1.14.0'
@@ -42,9 +43,9 @@ Documentation = 'https://rope.readthedocs.io/'
 [project.optional-dependencies]
 doc = [
     'pytoolconfig[doc]',
-    "sphinx>=4.5.0",
-    "sphinx-autodoc-typehints>=1.18.1",
-    "sphinx-rtd-theme>=1.0.0",
+    \"sphinx>=4.5.0\",
+    \"sphinx-autodoc-typehints>=1.18.1\",
+    \"sphinx-rtd-theme>=1.0.0\",
 ]
 dev = [
     'pytest>=7.0.1',
@@ -58,6 +59,7 @@ release = [
     'twine>=4.0.2',
     'pip-tools>=6.12.1',
 ]
+
 [tool.setuptools]
 packages = [
     'rope',
@@ -81,28 +83,28 @@ target-version = [
     'py311',
     'py312',
 ]
-include = 'rope/.*\.pyi?$'
+include = 'rope/.*\\.pyi?$'
 force-exclude = 'ropetest|rope/base/prefs.py'
 
 [tool.coverage.report]
 exclude_also = [
-    "if TYPE_CHECKING:",
-    "raise NotImplementedError()",
+    \"if TYPE_CHECKING:\",
+    \"raise NotImplementedError()\",
 ]
 
 [tool.isort]
-profile = "black"
+profile = \"black\"
 
 [tool.pytest.ini_options]
 
-testpaths = "ropetest"
+testpaths = \"ropetest\"
 python_files = [
-    "*test.py",
-    "__init__.py",
+    \"*test.py\",
+    \"__init__.py\",
 ]
 
 markers = [
-    "time_limit: sets a maximum amount of time the test can run",
+    \"time_limit: sets a maximum amount of time the test can run\",
 ]
 
 [build-system]
