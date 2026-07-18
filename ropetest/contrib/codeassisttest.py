@@ -924,7 +924,7 @@ class CodeAssistTest(unittest.TestCase):
         code = dedent("""\
             try:
                 range.
-            except:
+except Exception:
                 pass
         """)
         result = self._assist(code, code.index("."), maxfixes=1)  # noqa

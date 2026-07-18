@@ -1143,7 +1143,7 @@ class PatchedASTTest(unittest.TestCase):
         source = dedent("""\
             try:
                 pass
-            except:
+except Exception:
                 pass
             finally:
                 pass

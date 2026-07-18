@@ -75,7 +75,7 @@ class SuiteTest(unittest.TestCase):
         root = source_suite_tree(dedent("""\
             try:
                 pass
-            except:
+except Exception:
                 pass
             else:
                 pass
@@ -87,7 +87,7 @@ class SuiteTest(unittest.TestCase):
         root = source_suite_tree(dedent("""\
             try:
                 pass
-            except:
+except Exception:
                 pass
             finally:
                 pass
