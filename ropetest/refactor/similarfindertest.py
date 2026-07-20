@@ -167,13 +167,13 @@ class SimilarFinderTest(unittest.TestCase):
             if 1:
                 try:
                     pass
-                except:
+                except Exception:
                     pass
         """)
         pattern = dedent("""\
             try:
                 pass
-            except:
+            except Exception:
                 pass
         """)
         finder = self._create_finder(source)
