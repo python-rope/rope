@@ -546,7 +546,7 @@ class PyCoreTest(unittest.TestCase):
         code = dedent("""\
             try:
                 myvar1 = 1
-            except:
+            except Exception:
                 myvar2 = 1
             finally:
                 myvar3 = 1
