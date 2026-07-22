@@ -273,6 +273,19 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
 
     @testutils.only_for_versions_higher("3.6")
+    def test_handling_format_strings_with_triple_quote_in_body(self):
+        # A double-quoted f-string whose body contains a ''' sequence must not
+        # confuse the end-quote detection (end_quote_char picked the longest
+        # quote in the body instead of the matching delimiter).
+        source = 'f"abc = \'\'\'{a}"\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "JoinedStr", ['f"', "abc = '''", "FormattedValue", "", '"']
+        )
+        checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
+
+    @testutils.only_for_versions_higher("3.6")
     def test_handling_format_strings_with_implicit_join(self):
         source = '''"1" + rf'abc{a}' f"""xxx{b} """\n'''
         ast_frag = patchedast.get_patched_ast(source, True)
