@@ -325,6 +325,7 @@ class _PatchingASTWalker:
         for decorator in node.decorator_list:
             children.extend(("@", decorator))
         children.extend(["class", node.name])
+        children.extend(self._type_params_children(node))
         if node.bases:
             children.append("(")
             children.extend(self._child_nodes(node.bases, ","))
@@ -332,6 +333,21 @@ class _PatchingASTWalker:
         children.append(":")
         children.extend(node.body)
         self._handle(node, children)
+
+    def _type_params_children(self, node):
+        # PEP 695: render `[T, *Ts, **P]` type parameters between the name and
+        # the opening parenthesis. Empty when the node has no type params so
+        # pre-3.12 code is unaffected.
+        type_params = getattr(node, "type_params", None) or ()
+        if not type_params:
+            return []
+        children = ["["]
+        for index, type_param in enumerate(type_params):
+            if index > 0:
+                children.append(",")
+            children.append(type_param)
+        children.append("]")
+        return children
 
     def _Compare(self, node):
         children = []
@@ -491,6 +507,7 @@ class _PatchingASTWalker:
             children.extend(("@", decorator))
         children.extend(["async", "def"] if is_async else ["def"])
         children.append(node.name)
+        children.extend(self._type_params_children(node))
         children.extend(["(", node.args, ")"])
         children.append(":")
         children.extend(node.body)
@@ -824,6 +841,53 @@ class _PatchingASTWalker:
                 children.append(",")
         children.append("}")
         self._handle(node, children)
+
+    def _pattern_opening_token(self, node):
+        lineno = getattr(node, "lineno", None)
+        col_offset = getattr(node, "col_offset", None)
+        if not isinstance(lineno, int) or not isinstance(col_offset, int):
+            return ""
+        line_start = self.lines.get_line_start(lineno)
+        start = line_start + col_offset
+        return self.source.source[start : start + 1]
+
+    def _MatchSequence(self, node):
+        children = self._child_nodes(node.patterns, ",")
+        opening = self._pattern_opening_token(node)
+        if opening == "[":
+            self._handle(node, ["[", *children, "]"])
+            return
+        if opening == "(" and not node.patterns:
+            self._handle(node, [self.empty_tuple])
+            return
+        self._handle(node, children, eat_parens=opening == "(")
+
+    def _MatchStar(self, node):
+        self._handle(node, ["*", node.name or "_"])
+
+    def _MatchOr(self, node):
+        self._handle(node, self._child_nodes(node.patterns, "|"))
+
+    def _MatchSingleton(self, node):
+        self._handle(node, [str(node.value)])
+
+    def _TypeAlias(self, node):
+        children = ["type", node.name]
+        children.extend(self._type_params_children(node))
+        children.extend(["=", node.value])
+        self._handle(node, children)
+
+    def _TypeVar(self, node):
+        children = [node.name]
+        if getattr(node, "bound", None) is not None:
+            children.extend([":", node.bound])
+        self._handle(node, children)
+
+    def _ParamSpec(self, node):
+        self._handle(node, ["**", node.name])
+
+    def _TypeVarTuple(self, node):
+        self._handle(node, ["*", node.name])
 
 
 class _Source:

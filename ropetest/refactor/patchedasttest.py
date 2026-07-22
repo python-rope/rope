@@ -272,6 +272,49 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("JoinedStr", ['f"', "abc", "FormattedValue", "", '"'])
         checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
 
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_type_alias(self):
+        source = "type Alias[T] = list[T]\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "TypeAlias",
+            ["type", " ", "Name", "", "[", "", "TypeVar", "", "]", " ",
+             "=", " ", "Subscript"],
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_generic_function(self):
+        source = "def f[T](x: T) -> T:\n    return x\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        # The type parameter list must be rendered between name and '('.
+        assert "[T]" in source
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("TypeVar", ["T"])
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_generic_class(self):
+        source = "class C[T]:\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("TypeVar", ["T"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_handling_match_sequence_and_star(self):
+        source = "match x:\n    case [1, *rest]:\n        pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("MatchStar", ["*", "", "rest"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_handling_match_or_and_singleton(self):
+        source = "match x:\n    case 1 | None:\n        pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "MatchOr", ["MatchValue", " ", "|", " ", "MatchSingleton"]
+        )
+
     @testutils.only_for_versions_higher("3.6")
     def test_handling_format_strings_with_implicit_join(self):
         source = '''"1" + rf'abc{a}' f"""xxx{b} """\n'''

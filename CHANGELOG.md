@@ -1,5 +1,10 @@
 # **Upcoming release**
 
+- Add `patchedast` handlers for Python 3.12/3.13 native syntax so rope's AST
+  region walker no longer emits `Unknown node type` warnings or aborts on
+  PEP 695 type parameters (`type X[T] = ...`, `def f[T]`, `class C[T]`,
+  TypeVar/ParamSpec/TypeVarTuple) and structural pattern subtypes
+  (MatchSequence, MatchStar, MatchOr, MatchSingleton) (@marlon-costa-dc)
 - ...
 
 # Release 1.14.0
