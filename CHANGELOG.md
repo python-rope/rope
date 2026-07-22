@@ -1,5 +1,9 @@
 # **Upcoming release**
 
+- Fix `patchedast` aborting on a `'''` sequence inside a double-quoted
+  f-string (`end_quote_char` picked the longest quote in the body instead of
+  the matching delimiter), which raised `MismatchedTokenError` and broke
+  rename/inline for the whole module (@marlon-costa-dc)
 - ...
 
 # Release 1.14.0
