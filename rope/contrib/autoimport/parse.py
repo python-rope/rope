@@ -47,7 +47,7 @@ def get_names_from_file(
     try:
         root_node = ast.parse(module.read_bytes())
     except SyntaxError as error:
-        print(error)
+        logger.debug("Skipping invalid source file %s: %s", module, error)
         return
     for node in ast.iter_child_nodes(root_node):
         if isinstance(node, ast.Assign):
