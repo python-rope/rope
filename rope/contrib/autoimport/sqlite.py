@@ -44,7 +44,6 @@ from rope.contrib.autoimport.defs import (
 from rope.contrib.autoimport.parse import get_names
 from rope.contrib.autoimport.utils import (
     get_files,
-    get_modname_from_path,
     get_package_tuple,
     sort_and_deduplicate,
     sort_and_deduplicate_tuple,
@@ -654,12 +653,13 @@ class AutoImport:
         assert self.project_package.path
         underlined = underlined if underlined else self.underlined
         resource_path: Path = resource.pathlib
-        # The project doesn't need its name added to the path,
-        # since the standard python file layout accounts for that
-        # so we set add_package_name to False
-        resource_modname: str = get_modname_from_path(
-            resource_path, self.project_package.path, add_package_name=False
-        )
+        # Resolve the module name by walking up the package hierarchy from the
+        # resource (stopping at the first directory without an ``__init__.py``),
+        # rather than deriving it from the resource's path relative to the
+        # project root. The latter incorrectly includes intermediate,
+        # non-package directories in the module name.
+        # See https://github.com/python-rope/rope/issues/823
+        resource_modname: str = libutils.modname(resource)
         return ModuleFile(
             resource_path,
             resource_modname,
