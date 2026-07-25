@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #823 Fix autoimport.sqlite deriving module names from non-package folders (@deepakganesh78)
 - ...
 
 # Release 1.14.0
