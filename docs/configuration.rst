@@ -70,7 +70,7 @@ autoimport.* Options
 .. autopytoolconfigtable:: rope.base.prefs.AutoimportPrefs
 
 imports.* Options
-----------------
+-----------------
 
 .. autopytoolconfigtable:: rope.base.prefs.ImportPrefs
 
