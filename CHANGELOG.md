@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #850 Update and pin black version in pre-commit and Github Actions
 
 # Release 1.14.0
 

@@ -15,13 +15,13 @@ from rope.base.exceptions import ModuleNotFoundError
 
 # At present rope.base.prefs starts with `# type:ignore`.
 # As a result, mypy knows nothing about Prefs and get_config.
-from rope.base.prefs import Prefs, get_config  # type:ignore
+from rope.base.prefs import Prefs, get_config  # type: ignore
 from rope.base.resources import File, Folder, _ResourceMatcher
 
 try:
-    import cPickle as pickle  # type:ignore
+    import cPickle as pickle  # type: ignore
 except ImportError:
-    import pickle  # type:ignore
+    import pickle  # type: ignore
 
 
 class _Project:
