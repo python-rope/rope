@@ -8,7 +8,7 @@ repos:
   - id: check-added-large-files
 
 - repo: https://github.com/psf/black
-  rev: 24.1.1
+  rev: 26.5.1
   hooks:
   - id: black
     name: black check (Python)
