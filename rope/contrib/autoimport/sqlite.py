@@ -51,7 +51,6 @@ from rope.contrib.autoimport.utils import (
 )
 from rope.refactor import importutils
 
-
 if TYPE_CHECKING:
     from collections.abc import Collection
 
