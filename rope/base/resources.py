@@ -256,7 +256,7 @@ class _ResourceMatcher:
         re_pattern = "^(.*/)?" + re_pattern + "(/.*)?$"
         self.compiled_patterns.append(re.compile(re_pattern))
 
-    def does_match(self, resource):
+    def does_match(self, resource: Resource):
         for pattern in self.compiled_patterns:
             if pattern.match(resource.path):
                 return True
