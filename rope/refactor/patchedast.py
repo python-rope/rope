@@ -838,7 +838,7 @@ class _PatchingASTWalker:
             children.extend([":", node.bound])
         default_value = getattr(node, "default_value", None)
         if default_value:
-            children.extend(["=", node.default_value])
+            children.extend(["=", default_value])
         self._handle(node, children)
 
     def _TypeVarTuple(self, node):
