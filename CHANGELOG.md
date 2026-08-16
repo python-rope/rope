@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #858 Fix `find_definition`/Rename mis-handling class methods defined after an f-string with an unmatched literal bracket (Python 3.12+) (@gadievron)
 - #850 Update and pin black version in pre-commit and Github Actions
 - #851 Bump supported python version to up to Python 3.14
 - #852 Implement patchedast handlers for TypeAlias 
