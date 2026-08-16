@@ -4,6 +4,7 @@
 - #851 Bump supported python version to up to Python 3.14
 - #852 Implement patchedast handlers for TypeAlias 
 - #853 Implement patchedast handlers TypeVar
+- #847 Avoid printing autoimport syntax errors (@yangfan-yf-yf)
 
 # Release 1.14.0
 
