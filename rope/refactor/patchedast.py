@@ -491,7 +491,7 @@ class _PatchingASTWalker:
             children.extend(("@", decorator))
         children.extend(["async", "def"] if is_async else ["def"])
         children.append(node.name)
-        type_params = getattr(node, "type_params")
+        type_params = getattr(node, "type_params", [])
         if type_params:
             children.extend(["[", *self._child_nodes(type_params, ","), "]"])
         children.extend(["(", node.args, ")"])
