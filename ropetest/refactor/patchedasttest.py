@@ -1690,6 +1690,7 @@ class PatchedASTTest(unittest.TestCase):
             "T",
         ])
 
+    @testutils.only_for_versions_higher("3.13")
     def test_type_var_tuple_with_default_value(self):
         source = dedent("""\
             def foo[*T = (A, B)](x):
