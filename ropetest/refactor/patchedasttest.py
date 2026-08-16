@@ -1532,6 +1532,7 @@ class PatchedASTTest(unittest.TestCase):
             "}",
         ])
 
+    @testutils.only_for_versions_higher("3.12")
     def test_type_alias(self):
         source = dedent("""\
             type Point = tuple[float, float]
@@ -1546,6 +1547,7 @@ class PatchedASTTest(unittest.TestCase):
             "Subscript",
         ])
 
+    @testutils.only_for_versions_higher("3.12")
     def test_type_var_simple(self):
         source = dedent("""\
             def foo[S, T](x):
@@ -1598,6 +1600,7 @@ class PatchedASTTest(unittest.TestCase):
             "Name",
         ])
 
+    @testutils.only_for_versions_higher("3.12")
     def test_type_var_with_constraint(self):
         source = dedent("""\
             def foo[T: (A, B)](x):
