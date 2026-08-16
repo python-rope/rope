@@ -1579,6 +1579,7 @@ class PatchedASTTest(unittest.TestCase):
             ],
         )
 
+    @testutils.only_for_versions_higher("3.13")
     def test_type_var_with_default_value(self):
         source = dedent("""\
             def foo[T = D](x):
@@ -1615,6 +1616,7 @@ class PatchedASTTest(unittest.TestCase):
             "Tuple",
         ])
 
+    @testutils.only_for_versions_higher("3.13")
     def test_type_var_with_constraint_and_default_value(self):
         source = dedent("""\
             def foo[T: (A, B) = D](x):

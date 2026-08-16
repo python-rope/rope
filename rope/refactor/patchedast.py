@@ -836,7 +836,8 @@ class _PatchingASTWalker:
         children = [node.name]
         if node.bound:
             children.extend([":", node.bound])
-        if node.default_value:
+        default_value = getattr(node, "default_value", None)
+        if default_value:
             children.extend(["=", node.default_value])
         self._handle(node, children)
 
