@@ -836,24 +836,23 @@ class _PatchingASTWalker:
         children = [node.name]
         if node.bound:
             children.extend([":", node.bound])
-        default_value = getattr(node, "default_value", None)
-        if default_value:
-            children.extend(["=", default_value])
+        self._handle_default_value(node, children)
         self._handle(node, children)
 
     def _TypeVarTuple(self, node):
         children = ["*", node.name]
-        default_value = getattr(node, "default_value", None)
-        if default_value:
-            children.extend(["=", default_value])
+        self._handle_default_value(node, children)
         self._handle(node, children)
 
     def _ParamSpec(self, node):
         children = ["**", node.name]
+        self._handle_default_value(node, children)
+        self._handle(node, children)
+
+    def _handle_default_value(self, node, children):
         default_value = getattr(node, "default_value", None)
         if default_value:
             children.extend(["=", default_value])
-        self._handle(node, children)
 
 
 class _Source:
