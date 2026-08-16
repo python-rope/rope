@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #850 Update and pin black version in pre-commit and Github Actions
 - #851 Bump supported python version to up to Python 3.14
 - #852 Implement patchedast handlers for TypeAlias 
