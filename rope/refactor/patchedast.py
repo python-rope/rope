@@ -491,6 +491,9 @@ class _PatchingASTWalker:
             children.extend(("@", decorator))
         children.extend(["async", "def"] if is_async else ["def"])
         children.append(node.name)
+        type_params = getattr(node, "type_params")
+        if type_params:
+            children.extend(["[", *self._child_nodes(type_params, ","), "]"])
         children.extend(["(", node.args, ")"])
         children.append(":")
         children.extend(node.body)
@@ -827,6 +830,14 @@ class _PatchingASTWalker:
 
     def _TypeAlias(self, node):
         children = ["type", node.name, node.value]
+        self._handle(node, children)
+
+    def _TypeVar(self, node):
+        children = [node.name]
+        if node.bound:
+            children.extend([":", node.bound])
+        if node.default_value:
+            children.extend(["=", node.default_value])
         self._handle(node, children)
 
 

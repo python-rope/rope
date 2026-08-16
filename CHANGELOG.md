@@ -2,7 +2,8 @@
 
 - #850 Update and pin black version in pre-commit and Github Actions
 - #851 Bump supported python version to up to Python 3.14
-- #852 Implement patchedast for TypeAlias
+- #852 Implement patchedast handlers for TypeAlias 
+- #853 Implement patchedast handlers TypeVar
 
 # Release 1.14.0
 

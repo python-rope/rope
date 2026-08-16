@@ -37,6 +37,28 @@ class PatchedASTTest(unittest.TestCase):
             "Expr",
         ])
 
+    def assert_function_def_has_one_type_var(self, checker):
+        checker.check_children(
+            "FunctionDef",
+            [
+                "def",
+                " ",
+                "foo",
+                "",
+                "[",
+                "",
+                "TypeVar",
+                "",
+                "]",
+                "",
+                "(", "", "arguments", "", ")",
+                "",
+                ":",
+                "\n    ",
+                "Pass",
+            ],
+        )
+
     def test_operator_support_completeness(self):
         ast_ops = {
             n.__name__
@@ -1522,6 +1544,97 @@ class PatchedASTTest(unittest.TestCase):
             "Name",
             " = ",
             "Subscript",
+        ])
+
+    def test_type_var_simple(self):
+        source = dedent("""\
+            def foo[S, T](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        checker.check_children(
+            "FunctionDef",
+            [
+                "def",
+                " ",
+                "foo",
+                "",
+                "[",
+                "",
+                "TypeVar",
+                "",
+                ",",
+                " ",
+                "TypeVar",
+                "",
+                "]",
+                "",
+                "(", "", "arguments", "", ")",
+                "",
+                ":",
+                "\n    ",
+                "Pass",
+            ],
+        )
+
+    def test_type_var_with_default_value(self):
+        source = dedent("""\
+            def foo[T = D](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_type_var(checker)
+
+        checker.check_children("TypeVar", [
+            "T",
+            " ",
+            "=",
+            " ",
+            "Name",
+        ])
+
+    def test_type_var_with_constraint(self):
+        source = dedent("""\
+            def foo[T: (A, B)](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_type_var(checker)
+
+        checker.check_children("TypeVar", [
+            "T",
+            "",
+            ":",
+            " ",
+            "Tuple",
+        ])
+
+    def test_type_var_with_constraint_and_default_value(self):
+        source = dedent("""\
+            def foo[T: (A, B) = D](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_type_var(checker)
+
+        checker.check_children("TypeVar", [
+            "T",
+            "",
+            ":",
+            " ",
+            "Tuple",
+            " ",
+            "=",
+            " ",
+            "Name",
         ])
 
 
