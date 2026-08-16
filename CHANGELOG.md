@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - #850 Update and pin black version in pre-commit and Github Actions
+- #850 Bump supported python version to up to Python 3.14
 
 # Release 1.14.0
 
