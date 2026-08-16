@@ -89,6 +89,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/penguinpee"><img src="https://avatars.githubusercontent.com/u/98259694?v=4?s=100" width="100px;" alt="Sandro"/><br /><sub><b>Sandro</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=penguinpee" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.hit.edu.cn/"><img src="https://avatars.githubusercontent.com/u/266078689?v=4?s=100" width="100px;" alt="Yang Fan"/><br /><sub><b>Yang Fan</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=yangfan-yf-yf" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
