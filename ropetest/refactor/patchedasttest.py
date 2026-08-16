@@ -1510,6 +1510,20 @@ class PatchedASTTest(unittest.TestCase):
             "}",
         ])
 
+    def test_type_alias(self):
+        source = dedent("""\
+            type Point = tuple[float, float]
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("TypeAlias", [
+            "type",
+            " ",
+            "Name",
+            " = ",
+            "Subscript",
+        ])
+
 
 class _ResultChecker:
     def __init__(self, test_case, ast):

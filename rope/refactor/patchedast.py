@@ -825,6 +825,10 @@ class _PatchingASTWalker:
         children.append("}")
         self._handle(node, children)
 
+    def _TypeAlias(self, node):
+        children = ["type", node.name, node.value]
+        self._handle(node, children)
+
 
 class _Source:
     def __init__(self, source):
