@@ -45,11 +45,7 @@ class PatchedASTTest(unittest.TestCase):
                 " ",
                 "foo",
                 "",
-                "[",
-                "",
-                "TypeVar",
-                "",
-                "]",
+                "[", "", "TypeVar", "", "]",
                 "",
                 "(", "", "arguments", "", ")",
                 "",
@@ -67,11 +63,25 @@ class PatchedASTTest(unittest.TestCase):
                 " ",
                 "foo",
                 "",
-                "[",
+                "[", "", "TypeVarTuple", "", "]",
                 "",
-                "TypeVarTuple",
+                "(", "", "arguments", "", ")",
                 "",
-                "]",
+                ":",
+                "\n    ",
+                "Pass",
+            ],
+        )
+
+    def assert_function_def_has_one_param_spec(self, checker):
+        checker.check_children(
+            "FunctionDef",
+            [
+                "def",
+                " ",
+                "foo",
+                "",
+                "[", "", "ParamSpec", "", "]",
                 "",
                 "(", "", "arguments", "", ")",
                 "",
@@ -1692,6 +1702,42 @@ class PatchedASTTest(unittest.TestCase):
 
         checker.check_children("TypeVarTuple", [
             "*",
+            "",
+            "T",
+            " ",
+            "=",
+            " ",
+            "Tuple",
+        ])
+
+    def test_param_spec_simple(self):
+        source = dedent("""\
+            def foo[**T](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_param_spec(checker)
+
+        checker.check_children("ParamSpec", [
+            "**",
+            "",
+            "T",
+        ])
+
+    def test_param_spec_with_default_value(self):
+        source = dedent("""\
+            def foo[**T = (A, B)](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_param_spec(checker)
+
+        checker.check_children("ParamSpec", [
+            "**",
             "",
             "T",
             " ",

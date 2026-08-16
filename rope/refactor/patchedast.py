@@ -847,6 +847,12 @@ class _PatchingASTWalker:
             children.extend(["=", node.default_value])
         self._handle(node, children)
 
+    def _ParamSpec(self, node):
+        children = ["**", node.name]
+        if node.default_value:
+            children.extend(["=", node.default_value])
+        self._handle(node, children)
+
 
 class _Source:
     def __init__(self, source):
