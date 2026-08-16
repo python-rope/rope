@@ -1511,6 +1511,28 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
 
+class ConstNodeTypeNamesTest(unittest.TestCase):
+    def _name(self, value):
+        import ast as stdlib_ast
+        node = stdlib_ast.Constant(value=value)
+        return ast.get_const_subtype_name(node)
+
+    @unittest.skipIf(sys.version_info < (3, 8), "get_const_subtype_name requires 3.8+")
+    def test_int_name(self):
+        expected = "Constant" if sys.version_info >= (3, 14) else "Num"
+        self.assertEqual(self._name(1), expected)
+
+    @unittest.skipIf(sys.version_info < (3, 8), "get_const_subtype_name requires 3.8+")
+    def test_str_name(self):
+        expected = "Constant" if sys.version_info >= (3, 14) else "Str"
+        self.assertEqual(self._name("hello"), expected)
+
+    @unittest.skipIf(sys.version_info < (3, 8), "get_const_subtype_name requires 3.8+")
+    def test_none_name(self):
+        expected = "Constant" if sys.version_info >= (3, 14) else "NameConstant"
+        self.assertEqual(self._name(None), expected)
+
+
 class _ResultChecker:
     def __init__(self, test_case, ast):
         self.test_case = test_case
