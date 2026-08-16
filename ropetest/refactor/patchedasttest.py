@@ -1674,6 +1674,7 @@ class PatchedASTTest(unittest.TestCase):
             "Name",
         ])
 
+    @testutils.only_for_versions_higher("3.12")
     def test_type_var_tuple_simple(self):
         source = dedent("""\
             def foo[*T](x):
@@ -1711,6 +1712,7 @@ class PatchedASTTest(unittest.TestCase):
             "Tuple",
         ])
 
+    @testutils.only_for_versions_higher("3.12")
     def test_param_spec_simple(self):
         source = dedent("""\
             def foo[**T](x):
