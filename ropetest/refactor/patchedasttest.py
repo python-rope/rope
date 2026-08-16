@@ -59,6 +59,28 @@ class PatchedASTTest(unittest.TestCase):
             ],
         )
 
+    def assert_function_def_has_one_type_var_tuple(self, checker):
+        checker.check_children(
+            "FunctionDef",
+            [
+                "def",
+                " ",
+                "foo",
+                "",
+                "[",
+                "",
+                "TypeVarTuple",
+                "",
+                "]",
+                "",
+                "(", "", "arguments", "", ")",
+                "",
+                ":",
+                "\n    ",
+                "Pass",
+            ],
+        )
+
     def test_operator_support_completeness(self):
         ast_ops = {
             n.__name__
@@ -1640,6 +1662,42 @@ class PatchedASTTest(unittest.TestCase):
             "=",
             " ",
             "Name",
+        ])
+
+    def test_type_var_tuple_simple(self):
+        source = dedent("""\
+            def foo[*T](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_type_var_tuple(checker)
+
+        checker.check_children("TypeVarTuple", [
+            "*",
+            "",
+            "T",
+        ])
+
+    def test_type_var_tuple_with_default_value(self):
+        source = dedent("""\
+            def foo[*T = (A, B)](x):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+
+        self.assert_function_def_has_one_type_var_tuple(checker)
+
+        checker.check_children("TypeVarTuple", [
+            "*",
+            "",
+            "T",
+            " ",
+            "=",
+            " ",
+            "Tuple",
         ])
 
 
