@@ -70,6 +70,21 @@ class SourceLinesAdapter:
     def get_line_end(self, lineno):
         return self.starts[lineno] - 1
 
+    def __getitem__(self, subscript):
+        start_offset = self._calculate_offset(subscript.start)
+        stop_offset = self._calculate_offset(subscript.stop)
+        return self.code[start_offset:stop_offset]
+
+    def _calculate_offset(self, coord: tuple[int, int]) -> int:
+        lineno, col_offset = coord
+        lineno = self._clamp(0, self.length(), lineno)
+        col_offset = self._clamp(0, self.get_line_end(lineno) - self.get_line_start(lineno), col_offset)
+
+        return self.get_line_start(lineno) + col_offset
+
+    def _clamp(self, min_value, max_value, value):
+        return max(min_value, min(max_value, value))
+
 
 class ArrayLinesAdapter:
     def __init__(self, lines):
