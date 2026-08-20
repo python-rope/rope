@@ -5,7 +5,7 @@
 - #852 Implement patchedast handlers for TypeAlias 
 - #853 Implement patchedast handlers TypeVar
 - #847 Avoid printing autoimport syntax errors (@yangfan-yf-yf)
-- #819 supports MatchOr, MatchSequence, MatchStar (@jheld)
+- #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 
 # Release 1.14.0
 
