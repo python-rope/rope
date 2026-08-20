@@ -78,7 +78,11 @@ class SourceLinesAdapter:
     def _calculate_offset(self, coord: tuple[int, int]) -> int:
         lineno, col_offset = coord
         lineno = self._clamp(0, self.length(), lineno)
-        col_offset = self._clamp(0, self.get_line_end(lineno) - self.get_line_start(lineno), col_offset)
+        col_offset = self._clamp(
+            0,
+            self.get_line_end(lineno) - self.get_line_start(lineno),
+            col_offset,
+        )
 
         return self.get_line_start(lineno) + col_offset
 

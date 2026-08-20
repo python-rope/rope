@@ -805,11 +805,32 @@ class _PatchingASTWalker:
 
     def _MatchSequence(self, node):
         if node.patterns:
-            opening_paren = self.lines[(node.lineno, node.col_offset):(node.patterns[0].lineno, node.patterns[0].col_offset)]
-            closing_paren = self.lines[(node.patterns[-1].end_lineno, node.patterns[-1].end_col_offset):(node.end_lineno, node.end_col_offset)]
-            children = [*opening_paren, *self._child_nodes(node.patterns, ","), *closing_paren]
+            opening_paren = self.lines[
+                (node.lineno, node.col_offset) : (
+                    node.patterns[0].lineno,
+                    node.patterns[0].col_offset,
+                )
+            ]
+            closing_paren = self.lines[
+                (node.patterns[-1].end_lineno, node.patterns[-1].end_col_offset) : (
+                    node.end_lineno,
+                    node.end_col_offset,
+                )
+            ]
+            children = [
+                *opening_paren,
+                *self._child_nodes(node.patterns, ","),
+                *closing_paren,
+            ]
         else:
-            children = [self.lines[(node.lineno, node.col_offset):(node.end_lineno, node.end_col_offset)]]
+            children = [
+                self.lines[
+                    (node.lineno, node.col_offset) : (
+                        node.end_lineno,
+                        node.end_col_offset,
+                    )
+                ]
+            ]
         self._handle(node, children)
 
     def _MatchStar(self, node):
