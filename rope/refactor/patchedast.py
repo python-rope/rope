@@ -788,6 +788,13 @@ class _PatchingASTWalker:
         children.extend(node.cases)
         self._handle(node, children)
 
+    def _MatchOr(self, node):
+        children = [*self._child_nodes(node.patterns, "|")]
+        self._handle(node, children)
+
+    def _MatchSingleton(self, node):
+        self._handle(node, [str(node.value)])
+
     def _match_case(self, node):
         children = ["case", node.pattern]
         if node.guard:
@@ -795,6 +802,13 @@ class _PatchingASTWalker:
         children.append(":")
         children.extend(node.body)
         self._handle(node, children)
+
+    def _MatchSequence(self, node):
+        children = ["[", *self._child_nodes(node.patterns, ","), "]"]
+        self._handle(node, children)
+
+    def _MatchStar(self, node):
+        self._handle(node, ["*", node.name or "_"])
 
     def _MatchAs(self, node):
         if node.pattern:
