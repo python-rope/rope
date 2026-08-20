@@ -808,7 +808,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _MatchStar(self, node):
-        self._handle(node, ["*_"])
+        self._handle(node, ["*", node.name or "_"])
 
     def _MatchAs(self, node):
         if node.pattern:
