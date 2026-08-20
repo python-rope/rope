@@ -810,13 +810,13 @@ class _PatchingASTWalker:
                     node.patterns[0].lineno,
                     node.patterns[0].col_offset,
                 )
-            ]
+            ].strip()
             closing_paren = self.lines[
                 (node.patterns[-1].end_lineno, node.patterns[-1].end_col_offset) : (
                     node.end_lineno,
                     node.end_col_offset,
                 )
-            ]
+            ].strip()
             children = [
                 *opening_paren,
                 *self._child_nodes(node.patterns, ","),

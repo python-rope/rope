@@ -1529,6 +1529,21 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_spaces_around_parens(self):
+        source = dedent("""\
+            match x:
+                case (  1, 2
+            ):
+                    print(rest)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", [
+            "(", "  ", "MatchValue", "", ",", " ", "MatchValue", "\n", ")",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_sequence_with_internal_parens(self):
         source = dedent("""\
             match x:
