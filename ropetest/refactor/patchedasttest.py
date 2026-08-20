@@ -1487,6 +1487,86 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_no_parens(self):
+        source = dedent("""\
+            match x:
+                case 1, 2:
+                    print(rest)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", [
+            "MatchValue", "", ",", " ", "MatchValue",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_square_parens(self):
+        source = dedent("""\
+            match x:
+                case [1, 2]:
+                    print(rest)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", [
+            "[", "", "MatchValue", "", ",", " ", "MatchValue", "", "]",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_round_parens(self):
+        source = dedent("""\
+            match x:
+                case (1, 2):
+                    print(rest)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", [
+            "(", "", "MatchValue", "", ",", " ", "MatchValue", "", ")",
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_internal_parens(self):
+        source = dedent("""\
+            match x:
+                case [1], [2]:
+                    print(rest)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", [
+            "MatchSequence", "", ",", " ", "MatchSequence"
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_empty_round_parens(self):
+        source = dedent("""\
+            match x:
+                case ( ):
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", ["( )"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_empty_square_parens(self):
+        source = dedent("""\
+            match x:
+                case []:
+                    print(x)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchSequence")
+        checker.check_children("MatchSequence", ["[]"])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_sequence_with_star_and_value(self):
         source = dedent("""\
             match x:
