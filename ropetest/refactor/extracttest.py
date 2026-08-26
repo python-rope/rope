@@ -108,6 +108,28 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_function_with_fstring(self):
+        code = dedent("""\
+            def main():
+                h = 1
+                g = f"#{h}"
+                print(g)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "extracted")
+
+        expected = dedent("""\
+            def main():
+                h = 1
+                g = extracted(h)
+                print(g)
+
+            def extracted(h):
+                g = f"#{h}"
+                return g
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_function_containing_dict_generalized_unpacking(self):
         code = dedent("""\
             def a_func(dict1):
