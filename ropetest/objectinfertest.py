@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 
 import rope.base.builtins  # Use fully-qualified names for clarity.
-from rope.base import libutils
+from rope.base import libutils, pyobjects
 from ropetest import testutils
 
 
@@ -323,6 +323,17 @@ class ObjectInferTest(unittest.TestCase):
         c_class = mod["C"].get_object()
         a_var = mod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_capture_is_unknown(self):
+        code = dedent("""\
+            captured = 1
+            match value:
+                case [1, *_] as captured:
+                    pass
+        """)
+        scope = libutils.get_string_scope(self.project, code)
+        self.assertEqual(pyobjects.get_unknown(), scope["captured"].get_object())
 
     def test_basic_list_comprehensions(self):
         code = dedent("""\
