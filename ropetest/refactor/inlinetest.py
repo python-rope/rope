@@ -1521,3 +1521,19 @@ class InlineTest(unittest.TestCase):
         """)
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             refactored = self._inline(code, code.index("a_func") + 1)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_with_fstring_nested_quotes(self):
+        code = dedent('''\
+            s = "hello"
+            print(f'Value: {s}')
+            another_var = s
+            f'{''}'
+        ''')
+        expected = dedent('''\
+            print(f'Value: {"hello"}')
+            another_var = "hello"
+            f'{''}'
+        ''')
+        refactored = self._inline(code, code.index("s") + 1)
+        self.assertEqual(expected, refactored)
