@@ -37,6 +37,83 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index("a_var") + 1)
         self.assertEqual("another_var = 10\n", refactored)
 
+    def test_inline_assignment_before_another_statement(self):
+        code = dedent("""\
+            value = "text"; other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual('other = 10\nprint(other, "text")\n', refactored)
+
+    def test_inline_first_target_of_chained_assignment(self):
+        code = dedent("""\
+            value = other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual("other = 10\nprint(other, 10)\n", refactored)
+
+    def test_inline_parenthesized_first_target_of_chained_assignment(self):
+        code = dedent("""\
+            (value) = other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual("other = 10\nprint(other, 10)\n", refactored)
+
+    def test_inline_parenthesized_last_target_of_chained_assignment(self):
+        code = dedent("""\
+            value = (other) = 10
+            print(value, other)
+        """)
+        refactored = self._inline(code, code.index("other") + 1)
+        self.assertEqual("value = 10\nprint(value, 10)\n", refactored)
+
+    def test_inline_annotated_assignment(self):
+        code = dedent("""\
+            value: int = 10
+            print(value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual("print(10)\n", refactored)
+
+    def test_inline_attribute_before_same_named_local_assignment(self):
+        code = dedent("""\
+            class Example:
+                def method(self):
+                    self.value = 10; value = 20
+                    print(self.value, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual(
+            dedent("""\
+                class Example:
+                    def method(self):
+                        value = 20
+                        print(10, value)
+            """),
+            refactored,
+        )
+
+    def test_inline_local_after_same_named_attribute_in_chained_assignment(self):
+        code = dedent("""\
+            class Example:
+                def method(self):
+                    self.value = value = 10
+                    return self.value, value
+        """)
+        local_value = code.index("value", code.index("="))
+        refactored = self._inline(code, local_value + 1)
+        self.assertEqual(
+            dedent("""\
+                class Example:
+                    def method(self):
+                        self.value = 10
+                        return self.value, 10
+            """),
+            refactored,
+        )
+
     def test_empty_case(self):
         code = "a_var = 10\n"
         refactored = self._inline(code, code.index("a_var") + 1)

@@ -21,6 +21,7 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -38,6 +39,7 @@ from rope.refactor import (
     importutils,
     move,
     occurrences,
+    patchedast,
     rename,
     sourceutils,
 )
@@ -623,8 +625,23 @@ def _inline_variable(
 ):
     definition = _getvardef(pymodule, pyname)
     start, end = _assigned_lineno(pymodule, pyname)
+    assignment_node = _find_assignment_node(pymodule, pyname.assignments[0].ast_node)
 
     occurrence_finder = occurrences.create_finder(project, name, pyname, docs=docs)
+    if remove:
+        removal = _get_assignment_removal(
+            pymodule.source_code,
+            assignment_node,
+            name,
+            start,
+            end,
+            occurrence_finder,
+            pymodule,
+        )
+        return _rename_and_remove_assignment(
+            occurrence_finder, definition, pymodule, removal, region
+        )
+
     changed_source = rename.rename_in_module(
         occurrence_finder,
         definition,
@@ -633,32 +650,158 @@ def _inline_variable(
         writes=False,
         region=region,
     )
-    if changed_source is None:
-        changed_source = pymodule.source_code
-    if remove:
-        lines = codeanalyze.SourceLinesAdapter(changed_source)
-        source = (
-            changed_source[: lines.get_line_start(start)]
-            + changed_source[lines.get_line_end(end) + 1 :]
-        )
-    else:
-        source = changed_source
-    return source
+    return changed_source if changed_source is not None else pymodule.source_code
 
 
 def _getvardef(pymodule, pyname):
     assignment = pyname.assignments[0]
+    if assignment.levels:
+        raise exceptions.RefactoringError("Cannot inline tuple assignments.")
+
+    assignment_node = _find_assignment_node(pymodule, assignment.ast_node)
+    if assignment_node is not None:
+        source = pymodule.source_code
+        node_start, node_end = patchedast.node_region(assignment_node)
+        value_start, _ = patchedast.node_region(assignment.ast_node)
+        separator = source.rfind("=", node_start, value_start)
+        if separator != -1:
+            return source[separator + 1 : node_end].strip()
+
     lines = pymodule.lines
     start, end = _assigned_lineno(pymodule, pyname)
     definition_with_assignment = _join_lines(
         [lines.get_line(n) for n in range(start, end + 1)],
     )
-    if assignment.levels:
-        raise exceptions.RefactoringError("Cannot inline tuple assignments.")
     definition = definition_with_assignment[
         definition_with_assignment.index("=") + 1 :
     ].strip()
     return definition
+
+
+def _find_assignment_node(pymodule, value_node):
+    if value_node is None:
+        return None
+    module_ast = pymodule.get_ast()
+    patchedast.patch_ast(module_ast, pymodule.source_code)
+    for node in ast.walk(module_ast):
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is value_node:
+            return node
+
+
+def _rename_and_remove_assignment(finder, definition, pymodule, removal, region):
+    source = pymodule.source_code
+    remove_start, remove_end, replacement = removal
+    change_collector = codeanalyze.ChangeCollector(source)
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        if occurrence.is_a_fixed_primary() or occurrence.is_written():
+            continue
+        occurrence_start, occurrence_end = occurrence.get_primary_range()
+        if occurrence_start < remove_end and occurrence_end > remove_start:
+            continue
+        if region is None or region[0] <= occurrence_start < region[1]:
+            change_collector.add_change(occurrence_start, occurrence_end, definition)
+    change_collector.add_change(remove_start, remove_end, replacement)
+    changed_source = change_collector.get_changed()
+    return changed_source if changed_source is not None else source
+
+
+def _get_assignment_removal(
+    source, assignment_node, name, start, end, finder, pymodule
+):
+    if assignment_node is None:
+        return _get_logical_line_removal(source, start, end)
+
+    targets = (
+        assignment_node.targets
+        if isinstance(assignment_node, ast.Assign)
+        else [assignment_node.target]
+    )
+    target_index = _find_assignment_target_index(targets, name, finder, pymodule)
+    if target_index is None:
+        return _get_logical_line_removal(source, start, end)
+
+    if len(targets) > 1:
+        following_nodes = [*targets[1:], assignment_node.value]
+        segment_ends = []
+        for target, following in zip(targets, following_nodes):
+            _, target_end = patchedast.node_region(target)
+            following_start, _ = patchedast.node_region(following)
+            separator = source.find("=", target_end, following_start)
+            if separator == -1:
+                return _get_logical_line_removal(source, start, end)
+            segment_ends.append(
+                _skip_assignment_gap(source, separator + 1, following_start)
+            )
+
+        node_start, _ = patchedast.node_region(assignment_node)
+        segment_starts = [node_start, *segment_ends[:-1]]
+        return segment_starts[target_index], segment_ends[target_index], ""
+
+    node_start, node_end = patchedast.node_region(assignment_node)
+    lines = codeanalyze.SourceLinesAdapter(source)
+    line_start = lines.get_line_start(assignment_node.lineno)
+    line_end = lines.get_line_end(assignment_node.end_lineno)
+
+    remove_end = node_end
+    while remove_end < line_end and source[remove_end] in " \t":
+        remove_end += 1
+    if remove_end < line_end and source[remove_end] == ";":
+        remove_end += 1
+        while remove_end < line_end and source[remove_end] in " \t":
+            remove_end += 1
+        return node_start, remove_end, ""
+
+    remove_start = node_start
+    while remove_start > line_start and source[remove_start - 1] in " \t":
+        remove_start -= 1
+    if remove_start > line_start and source[remove_start - 1] == ";":
+        remove_start -= 1
+        while remove_start > line_start and source[remove_start - 1] in " \t":
+            remove_start -= 1
+        return remove_start, node_end, ""
+
+    return _get_logical_line_removal(source, start, end)
+
+
+def _target_matches_name(target, name):
+    return (isinstance(target, ast.Name) and target.id == name) or (
+        isinstance(target, ast.Attribute) and target.attr == name
+    )
+
+
+def _find_assignment_target_index(targets, name, finder, pymodule):
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        occurrence_start, occurrence_end = occurrence.get_word_range()
+        for index, target in enumerate(targets):
+            target_start, target_end = patchedast.node_region(target)
+            if target_start <= occurrence_start and occurrence_end <= target_end:
+                return index
+
+    matching_indexes = [
+        index
+        for index, target in enumerate(targets)
+        if _target_matches_name(target, name)
+    ]
+    if len(matching_indexes) == 1:
+        return matching_indexes[0]
+
+
+def _skip_assignment_gap(source, offset, limit):
+    while offset < limit:
+        if source[offset] in " \t\r\n":
+            offset += 1
+        elif source.startswith("\\\r\n", offset):
+            offset += 3
+        elif source.startswith("\\\n", offset):
+            offset += 2
+        else:
+            break
+    return offset
+
+
+def _get_logical_line_removal(source, start, end):
+    lines = codeanalyze.SourceLinesAdapter(source)
+    return lines.get_line_start(start), lines.get_line_end(end) + 1, ""
 
 
 def _assigned_lineno(pymodule, pyname):
