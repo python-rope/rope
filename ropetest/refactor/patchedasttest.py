@@ -1938,7 +1938,7 @@ class PatchedASTTest(unittest.TestCase):
             def check_transition(src: str, dst: str) -> None:
                     raise Refused(
                         f"{src} - {dst} isn't a declared transition. "
-                        f"passing silently (#1848).")
+                        f"passing silently (#123).")
             SCHEMA = \"\"\"
                 -- called `move()
                 PRIMARY KEY (source_site, item_id)
