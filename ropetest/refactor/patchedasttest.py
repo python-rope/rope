@@ -288,7 +288,7 @@ class PatchedASTTest(unittest.TestCase):
         source = dedent("""\
             assert flag, (
                 f"one "
-                f"two (#1693).")
+                f"two (#123).")
             """)
         ast_frag = patchedast.get_patched_ast(source, True)
         self.assertEqual(source, patchedast.write_ast(ast_frag))
@@ -297,7 +297,7 @@ class PatchedASTTest(unittest.TestCase):
         source = dedent("""\
             assert flag, (
                 "one "
-                "two (#1693).")
+                "two (#123).")
             """)
         ast_frag = patchedast.get_patched_ast(source, True)
         self.assertEqual(source, patchedast.write_ast(ast_frag))
