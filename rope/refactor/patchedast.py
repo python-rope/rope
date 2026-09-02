@@ -1,6 +1,9 @@
+import bisect
 import collections
+import io
 import numbers
 import re
+import tokenize
 import warnings
 from itertools import chain
 
@@ -907,15 +910,21 @@ class _Source:
     def __init__(self, source):
         self.source = source
         self.offset = 0
+        self._ranges = None
 
     def consume(self, token, skip_comment=True):
         try:
             while True:
                 new_offset = self.source.index(token, self.offset)
-                if self._good_token(token, new_offset) or not skip_comment:
+                if not skip_comment:
                     break
-                else:
-                    self._skip_comment()
+                here = self._enclosing_literal(self.offset)
+                there = self._enclosing_literal(new_offset)
+                if there is None or there == here:
+                    break
+                # The match is buried in a literal the walker is not
+                # itself working inside.  Resume past that literal.
+                self.offset = there[1]
         except (ValueError, TypeError):
             raise MismatchedTokenError(
                 f"Token <{token}> at {self._get_location()} cannot be matched"
@@ -957,19 +966,83 @@ class _Source:
         repattern = re.compile(r"with|,")
         return self._consume_pattern(repattern)
 
-    def _good_token(self, token, offset, start=None):
+    def _good_token(self, token, offset):
         """Checks whether consumed token is in comments"""
-        if start is None:
-            start = self.offset
+        literal = self._enclosing_literal(offset)
+        return literal is None or not literal[2]
+
+    def _enclosing_literal(self, offset):
+        """The string literal or comment containing ``offset``, if any.
+
+        A ``(start, end, is_comment)`` triple, or ``None`` when
+        ``offset`` sits in ordinary code.
+
+        The walker searches the source as plain text, which cannot tell
+        a token from the same characters inside a literal.  Asked for
+        ``)`` it would match the one in ``f"see (#123)"``, or the one in
+        a triple-quoted ``CREATE TABLE t (id)`` blob, then carry on
+        from a position the tree knows nothing about -- surfacing much
+        later as an error naming an unrelated node.
+        """
+        ranges, starts = self._get_ranges()
+        index = bisect.bisect_right(starts, offset) - 1
+        if index >= 0 and ranges[index][1] > offset:
+            return ranges[index]
+        return None
+
+    def _get_ranges(self):
+        """Every string literal and comment, as sorted offset ranges.
+
+        Paired with the list of their start offsets, to bisect on.
+
+        Tokenized once per source.  The tokenizer is what makes this
+        exact rather than another guess at where a literal starts: a
+        scan for quotes cannot know whether it began inside one.
+
+        On an unparseable source it yields nothing, leaving the plain
+        textual search of before.
+        """
+        if self._ranges is None:
+            ranges = self._tokenize_ranges()
+            self._ranges = (ranges, [start for start, _, _ in ranges])
+        return self._ranges
+
+    def _tokenize_ranges(self):
+        line_starts = [0]
+        for line in self.source.splitlines(keepends=True):
+            line_starts.append(line_starts[-1] + len(line))
+
+        def offset_of(position):
+            row, column = position
+            if row >= len(line_starts):
+                return len(self.source)
+            return line_starts[row - 1] + column
+
+        # FSTRING_* exists from Python 3.12 on, where an f-string is
+        # tokenized in pieces.  Taking only MIDDLE keeps the replacement
+        # fields out: they are code, and the walker consumes them.
+        # Before 3.12 an f-string is one STRING token, fields included --
+        # which is why `consume` compares the walker's own literal to the
+        # match's rather than skipping every literal it meets.
+        wanted = {tokenize.STRING, tokenize.COMMENT}
+        for name in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):
+            if hasattr(tokenize, name):
+                wanted.add(getattr(tokenize, name))
+        ranges = []
         try:
-            comment_index = self.source.rindex("#", start, offset)
-        except ValueError:
-            return True
-        try:
-            new_line_index = self.source.rindex("\n", start, offset)
-        except ValueError:
-            return False
-        return comment_index < new_line_index
+            tokens = tokenize.generate_tokens(io.StringIO(self.source).readline)
+            for token in tokens:
+                if token.type in wanted:
+                    ranges.append(
+                        (
+                            offset_of(token.start),
+                            offset_of(token.end),
+                            token.type == tokenize.COMMENT,
+                        )
+                    )
+        except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
+            return []
+        return ranges
 
     def _skip_comment(self):
         self.offset = self.source.index("\n", self.offset + 1)
@@ -999,7 +1072,7 @@ class _Source:
         while True:
             try:
                 index = self.source.rindex(token, start, end)
-                if self._good_token(token, index, start=start):
+                if self._good_token(token, index):
                     return index
                 else:
                     end = index
