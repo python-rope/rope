@@ -2,6 +2,7 @@ import os.path
 import pathlib
 import tempfile
 import unittest
+from unittest.mock import patch
 from textwrap import dedent
 
 from rope.base.exceptions import ResourceNotFoundError, RopeError
@@ -195,6 +196,12 @@ class ProjectTest(unittest.TestCase):
     def test_is_folder(self):
         self.assertTrue(self.project.get_resource(self.sample_folder).is_folder())
         self.assertTrue(not self.project.get_resource(self.sample_file).is_folder())
+
+    def test_is_dir(self):
+        with patch('rope.base.resources.Folder.is_folder') as is_folder1:
+            assert self.project.get_resource(self.sample_folder).is_dir() == is_folder1.return_value
+        with patch('rope.base.resources.File.is_folder') as is_folder2:
+            assert self.project.get_resource(self.sample_file).is_dir() == is_folder2.return_value
 
     def testget_children(self):
         children = self.project.get_resource(self.sample_folder).get_children()
