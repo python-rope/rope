@@ -983,6 +983,18 @@ class _Source:
             if end is None:
                 end = len(self.source)
             match = repattern.search(self.source, self.offset, end)
+            if match is None:
+                # `re.search` returns None when nothing matches in the
+                # requested range, and calling `.group()` on it raised a
+                # bare AttributeError that says nothing about where the
+                # walker lost track.
+                #
+                # `consume()` already reports this situation as a
+                # MismatchedTokenError with a source location; do the
+                # same here so callers see one failure mode, not two.
+                raise MismatchedTokenError(
+                    f"Pattern at {self._get_location()} cannot be matched"
+                )
             if self._good_token(match.group(), match.start()):
                 break
             else:
