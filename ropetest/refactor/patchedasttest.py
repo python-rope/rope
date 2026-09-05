@@ -280,6 +280,38 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children("BinOp", ["Num", " ", "+", " ", "JoinedStr"])
 
+    def test_handling_hash_inside_implicitly_concatenated_fstrings(self):
+        # The walker searches the source as plain text.  A `#` inside a
+        # string opened no comment, yet it made the rest of that line be
+        # skipped -- taking the closing paren with it -- and the walker
+        # then matched a paren belonging to some later statement.
+        source = dedent("""\
+            assert flag, (
+                f"one "
+                f"two (#123).")
+            """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    def test_handling_hash_inside_a_plain_string(self):
+        source = dedent("""\
+            assert flag, (
+                "one "
+                "two (#123).")
+            """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    def test_handling_paren_inside_a_triple_quoted_string(self):
+        source = dedent('''\
+            SCHEMA = """
+                PRIMARY KEY (a, b)
+            """
+            run(SCHEMA)
+            ''')
+        ast_frag = patchedast.get_patched_ast(source, True)
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
     def test_handling_implicit_string_concatenation(self):
         source = "a = '1''2'"
         ast_frag = patchedast.get_patched_ast(source, True)

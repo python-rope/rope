@@ -7,6 +7,7 @@
 - #847 Avoid printing autoimport syntax errors (@yangfan-yf-yf)
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 - #870 Add default implementation for is_dir() (@lieryan)
+- #868 Fix patchedast matching tokens inside string literals
 
 # Release 1.14.0
 
