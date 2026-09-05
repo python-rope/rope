@@ -6,6 +6,7 @@
 - #853 Implement patchedast handlers TypeVar
 - #847 Avoid printing autoimport syntax errors (@yangfan-yf-yf)
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
+- #869 Fix source folder detection stopping at the first package
 - #870 Add default implementation for is_dir() (@lieryan)
 
 # Release 1.14.0
