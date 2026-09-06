@@ -3,6 +3,7 @@ from textwrap import dedent
 
 from rope.base import exceptions
 from rope.contrib.findit import find_definition, find_implementations, find_occurrences
+from rope.refactor.rename import Rename
 from ropetest import testutils
 
 
@@ -145,3 +146,109 @@ class FindItTest(unittest.TestCase):
         result = find_definition(self.project, code, code.index("var"))
         self.assertEqual(mod1, result.resource)
         self.assertEqual(0, result.offset)
+
+    # worder's is_a_class_or_function_name_in_header only recognised the
+    # canonical `def`/`class` prefixes, so an `async def` method header was
+    # not treated as a definition and find_definition resolved a call via
+    # self to the call site itself (never the def).
+
+    def test_find_definition_of_async_method(self):
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_of_async_method_extra_whitespace(self):
+        # `async  def` (two spaces) / `async\tdef` are valid Python and must
+        # be recognised too, not just canonical single-space `async def`.
+        code = dedent("""\
+            class C(object):
+                async  def target(self):
+                    pass
+
+                async  def run(self):
+                    await self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_of_async_method_tab_separated(self):
+        # `async\tdef` (tab-separated) is valid Python; the normalised
+        # predicate must recognise it too.
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """).replace("async def", "async\tdef")
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_rename_heals_async_method(self):
+        # Rename from the call must reach the async def, not orphan it --
+        # the damaging end-to-end symptom of the unrecognised header.
+        mod = testutils.create_module(self.project, "mod")
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        mod.write(code)
+        call_offset = code.rindex("target")
+        changes = Rename(self.project, mod, call_offset).get_changes("renamed")
+        self.project.do(changes)
+        result = mod.read()
+        # both the call and the def must be renamed -- not silently orphaned
+        self.assertEqual(0, result.count("target"))
+        self.assertEqual(2, result.count("renamed"))
+
+    def test_find_definition_of_sync_method_still_resolves(self):
+        # regression control: sync methods must keep resolving
+        code = dedent("""\
+            class C(object):
+                def target(self):
+                    pass
+
+                def run(self):
+                    self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_of_module_level_async_function(self):
+        # control: module-level async defs already resolve correctly
+        code = dedent("""\
+            async def target():
+                pass
+
+            async def run():
+                await target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
