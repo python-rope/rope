@@ -579,7 +579,7 @@ class _PatchingASTWalker:
         if not isinstance(node, ast.If):
             return False
         start, end = self.ast_adapter[node]
-        return "elif" in self.source[start:start+4]
+        return "elif" in self.source[start : start + 4]
 
     def _IfExp(self, node):
         return self._handle(node, [node.body, "if", node.test, "else", node.orelse])
