@@ -113,6 +113,22 @@ class InlineTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self._inline(code, code.index("another_var") + 1)
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_pattern_capture_cannot_be_inlined(self):
+        code = dedent("""\
+            old_name = 0
+            match value:
+                case old_name:
+                    print(old_name)
+            print(old_name)
+        """)
+        capture_offset = code.index("old_name", code.index("case")) + 1
+        with self.assertRaisesRegex(
+            rope.base.exceptions.RefactoringError,
+            "Pattern matching captures cannot be inlined",
+        ):
+            self._inline(code, capture_offset)
+
     def test_attribute_inlining(self):
         code = dedent("""\
             class A(object):

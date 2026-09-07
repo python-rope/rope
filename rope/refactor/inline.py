@@ -21,6 +21,7 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -245,6 +246,13 @@ class InlineVariable(_Inliner):
         self._init_imports()
 
     def _check_exceptional_conditions(self):
+        if any(
+            isinstance(assignment.ast_node, ast.pattern)
+            for assignment in self.pyname.assignments
+        ):
+            raise exceptions.RefactoringError(
+                "Pattern matching captures cannot be inlined."
+            )
         if len(self.pyname.assignments) != 1:
             raise exceptions.RefactoringError(
                 "Local variable should be assigned once for inlining."

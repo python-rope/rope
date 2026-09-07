@@ -1,10 +1,10 @@
 import sys
 import unittest
 from textwrap import dedent
-from rope.base import exceptions
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences
+from rope.base import exceptions
 from rope.refactor import rename
 from rope.refactor.rename import Rename
 from ropetest import testutils
@@ -238,6 +238,63 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             dedent("""\
                 while new_var := next(foo):
                     print(new_var)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_as_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *_] as old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.rindex("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *_] as new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_star_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *old_name] if old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *new_name] if new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_mapping_rest_capture(self):
+        code = dedent("""\
+            match value:
+                case {"key": item, **old_name}:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case {"key": item, **new_name}:
+                        print(new_name)
             """),
             refactored,
         )

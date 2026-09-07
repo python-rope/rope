@@ -112,6 +112,25 @@ class PyCoreScopesTest(unittest.TestCase):
             ["a_var", "values"],
         )
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_capture_names(self):
+        code = dedent("""\
+            def func(value):
+                match value:
+                    case [_, *rest] as whole:
+                        pass
+                    case {"key": item, **remaining}:
+                        pass
+        """)
+        scope = libutils.get_string_scope(self.project, code)
+        function_scope = scope.get_scopes()[0]
+        defined_names = set(function_scope.get_names())
+
+        self.assertLessEqual(
+            {"item", "remaining", "rest", "whole"}, defined_names
+        )
+        self.assertNotIn("_", defined_names)
+
     @testutils.only_for_versions_higher("3.8")
     def test_inline_assignment_in_comprehensions(self):
         code = dedent("""\
