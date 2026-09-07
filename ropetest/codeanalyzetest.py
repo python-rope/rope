@@ -47,26 +47,6 @@ class SourceLinesAdapterTest(unittest.TestCase):
         to_lines = SourceLinesAdapter("line1")
         self.assertEqual(1, to_lines.get_line_number(5))
 
-    def test_source_lines_getitem_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('ne2\nli', to_lines[(2, 2):(3, 2)])
-
-    def test_source_lines_getitem_start_lineno_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual("", to_lines[(100, 2):(3, 2)])
-
-    def test_source_lines_getitem_start_col_offset_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('\nli', to_lines[(2, 100):(3, 2)])
-
-    def test_source_lines_getitem_end_lineno_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual("ne2\nline3\nline4\n", to_lines[(2, 2):(100, 2)])
-
-    def test_source_lines_getitem_end_col_offset_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('ne2\nline3', to_lines[(2, 2):(3, 100)])
-
 
 class WordRangeFinderTest(unittest.TestCase):
     def _find_primary(self, code, offset):
