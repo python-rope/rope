@@ -1010,9 +1010,6 @@ class _Source:
     def __getitem__(self, index):
         return self.source[index]
 
-    def __getslice__(self, i, j):
-        return self.source[i:j]
-
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
         integer = r"\-?(0[xo][\da-fA-F]+|\d+)"
