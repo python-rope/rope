@@ -1,9 +1,18 @@
+import ast
+import textwrap
 import unittest
 from textwrap import dedent
 
+import pytest
+
 import rope.base.evaluate
 from rope.base import codeanalyze, exceptions, libutils, worder
-from rope.base.codeanalyze import LogicalLineFinder, SourceLinesAdapter, get_block_start
+from rope.base.codeanalyze import (
+    ASTLinesAdapter,
+    LogicalLineFinder,
+    SourceLinesAdapter,
+    get_block_start,
+)
 from ropetest import testutils
 
 
@@ -37,26 +46,6 @@ class SourceLinesAdapterTest(unittest.TestCase):
     def test_source_lines_last_line_with_no_new_line(self):
         to_lines = SourceLinesAdapter("line1")
         self.assertEqual(1, to_lines.get_line_number(5))
-
-    def test_source_lines_getitem_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('ne2\nli', to_lines[(2, 2):(3, 2)])
-
-    def test_source_lines_getitem_start_lineno_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual("", to_lines[(100, 2):(3, 2)])
-
-    def test_source_lines_getitem_start_col_offset_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('\nli', to_lines[(2, 100):(3, 2)])
-
-    def test_source_lines_getitem_end_lineno_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual("ne2\nline3\nline4\n", to_lines[(2, 2):(100, 2)])
-
-    def test_source_lines_getitem_end_col_offset_out_of_range(self):
-        to_lines = SourceLinesAdapter("line1\nline2\nline3\nline4\n")
-        self.assertEqual('ne2\nline3', to_lines[(2, 2):(3, 100)])
 
 
 class WordRangeFinderTest(unittest.TestCase):
@@ -1020,3 +1009,312 @@ class CustomLogicalLineFinderTest(LogicalLineFinderTest):
     def _logical_finder(self, code):
         lines = SourceLinesAdapter(code)
         return codeanalyze.CachingLogicalLineFinder(lines, codeanalyze.custom_generator)
+
+
+class TestASTLinesAdapter:
+    @pytest.fixture(scope="class")
+    @classmethod
+    def source(cls, request) -> str:
+        return request.cls.SOURCE
+
+    @pytest.fixture(scope="class")
+    @classmethod
+    def tree(self, source) -> ast.Module:
+        return ast.parse(source)
+
+    @pytest.fixture(scope="class")
+    @classmethod
+    def ast_adapter(self, source) -> ASTLinesAdapter:
+        return ASTLinesAdapter(source)
+
+    class TestAgreesWithAst:
+        SMALL_SOURCE = textwrap.dedent(
+            """
+            def greet(name: str) -> str:
+                message = f"Hello, {name}! 你好"
+                return message
+
+            class Foo:
+                def bar(self, x, y):
+                    return x + y - len("héllo")
+
+            def multiline_start_on_unicode(データ):
+                処理 = データ + "更多文字"  # this line starts a multi-line dict below
+                config = {
+                    "き": 1,
+                    "り": 2,
+                }
+                return 処理, config
+            """
+        )
+
+        # Deliberately full of unicode corner cases
+        UNICODE_EDGE_SOURCE = (
+            "def f1():\n"
+            "    party = \"\U0001F389\U0001F389\U0001F389\" + \"test\"\n"
+            "    combining = \"e\u0301\u0301 vs \u00e9\"\n"
+            "    return party, combining\n"
+            "\n"
+            "def f2(\u0627\u0633\u0645):\n"  # Arabic identifier (RTL script)
+            "    greeting = \"\u0645\u0631\u062d\u0628\u0627 \" + \u0627\u0633\u0645\n"
+            "    return greeting\n"
+            "\r\n"  # CRLF blank line
+            "def f3():\r\n"  # rest of this function uses CRLF endings
+            "    zwj = \"\U0001F9D1\u200d\U0001F680\"\r\n"  # person + ZWJ + rocket
+            "    multi = {\r\n"
+            "        \"\u05d0\": 1,\r\n"  # Hebrew (RTL script) as dict key
+            "        \"\u05d1\": 2,\r\n"
+            "    }\r\n"
+            "    return zwj, multi\r\n"
+            "\r"  # bare-CR blank line
+            "def f4():\r"  # rest of this function uses bare-CR endings
+            "    variation = \"\u2764\ufe0f\"\r"  # heart + variation selector-16
+            "    return variation\r"
+            "\n"
+            "def f5():\n"
+            "    x = 1\t+ \x0c{\n"  # form feed + tab before a multi-line dict
+            "        1: 2,\n"
+            "    }\n"
+            "    return x\n"
+        )
+
+        SOURCES: dict[str, str] = {
+            "small": SMALL_SOURCE,
+            "unicode_edges": UNICODE_EDGE_SOURCE,
+        }
+
+        @pytest.fixture(scope="class", params=sorted(SOURCES))
+        @classmethod
+        def source(cls, request) -> str:
+            return cls.SOURCES[request.param]
+
+        @pytest.fixture(scope="class")
+        @classmethod
+        def nodes(cls, source: str) -> list[ast.AST]:
+            tree = ast.parse(source)
+            return [n for n in ast.walk(tree)]
+
+        def test_unpadded_segment_matches(self, source, ast_adapter, nodes):
+            for node in nodes:
+                assert ast_adapter.get_source_segment(node) == ast.get_source_segment(source, node)
+
+        def test_padded_segment_matches(self, source, ast_adapter, nodes):
+            for node in nodes:
+                expected = ast.get_source_segment(source, node, padded=True)
+                actual = ast_adapter.get_source_segment(node, padded=True)
+                assert actual == expected
+
+        def test_offsets_slice_source_to_unpadded_segment(self, source, ast_adapter, nodes):
+            for node in nodes:
+                start, end = ast_adapter[node]
+                expected = ast.get_source_segment(source, node)
+                if (start, end) == (None, None):
+                    assert expected is None
+                else:
+                    assert source[start:end] == expected
+
+    class TestLineEndings:
+        def test_empty_source_has_one_line(self):
+            ast_adapter = ASTLinesAdapter("")
+            assert len(ast_adapter) == 1
+            assert ast_adapter._starts_str == [0, 1]
+            assert ast_adapter.get_line(1) == ""
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(2)
+
+        def test_source_without_trailing_newline(self):
+            ast_adapter = ASTLinesAdapter("abc")
+            assert len(ast_adapter) == 1
+            assert ast_adapter._starts_str == [0, 4]
+            assert ast_adapter.get_line(1) == "abc"
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(2)
+
+        def test_source_with_trailing_lf_has_no_phantom_line(self):
+            ast_adapter = ASTLinesAdapter("abc\n")
+            assert len(ast_adapter) == 1
+            assert ast_adapter._starts_str == [0, 4]
+            assert ast_adapter.get_line(1) == "abc"
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(2)
+
+        def test_source_with_trailing_crlf_has_no_phantom_line(self):
+            ast_adapter = ASTLinesAdapter("abc\r\n")
+            assert len(ast_adapter) == 1
+            assert ast_adapter._starts_str == [0, 5]
+            assert ast_adapter.get_line(1) == "abc"
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(2)
+
+        def test_source_with_trailing_cr_has_no_phantom_line(self):
+            ast_adapter = ASTLinesAdapter("abc\r")
+            assert len(ast_adapter) == 1
+            assert ast_adapter._starts_str == [0, 4]
+            assert ast_adapter.get_line(1) == "abc"
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(2)
+
+        def test_source_ends_with_multiple_newlines(self):
+            ast_adapter = ASTLinesAdapter("abc\n\n")
+            assert len(ast_adapter) == 2
+            assert ast_adapter._starts_str == [0, 4, 5]
+            assert ast_adapter.get_line(1) == "abc"
+            assert ast_adapter.get_line(2) == ""
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(3)
+
+        def test_multiple_lines_lf(self):
+            ast_adapter = ASTLinesAdapter("a\nbb\nccc\n")
+            assert ast_adapter._starts_str == [0, 2, 5, 9]
+            assert ast_adapter.get_line(1) == "a"
+            assert ast_adapter.get_line(2) == "bb"
+            assert ast_adapter.get_line(3) == "ccc"
+            with pytest.raises(ASTLinesAdapter.LineNumberOutOfRange):
+                ast_adapter.get_line(4)
+
+    class TestMixedLineEndings:
+        SOURCE = (
+            "s = 1\n"
+            "café = {\n"
+            "    '你': 100,\r\n"
+            "    '好': 200,\n"
+            "    30: 300,\r"
+            "    40: 400,\r\n"
+            "}\n"
+            "print(café)"
+        )
+
+        @pytest.fixture(scope="class")
+        @classmethod
+        def dict_node(self, tree) -> ast.Dict:
+            node = next(
+                n
+                for n in ast.walk(tree)
+                if isinstance(n, ast.Dict)
+            )
+            assert node.lineno != node.end_lineno, "expected a multi-line node for this test to mean anything"
+            return node
+
+        def test_unpadded_get_source_segment_of_node_with_mixed_line_endings(self, dict_node, ast_adapter):
+            assert ast_adapter.get_source_segment(dict_node) == ast.get_source_segment(
+                self.SOURCE, dict_node
+            )
+
+        def test_padded_get_source_segment_of_node_with_mixed_line_endings(self, dict_node, ast_adapter):
+            assert ast_adapter.get_source_segment(
+                dict_node, padded=True
+            ) == ast.get_source_segment(
+                self.SOURCE, dict_node, padded=True
+            )
+
+        def test_line_starts_found_for_every_ending_style(self, ast_adapter):
+            assert len(ast_adapter) == 8
+
+        def test_get_line(self, ast_adapter):
+            lines = [ast_adapter.get_line(line_idx + 1) for line_idx in range(len(ast_adapter))]
+            expected = [
+                's = 1',
+                'café = {',
+                "    '你': 100,",
+                "    '好': 200,",
+                '    30: 300,',
+                '    40: 400,',
+                '}',
+                'print(café)',
+            ]
+            assert lines == expected
+
+    class TestPaddedMultiByteFirstLine:
+        SOURCE = 'x = "你好" + {\n    1: 2,\n}\n'
+
+        @pytest.fixture
+        def dict_node(self, tree) -> ast.Dict:
+            dict_node = next(n for n in ast.walk(tree) if isinstance(n, ast.Dict))
+            assert dict_node.lineno != dict_node.end_lineno
+            assert dict_node.col_offset > 0, "col_offset must be non-zero for this test to mean anything"
+            return dict_node
+
+        def test_padded_segment_matches_ast(self, dict_node, ast_adapter):
+            expected = ast.get_source_segment(self.SOURCE, dict_node, padded=True)
+            actual = ast_adapter.get_source_segment(dict_node, padded=True)
+            assert actual == expected
+
+        def test_padding_length_is_char_count_not_byte_count(self, dict_node, ast_adapter):
+            segment = ast_adapter.get_source_segment(dict_node, padded=True)
+            first_line_of_segment = segment.splitlines()[0]
+            leading_spaces = len(first_line_of_segment) - len(first_line_of_segment.lstrip(" "))
+            # 'x = "你好" + ' is 11 characters (5 ASCII + 2 CJK chars + 4 ASCII),
+            # despite being 15 UTF-8 bytes.
+            assert leading_spaces == 11
+
+    class TestMissingLocationInfoTest:
+        SOURCE = 'abc = def'
+
+        def test_get_source_segment_returns_none(self, ast_adapter):
+            node = ast.Module(body=[], type_ignores=[])
+            assert not hasattr(node, 'lineno')
+            assert not hasattr(node, 'col_offset')
+
+            assert ast_adapter.get_source_segment(node) is None
+
+        def test_get_source_region_returns_none(self, ast_adapter):
+            node = ast.Module(body=[], type_ignores=[])
+            assert not hasattr(node, 'lineno')
+            assert not hasattr(node, 'col_offset')
+
+            assert ast_adapter[node] == (None, None)
+
+    class TestRegionOffset:
+        SOURCE = textwrap.dedent(
+            """
+            def multiline_start_on_unicode(データ):
+                処理 = データ + "更多文字"  # this line starts a multi-line dict below
+                config = {
+                    "き": 1,
+                    "り": 2,
+                }
+                return 処理, config
+            """
+        )
+
+        def test_zero_offset_is_always_zero(self, ast_adapter):
+            for line_idx in range(len(ast_adapter)):
+                assert ast_adapter._line_region_offset(line_idx, 0) == 0
+
+        def test_ascii_only_line_matches_col_offset(self, tree, source, ast_adapter):
+            node = next(
+                n
+                for n in ast.walk(tree)
+                if isinstance(n, ast.Name) and n.id == "config"
+            )
+            line_idx = 3
+            assert node.lineno == node.end_lineno == 4
+            line = ast_adapter.get_line(4)
+            assert line == "    config = {"
+
+            start = ast_adapter._line_region_offset(line_idx, node.col_offset)
+            assert start == node.col_offset == 4
+            end = ast_adapter._line_region_offset(line_idx, node.end_col_offset)
+            assert end == node.end_col_offset == 10
+            assert line[start:end] == "config"
+
+        def test_full_line_byte_length_matches_full_line_char_length(self, ast_adapter):
+            for line_idx in range(len(ast_adapter)):
+                line_bytes = ast_adapter._get_line_bytes(line_idx)
+                assert ast_adapter._line_region_offset(line_idx, len(line_bytes)) == len(
+                    ast_adapter._get_line_text(line_idx)
+                )
+
+        @pytest.mark.parametrize(
+            "line_text, byte_col, expected_char_col",
+            [
+                ("hello world\n", 5, 5),  # pure ASCII: byte offset == char offset
+                ("你好世界\n", 3, 1),  # first char is 3 bytes -> 1 char consumed
+                ("你好世界\n", 6, 2),  # first two chars are 6 bytes -> 2 chars
+                ('"héllo"\n', 2, 2),  # ASCII prefix before the accented char
+                ('"héllo"\n', 4, 3),  # 'é' (2 bytes) fully consumed -> 3 chars ('"h\u00e9')
+            ],
+        )
+        def test_known_byte_to_char_conversions(self, line_text, byte_col, expected_char_col):
+            ast_adapter = ASTLinesAdapter(line_text)
+            assert ast_adapter._line_region_offset(0, byte_col) == expected_char_col

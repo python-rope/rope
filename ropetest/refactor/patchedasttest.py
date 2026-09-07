@@ -1596,6 +1596,26 @@ class PatchedASTTest(unittest.TestCase):
         )
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_multibyte_unicode(self):
+        source = dedent("""\
+            match x:
+                case ["😃", *rest] as myval:
+                    print(myval)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "MatchSequence", " ", "as", " ", "myval",
+        ])
+        checker.check_children("MatchSequence", [
+            "[", "", "MatchValue", "", ",", " ", "MatchStar", "", "]",
+        ])
+        checker.check_children("MatchStar", [
+            "*", "", "rest"
+        ])
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_as_capture_pattern(self):
         source = dedent("""\
             match x:

@@ -70,24 +70,146 @@ class SourceLinesAdapter:
     def get_line_end(self, lineno):
         return self.starts[lineno] - 1
 
-    def __getitem__(self, subscript):
-        start_offset = self._calculate_offset(subscript.start)
-        stop_offset = self._calculate_offset(subscript.stop)
-        return self.code[start_offset:stop_offset]
 
-    def _calculate_offset(self, coord: tuple[int, int]) -> int:
-        lineno, col_offset = coord
-        lineno = self._clamp(0, self.length(), lineno)
-        col_offset = self._clamp(
-            0,
-            self.get_line_end(lineno) - self.get_line_start(lineno),
-            col_offset,
+class ASTLinesAdapter:
+    """
+    Convert between stdlib's ast `col_offset` and rope's `region` offsets.
+
+    ast `col_offset` are given in byte offset of the utf-8 source code from
+    the CPython interpreter, this is not necessarily identical to the str
+    offset (i.e. unicode codepoint offset) that rope uses.
+
+    Semantics are intended to match ``ast.get_source_segment`` exactly,
+    including its quirks:
+
+    - Line numbers are 1-indexed (``node.lineno`` / ``node.end_lineno``),
+      matching the ``ast`` module.
+    - Column offsets are UTF-8 *byte* offsets into the line, not character
+      offsets -- this matters for any line containing non-ASCII characters.
+    - Line splitting uses the same boundaries the CPython parser uses
+      (``\\n``, ``\\r\\n``, ``\\r``) rather than the broader set recognized by
+      ``str.splitlines()`` (form feed, vertical tab, etc.), since those extra
+      separators don't correspond to a new line as far as ``lineno`` is
+      concerned.
+    """
+
+    class LineNumberOutOfRange(IndexError):
+        pass
+
+    # Same pattern rule as `ast._line_pattern` used by `ast._splitlines_no_ff`
+    # to split lines in a way that mimics how the CPython parser splits source
+    # code.
+    LINE_PATTERN = re.compile("(.*?(?:\r\n|\n|\r|$))")
+
+    def __init__(self, source: str):
+        self.code: str = source
+        self._starts_str: list[int] = self._initialize_line_starts(self.code)
+        self._line_cache: list[tuple[str, bytes | None] | None] = [None] * len(
+            self._starts_str
         )
 
-        return self.get_line_start(lineno) + col_offset
+    @classmethod
+    def _initialize_line_starts(cls, source) -> list[int]:
+        matches = list(cls.LINE_PATTERN.finditer(source))
+        if len(matches) > 1 and matches[-1].start() == matches[-1].end():
+            matches.pop()
+        starts = [m.start() for m in matches]
+        if source[-1:] in ["\n", "\r"]:
+            starts.append(len(source))
+        else:
+            starts.append(len(source) + 1)
+        return starts
 
-    def _clamp(self, min_value, max_value, value):
-        return max(min_value, min(max_value, value))
+    def __len__(self):
+        return len(self._starts_str) - 1
+
+    def _validate_lineno(self, lineno: int) -> int:
+        if not (0 < lineno <= len(self._starts_str) - 1):
+            raise ASTLinesAdapter.LineNumberOutOfRange(
+                f"Line number out of range: {lineno}"
+            )
+        return lineno - 1
+
+    def _get_cached_line(self, line_idx: int) -> tuple[str, bytes | None]:
+        cached = self._line_cache[line_idx]
+        if cached is None:
+            start = self._starts_str[line_idx]
+            end = self._starts_str[line_idx + 1] - 1
+            line_text = self.code[start:end].rstrip("\r\n")
+            # on ASCII-only line, col_offset and char offset is identical, we
+            # can skip all the encoding/decoding
+            line_bytes = None if line_text.isascii() else line_text.encode("utf-8")
+            cached = (line_text, line_bytes)
+            self._line_cache[line_idx] = cached
+        return cached
+
+    def _get_line_text(self, line_idx: int) -> str:
+        return self._get_cached_line(line_idx)[0]
+
+    def _get_line_bytes(self, line_idx: int) -> bytes:
+        line_text, line_bytes = self._get_cached_line(line_idx)
+        return line_bytes if line_bytes is not None else line_text.encode("utf-8")
+
+    def _line_region_offset(self, line_idx: int, col_offset: int) -> int:
+        """str offset relative to the start of line"""
+        if col_offset == 0:
+            return 0
+        line_text, line_bytes = self._get_cached_line(line_idx)
+        if line_bytes is None:
+            return col_offset
+        prefix_bytes = line_bytes[:col_offset].decode("utf-8")
+        return len(prefix_bytes)
+
+    def _absolute_region_offset(self, line_idx: int, col_offset: int) -> int:
+        """str offset relative to the start of file"""
+        line_offset = self._line_region_offset(line_idx, col_offset)
+        return self._starts_str[line_idx] + line_offset
+
+    @classmethod
+    def _pad_whitespace(cls, source: str) -> str:
+        """Equivalent to `ast._pad_whitespace(source)`"""
+        return "".join(c if c in "\f\t" else " " for c in source)
+
+    def get_line(self, lineno: int) -> str:
+        line_idx = self._validate_lineno(lineno)
+        return self._get_line_text(line_idx)
+
+    def get_source_segment(self, node, *, padded: bool = False) -> str | None:
+        """Equivalent to ``ast.get_source_segment(source, node, padded=padded)``.
+
+        ``ast.get_source_segment(source, node)`` is convenient, but every call
+        re-splits the *entire* source string into lines (via the private
+        ``ast._splitlines_no_ff``) and re-encodes whatever lines it touches to
+        UTF-8. If you're pulling source segments for many nodes out of the same
+        file (e.g. walking a whole AST), that's a lot of repeated O(n) work.
+        """
+
+        region_start, region_end = self[node]
+        if region_start is None and region_end is None:
+            return None
+        source_segment = self.code[region_start:region_end]
+
+        if padded and node.lineno != node.end_lineno:
+            line_idx = node.lineno - 1
+            char_col = self._line_region_offset(line_idx, node.col_offset)
+            prefix = self._get_line_text(line_idx)[:char_col]
+            padding = self._pad_whitespace(prefix)
+            source_segment = padding + source_segment
+
+        return source_segment
+
+    def __getitem__(self, node) -> tuple[int, int] | tuple[None, None]:
+        try:
+            line_idx = node.lineno - 1
+            end_line_idx = node.end_lineno - 1
+            col_offset = node.col_offset
+            end_col_offset = node.end_col_offset
+        except AttributeError:
+            return (None, None)
+
+        region_start = self._absolute_region_offset(line_idx, col_offset)
+        region_end = self._absolute_region_offset(end_line_idx, end_col_offset)
+        return (region_start, region_end)
 
 
 class ArrayLinesAdapter:
