@@ -144,10 +144,19 @@ class ASTLinesAdapter:
             end = min(end, start + col_offset)
         return self._code_bytes[start:end].rstrip(b"\r\n")
 
+    def _is_line_ascii_only(self, line_idx: int):
+        start_str = self._starts_str[line_idx]
+        end_str = self._starts_str[line_idx + 1]
+        start_bytes = self._starts_bytes[line_idx]
+        end_bytes = self._starts_bytes[line_idx + 1]
+        # str length == bytes length iff they're ascii-only because any
+        # non-ascii characters would be at least 2 bytes
+        return (end_str - start_str) == (end_bytes - start_bytes)
+
     def _line_region_offset(self, line_idx: int, col_offset: int) -> int:
         """str offset relative to the start of line"""
-        if col_offset == 0:
-            return 0
+        if col_offset == 0 or self._is_line_ascii_only(line_idx):
+            return col_offset
         prefix = self._get_line_text(line_idx, col_offset)
         return len(prefix)
 
