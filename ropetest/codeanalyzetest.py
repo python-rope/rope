@@ -1265,22 +1265,20 @@ class TestASTLinesAdapter:
             assert ast_adapter[node] == (None, None)
 
         def test_get_source_segment_returns_none_without_end_location(self, ast_adapter):
-            node = ast.Add(
-                lineno=1,
-                col_offset=1,
-                end_lineno=None,
-                end_col_offset=None,
-            )
+            node = ast.Add()
+            node.lineno = 1
+            node.col_offset = 1
+            node.end_lineno = None
+            node.end_col_offset = None
 
             assert ast_adapter.get_source_segment(node) is None
 
         def test_get_source_region_returns_none_without_end_location(self, ast_adapter):
-            node = ast.Add(
-                lineno=1,
-                col_offset=1,
-                end_lineno=None,
-                end_col_offset=None,
-            )
+            node = ast.Add()
+            node.lineno = 1
+            node.col_offset = 1
+            node.end_lineno = None
+            node.end_col_offset = None
 
             assert ast_adapter[node] == (None, None)
 
