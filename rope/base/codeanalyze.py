@@ -199,6 +199,8 @@ class ASTLinesAdapter:
 
     def __getitem__(self, node) -> tuple[int, int] | tuple[None, None]:
         try:
+            if node.end_lineno is None or node.end_col_offset is None:
+                return (None, None)
             line_idx = node.lineno - 1
             end_line_idx = node.end_lineno - 1
             col_offset = node.col_offset
