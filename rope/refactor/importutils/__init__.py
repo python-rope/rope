@@ -8,9 +8,8 @@ refactorings or as a separate task.
 import rope.base.codeanalyze
 import rope.base.evaluate
 from rope.base import libutils
-from rope.base.prefs import get_preferred_import_style
-from rope.base.prefs import ImportStyle
 from rope.base.change import ChangeContents, ChangeSet
+from rope.base.prefs import ImportStyle, get_preferred_import_style
 from rope.refactor import occurrences, rename
 from rope.refactor.importutils import actions, module_imports
 from rope.refactor.importutils.importinfo import FromImport, NormalImport

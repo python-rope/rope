@@ -17,6 +17,7 @@ from itertools import chain
 from pathlib import Path
 from threading import local
 from typing import (
+    TYPE_CHECKING,
     Generator,
     Iterable,
     Iterator,
@@ -24,7 +25,6 @@ from typing import (
     Optional,
     Set,
     Tuple,
-    TYPE_CHECKING,
 )
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning

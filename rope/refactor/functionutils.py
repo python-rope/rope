@@ -1,5 +1,5 @@
 import ast
-from typing import Tuple, List
+from typing import List, Tuple
 
 from rope.base import pyobjects, worder
 from rope.base.builtins import Lambda
