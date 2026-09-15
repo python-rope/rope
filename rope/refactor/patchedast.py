@@ -67,6 +67,7 @@ class _PatchingASTWalker:
         self.source = _Source(source)
         self.children = children
         self.lines = codeanalyze.SourceLinesAdapter(source)
+        self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
         self.children_stack = []
 
     Number = object()
@@ -217,7 +218,8 @@ class _PatchingASTWalker:
         for children in reversed(self.children_stack):
             for child in children:
                 if isinstance(child, ast.stmt):
-                    return child.col_offset + self.lines.get_line_start(child.lineno)
+                    start, _ = self.ast_adapter[child]
+                    return start
         return len(self.source.source)
 
     def _join(self, iterable, separator):
@@ -576,11 +578,8 @@ class _PatchingASTWalker:
     def _is_elif(self, node):
         if not isinstance(node, ast.If):
             return False
-        offset = self.lines.get_line_start(node.lineno) + node.col_offset
-        word = self.source[offset : offset + 4]
-        # XXX: This is a bug; the offset does not point to the first
-        alt_word = self.source[offset - 5 : offset - 1]
-        return "elif" in (word, alt_word)
+        start, end = self.ast_adapter[node]
+        return "elif" in self.source[start : start + 4]
 
     def _IfExp(self, node):
         return self._handle(node, [node.body, "if", node.test, "else", node.orelse])
@@ -813,27 +812,23 @@ class _PatchingASTWalker:
                 *closing_paren,
             ]
         else:
-            node_start = (node.lineno, node.col_offset)
-            node_end = (node.end_lineno, node.end_col_offset)
-            children = [self.lines[node_start:node_end]]
+            empty_tuple = self.ast_adapter.get_source_segment(node)
+            children = [empty_tuple]
         self._handle(node, children)
 
     def _get_surrounding_parens(self, node: ast.MatchSequence):
-        node_start = (node.lineno, node.col_offset)
-        first_pattern_start = (node.patterns[0].lineno, node.patterns[0].col_offset)
-        opening_paren = self.lines[node_start:first_pattern_start].strip()
+        node_start, node_end = self.ast_adapter[node]
+        first_pattern_start, _ = self.ast_adapter[node.patterns[0]]
+        _, last_pattern_end = self.ast_adapter[node.patterns[-1]]
+        opening_paren = self.source[node_start:first_pattern_start].strip()
+        closing_paren = self.source[last_pattern_end:node_end].strip()
+
         if opening_paren not in ["[", "(", ""]:
             warnings.warn(
                 f"Unexpected character in MatchSequence's opening_paren <{opening_paren}>; please report!",
                 RuntimeWarning,
             )
 
-        last_pattern_end = (
-            node.patterns[-1].end_lineno,
-            node.patterns[-1].end_col_offset,
-        )
-        node_end = (node.end_lineno, node.end_col_offset)
-        closing_paren = self.lines[last_pattern_end:node_end].strip()
         if closing_paren not in ["]", ")", ""]:
             warnings.warn(
                 f"Unexpected character in MatchSequence's closing_paren <{closing_paren}>; please report!",
@@ -1014,9 +1009,6 @@ class _Source:
 
     def __getitem__(self, index):
         return self.source[index]
-
-    def __getslice__(self, i, j):
-        return self.source[i:j]
 
     def _get_number_pattern(self):
         # HACK: It is merely an approaximation and does the job
