@@ -8,9 +8,8 @@ from rope.base import exceptions
 from rope.refactor import move
 from ropetest import testutils
 
-
 if TYPE_CHECKING:
-    from rope.base import resources, project
+    from rope.base import project, resources
 
 class MoveRefactoringTest(unittest.TestCase):
     project: project.Project
@@ -73,6 +72,29 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
         self.assertEqual("foo = 123\n", self.destination_module.read())
+
+    def test_move_constant_preserves_used_module_alias(self) -> None:
+        self.project.prefs["prefer_module_from_imports"] = True
+        self.mod4.write("def keep():\n    return 1\n\nvalue = 2\n")
+        self.mod5.write("def existing():\n    return 3\n")
+        self.mod3.write(
+            "from pkg import mod5\n"
+            "from pkg import mod4 as utils_module\n"
+            "\n"
+            "def run():\n"
+            "    return mod5.existing(), utils_module.keep(), utils_module.value\n"
+        )
+        self._move(self.mod4, self.mod4.read().index("value"), self.mod5)
+        self.assertEqual(
+            "from pkg import mod5\n"
+            "from pkg import mod4 as utils_module\n"
+            "\n"
+            "def run():\n"
+            "    return mod5.existing(), utils_module.keep(), mod5.value\n",
+            self.mod3.read(),
+        )
+        self.assertEqual("def keep():\n    return 1\n\n", self.mod4.read())
+        self.assertIn("value = 2\n", self.mod5.read())
 
     def test_move_constant_2(self) -> None:
         self.origin_module.write("bar = 321\nfoo = 123\n")
@@ -603,7 +625,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 import mod4
                 print(mod4)"""
-            ), 
+            ),
             self.origin_module.read(),
         )
 
@@ -1423,7 +1445,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 def hello(func):
                     return func
-            """), 
+            """),
             self.origin_module.read(),
         )
         self.assertEqual(

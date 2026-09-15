@@ -1,8 +1,13 @@
 import unittest
 from textwrap import dedent
 
-from rope.base.prefs import get_preferred_import_style, ImportStyle, Prefs, ImportPrefs
-from rope.base.prefs import DEFAULT_IMPORT_STYLE
+from rope.base.prefs import (
+    DEFAULT_IMPORT_STYLE,
+    ImportPrefs,
+    ImportStyle,
+    Prefs,
+    get_preferred_import_style,
+)
 from rope.refactor.importutils import ImportTools, add_import, importinfo
 from ropetest import testutils
 
@@ -1942,6 +1947,30 @@ class ImportUtilsTest(unittest.TestCase):
             return import_stmt.start_line <= lineno < import_stmt.end_line
 
         return import_filter
+
+    def test_filtered_duplicate_removal_preserves_distinct_from_imports(self):
+        for imported in ("mod3", "mod3 as other", "*"):
+            with self.subTest(imported=imported):
+                source = "from pkg2 import mod2\nfrom pkg2 import " + imported + "\n"
+                self.mod.write(source)
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(source, module_imports.get_changed_source())
+
+    def test_filtered_duplicate_removal_still_removes_covered_imports(self):
+        for imported in ("mod2", "mod2, mod3", "*"):
+            with self.subTest(imported=imported):
+                expected = "from pkg2 import " + imported + "\n"
+                self.mod.write(expected + "from pkg2 import mod2\n")
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(expected, module_imports.get_changed_source())
 
     def test_filtered_expand_stars(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
