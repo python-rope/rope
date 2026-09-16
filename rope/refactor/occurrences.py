@@ -339,13 +339,41 @@ class _TextualFinder:
                     yield match.start("fstring") + offset
 
     def _search_in_f_string(self, f_string: str) -> Iterator[int]:
-        tree = ast.parse(f_string)
+        # Handle f-strings more robustly, especially for Python 3.12+ nested quotes
+        try:
+            # First, try to parse the f-string content as an expression
+            tree = ast.parse(f_string, mode='eval')
+        except SyntaxError:
+            # If that fails, try as a module (statement-level parsing)
+            try:
+                tree = ast.parse(f_string, mode='exec')
+            except SyntaxError:
+                # If AST parsing fails completely, fall back to textual search
+                # This handles malformed f-strings that can't be parsed
+                yield from self._fallback_search_in_string(f_string)
+                return
+        
+        # Walk the AST to find name occurrences
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == self.name:
                 yield node.col_offset
             elif isinstance(node, ast.Attribute) and node.attr == self.name:
                 assert node.end_col_offset is not None
                 yield node.end_col_offset - len(self.name)
+
+    def _fallback_search_in_string(self, text: str) -> Iterator[int]:
+        """Fallback textual search when AST parsing fails"""
+        current = 0
+        while True:
+            try:
+                found = text.index(self.name, current)
+                current = found + len(self.name)
+                # Check if it's a valid identifier boundary
+                if (found == 0 or not self._is_id_char(text[found - 1])) and \
+                (current == len(text) or not self._is_id_char(text[current])):
+                    yield found
+            except ValueError:
+                break
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0
