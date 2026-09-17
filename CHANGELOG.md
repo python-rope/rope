@@ -8,7 +8,7 @@
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 - #870 Add default implementation for is_dir() (@lieryan)
 - #872 Fix unicode handling in patchedast (@lieryan)
-- #825 Define functions extracted from a class body before the class (@ethanstoner)
+- #825, #878 Define functions extracted from a class body before the class (@ethanstoner)
 
 # Release 1.14.0
 
