@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #825 Define functions extracted from a class body before the class (@ethanstoner)
 
 # Release 1.15.0
 

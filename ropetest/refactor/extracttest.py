@@ -1758,6 +1758,153 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_method_in_class_body(self):
+        code = dedent("""\
+            class TSV:
+                delimiter = "\\t"
+
+            print(TSV.delimiter)
+        """)
+        start = code.index('"\\t"')
+        end = start + len('"\\t"')
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return "\\t"
+
+            class TSV:
+                delimiter = extracted()
+
+            print(TSV.delimiter)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_class_body_reading_class_variables(self):
+        code = dedent("""\
+            class A:
+                a = 1
+                b = a + 2
+        """)
+        start = code.index("a + 2")
+        end = start + len("a + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted(a):
+                return a + 2
+
+            class A:
+                a = 1
+                b = extracted(a)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_decorated_class_body(self):
+        code = dedent("""\
+            @decorator
+            class A:
+                a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            @decorator
+            class A:
+                a = extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_class_body_inside_function(self):
+        code = dedent("""\
+            def f():
+                class A:
+                    a = 1 + 2
+                return A
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+            def f():
+
+                def extracted():
+                    return 1 + 2
+
+                class A:
+                    a = extracted()
+                return A
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_nested_class_body(self):
+        code = dedent("""\
+            class A:
+                class B:
+                    a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            class A:
+                class B:
+                    a = extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_global_extract_method_in_class_body(self):
+        code = dedent("""\
+            def f():
+                class A:
+                    a = 1 + 2
+                return A
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(
+            code, start, end, "extracted", global_=True
+        )
+        expected = dedent("""\
+            def f():
+                class A:
+                    a = extracted()
+                return A
+
+            def extracted():
+                return 1 + 2
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_global_extract_method_in_module_level_class_body(self):
+        code = dedent("""\
+            class A:
+                a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(
+            code, start, end, "extracted", global_=True
+        )
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            class A:
+                a = extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_where_to_search_when_extracting_global_names(self):
         code = dedent("""\
             def a():
