@@ -408,6 +408,27 @@ class _PatchingASTWalker:
                 children.append(part)
         children.append(end_quote_char())
         self._handle(node, children)
+        self._extend_joined_string_to(node, end)
+
+    def _extend_joined_string_to(self, node, string_end):
+        """Cover concatenation parts that follow the last interpolation.
+
+        `_handle` stops at the first closing quote it finds after the last
+        `FormattedValue`, so in an implicit concatenation whose trailing parts
+        are pure literal text -- ``f"{a} one " f"#52 two"`` -- it stops at the
+        end of the part holding the interpolation.  That both understates the
+        node's region and parks the scanner inside the literal, where an
+        unescaped ``#`` reads as the start of a comment and swallows the rest
+        of the line.  `consume_string` already measured the whole
+        concatenation, so close the gap from its end offset.
+        """
+        if self.source.offset >= string_end:
+            return
+        trailing_parts = self.source[self.source.offset : string_end]
+        if self.children:
+            node.sorted_children.append(trailing_parts)
+        self.source.offset = string_end
+        node.region = (node.region[0], string_end)
 
     def _FormattedValue(self, node):
         children = []

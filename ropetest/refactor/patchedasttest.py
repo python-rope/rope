@@ -338,6 +338,48 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
 
     @testutils.only_for_versions_higher("3.6")
+    def test_handling_format_strings_with_implicit_join_trailing_literal_part(self):
+        source = 'a = f"one {b}" f"two"\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "JoinedStr", ['f"', "one ", "FormattedValue", "", '"', ' f"two"']
+        )
+        checker.check_region("JoinedStr", 4, len('a = f"one {b}" f"two"'))
+
+    @testutils.only_for_versions_higher("3.6")
+    def test_handling_format_strings_with_hash_in_joined_trailing_part(self):
+        source = dedent("""\
+            E(
+                f"{a} one "
+                f"#52 two")
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "JoinedStr", ['f"', "", "FormattedValue", " one ", '"', '\n    f"#52 two"']
+        )
+        checker.check_children("Call", ["Name", "", "(", "\n    ", "JoinedStr", "", ")"])
+
+    @testutils.only_for_versions_higher("3.6")
+    def test_handling_format_strings_with_hash_in_joined_trailing_part_assignment(self):
+        source = 'a = 1\nb = (f"{a} one "\n     f"#52 two")\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "JoinedStr",
+            ['f"', "", "FormattedValue", " one ", '"', '\n     f"#52 two"'],
+        )
+
+    @testutils.only_for_versions_higher("3.6")
+    def test_handling_format_strings_followed_by_a_real_comment(self):
+        source = 'a = f"one {b}"  # trailing comment\nc = 1\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("JoinedStr", ['f"', "one ", "FormattedValue", "", '"'])
+        checker.check_region("JoinedStr", 4, len('a = f"one {b}"'))
+
+    @testutils.only_for_versions_higher("3.6")
     def test_handling_format_strings_with_format_spec(self):
         source = 'f"abc{a:01}"\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -2000,6 +2042,12 @@ class _ResultChecker:
         search = Search()
         ast.call_for_nodes(self.ast, search)
         return search.result
+
+    def check_region(self, text, start, end):
+        node = self._find_node(text)
+        if node is None:
+            self.test_case.fail("Node <%s> cannot be found" % text)
+        self.test_case.assertEqual((start, end), node.region)
 
     def check_children(self, text, children):
         node = self._find_node(text)

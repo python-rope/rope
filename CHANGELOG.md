@@ -8,6 +8,7 @@
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 - #870 Add default implementation for is_dir() (@lieryan)
 - #872 Fix unicode handling in patchedast (@lieryan)
+- #879 Fix patchedast region for implicitly-concatenated f-strings whose trailing parts hold no interpolation (@stevemadere)
 
 # Release 1.14.0
 
