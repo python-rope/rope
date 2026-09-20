@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #831 Preserve external imported names when renaming their local bindings (@ryanchou1994)
 
 # Release 1.15.0
 
