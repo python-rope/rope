@@ -582,6 +582,111 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             mod2.read(),
         )
 
+    def test_renaming_external_import_preserves_imported_name(self):
+        self.project.prefs.add("extension_modules", "builtins")
+        code = "from builtins import zip\nresult = list(zip([1], [2]))\n"
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from builtins import zip as pairs\nresult = list(pairs([1], [2]))\n",
+            refactored,
+        )
+        namespace = {}
+        exec(refactored, namespace)
+        self.assertEqual([(1, 2)], namespace["result"])
+
+    def test_renaming_external_import_with_same_alias(self):
+        code = "from builtins import zip as zip\nresult = zip([], [])\n"
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from builtins import zip as pairs\nresult = pairs([], [])\n",
+            refactored,
+        )
+
+    def test_renaming_external_import_with_different_alias(self):
+        code = "from builtins import zip as pairs\nresult = pairs([], [])\n"
+        refactored = self._local_rename(code, code.rindex("pairs"), "new_pairs")
+        self.assertEqual(
+            "from builtins import zip as new_pairs\nresult = new_pairs([], [])\n",
+            refactored,
+        )
+
+    def test_renaming_multiline_external_import_after_unicode(self):
+        code = dedent("""\
+            café = 1; from builtins import (
+                zip as  # Keep the imported name.
+                zip,
+            )
+            result = zip([], [])
+        """)
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            dedent("""\
+                café = 1; from builtins import (
+                    zip as  # Keep the imported name.
+                    pairs,
+                )
+                result = pairs([], [])
+            """),
+            refactored,
+        )
+
+    def test_renaming_conditional_external_import_from_another_module(self):
+        compat = testutils.create_module(self.project, "compat")
+        compat.write(dedent("""\
+            import sys
+            if sys.version_info[0] >= 3:
+                from builtins import map, zip
+            else:
+                zip = lambda *args: None
+        """))
+        mod = testutils.create_module(self.project, "mod")
+        mod.write("from compat import zip\nresult = list(zip([1], [2]))\n")
+        self._rename(mod, mod.read().rindex("zip"), "pairs")
+        self.assertEqual(
+            dedent("""\
+                import sys
+                if sys.version_info[0] >= 3:
+                    from builtins import map, zip as pairs
+                else:
+                    pairs = lambda *args: None
+            """),
+            compat.read(),
+        )
+        self.assertEqual(
+            "from compat import pairs\nresult = list(pairs([1], [2]))\n",
+            mod.read(),
+        )
+
+    def test_renaming_import_from_external_python_module(self):
+        external_project = testutils.sample_project()
+        self.addCleanup(testutils.remove_project, external_project)
+        external = testutils.create_module(external_project, "external")
+        external.write("value = 42\n")
+        self.project.prefs.add("python_path", external_project.address)
+        code = "from external import value\nresult = value\n"
+        refactored = self._local_rename(code, code.rindex("value"), "new_value")
+        self.assertEqual(
+            "from external import value as new_value\nresult = new_value\n",
+            refactored,
+        )
+        self.assertEqual("value = 42\n", external.read())
+
+    def test_renaming_external_import_does_not_resolve_unrelated_import(self):
+        invalid = testutils.create_module(self.project, "invalid")
+        invalid.write("def broken(:\n")
+        code = (
+            "from invalid import other\n"
+            "from builtins import zip\n"
+            "result = zip([], [])\n"
+        )
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from invalid import other\n"
+            "from builtins import zip as pairs\n"
+            "result = pairs([], [])\n",
+            refactored,
+        )
+
     def test_applying_all_changes_together(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(dedent("""\
