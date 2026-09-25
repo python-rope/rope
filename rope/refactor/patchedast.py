@@ -385,14 +385,19 @@ class _PatchingASTWalker:
             return self.source[start : quote_pos + len(quote_char)]
 
         def end_quote_char():
-            possible_quotes = [
-                (self.source.source.rfind(q, start, end), q)
-                for q in reversed(QUOTE_CHARS)
-            ]
-            _, quote_pos, quote_char = max(
-                (len(q), pos, q) for pos, q in possible_quotes if pos != -1
+            # The closing delimiter is the quote char the f-string literally
+            # ends with -- NOT the longest quote char anywhere in the body.
+            # A ''' appearing inside a "..." f-string body must not be picked
+            # as the delimiter (issue: end_quote_char used max(len(q)) and
+            # mis-matched, producing a token that consume_joined_string could
+            # not locate).
+            for quote_char in QUOTE_CHARS:
+                if self.source.source[end - len(quote_char) : end] == quote_char:
+                    return self.source[end - len(quote_char) : end]
+            raise MismatchedTokenError(
+                f"f-string at line {self.lines.get_line_number(start)} does not"
+                " end with a quote delimiter"
             )
-            return self.source[end - len(quote_char) : end]
 
         QUOTE_CHARS = ['"""', "'''", '"', "'"]
         offset = self.source.offset
