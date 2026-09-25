@@ -1284,7 +1284,6 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @unittest.expectedFailure
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_false_format_value_in_regular_string(self):
         code = dedent("""\

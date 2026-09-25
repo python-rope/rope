@@ -8,6 +8,7 @@
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 - #870 Add default implementation for is_dir() (@lieryan)
 - #872 Fix unicode handling in patchedast (@lieryan)
+- Locate multi-line f-strings, replacement fields and match-sequence delimiters in patchedast by parser coordinates
 
 # Release 1.14.0
 
