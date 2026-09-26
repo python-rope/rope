@@ -81,7 +81,7 @@ The first approach uses the ``Project.get_resource()`` method.
 
   myresource = myproject.get_resource('/path/to/resource')
 
-However, it's preferable to use the ``libutils.path_to_resource()``
+However, it's preferable to use the `libutils.path_to_resource()`
 function, because it's more flexible and offers a unified way to create
 resources.  It takes a ``project`` and ``path`` as parameters with an
 optional ``type``.  The ``type`` parameter, with values ``file`` or
@@ -212,14 +212,14 @@ One of the greatest strengths of rope is its Static Object Analysis
 of objects passed to the function. Rope uses the collected data to infer
 the type of function parameters, return values, and the objects stored
 in built-in containers. The function
-``rope.base.libutils.analyze_modules()`` performs SOA on all modules in
+`rope.base.libutils.analyze_modules` performs SOA on all modules in
 the project. It is recommended that you call this function occasionally,
 and especially before performing large refactorings. Note that analyzing
 all modules of a project may take a long time.
 
 If you have ``automatic_soa`` set, which instructs rope to analyze the
 changed scopes of modules, then you should report the changes by calling
-``rope.base.libutils.report_change()`` when saving files, as follows:
+`rope.base.libutils.report_change()` when saving files, as follows:
 
 .. code-block:: python
 
@@ -354,8 +354,8 @@ values for ``type`` are the strings ``'file'`` or ``'folder'``.
   new_folder = libutils.path_to_resource(myproject, '/path/to/folder', type='folder')
 
 
-``rope.base.project.Project``
-=============================
+`rope.base.project.Project`
+===========================
 
 You can create a project by:
 
@@ -365,9 +365,9 @@ You can create a project by:
 
 Where the ``root_address`` is the root folder of your project.
 
-A project has some useful attributes.  ``Project.address`` is the
-address of the root folder of a project.  ``Project.root`` is a
-``Folder`` object that points to that folder.
+A project has some useful attributes.  `Project.address` is the
+address of the root folder of a project.  `Project.root` is a
+`Folder` object that points to that folder.
 
 
 `Project.do()`
@@ -446,13 +446,13 @@ history.
 
 Provides useful methods for managing python modules and packages.  Each
 project has a ``PyCore`` that can be accessed using the
-``Project.pycore`` attribute.
+`Project.pycore` attribute.
 
-``PyCore.run_module()`` runs a resource.  When running, it collects type
+`PyCore.run_module()` runs a resource.  When running, it collects type
 information to do dynamic object inference.  For this reason modules
 run much slower.
 
-Also ``Pycore.analyze_module()`` collects object information for a
+Also `Pycore.analyze_module()` collects object information for a
 module.  The collected information can be used to enhance rope's
 static object inference.
 
@@ -522,10 +522,10 @@ exception.
 Refactorings
 ============
 
-Have a look at ``rope.refactor`` package and its sub-modules.  For
+Have a look at the `rope.refactor` package and its sub-modules.  For
 example for performing a move refactoring you can create an object
 representing this operation (which will be an instance of e.g.
-`MoveMethod`, `MoveModule`, ...) like this:
+`MoveMethod`, `MoveModule`, ...) using `create_move`.
 
 .. code-block:: python
 
