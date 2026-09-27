@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #802 Patch annotations on regular function arguments (@Strohutt)
 - ...
 
 # Release 1.15.0
