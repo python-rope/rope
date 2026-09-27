@@ -24,6 +24,21 @@ class SimilarFinderTest(unittest.TestCase):
         finder = self._create_finder("")
         self.assertEqual([], list(finder.get_match_regions("10")))
 
+    def test_matching_argument_annotation(self):
+        source = "def foo(l: list):\n    pass\n"
+        finder = similarfinder.RawSimilarFinder(source)
+        regions = [match.get_region() for match in finder.get_matches("${a}")]
+        start = source.index("list")
+        self.assertEqual([(start, start + len("list"))], regions)
+
+    def test_matching_nested_argument_annotation(self):
+        source = "def foo(items: list[list[int]] = None):\n    pass\n"
+        finder = self._create_finder(source)
+        regions = list(finder.get_match_regions("list"))
+        first = source.index("list")
+        second = source.index("list", first + 1)
+        self.assertEqual([(first, first + 4), (second, second + 4)], regions)
+
     def test_constant_integer(self):
         source = "a = 10\n"
         finder = self._create_finder(source)

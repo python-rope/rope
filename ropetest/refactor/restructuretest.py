@@ -28,6 +28,16 @@ class RestructureTest(unittest.TestCase):
         self.project.do(refactoring.get_changes())
         self.assertEqual("a = int(1)\nb = 1\n", self.mod.read())
 
+    def test_replacing_argument_annotations(self):
+        source = "def f(items: list[list[int]] = None):\n    return items\n"
+        self.mod.write(source)
+        refactoring = restructure.Restructure(self.project, "list", "tuple")
+        self.project.do(refactoring.get_changes())
+        self.assertEqual(
+            "def f(items: tuple[tuple[int]] = None):\n    return items\n",
+            self.mod.read(),
+        )
+
     def test_replacing_patterns_with_normal_names(self):
         refactoring = restructure.Restructure(
             self.project, "${a} = 1", "${a} = int(1)", args={"a": "exact"}

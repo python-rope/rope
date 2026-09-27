@@ -688,6 +688,36 @@ class PatchedASTTest(unittest.TestCase):
             ["async", " ", "def", " ", "f", "", "(", "", "arguments", "", ")", "", ":", "\n    ", "Pass"],
         )
 
+    def test_argument_annotation(self):
+        source = "def f(items: list):\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag.body[0].args.args[0])
+        start = source.index("items")
+        end = source.index(")")
+        checker.check_region("arg", start, end)
+        start = source.index("list")
+        checker.check_region("Name", start, start + len("list"))
+        checker.check_children("arg", ["items", "", ":", " ", "Name"])
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    def test_argument_annotation_with_default(self):
+        source = dedent("""\
+            async def f(
+                items : dict[str, list[int]] = None,  # keep the annotation
+                fallback=None,
+            ):
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        arguments = ast_frag.body[0].args
+        annotation = arguments.args[0].annotation
+        start = source.index("dict")
+        end = start + len("dict[str, list[int]]")
+        self.assertEqual((start, end), annotation.region)
+        self.assertEqual((source.index("items"), end), arguments.args[0].region)
+        self.assertEqual("None", source[slice(*arguments.defaults[0].region)])
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
     def test_function_node2(self):
         source = dedent('''\
             def f(p1, **p2):

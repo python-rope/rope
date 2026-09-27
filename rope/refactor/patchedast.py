@@ -632,7 +632,10 @@ class _PatchingASTWalker:
         self._handle(node, [str(node.value)])
 
     def _arg(self, node):
-        self._handle(node, [node.arg])
+        children = [node.arg]
+        if node.annotation is not None:
+            children.extend([":", node.annotation])
+        self._handle(node, children)
 
     def _Pass(self, node):
         self._handle(node, ["pass"])
