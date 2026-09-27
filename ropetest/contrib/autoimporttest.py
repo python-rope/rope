@@ -15,6 +15,7 @@ class AutoImportTest(unittest.TestCase):
         self.importer = autoimport.AutoImport(self.project, observe=False)
 
     def tearDown(self):
+        self.importer.close()
         testutils.remove_project(self.project)
         super().tearDown()
 
@@ -178,12 +179,12 @@ class AutoImportTest(unittest.TestCase):
 
 
 def test_search_submodule(project, external_fixturepkg):
-    importer = autoimport.AutoImport(project, observe=False)
-    importer.update_module("external_fixturepkg")
-    import_statement = ("from external_fixturepkg import mod1", "mod1")
-    assert import_statement in importer.search("mod1", exact_match=True)
-    assert import_statement in importer.search("mo")
-    assert import_statement in importer.search("mod1")
+    with autoimport.AutoImport(project, observe=False) as importer:
+        importer.update_module("external_fixturepkg")
+        import_statement = ("from external_fixturepkg import mod1", "mod1")
+        assert import_statement in importer.search("mod1", exact_match=True)
+        assert import_statement in importer.search("mo")
+        assert import_statement in importer.search("mod1")
 
 
 class AutoImportObservingTest(unittest.TestCase):
@@ -196,6 +197,7 @@ class AutoImportObservingTest(unittest.TestCase):
         self.importer = autoimport.AutoImport(self.project, observe=True)
 
     def tearDown(self):
+        self.importer.close()
         testutils.remove_project(self.project)
         super().tearDown()
 
