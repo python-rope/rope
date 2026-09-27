@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #886 Close connections opened by other threads in AutoImport.close() (@cristianchiriac)
 
 # Release 1.15.0
 
