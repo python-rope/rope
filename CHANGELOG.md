@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #886 Track and close SQLite connections created in worker threads in AutoImport (@mcepl)
 - ...
 
 # Release 1.15.0

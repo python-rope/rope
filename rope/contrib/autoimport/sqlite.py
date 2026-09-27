@@ -15,7 +15,7 @@ from datetime import datetime
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
-from threading import local
+from threading import Lock, local
 from typing import (
     TYPE_CHECKING,
     Generator,
@@ -142,6 +142,10 @@ class AutoImport:
                 "`AutoImport(memory=True)` explicitly.",
                 DeprecationWarning,
             )
+        self._closed = False
+        self._connections: Set[sqlite3.Connection] = set()
+        self._connections_lock = Lock()
+        self._observer: Optional[resourceobserver.ResourceObserver] = None
         self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
@@ -149,10 +153,10 @@ class AutoImport:
         )
         self._setup_db()
         if observe:
-            observer = resourceobserver.ResourceObserver(
+            self._observer = resourceobserver.ResourceObserver(
                 changed=self._changed, moved=self._moved, removed=self._removed
             )
-            project.add_observer(observer)
+            project.add_observer(self._observer)
 
     @classmethod
     def create_database_connection(
@@ -186,10 +190,25 @@ class AutoImport:
             else:
                 project_hash = calculate_project_hash(project.ropefolder.real_path)
             return sqlite3.connect(
-                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+                f"file:rope-{project_hash}:?mode=memory&cache=shared",
+                uri=True,
+                check_same_thread=False,
             )
         else:
-            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
+            return sqlite3.connect(
+                project.ropefolder.pathlib / "autoimport.db",
+                check_same_thread=False,
+            )
+
+    def _register_connection(self, conn: sqlite3.Connection) -> None:
+        with self._connections_lock:
+            if self._closed:
+                with contextlib.suppress(
+                    sqlite3.ProgrammingError, sqlite3.OperationalError
+                ):
+                    conn.close()
+                raise exceptions.RopeError("AutoImport instance has been closed")
+            self._connections.add(conn)
 
     @property
     def connection(self) -> sqlite3.Connection:
@@ -198,15 +217,26 @@ class AutoImport:
 
         This makes sure AutoImport can be shared across threads.
         """
+        if self._closed:
+            raise exceptions.RopeError("AutoImport instance has been closed")
         if not hasattr(self.thread_local, "connection"):
-            self.thread_local.connection = self.create_database_connection(
+            conn = self.create_database_connection(
                 project=self.project,
                 memory=self.memory,
             )
+            self._register_connection(conn)
+            self.thread_local.connection = conn
         return self.thread_local.connection
 
     @connection.setter
     def connection(self, value: sqlite3.Connection):
+        if self._closed:
+            raise exceptions.RopeError("AutoImport instance has been closed")
+        old_conn = getattr(self.thread_local, "connection", None)
+        if old_conn is not None and old_conn is not value:
+            with self._connections_lock:
+                self._connections.discard(old_conn)
+        self._register_connection(value)
         self.thread_local.connection = value
 
     def _setup_db(self):
@@ -457,10 +487,56 @@ class AutoImport:
         self._del_if_exist(module)
         self.generate_modules_cache([module])
 
+    def close_thread_connection(self):
+        """Close the SQLite connection for the current thread."""
+        conn = getattr(self.thread_local, "connection", None)
+        if conn is not None:
+            with self._connections_lock:
+                self._connections.discard(conn)
+            with contextlib.suppress(AttributeError):
+                del self.thread_local.connection
+            with contextlib.suppress(
+                sqlite3.ProgrammingError, sqlite3.OperationalError
+            ):
+                conn.commit()
+            with contextlib.suppress(
+                sqlite3.ProgrammingError, sqlite3.OperationalError
+            ):
+                conn.close()
+
     def close(self):
         """Close the autoimport database."""
-        self.connection.commit()
-        self.connection.close()
+        with self._connections_lock:
+            if self._closed:
+                return
+            self._closed = True
+            connections = list(self._connections)
+            self._connections.clear()
+
+        if self._observer is not None:
+            with contextlib.suppress(Exception):
+                self.project.remove_observer(self._observer)
+            self._observer = None
+
+        for conn in connections:
+            with contextlib.suppress(
+                sqlite3.ProgrammingError, sqlite3.OperationalError
+            ):
+                conn.commit()
+            with contextlib.suppress(
+                sqlite3.ProgrammingError, sqlite3.OperationalError
+            ):
+                conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def __del__(self):
+        with contextlib.suppress(Exception):
+            self.close()
 
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
