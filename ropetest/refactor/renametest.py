@@ -1,10 +1,10 @@
 import sys
 import unittest
 from textwrap import dedent
-from rope.base import exceptions
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences
+from rope.base import exceptions
 from rope.refactor import rename
 from rope.refactor.rename import Rename
 from ropetest import testutils

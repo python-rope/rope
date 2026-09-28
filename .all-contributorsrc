@@ -609,6 +609,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "marlon-costa-dc",
+      "name": "Marlon Costa",
+      "avatar_url": "https://avatars.githubusercontent.com/u/128386606?v=4",
+      "profile": "https://github.com/marlon-costa-dc",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
