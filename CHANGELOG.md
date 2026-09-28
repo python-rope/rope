@@ -10,6 +10,7 @@
 - #853 Implement patchedast handlers TypeVar (@lieryan)
 - #847 Avoid printing autoimport syntax errors (@yangfan-yf-yf)
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
+- #861 Recognize pattern captures for rename and reject unsupported inline operations (@yangfan-yf-yf)
 - #870 Add default implementation for is_dir() (@lieryan)
 - #872 Fix unicode handling in patchedast (@lieryan)
 - #845 Support PEP 695 type parameters on class definitions and type aliases in patchedast (@marlon-costa-dc)
