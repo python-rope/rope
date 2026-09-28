@@ -8,7 +8,9 @@ from rope.contrib.autoimport import models
 
 @pytest.fixture
 def empty_db():
-    return sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:")
+    yield conn
+    conn.close()
 
 
 class TestQuery:
