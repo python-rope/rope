@@ -2,6 +2,7 @@ import warnings
 from keyword import iskeyword
 
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -120,7 +121,12 @@ class Rename:
         job_set = task_handle.create_jobset("Collecting Changes", len(resources))
         for file_ in resources:
             job_set.started_job(file_.path)
-            new_content = rename_in_module(finder, new_name, resource=file_)
+            new_content = rename_in_module(
+                finder,
+                new_name,
+                resource=file_,
+                preserve_imports=self._get_preserved_imports(file_),
+            )
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
@@ -129,6 +135,33 @@ class Rename:
             if self._is_allowed_to_move(resources, resource):
                 self._rename_module(resource, new_name, changes)
         return changes
+
+    def _get_preserved_imports(self, resource):
+        """Find imported names whose definitions are outside the project."""
+        pymodule = self.project.get_pymodule(resource)
+        lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
+        for node in ast.walk(pymodule.get_ast()):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            names = [alias for alias in node.names if alias.name == self.old_name]
+            if not names:
+                continue
+            imported_module = pynames.ImportedModule(
+                pymodule, node.module or "", level=node.level
+            ).get_object()
+            imported_resource = (
+                imported_module.get_resource()
+                if isinstance(imported_module, pyobjects.AbstractModule)
+                else None
+            )
+            if imported_resource is not None and (
+                imported_resource.project == self.project
+                and not self.project.is_ignored(imported_resource)
+            ):
+                continue
+            for alias in names:
+                start, _ = lines[alias]
+                yield start, alias.asname is None
 
     def validate_changes(
         self,
@@ -233,6 +266,7 @@ def rename_in_module(
     region=None,
     reads=True,
     writes=True,
+    preserve_imports=None,
 ):
     """Returns the changed source or `None` if there is no changes"""
     if resource is not None:
@@ -240,6 +274,7 @@ def rename_in_module(
     else:
         source_code = pymodule.source_code
     change_collector = codeanalyze.ChangeCollector(source_code)
+    preserved_imports = None
     for occurrence in occurrences_finder.find_occurrences(resource, pymodule):
         if replace_primary and occurrence.is_a_fixed_primary():
             continue
@@ -252,7 +287,16 @@ def rename_in_module(
         ):
             continue
         if region is None or region[0] <= start < region[1]:
-            change_collector.add_change(start, end, new_name)
+            replacement = new_name
+            if preserve_imports is not None and occurrence.is_in_import_statement():
+                if preserved_imports is None:
+                    preserved_imports = dict(preserve_imports)
+                if start in preserved_imports:
+                    if not preserved_imports[start]:
+                        continue
+                    if source_code[start:end] != new_name:
+                        replacement = source_code[start:end] + " as " + new_name
+            change_collector.add_change(start, end, replacement)
     return change_collector.get_changed()
 
 
