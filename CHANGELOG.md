@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #811 Preserve still-used imports when moving globals with filtered import cleanup
 
 # Release 1.15.0
 

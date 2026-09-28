@@ -1948,6 +1948,30 @@ class ImportUtilsTest(unittest.TestCase):
 
         return import_filter
 
+    def test_filtered_duplicate_removal_preserves_distinct_from_imports(self):
+        for imported in ("mod3", "mod3 as other", "*"):
+            with self.subTest(imported=imported):
+                source = "from pkg2 import mod2\nfrom pkg2 import " + imported + "\n"
+                self.mod.write(source)
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(source, module_imports.get_changed_source())
+
+    def test_filtered_duplicate_removal_still_removes_covered_imports(self):
+        for imported in ("mod2", "mod2, mod3", "*"):
+            with self.subTest(imported=imported):
+                expected = "from pkg2 import " + imported + "\n"
+                self.mod.write(expected + "from pkg2 import mod2\n")
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(expected, module_imports.get_changed_source())
+
     def test_filtered_expand_stars(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")
         self.pkg2.get_child("__init__.py").write("var2 = 1\n")
