@@ -186,6 +186,36 @@ def test_close_idempotent(project: Project):
         conn.execute("SELECT 1")
 
 
+def test_register_connection_after_close(project: Project):
+    ai = AutoImport(project, memory=True)
+    ai.close()
+    conn = AutoImport.create_database_connection(memory=True)
+    with pytest.raises(exceptions.RopeError, match="AutoImport instance has been closed"):
+        ai._register_connection(conn)
+    assert conn not in ai._connections
+    with pytest.raises(sqlite3.ProgrammingError, match="Cannot operate on a closed database"):
+        conn.execute("SELECT 1")
+
+
+def test_connection_setter_after_close(project: Project):
+    ai = AutoImport(project, memory=True)
+    ai.close()
+    with closing(AutoImport.create_database_connection(memory=True)) as conn:
+        with pytest.raises(exceptions.RopeError, match="AutoImport instance has been closed"):
+            ai.connection = conn
+
+
+def test_connection_setter_replaces_existing(project: Project):
+    with AutoImport(project, memory=True) as ai:
+        old_conn = ai.connection
+        assert old_conn in ai._connections
+        with closing(AutoImport.create_database_connection(memory=True)) as conn:
+            ai.connection = conn
+            assert ai.connection is conn
+            assert conn in ai._connections
+            assert old_conn not in ai._connections
+
+
 def test_connection(project: Project, project2: Project):
     ai1 = AutoImport(project)
     ai2 = AutoImport(project)
