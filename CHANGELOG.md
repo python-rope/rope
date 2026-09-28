@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- ...
+- #871 Reject extraction of expressions with nested named expressions (@yangfan-yf-yf)
 
 # Release 1.15.0
 

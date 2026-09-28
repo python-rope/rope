@@ -192,6 +192,7 @@ class _ReturnOrYieldFinder(ast.RopeNodeVisitor):
 
     def _NamedExpr(self, node):
         self.named_expression += 1
+        self.visit(node.value)
 
     def _Yield(self, node):
         self.yields += 1
