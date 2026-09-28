@@ -8,9 +8,8 @@ from rope.base import exceptions
 from rope.refactor import move
 from ropetest import testutils
 
-
 if TYPE_CHECKING:
-    from rope.base import resources, project
+    from rope.base import project, resources
 
 class MoveRefactoringTest(unittest.TestCase):
     project: project.Project
@@ -603,7 +602,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 import mod4
                 print(mod4)"""
-            ), 
+            ),
             self.origin_module.read(),
         )
 
@@ -1423,7 +1422,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 def hello(func):
                     return func
-            """), 
+            """),
             self.origin_module.read(),
         )
         self.assertEqual(

@@ -326,6 +326,83 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children("JoinedStr", ['f"', "abc", "FormattedValue", "", '"'])
         checker.check_children("FormattedValue", ["{", "", "Name", "", "}"])
 
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_type_alias(self):
+        source = dedent("""\
+            type Alias[T] = list[T]
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "TypeAlias",
+            ["type", " ", "Name", "", "[", "", "TypeVar", "", "]", " = ",
+             "Subscript"],
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_generic_function(self):
+        # TP occurs only in the type parameter list, so its region can only
+        # come from the "[TP]" clause rendered between the name and "(".
+        source = dedent("""\
+            def f[TP](x):
+                return x
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "FunctionDef",
+            ["def", " ", "f", "", "[", "", "TypeVar", "", "]", "", "(", "",
+             "arguments", "", ")", "", ":", "\n    ", "Return"],
+        )
+        start = source.index("TP")
+        checker.check_region("TypeVar", start, start + len("TP"))
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_handling_pep695_generic_class(self):
+        source = dedent("""\
+            class C[TP]:
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "ClassDef",
+            ["class", " ", "C", "", "[", "", "TypeVar", "", "]", "", ":",
+             "\n    ", "Pass"],
+        )
+        start = source.index("TP")
+        checker.check_region("TypeVar", start, start + len("TP"))
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_handling_match_sequence_and_star(self):
+        source = dedent("""\
+            match x:
+                case [1, *rest]:
+                    pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "MatchSequence",
+            ["[", "", "MatchValue", "", ",", " ", "MatchStar", "", "]"],
+        )
+        start = source.index("[1, *rest]")
+        checker.check_region("MatchSequence", start, start + len("[1, *rest]"))
+        checker.check_children("MatchStar", ["*", "", "rest"])
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_handling_match_or_and_singleton(self):
+        source = dedent("""\
+            match x:
+                case 1 | None:
+                    pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "MatchOr", ["MatchValue", " ", "|", " ", "MatchSingleton"]
+        )
+
     @testutils.only_for_versions_higher("3.6")
     def test_handling_format_strings_with_implicit_join(self):
         source = '''"1" + rf'abc{a}' f"""xxx{b} """\n'''
@@ -1594,6 +1671,26 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             "MatchSequence", ["[", "", "MatchStar", "", ",", " ", "MatchValue", "", "]"]
         )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_multibyte_unicode(self):
+        source = dedent("""\
+            match x:
+                case ["😃", *rest] as myval:
+                    print(myval)
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        self.assert_single_case_match_block(checker, "MatchAs")
+        checker.check_children("MatchAs", [
+            "MatchSequence", " ", "as", " ", "myval",
+        ])
+        checker.check_children("MatchSequence", [
+            "[", "", "MatchValue", "", ",", " ", "MatchStar", "", "]",
+        ])
+        checker.check_children("MatchStar", [
+            "*", "", "rest"
+        ])
 
     @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_as_capture_pattern(self):

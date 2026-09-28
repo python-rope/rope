@@ -400,7 +400,7 @@ Extract Method
 In these examples ``${region_start}`` and ``${region_end}`` show the
 selected region for extraction:
 
-.. code-block:: python
+.. code-block:: none
 
   def a_func():
       a = 1
@@ -421,7 +421,7 @@ After performing extract method we'll have:
 
 For multi-line extractions if we have:
 
-.. code-block:: python
+.. code-block:: none
 
   def a_func():
       a = 1
@@ -1265,7 +1265,7 @@ After running ``mod1`` either SOA or DOA on this module you can test:
 
 ``mod2.py``:
 
-.. code-block:: python
+.. code-block:: none
 
   import mod1
 

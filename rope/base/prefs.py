@@ -1,6 +1,6 @@
 """Rope preferences."""
-from enum import Enum
 from dataclasses import asdict, dataclass
+from enum import Enum
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -218,7 +218,7 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
             In general case, you don't have to change this value, unless you're
             an rope expert.  Change this value to inject you own
             implementations of interfaces listed in module
-            ``rope.base.oi.type_hinting.providers.interfaces`` 
+            ``rope.base.oi.type_hinting.providers.interfaces``
 
             For example, you can add you own providers for Django Models, or
             disable the search type-hinting in a class hierarchy, etc.
