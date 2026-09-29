@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Refuse variable inlining into lazily evaluated type aliases.
 - ...
 
 # Release 1.15.0
