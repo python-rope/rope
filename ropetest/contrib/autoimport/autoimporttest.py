@@ -132,6 +132,23 @@ def test_connection(project: Project, project2: Project):
     assert ai1.connection is not ai3.connection
 
 
+def test_resource_to_module_skips_non_package_folders(
+    autoimport: AutoImport,
+    project: Project,
+):
+    # Intermediate folders that are not packages (no ``__init__.py``) must not
+    # be included in the derived module name.
+    # Regression test for https://github.com/python-rope/rope/issues/823
+    src = project.root.create_folder("src")
+    pkg = src.create_folder("mypkg")
+    pkg.create_file("__init__.py")
+    documents = pkg.create_file("documents.py")
+
+    module = autoimport._resource_to_module(documents)
+
+    assert module.modname == "mypkg.documents"
+
+
 @contextmanager
 def assert_database_is_reset(conn):
     conn.execute("ALTER TABLE names ADD COLUMN deprecated_column")
