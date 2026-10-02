@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - ...
+- Fix changing constructor signatures for classes defined inside functions (#692).
 
 # Release 1.15.0
 
