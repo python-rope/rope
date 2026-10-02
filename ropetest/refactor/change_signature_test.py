@@ -775,6 +775,98 @@ class ChangeSignatureTest(unittest.TestCase):
             self.mod.read(),
         )
 
+    def test_changing_signature_for_function_local_constructor(self):
+        code = dedent("""\
+            def make():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                item = Local(1)
+                item.__init__(2)
+                return item
+        """)
+        expected = dedent("""\
+            def make():
+                class Local:
+                    def __init__(self):
+                        pass
+                item = Local()
+                item.__init__()
+                return item
+        """)
+        offsets = (
+            code.index("Local"),
+            code.index("__init__"),
+            code.rindex("Local"),
+            code.rindex("__init__"),
+        )
+        for offset in offsets:
+            with self.subTest(offset=offset):
+                self.mod.write(code)
+                signature = change_signature.ChangeSignature(
+                    self.project, self.mod, offset
+                )
+                self.project.do(
+                    signature.get_changes([change_signature.ArgumentRemover(1)])
+                )
+                self.assertEqual(expected, self.mod.read())
+
+    def test_function_local_constructors_with_the_same_name_are_distinct(self):
+        self.mod.write(dedent("""\
+            def first():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                return Local(1)
+            def second():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                return Local(2)
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("__init__")
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        self.assertEqual(
+            dedent("""\
+                def first():
+                    class Local:
+                        def __init__(self):
+                            pass
+                    return Local()
+                def second():
+                    class Local:
+                        def __init__(self, value):
+                            pass
+                    return Local(2)
+            """),
+            self.mod.read(),
+        )
+
+    def test_changing_signature_for_class_nested_constructor(self):
+        self.mod.write(dedent("""\
+            class Outer:
+                class Inner:
+                    def __init__(self, value):
+                        pass
+            item = Outer.Inner(1)
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("__init__")
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        self.assertEqual(
+            dedent("""\
+                class Outer:
+                    class Inner:
+                        def __init__(self):
+                            pass
+                item = Outer.Inner()
+            """),
+            self.mod.read(),
+        )
+
     def test_redordering_arguments_reported_by_mft(self):
         self.mod.write(dedent("""\
             def f(a, b, c):

@@ -39,7 +39,10 @@ class ChangeSignature:
             and isinstance(pyobject.parent, pyobjects.PyClass)
         ):
             pyclass = pyobject.parent
-            self.others = (pyclass.get_name(), pyclass.parent[pyclass.get_name()])
+            self.others = (
+                pyclass.get_name(),
+                pyclass.parent.get_scope()[pyclass.get_name()],
+            )
 
     def _change_calls(
         self,
