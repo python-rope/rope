@@ -387,6 +387,56 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_assigned_here(0))
 
+    def test_subscript_assignment_does_not_assign_its_index(self):
+        for code in (
+            "get_registry()[name] = value\n",
+            "registry[name]=value\n",
+            "registry[name]+=value\n",
+            "registry[(name)]=value\n",
+            "registry[left + name] = value\n",
+            "registry[:name] = value\n",
+            "registry[name:]=value\n",
+            "registry[registry[name]]=value\n",
+            "[registry[name]]=values\n",
+        ):
+            with self.subTest(code=code):
+                word_finder = worder.Worder(code)
+                self.assertFalse(word_finder.is_assigned_here(code.index("name")))
+
+    def test_grouped_and_list_assignment_targets_are_assigned(self):
+        for code in (
+            "(name)=value\n",
+            "(name) = value\n",
+            "[name]=value\n",
+            "[name] = value\n",
+            "[(name)]=value\n",
+            "([name])=value\n",
+        ):
+            with self.subTest(code=code):
+                word_finder = worder.Worder(code)
+                self.assertTrue(word_finder.is_assigned_here(code.index("name")))
+
+    def test_assignment_operator_types(self):
+        for operator in (
+            "=", "+=", "-=", "*=", "/=", "//=", "%=", "**=", "@=",
+            "&=", "|=", "^=", "<<=", ">>=", ":=",
+        ):
+            code = "name " + operator + " value\n"
+            if operator == ":=":
+                code = "(" + code.rstrip() + ")\n"
+            with self.subTest(operator=operator):
+                word_finder = worder.Worder(code)
+                self.assertEqual(
+                    operator, word_finder.get_assignment_type(code.index("name"))
+                )
+
+    def test_comparison_operators_do_not_assign(self):
+        for operator in ("==", "!=", "<=", ">="):
+            code = "name " + operator + " value\n"
+            with self.subTest(operator=operator):
+                word_finder = worder.Worder(code)
+                self.assertFalse(word_finder.is_assigned_here(0))
+
     # XXX: is_assigned_here should work for tuple assignments
     def xxx_test_is_assigned_here_for_tuple_assignment(self):
         code = "a, b = (1, 2)\n"
