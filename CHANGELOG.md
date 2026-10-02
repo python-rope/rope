@@ -1,6 +1,7 @@
 # **Upcoming release**
 
 - ...
+- Fix inlining parameters used as indices in subscript assignments (#827).
 
 # Release 1.15.0
 
