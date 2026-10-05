@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Refuse variable inlining that moves an initializer into a deferred annotation.
 - ...
 
 # Release 1.15.0

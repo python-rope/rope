@@ -17,10 +17,12 @@
 #  but it should be 200.
 
 import re
+import sys
 from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -267,6 +269,14 @@ class InlineVariable(_Inliner):
             resources = [self.original]
             if remove and self.original != self.resource:
                 resources.append(self.resource)
+        resources = list(resources)
+        check_resources = resources
+        if remove and not rename._is_local(self.pyname):
+            check_resources = list(
+                dict.fromkeys(resources + list(self.project.get_python_files()))
+            )
+        for resource in check_resources:
+            self._check_deferred_annotation_references(resource, remove, only_current)
         changes = ChangeSet("Inline variable <%s>" % self.name)
         jobset = task_handle.create_jobset("Calculating changes", len(resources))
 
@@ -282,6 +292,75 @@ class InlineVariable(_Inliner):
                     changes.add_change(ChangeContents(resource, result))
             jobset.finished_job()
         return changes
+
+    def _check_deferred_annotation_references(self, resource, remove, only_current):
+        pymodule = self.project.get_pymodule(resource)
+        tree = pymodule.get_ast()
+        future_annotations = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "__future__"
+            and any(alias.name == "annotations" for alias in node.names)
+            for node in tree.body
+        )
+        if not future_annotations and sys.version_info < (3, 14):
+            return
+        annotations = []
+
+        def collect(node, scope=None):
+            if isinstance(node, ast.arg):
+                annotations.append(node.annotation)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                annotations.append(node.returns)
+                scope = "function"
+            elif isinstance(node, ast.Lambda):
+                scope = "function"
+            elif isinstance(node, ast.ClassDef):
+                scope = "class"
+            elif (
+                isinstance(node, ast.AnnAssign) and node.simple and scope != "function"
+            ):
+                annotations.append(node.annotation)
+            for child in ast.iter_child_nodes(node):
+                collect(child, scope)
+
+        collect(tree)
+        lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
+        regions = [lines[node] for node in annotations if node is not None]
+        if not regions:
+            return
+        if (
+            future_annotations
+            and remove
+            and any(
+                isinstance(node, (ast.Name, ast.Attribute))
+                and occurrences.same_pyname(
+                    self.pyname, evaluate.eval_node(pymodule.get_scope(), node)
+                )
+                for annotation in annotations
+                if annotation is not None
+                for node in ast.walk(annotation)
+            )
+        ):
+            # Stringified annotations may resolve module globals even when
+            # static name lookup finds a class member or function parameter.
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable referenced in a deferred annotation."
+            )
+        finder = occurrences.create_finder(
+            self.project, self.name, self.pyname, imports=False
+        )
+        for occurrence in finder.find_occurrences(pymodule=pymodule):
+            if only_current and not remove:
+                start, end = occurrence.get_primary_range()
+                if resource != self.original or not start <= self.offset <= end:
+                    continue
+            start, _ = occurrence.get_word_range()
+            if any(begin <= start < end for begin, end in regions):
+                # Substituting the initializer can change when an annotation
+                # evaluates it and which bindings it observes.
+                raise exceptions.RefactoringError(
+                    "Cannot inline a variable referenced in a deferred annotation."
+                )
 
     def _change_main_module(self, remove, only_current, docs):
         region = None
