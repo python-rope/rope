@@ -917,10 +917,6 @@ class _Source:
         lines = self.source[: self.offset].split("\n")
         return (len(lines), len(lines[-1]))
 
-    def till_token(self, token):
-        new_offset = self.source.index(token, self.offset)
-        return self[self.offset : new_offset]
-
     def rfind_token(self, token, start, end):
         index = start
         while True:
@@ -932,12 +928,6 @@ class _Source:
                     end = index
             except ValueError:
                 return None
-
-    def from_offset(self, offset):
-        return self[offset : self.offset]
-
-    def find_backwards(self, pattern, offset):
-        return self.source.rindex(pattern, 0, offset)
 
     def __getitem__(self, index):
         return self.source[index]
