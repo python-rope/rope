@@ -70,8 +70,7 @@ class _PatchingASTWalker:
         self.ast_adapter = self.source.ast_adapter
         self.children_stack = []
 
-    Number = object()
-    String = object()
+    Constant = object()
     with_or_comma_context_manager = object()
     empty_tuple = object()
 
@@ -114,9 +113,7 @@ class _PatchingASTWalker:
                 self(child)
                 token_start = child.region[0]
             else:
-                if child is self.String:
-                    region = self.source.consume_node(node)
-                elif child is self.Number:
+                if child is self.Constant:
                     region = self.source.consume_node(node)
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
@@ -346,23 +343,7 @@ class _PatchingASTWalker:
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
     def _Constant(self, node):
-        if isinstance(node.value, (str, bytes)):
-            self._handle(node, [self.String])
-            return
-
-        if any(node.value is v for v in [True, False, None]):
-            self._handle(node, [str(node.value)])
-            return
-
-        if isinstance(node.value, numbers.Number):
-            self._handle(node, [self.Number])
-            return
-
-        if node.value is Ellipsis:
-            self._handle(node, ["..."])
-            return
-
-        assert False
+        self._handle(node, [self.Constant])
 
     def _JoinedStr(self, node):
         def start_quote_char():
