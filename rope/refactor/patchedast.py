@@ -67,7 +67,7 @@ class _PatchingASTWalker:
         self.source = _Source(source)
         self.children = children
         self.lines = codeanalyze.SourceLinesAdapter(source)
-        self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
+        self.ast_adapter = self.source.ast_adapter
         self.children_stack = []
 
     Number = object()
@@ -115,9 +115,7 @@ class _PatchingASTWalker:
                 token_start = child.region[0]
             else:
                 if child is self.String:
-                    region = self.source.consume_string(
-                        end=self._find_next_statement_start()
-                    )
+                    region = self.source.consume_node(node)
                 elif child is self.Number:
                     region = self.source.consume_number()
                 elif child == self.empty_tuple:
@@ -397,10 +395,7 @@ class _PatchingASTWalker:
 
         QUOTE_CHARS = ['"""', "'''", '"', "'"]
         offset = self.source.offset
-        start, end = self.source.consume_string(
-            end=self._find_next_statement_start(),
-        )
-        self.source.offset = offset
+        start, end = self.ast_adapter[node]
 
         children = []
         children.append(start_quote_char())
@@ -909,6 +904,7 @@ class _Source:
     def __init__(self, source):
         self.source = source
         self.offset = 0
+        self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
 
     def consume(self, token, skip_comment=True):
         try:
@@ -930,21 +926,11 @@ class _Source:
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def consume_string(self, end=None):
-        if _Source._string_pattern is None:
-            string_pattern = codeanalyze.get_string_pattern()
-            formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:{})|(?:{})".format(
-                string_pattern,
-                formatted_string_pattern,
-            )
-            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(
-                original,
-                original,
-            )
-            _Source._string_pattern = re.compile(pattern)
-        repattern = _Source._string_pattern
-        return self._consume_pattern(repattern, end)
+    def consume_node(self, node):
+        start, end = self.ast_adapter[node]
+        if self.offset < end:
+            self.offset = end
+        return start, end
 
     def consume_number(self):
         if _Source._number_pattern is None:
@@ -1022,5 +1008,4 @@ class _Source:
         integer = r"\-?(0[xo][\da-fA-F]+|\d+)"
         return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
 
-    _string_pattern = None
     _number_pattern = None
