@@ -917,18 +917,6 @@ class _Source:
         lines = self.source[: self.offset].split("\n")
         return (len(lines), len(lines[-1]))
 
-    def _consume_pattern(self, repattern, end=None):
-        while True:
-            if end is None:
-                end = len(self.source)
-            match = repattern.search(self.source, self.offset, end)
-            if self._good_token(match.group(), match.start()):
-                break
-            else:
-                self._skip_comment()
-        self.offset = match.end()
-        return match.start(), match.end()
-
     def till_token(self, token):
         new_offset = self.source.index(token, self.offset)
         return self[self.offset : new_offset]
