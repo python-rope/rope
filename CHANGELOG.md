@@ -1,6 +1,7 @@
 # **Upcoming release**
 
-- #895 patchedast Starred and keyword now consumes their syntactically expected and ** (lieryan)
+- #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
+- #896 patchedast cleanup and refactoring (@lieryan)
 
 # Release 1.15.0
 

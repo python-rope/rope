@@ -1221,7 +1221,23 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
             "With",
-            ["with", " ", "Name", " ", "as", " ", "Name", "", ":", "\n    ", "Pass"],
+            ["with", " ", "withitem", "", ":", "\n    ", "Pass"],
+        )
+        checker.check_children(
+            "withitem",
+            ["Name", " ", "as", " ", "Name"],
+        )
+
+    def test_with_node_multiple_items(self):
+        source = dedent("""\
+            with a as b, c as d:
+                pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "With",
+            ["with", " ", "withitem", "", ",", " ", "withitem", "", ":", "\n    ", "Pass"],
         )
 
     def test_async_with_node(self):
@@ -1234,7 +1250,11 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
             "AsyncWith",
-            ["async", " ", "with", " ", "Name", " ", "as", " ", "Name", "", ":", "\n        ", "Pass"],
+            ["async", " ", "with", " ", "withitem", "", ":", "\n        ", "Pass"],
+        )
+        checker.check_children(
+            "withitem",
+            ["Name", " ", "as", " ", "Name"],
         )
 
     def test_try_finally_node(self):
