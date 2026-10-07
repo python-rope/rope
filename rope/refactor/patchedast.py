@@ -364,15 +364,6 @@ class _PatchingASTWalker:
 
         assert False
 
-    def _Num(self, node):
-        self._handle(node, [self.Number])
-
-    def _Str(self, node):
-        self._handle(node, [self.String])
-
-    def _Bytes(self, node):
-        self._handle(node, [self.String])
-
     def _JoinedStr(self, node):
         def start_quote_char():
             possible_quotes = [
@@ -433,9 +424,6 @@ class _PatchingASTWalker:
                     children.append(",")
         children.append("}")
         self._handle(node, children)
-
-    def _Ellipsis(self, node):
-        self._handle(node, ["..."])
 
     def _Expr(self, node):
         self._handle(node, [node.value])
@@ -648,6 +636,7 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _Index(self, node):
+        assert False
         self._handle(node, [node.value])
 
     def _Subscript(self, node):
