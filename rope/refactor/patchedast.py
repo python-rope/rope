@@ -71,7 +71,6 @@ class _PatchingASTWalker:
         self.children_stack = []
 
     AtomicNode = object()
-    with_or_comma_context_manager = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -114,8 +113,6 @@ class _PatchingASTWalker:
             else:
                 if child is self.AtomicNode:
                     region = self.source.consume_node(node)
-                elif child == self.with_or_comma_context_manager:
-                    region = self.source.consume_with_or_comma_context_manager()
                 elif isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
                     region = self.source.consume_joined_string(child)
                 else:
@@ -718,16 +715,19 @@ class _PatchingASTWalker:
             children.extend(node.orelse)
         self._handle(node, children)
 
+    def _withitem(self, node):
+        children = []
+        children.extend([node.context_expr])
+        if node.optional_vars:
+            children.extend(["as", node.optional_vars])
+        self._handle(node, children)
+
     def _handle_with_node(self, node, is_async):
         children = []
 
         if is_async:
             children.extend(["async"])
-        for item in node.items:
-            children.extend([self.with_or_comma_context_manager, item.context_expr])
-            if item.optional_vars:
-                children.extend(["as", item.optional_vars])
-        children.append(":")
+        children.extend(["with", *self._child_nodes(node.items, ","), ":"])
         children.extend(node.body)
         self._handle(node, children)
 
@@ -895,10 +895,6 @@ class _Source:
         if self.offset < end:
             self.offset = end
         return start, end
-
-    def consume_with_or_comma_context_manager(self):
-        repattern = re.compile(r"with|,")
-        return self._consume_pattern(repattern)
 
     def _good_token(self, token, offset, start=None):
         """Checks whether consumed token is in comments"""
