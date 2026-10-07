@@ -117,7 +117,7 @@ class _PatchingASTWalker:
                 if child is self.String:
                     region = self.source.consume_node(node)
                 elif child is self.Number:
-                    region = self.source.consume_number()
+                    region = self.source.consume_node(node)
                 elif child == self.empty_tuple:
                     region = self.source.consume_empty_tuple()
                 elif child == self.with_or_comma_context_manager:
@@ -932,12 +932,6 @@ class _Source:
             self.offset = end
         return start, end
 
-    def consume_number(self):
-        if _Source._number_pattern is None:
-            _Source._number_pattern = re.compile(self._get_number_pattern())
-        repattern = _Source._number_pattern
-        return self._consume_pattern(repattern)
-
     def consume_empty_tuple(self):
         return self._consume_pattern(re.compile(r"\(\s*\)"))
 
@@ -1002,10 +996,3 @@ class _Source:
 
     def __getitem__(self, index):
         return self.source[index]
-
-    def _get_number_pattern(self):
-        # HACK: It is merely an approaximation and does the job
-        integer = r"\-?(0[xo][\da-fA-F]+|\d+)"
-        return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
-
-    _number_pattern = None
