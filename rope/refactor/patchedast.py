@@ -589,7 +589,7 @@ class _PatchingASTWalker:
 
     def _keyword(self, node):
         if node.arg is None:
-            children = [node.value]
+            children = ["**", node.value]
         else:
             children = [node.arg, "=", node.value]
         self._handle(node, children)
@@ -779,7 +779,7 @@ class _PatchingASTWalker:
         self._handle_with_node(node, is_async=True)
 
     def _Starred(self, node):
-        self._handle(node, [node.value])
+        self._handle(node, ["*", node.value])
 
     def _Match(self, node):
         children = ["match", node.subject, ":"]
