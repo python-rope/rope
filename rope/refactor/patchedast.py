@@ -70,7 +70,7 @@ class _PatchingASTWalker:
         self.ast_adapter = self.source.ast_adapter
         self.children_stack = []
 
-    Constant = object()
+    AtomicNode = object()
     with_or_comma_context_manager = object()
 
     def __call__(self, node):
@@ -112,7 +112,7 @@ class _PatchingASTWalker:
                 self(child)
                 token_start = child.region[0]
             else:
-                if child is self.Constant:
+                if child is self.AtomicNode:
                     region = self.source.consume_node(node)
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
@@ -340,7 +340,7 @@ class _PatchingASTWalker:
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
     def _Constant(self, node):
-        self._handle(node, [self.Constant])
+        self._handle(node, [self.AtomicNode])
 
     def _JoinedStr(self, node):
         def start_quote_char():
