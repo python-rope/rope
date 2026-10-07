@@ -635,10 +635,6 @@ class _PatchingASTWalker:
             children.append(node.value)
         self._handle(node, children)
 
-    def _Index(self, node):
-        assert False
-        self._handle(node, [node.value])
-
     def _Subscript(self, node):
         self._handle(node, [node.value, "[", node.slice, "]"])
 
