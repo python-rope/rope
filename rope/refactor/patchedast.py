@@ -72,7 +72,6 @@ class _PatchingASTWalker:
 
     Constant = object()
     with_or_comma_context_manager = object()
-    empty_tuple = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -115,8 +114,6 @@ class _PatchingASTWalker:
             else:
                 if child is self.Constant:
                     region = self.source.consume_node(node)
-                elif child == self.empty_tuple:
-                    region = self.source.consume_empty_tuple()
                 elif child == self.with_or_comma_context_manager:
                     region = self.source.consume_with_or_comma_context_manager()
                 elif isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
@@ -689,7 +686,8 @@ class _PatchingASTWalker:
         if node.elts:
             self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
         else:
-            self._handle(node, [self.empty_tuple])
+            empty_tuple = self.ast_adapter.get_source_segment(node)
+            self._handle(node, [empty_tuple])
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
@@ -897,9 +895,6 @@ class _Source:
         if self.offset < end:
             self.offset = end
         return start, end
-
-    def consume_empty_tuple(self):
-        return self._consume_pattern(re.compile(r"\(\s*\)"))
 
     def consume_with_or_comma_context_manager(self):
         repattern = re.compile(r"with|,")
