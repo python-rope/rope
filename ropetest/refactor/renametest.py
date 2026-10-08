@@ -242,6 +242,63 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_as_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *_] as old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.rindex("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *_] as new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_star_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *old_name] if old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *new_name] if new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_mapping_rest_capture(self):
+        code = dedent("""\
+            match value:
+                case {"key": item, **old_name}:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case {"key": item, **new_name}:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = dedent("""\
             def a_func(p1=None, p2=None):
