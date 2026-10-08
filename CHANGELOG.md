@@ -1,7 +1,8 @@
 # **Upcoming release**
 
 - Refuse variable inlining that moves an initializer into a deferred annotation.
-- ...
+- #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
+- #896 patchedast cleanup and refactoring (@lieryan)
 
 # Release 1.15.0
 

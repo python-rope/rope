@@ -87,15 +87,44 @@ def test_refuses_moving_side_effect_into_annotation(project, deferred_prefix):
 
 
 @pytest.mark.parametrize("definition,owner,key", [
-    ("async def func(x: target):\n    pass\n", "func", "x"),
-    ("def func(x: target, /):\n    pass\n", "func", "x"),
-    ("def func(*, x: target):\n    pass\n", "func", "x"),
-    ("def func(*x: target):\n    pass\n", "func", "x"),
-    ("def func(**x: target):\n    pass\n", "func", "x"),
-    ("def func() -> target:\n    pass\n", "func", "return"),
-    ("class Owner:\n    x: target\n", "Owner", "x"),
-    ("x: target\nimport sys\n", "sys.modules[__name__]", "x"),
-    ("def 函数(x: (\n    list[target]\n)):\n    pass\n", "函数", "x"),
+    (dedent("""\
+        async def func(x: target):
+            pass
+    """), "func", "x"),
+    (dedent("""\
+        def func(x: target, /):
+            pass
+    """), "func", "x"),
+    (dedent("""\
+        def func(*, x: target):
+            pass
+    """), "func", "x"),
+    (dedent("""\
+        def func(*x: target):
+            pass
+    """), "func", "x"),
+    (dedent("""\
+        def func(**x: target):
+            pass
+    """), "func", "x"),
+    (dedent("""\
+        def func() -> target:
+            pass
+    """), "func", "return"),
+    (dedent("""\
+        class Owner:
+            x: target
+    """), "Owner", "x"),
+    (dedent("""\
+        x: target
+        import sys
+    """), "sys.modules[__name__]", "x"),
+    (dedent("""\
+        def 函数(x: (
+            list[target]
+        )):
+            pass
+    """), "函数", "x"),
 ])
 def test_refuses_annotation_kinds(project, deferred_prefix, definition, owner, key):
     comparison = "list[int]" if "list[target]" in definition else "int"
