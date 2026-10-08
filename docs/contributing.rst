@@ -121,6 +121,7 @@ Programming Style
 * Use four spaces for indentation.
 * Include good unit-tests when appropriate.
 * Rope test suite should pass after patching.
+* When writing tests, use `textwrap.dedent()` for multiline source or expected code samples, even when they otherwise fit into a single line.
 
 .. _`black codestyle`: https://github.com/psf/black
 
