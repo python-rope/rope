@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #811 Preserve still-used imports when moving globals with filtered import cleanup
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 
