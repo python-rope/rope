@@ -21,6 +21,7 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -267,6 +268,8 @@ class InlineVariable(_Inliner):
             resources = [self.original]
             if remove and self.original != self.resource:
                 resources.append(self.resource)
+        for resource in resources:
+            self._check_type_alias_references(resource, remove, only_current)
         changes = ChangeSet("Inline variable <%s>" % self.name)
         jobset = task_handle.create_jobset("Calculating changes", len(resources))
 
@@ -282,6 +285,34 @@ class InlineVariable(_Inliner):
                     changes.add_change(ChangeContents(resource, result))
             jobset.finished_job()
         return changes
+
+    def _check_type_alias_references(self, resource, remove, only_current):
+        if not hasattr(ast, "TypeAlias"):
+            return
+        pymodule = self.project.get_pymodule(resource)
+        lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
+        regions = [
+            lines[node]
+            for node in ast.walk(pymodule.get_ast())
+            if isinstance(node, ast.TypeAlias)
+        ]
+        if not regions:
+            return
+        finder = occurrences.create_finder(
+            self.project, self.name, self.pyname, imports=False
+        )
+        for occurrence in finder.find_occurrences(pymodule=pymodule):
+            if only_current and not remove:
+                start, end = occurrence.get_primary_range()
+                if resource != self.original or not start <= self.offset <= end:
+                    continue
+            start, _ = occurrence.get_word_range()
+            if any(begin <= start < end for begin, end in regions):
+                # Type aliases evaluate their expressions lazily. Substituting
+                # the initializer can change its timing or name bindings.
+                raise exceptions.RefactoringError(
+                    "Cannot inline a variable referenced in a type alias."
+                )
 
     def _change_main_module(self, remove, only_current, docs):
         region = None

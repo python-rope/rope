@@ -2,6 +2,7 @@
 
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
+- Refuse variable inlining into lazily evaluated type aliases.
 
 # Release 1.15.0
 
