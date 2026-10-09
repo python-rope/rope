@@ -42,6 +42,37 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index("a_var") + 1)
         self.assertEqual("", refactored)
 
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_type_alias_is_refused(self):
+        code = dedent("""\
+            type an_alias = int
+            value = an_alias.__value__
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_lazily_evaluated_type_alias_is_refused(self):
+        code = dedent("""\
+            type an_alias = Later
+            def a_func(param: an_alias):
+                pass
+            class Later:
+                pass
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_generic_type_alias(self):
+        code = dedent("""\
+            type an_alias[T] = list[T]
+            def a_func(param: an_alias[int]):
+                pass
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
+
     def test_long_definition(self):
         code = dedent("""\
             a_var = 10 + (10 + 10)

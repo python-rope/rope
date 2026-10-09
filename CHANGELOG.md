@@ -2,6 +2,7 @@
 
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
+- #862, #874 Recognize type alias statements as assignments in rename refactoring (@TanbirRamim)
 
 # Release 1.15.0
 
@@ -13,9 +14,6 @@
 - #623, #819, #863 Support MatchOr, MatchSequence, MatchStar (@jheld, @lieryan)
 - #870 Add default implementation for is_dir() (@lieryan)
 - #872 Fix unicode handling in patchedast (@lieryan)
-- #845 Support PEP 695 type parameters on class definitions and type aliases in patchedast (@marlon-costa-dc)
-- #849 docs: resolve warnings and update Github Actions versions (@mcepl)
-- #835 Tear down tests using python from venv (@aeliton)
 
 # Release 1.14.0
 

@@ -242,6 +242,74 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias(self):
+        code = dedent("""\
+            type old_name = int
+            x: old_name = 1
+        """)
+        refactored = self._local_rename(code, code.index("old_name") + 1, "new_name")
+        self.assertEqual(
+            dedent("""\
+                type new_name = int
+                x: new_name = 1
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias_from_its_usage(self):
+        code = dedent("""\
+            type old_name = int
+            def a_func(param: old_name) -> old_name:
+                pass
+        """)
+        offset = code.rindex("old_name") + 1
+        refactored = self._local_rename(code, offset, "new_name")
+        self.assertEqual(
+            dedent("""\
+                type new_name = int
+                def a_func(param: new_name) -> new_name:
+                    pass
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias_in_function_scope(self):
+        code = dedent("""\
+            old_name = 1
+            def a_func():
+                type old_name = int
+                x: old_name = 1
+        """)
+        offset = code.index("old_name", code.index("type")) + 1
+        refactored = self._local_rename(code, offset, "new_name")
+        self.assertEqual(
+            dedent("""\
+                old_name = 1
+                def a_func():
+                    type new_name = int
+                    x: new_name = 1
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_generic_type_alias(self):
+        code = dedent("""\
+            type OldAlias[T] = list[T]
+            x: OldAlias[int] = []
+        """)
+        refactored = self._local_rename(code, code.index("OldAlias") + 1, "NewAlias")
+        self.assertEqual(
+            dedent("""\
+                type NewAlias[T] = list[T]
+                x: NewAlias[int] = []
+            """),
+            refactored,
+        )
+
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = dedent("""\
             def a_func(p1=None, p2=None):

@@ -371,6 +371,12 @@ class _AssignVisitor(ast.RopeNodeVisitor):
             self.visit(child_node)
         _ExpressionVisitor(self.scope_visitor).visit(node.value)
 
+    def _TypeAlias(self, node):
+        # the alias value is not recorded as an assigned value: a type
+        # alias is a distinct TypeAliasType object whose value is evaluated
+        # lazily, so substituting the value for the alias name is unsafe
+        self.visit(node.name)
+
     def _assigned(self, name, assignment=None):
         self.scope_visitor._assigned(name, assignment)
 
@@ -450,6 +456,9 @@ class _ScopeVisitor(_ExpressionVisitor):
 
     def _AnnAssign(self, node):
         _AnnAssignVisitor(self).visit(node)
+
+    def _TypeAlias(self, node):
+        _AssignVisitor(self).visit(node)
 
     def _AugAssign(self, node):
         pass
