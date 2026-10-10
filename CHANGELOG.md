@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Refuse inlining that mistakes lambda-local bindings for enclosing names.
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 
