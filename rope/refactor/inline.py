@@ -239,6 +239,10 @@ class InlineMethod(_Inliner):
 class InlineVariable(_Inliner):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
+        if not isinstance(self.pyname, pynames.AssignedName):
+            raise exceptions.RefactoringError(
+                "Inline variable should be performed on an assigned variable."
+            )
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
         self._check_exceptional_conditions()
@@ -328,8 +332,28 @@ class InlineVariable(_Inliner):
 class InlineParameter(_Inliner):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
+        if not isinstance(self.pyname, pynames.ParameterName):
+            raise exceptions.RefactoringError(
+                "Inline parameter should be performed on a parameter."
+            )
+        pyfunction = self.pyname.pyfunction
+        functionutils._check_signature_parameters(pyfunction)
+        if self.name not in [
+            argument.arg for argument in pyfunction.get_ast().args.args
+        ]:
+            raise exceptions.RefactoringError(
+                "Cannot inline the default of a list or keyword argument."
+            )
+        definition_info = functionutils.DefinitionInfo.read(pyfunction)
+        indices = [
+            index
+            for index, (name, default) in enumerate(definition_info.args_with_defaults)
+            if name == self.name
+        ]
+        if len(indices) != 1:
+            raise exceptions.RefactoringError("Cannot resolve the parameter default.")
         resource, offset = self._function_location()
-        index = self.pyname.index
+        index = indices[0]
         self.changers = [change_signature.ArgumentDefaultInliner(index)]
         self.signature = change_signature.ChangeSignature(
             self.project, resource, offset
@@ -393,6 +417,11 @@ class _DefinitionGenerator:
             self.body = sourceutils.get_body(self.pyfunction)
 
     def _get_definition_info(self):
+        arguments = self.pyfunction.get_ast().args
+        if arguments.kwonlyargs or arguments.vararg or arguments.kwarg:
+            raise exceptions.RefactoringError(
+                "Cannot inline functions with list and keyword arguments."
+            )
         return functionutils.DefinitionInfo.read(self.pyfunction)
 
     def _get_definition_params(self):
@@ -426,6 +455,13 @@ class _DefinitionGenerator:
         call_info = functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call
         )
+        positional_only = {
+            argument.arg for argument in self.pyfunction.get_ast().args.posonlyargs
+        }
+        if any(name in positional_only for name, value in call_info.keywords):
+            raise exceptions.RefactoringError(
+                "Cannot inline a positional-only parameter passed as a keyword."
+            )
         paramdict = self.definition_params
         mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
         for param_name, value in mapping.param_dict.items():

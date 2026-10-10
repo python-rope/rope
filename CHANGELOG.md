@@ -1,5 +1,8 @@
 # **Upcoming release**
 
+- Preserve positional-only and keyword-only parameter bindings, call inference,
+  and default-expression scope; refuse unsupported signature rewrites
+  (@yangfan-yf-yf)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 

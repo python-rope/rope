@@ -93,12 +93,17 @@ class ScopeNameFinder:
     ) -> Tuple[Optional[rope.base.pynames.PyName], Optional[rope.base.pynames.PyName]]:
         lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_offset(offset)
+        parameter = self._get_parameter_at(holding_scope, offset)
+        if parameter is not None:
+            return (None, parameter)
         # function keyword parameter
         if self.worder.is_function_keyword_parameter(offset):
             keyword_name = self.worder.get_word_at(offset)
             pyobject = self.get_enclosing_function(offset)
             if isinstance(pyobject, pyobjectsdef.PyFunction):
-                parameter_name = pyobject.get_parameters().get(keyword_name, None)
+                parameter_name = None
+                if keyword_name in pyobject.get_keyword_param_names():
+                    parameter_name = pyobject.get_parameters().get(keyword_name)
                 return (None, parameter_name)
             elif isinstance(pyobject, pyobjects.AbstractFunction):
                 parameter_name = rope.base.pynames.ParameterName()
@@ -129,6 +134,24 @@ class ScopeNameFinder:
         else:
             name = self.worder.get_primary_at(offset)
         return eval_str2(holding_scope, name)
+
+    def _get_parameter_at(self, scope, offset):
+        if scope.get_kind() != "Function":
+            return None
+        function = scope.pyobject
+        args = function.arguments
+        nodes = (
+            args.posonlyargs + args.args + args.kwonlyargs + [args.vararg, args.kwarg]
+        )
+        for node in nodes:
+            if node is None:
+                continue
+            prefix = self.lines.get_line(node.lineno).encode("utf-8")[: node.col_offset]
+            start = self.lines.get_line_start(node.lineno) + len(prefix.decode("utf-8"))
+            _, end = self.worder.get_word_range(start)
+            if start <= offset < end:
+                return function.get_parameters()[node.arg]
+        return None
 
     def get_enclosing_function(self, offset):
         function_parens = self.worder.find_parens_start_from_inside(offset)
@@ -182,8 +205,16 @@ class StatementEvaluator(ast.RopeNodeVisitor):
         if pyobject is None:
             return
 
-        def _get_returned(pyobject):
-            args = arguments.create_arguments(primary, pyobject, node, self.scope)
+        def _get_returned(pyobject, receiver=None):
+            args = arguments.create_arguments(
+                primary,
+                pyobject,
+                node,
+                self.scope,
+                ignore_instance=receiver is not None,
+            )
+            if receiver is not None:
+                args = arguments.MixedArguments(receiver, args, self.scope)
             return pyobject.get_returned_object(args)
 
         if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
@@ -197,13 +228,15 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             return
 
         pyfunction = None
+        receiver = None
         if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
             pyfunction = pyobject
         elif "__call__" in pyobject:
             pyfunction = pyobject["__call__"].get_object()
+            receiver = rope.base.pynames.UnboundName(pyobject)
         if pyfunction is not None:
             self.result = rope.base.pynames.UnboundName(
-                pyobject=_get_returned(pyfunction)
+                pyobject=_get_returned(pyfunction, receiver)
             )
 
     def _Str(self, node):
@@ -350,7 +383,7 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             args = [node]
             if other_args:
                 args += other_args
-            arguments_ = arguments.Arguments(args, self.scope)
+            arguments_ = arguments.Arguments(args, self.scope, called)
             self.result = rope.base.pynames.UnboundName(
                 pyobject=called.get_returned_object(arguments_)
             )
