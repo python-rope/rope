@@ -427,3 +427,133 @@ def test_attribute_receiver_ignores_unrelated_lambda_bindings(project, expressio
     )
     assert source.read() != before
     assert execute(project, source) == "True\n42\n"
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "[item for item in target]",
+        "{item for item in target}",
+        "{item: item for item in target}",
+        "(item for item in target)",
+    ],
+)
+def test_comprehension_first_iterable_keeps_lambda_binding(project, expression):
+    source = module(
+        project,
+        "source",
+        dedent(f"""\
+            target = [42]
+            value = (lambda target: {expression})([int])
+            print(next(iter(value)) is int)
+        """),
+    )
+    before = source.read()
+    assert execute(project, source) == "True\n"
+    offset = before.index("in target") + len("in ") + 1
+    with pytest.raises(RefactoringError, match="lambda-local"):
+        create_inline(project, source, offset).get_changes(
+            only_current=True, remove=False
+        )
+    assert source.read() == before
+    assert execute(project, source) == "True\n"
+
+
+@pytest.mark.parametrize("fragment", ["in target", "if target"])
+def test_comprehension_later_iterable_and_condition_keep_lambda_binding(
+    project, fragment
+):
+    source = module(
+        project,
+        "source",
+        dedent("""\
+            target = [42]
+            value = (lambda target: [item for unused in [0]
+                                    for item in target if target[0] is int])([int])
+            print(value == [int])
+        """),
+    )
+    before = source.read()
+    assert execute(project, source) == "True\n"
+    offset = before.index(fragment) + len("in ") + 1
+    with pytest.raises(RefactoringError, match="lambda-local"):
+        create_inline(project, source, offset).get_changes(
+            only_current=True, remove=False
+        )
+    assert source.read() == before
+    assert execute(project, source) == "True\n"
+
+
+@pytest.mark.parametrize(
+    "code,fragment,expected",
+    [
+        (
+            dedent("""\
+                class Box:
+                    pass
+                target = Box()
+                receiver = Box()
+                value = (lambda target: [int for target.attr in [int]][0])(receiver)
+                print(value is int, receiver.attr is int, hasattr(target, "attr"))
+            """),
+            "for target.attr",
+            "True True False\n",
+        ),
+        (
+            dedent("""\
+                target = [str]
+                receiver = [str]
+                value = (lambda target: [int for target[0] in [int]][0])(receiver)
+                print(value is int, receiver[0] is int, target[0] is str)
+            """),
+            "for target[0]",
+            "True True True\n",
+        ),
+    ],
+)
+def test_comprehension_assignment_receiver_keeps_lambda_binding(
+    project, code, fragment, expected
+):
+    source = module(project, "source", code)
+    before = source.read()
+    assert execute(project, source) == expected
+    offset = before.index(fragment) + len("for ") + 1
+    with pytest.raises(RefactoringError, match="lambda-local"):
+        create_inline(project, source, offset).get_changes(
+            only_current=True, remove=False
+        )
+    assert source.read() == before
+    assert execute(project, source) == expected
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "[target for target in [int]]",
+        "[target for (target, unused) in [(int, 0)]]",
+        "[(lambda: target)() for target in [int]]",
+    ],
+)
+def test_comprehension_store_and_capture_allow_eager_reference(project, expression):
+    source = module(
+        project,
+        "source",
+        dedent(f"""\
+            target = 42
+            value = (lambda target: {expression})(str)
+            print(value[0] is int)
+            print(target)
+        """),
+    )
+    before = source.read()
+    assert execute(project, source) == "True\n42\n"
+    offset = before.index("print(target)") + len("print(") + 1
+    project.do(
+        create_inline(project, source, offset).get_changes(
+            only_current=True, remove=True
+        )
+    )
+    assert source.read() != before
+    assert "target = 42" not in source.read()
+    assert expression in source.read()
+    assert execute(project, source) == "True\n42\n"
