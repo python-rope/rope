@@ -1,6 +1,6 @@
 # **Upcoming release**
 
-- Refuse variable inlining that moves an initializer into a deferred annotation.
+- Refuse variable inlining that moves an initializer into a deferred annotation or a lazy function/class type parameter.
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 

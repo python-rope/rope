@@ -302,11 +302,26 @@ class InlineVariable(_Inliner):
             and any(alias.name == "annotations" for alias in node.names)
             for node in tree.body
         )
-        if not future_annotations and sys.version_info < (3, 14):
+        if not future_annotations and sys.version_info < (3, 12):
             return
         annotations = []
+        type_parameters = []
 
         def collect(node, scope=None):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                parameters = getattr(node, "type_params", [])
+                if parameters:
+                    namespace = (
+                        pymodule.get_scope()
+                        .get_inner_scope_for_line(node.lineno)
+                        .parent
+                    )
+                    names = {parameter.name for parameter in parameters}
+                    for parameter in parameters:
+                        for attr in ("bound", "default_value"):
+                            expression = getattr(parameter, attr, None)
+                            if expression is not None:
+                                type_parameters.append((expression, namespace, names))
             if isinstance(node, ast.arg):
                 annotations.append(node.annotation)
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -324,10 +339,118 @@ class InlineVariable(_Inliner):
                 collect(child, scope)
 
         collect(tree)
+        if not future_annotations and sys.version_info < (3, 14):
+            annotations = []
         lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
         regions = [lines[node] for node in annotations if node is not None]
-        if not regions:
+        parameter_regions = [lines[item[0]] for item in type_parameters]
+        if not regions and not parameter_regions:
             return
+
+        def parameter_reference(node, namespace, names):
+            inner_namespace = namespace
+            inner_names = set(names)
+            while inner_namespace.get_kind() == "Class":
+                inner_names.update(
+                    parameter.name
+                    for parameter in getattr(
+                        inner_namespace.pyobject.get_ast(), "type_params", []
+                    )
+                )
+                inner_namespace = inner_namespace.parent
+            if isinstance(node, ast.Lambda):
+                arguments = node.args
+                defaults = arguments.defaults + [
+                    default for default in arguments.kw_defaults if default is not None
+                ]
+                bound_names = inner_names | {
+                    argument.arg
+                    for argument in (
+                        arguments.posonlyargs
+                        + arguments.args
+                        + arguments.kwonlyargs
+                        + [arguments.vararg, arguments.kwarg]
+                    )
+                    if argument is not None
+                }
+                return any(
+                    parameter_reference(default, namespace, names)
+                    for default in defaults
+                ) or parameter_reference(node.body, inner_namespace, bound_names)
+            if isinstance(
+                node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+            ):
+                bound_names = set(names)
+                for index, generator in enumerate(node.generators):
+                    iterable_namespace = namespace if index == 0 else inner_namespace
+                    if parameter_reference(
+                        generator.iter, iterable_namespace, bound_names
+                    ):
+                        return True
+                    bound_names.update(inner_names)
+                    bound_names.update(
+                        name.id
+                        for name in ast.walk(generator.target)
+                        if isinstance(name, ast.Name)
+                        and isinstance(name.ctx, ast.Store)
+                    )
+                    if parameter_reference(
+                        generator.target, inner_namespace, bound_names
+                    ):
+                        return True
+                    if any(
+                        parameter_reference(condition, inner_namespace, bound_names)
+                        for condition in generator.ifs
+                    ):
+                        return True
+                values = (
+                    [node.key, node.value]
+                    if isinstance(node, ast.DictComp)
+                    else [node.elt]
+                )
+                return any(
+                    parameter_reference(value, inner_namespace, bound_names)
+                    for value in values
+                )
+            if isinstance(node, (ast.Name, ast.Attribute)):
+                primary = node
+                while isinstance(primary, ast.Attribute):
+                    primary = primary.value
+                if not (isinstance(primary, ast.Name) and primary.id in names):
+                    if isinstance(primary, ast.Name):
+                        outer_scope = namespace
+                        while outer_scope is not None:
+                            if (
+                                outer_scope.get_kind() != "Class"
+                                or outer_scope is namespace
+                            ) and primary.id in outer_scope.get_names():
+                                break
+                            if any(
+                                parameter.name == primary.id
+                                for parameter in getattr(
+                                    outer_scope.pyobject.get_ast(), "type_params", []
+                                )
+                            ):
+                                return False
+                            outer_scope = outer_scope.parent
+                    if occurrences.same_pyname(
+                        self.pyname, evaluate.eval_node(namespace, node)
+                    ):
+                        return True
+            return any(
+                parameter_reference(child, namespace, names)
+                for child in ast.iter_child_nodes(node)
+            )
+
+        if remove and any(
+            parameter_reference(expression, namespace, names)
+            for expression, namespace, names in type_parameters
+        ):
+            # Type parameter expressions use the enclosing annotation scope,
+            # not the function's parameters/locals or the new class's body.
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable referenced in a deferred annotation."
+            )
         if (
             future_annotations
             and remove
@@ -350,12 +473,17 @@ class InlineVariable(_Inliner):
             self.project, self.name, self.pyname, imports=False
         )
         for occurrence in finder.find_occurrences(pymodule=pymodule):
-            if only_current and not remove:
+            current = True
+            if only_current:
                 start, end = occurrence.get_primary_range()
-                if resource != self.original or not start <= self.offset <= end:
+                current = resource == self.original and start <= self.offset <= end
+                if not remove and not current:
                     continue
             start, _ = occurrence.get_word_range()
-            if any(begin <= start < end for begin, end in regions):
+            if any(begin <= start < end for begin, end in regions) or (
+                current
+                and any(begin <= start < end for begin, end in parameter_regions)
+            ):
                 # Substituting the initializer can change when an annotation
                 # evaluates it and which bindings it observes.
                 raise exceptions.RefactoringError(
