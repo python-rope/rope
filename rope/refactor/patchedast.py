@@ -67,13 +67,10 @@ class _PatchingASTWalker:
         self.source = _Source(source)
         self.children = children
         self.lines = codeanalyze.SourceLinesAdapter(source)
-        self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
+        self.ast_adapter = self.source.ast_adapter
         self.children_stack = []
 
-    Number = object()
-    String = object()
-    with_or_comma_context_manager = object()
-    empty_tuple = object()
+    AtomicNode = object()
 
     def __call__(self, node):
         method = getattr(self, "_" + node.__class__.__name__, None)
@@ -114,16 +111,8 @@ class _PatchingASTWalker:
                 self(child)
                 token_start = child.region[0]
             else:
-                if child is self.String:
-                    region = self.source.consume_string(
-                        end=self._find_next_statement_start()
-                    )
-                elif child is self.Number:
-                    region = self.source.consume_number()
-                elif child == self.empty_tuple:
-                    region = self.source.consume_empty_tuple()
-                elif child == self.with_or_comma_context_manager:
-                    region = self.source.consume_with_or_comma_context_manager()
+                if child is self.AtomicNode:
+                    region = self.source.consume_node(node)
                 elif isinstance(node, (ast.JoinedStr, ast.FormattedValue)):
                     region = self.source.consume_joined_string(child)
                 else:
@@ -348,32 +337,7 @@ class _PatchingASTWalker:
         self._handle(node, ["del"] + self._child_nodes(node.targets, ","))
 
     def _Constant(self, node):
-        if isinstance(node.value, (str, bytes)):
-            self._handle(node, [self.String])
-            return
-
-        if any(node.value is v for v in [True, False, None]):
-            self._handle(node, [str(node.value)])
-            return
-
-        if isinstance(node.value, numbers.Number):
-            self._handle(node, [self.Number])
-            return
-
-        if node.value is Ellipsis:
-            self._handle(node, ["..."])
-            return
-
-        assert False
-
-    def _Num(self, node):
-        self._handle(node, [self.Number])
-
-    def _Str(self, node):
-        self._handle(node, [self.String])
-
-    def _Bytes(self, node):
-        self._handle(node, [self.String])
+        self._handle(node, [self.AtomicNode])
 
     def _JoinedStr(self, node):
         def start_quote_char():
@@ -397,10 +361,7 @@ class _PatchingASTWalker:
 
         QUOTE_CHARS = ['"""', "'''", '"', "'"]
         offset = self.source.offset
-        start, end = self.source.consume_string(
-            end=self._find_next_statement_start(),
-        )
-        self.source.offset = offset
+        start, end = self.ast_adapter[node]
 
         children = []
         children.append(start_quote_char())
@@ -438,9 +399,6 @@ class _PatchingASTWalker:
                     children.append(",")
         children.append("}")
         self._handle(node, children)
-
-    def _Ellipsis(self, node):
-        self._handle(node, ["..."])
 
     def _Expr(self, node):
         self._handle(node, [node.value])
@@ -589,7 +547,7 @@ class _PatchingASTWalker:
 
     def _keyword(self, node):
         if node.arg is None:
-            children = [node.value]
+            children = ["**", node.value]
         else:
             children = [node.arg, "=", node.value]
         self._handle(node, children)
@@ -651,9 +609,6 @@ class _PatchingASTWalker:
         if node.value:
             children.append(node.value)
         self._handle(node, children)
-
-    def _Index(self, node):
-        self._handle(node, [node.value])
 
     def _Subscript(self, node):
         self._handle(node, [node.value, "[", node.slice, "]"])
@@ -728,7 +683,8 @@ class _PatchingASTWalker:
         if node.elts:
             self._handle(node, self._child_nodes(node.elts, ","), eat_parens=True)
         else:
-            self._handle(node, [self.empty_tuple])
+            empty_tuple = self.ast_adapter.get_source_segment(node)
+            self._handle(node, [empty_tuple])
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
@@ -759,16 +715,19 @@ class _PatchingASTWalker:
             children.extend(node.orelse)
         self._handle(node, children)
 
+    def _withitem(self, node):
+        children = []
+        children.extend([node.context_expr])
+        if node.optional_vars:
+            children.extend(["as", node.optional_vars])
+        self._handle(node, children)
+
     def _handle_with_node(self, node, is_async):
         children = []
 
         if is_async:
             children.extend(["async"])
-        for item in node.items:
-            children.extend([self.with_or_comma_context_manager, item.context_expr])
-            if item.optional_vars:
-                children.extend(["as", item.optional_vars])
-        children.append(":")
+        children.extend(["with", *self._child_nodes(node.items, ","), ":"])
         children.extend(node.body)
         self._handle(node, children)
 
@@ -779,7 +738,7 @@ class _PatchingASTWalker:
         self._handle_with_node(node, is_async=True)
 
     def _Starred(self, node):
-        self._handle(node, [node.value])
+        self._handle(node, ["*", node.value])
 
     def _Match(self, node):
         children = ["match", node.subject, ":"]
@@ -909,6 +868,7 @@ class _Source:
     def __init__(self, source):
         self.source = source
         self.offset = 0
+        self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
 
     def consume(self, token, skip_comment=True):
         try:
@@ -930,34 +890,11 @@ class _Source:
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def consume_string(self, end=None):
-        if _Source._string_pattern is None:
-            string_pattern = codeanalyze.get_string_pattern()
-            formatted_string_pattern = codeanalyze.get_formatted_string_pattern()
-            original = r"(?:{})|(?:{})".format(
-                string_pattern,
-                formatted_string_pattern,
-            )
-            pattern = r"({})((\s|\\\n|#[^\n]*\n)*({}))*".format(
-                original,
-                original,
-            )
-            _Source._string_pattern = re.compile(pattern)
-        repattern = _Source._string_pattern
-        return self._consume_pattern(repattern, end)
-
-    def consume_number(self):
-        if _Source._number_pattern is None:
-            _Source._number_pattern = re.compile(self._get_number_pattern())
-        repattern = _Source._number_pattern
-        return self._consume_pattern(repattern)
-
-    def consume_empty_tuple(self):
-        return self._consume_pattern(re.compile(r"\(\s*\)"))
-
-    def consume_with_or_comma_context_manager(self):
-        repattern = re.compile(r"with|,")
-        return self._consume_pattern(repattern)
+    def consume_node(self, node):
+        start, end = self.ast_adapter[node]
+        if self.offset < end:
+            self.offset = end
+        return start, end
 
     def _good_token(self, token, offset, start=None):
         """Checks whether consumed token is in comments"""
@@ -980,22 +917,6 @@ class _Source:
         lines = self.source[: self.offset].split("\n")
         return (len(lines), len(lines[-1]))
 
-    def _consume_pattern(self, repattern, end=None):
-        while True:
-            if end is None:
-                end = len(self.source)
-            match = repattern.search(self.source, self.offset, end)
-            if self._good_token(match.group(), match.start()):
-                break
-            else:
-                self._skip_comment()
-        self.offset = match.end()
-        return match.start(), match.end()
-
-    def till_token(self, token):
-        new_offset = self.source.index(token, self.offset)
-        return self[self.offset : new_offset]
-
     def rfind_token(self, token, start, end):
         index = start
         while True:
@@ -1008,19 +929,5 @@ class _Source:
             except ValueError:
                 return None
 
-    def from_offset(self, offset):
-        return self[offset : self.offset]
-
-    def find_backwards(self, pattern, offset):
-        return self.source.rindex(pattern, 0, offset)
-
     def __getitem__(self, index):
         return self.source[index]
-
-    def _get_number_pattern(self):
-        # HACK: It is merely an approaximation and does the job
-        integer = r"\-?(0[xo][\da-fA-F]+|\d+)"
-        return r"(%s(\.\d*)?|(\.\d+))([eE][-+]?\d+)?[jJ]?" % integer
-
-    _string_pattern = None
-    _number_pattern = None

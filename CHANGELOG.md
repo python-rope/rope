@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
+- #896 patchedast cleanup and refactoring (@lieryan)
 - #886 Close connections opened by other threads in AutoImport.close() (@cristianchiriac)
 
 # Release 1.15.0
