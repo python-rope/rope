@@ -1333,3 +1333,92 @@ def test_calltip_reads_simple_source_lambda_without_changing_its_binding(model_p
     )
     assert runtime_observed(source) is True
     assert resource.read() == source
+
+
+@pytest.mark.parametrize("renamed_owner", ["Owner", "Other"])
+def test_lambda_walrus_local_value_keeps_outer_value_and_field_rename_independent(
+    model_project, renamed_owner
+):
+    source = (
+        "class Owner:\n    field = 1\nclass Other:\n    field = 2\n"
+        "local = Other()\nresult = (lambda: ((local := Owner()), local)[1])()\n"
+        "observed = (result.field, local.field)\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    local = evaluate.eval_location(pymodule, source.index("local :="))
+    assert local is not pymodule["local"]
+    assert local.get_object().get_type() is pymodule["Owner"].get_object()
+    assert pymodule["local"].get_object().get_type() is pymodule["Other"].get_object()
+    assert pymodule["result"].get_object().get_type() is pymodule["Owner"].get_object()
+    before = runtime_observed(source)
+    offset = source.index("field = " + ("1" if renamed_owner == "Owner" else "2"))
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == (1, 2)
+    assert ("result.changed" in resource.read()) == (renamed_owner == "Owner")
+    assert ("local.changed" in resource.read()) == (renamed_owner == "Other")
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="type aliases require Python 3.12"
+)
+@pytest.mark.parametrize("enabled", [False, True])
+def test_conditional_class_alias_queries_are_readable_and_candidate_edits_are_atomic(
+    model_project, enabled
+):
+    source = (
+        f"target = int\nenabled = {enabled}\nclass Owner:\n"
+        "    if enabled:\n        target = bytes\n"
+        "    type Alias = tuple[target, target]\n"
+        "unrelated = 42\nobserved = unrelated\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("tuple["))
+    assert (
+        evaluate.eval_location(pymodule, offset).get_object() is pyobjects.get_unknown()
+    )
+    assert codeassist.get_definition_location(
+        model_project, source, offset, resource
+    ) == (resource, 6)
+    assert finderrors.find_errors(model_project, resource) == []
+    before = {}
+    exec(compile(source, "conditional_alias.py", "exec", dont_inherit=True), before)
+    expected = bytes if enabled else int
+    assert before["Owner"].Alias.__value__.__args__ == (expected, expected)
+    for selection in (offset, 0, source.index("target = bytes")):
+        with pytest.raises(exceptions.RefactoringError, match="unresolved"):
+            rename.Rename(model_project, resource, selection).get_changes("changed")
+        assert resource.read() == source
+    model_project.do(
+        rename.Rename(model_project, resource, source.index("unrelated =")).get_changes(
+            "safe"
+        )
+    )
+    after = {}
+    exec(
+        compile(resource.read(), "conditional_alias.py", "exec", dont_inherit=True),
+        after,
+    )
+    assert after["Owner"].Alias.__value__.__args__ == (expected, expected)
+    assert after["observed"] == before["observed"] == 42
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="type parameters require Python 3.12"
+)
+def test_generic_class_bound_query_and_outer_rename_keep_runtime_bound(model_project):
+    source = "target = int\nclass Owner[T: target]:\n    pass\nobserved = Owner.__type_params__[0].__bound__ is int\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("[T:"))
+    assert evaluate.eval_location(pymodule, offset) is pymodule["target"]
+    assert codeassist.get_definition_location(
+        model_project, source, offset, resource
+    ) == (resource, 1)
+    before = runtime_observed(source)
+    model_project.do(rename.Rename(model_project, resource, 0).get_changes("changed"))
+    assert runtime_observed(resource.read()) == before is True
+    assert "class Owner[T: changed]" in resource.read()
