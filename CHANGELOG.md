@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Fix namespace package directory renames and preserve explicit resource limits.
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 
