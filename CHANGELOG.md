@@ -1,5 +1,12 @@
 # **Upcoming release**
 
+- Preserve source bindings in function annotations, lambdas and comprehensions
+  during renaming, and keep call-time lambda values separate from source names.
+- Keep initialized instance lambda values separate from same-named class values
+  when resolving attribute calls and renaming fields.
+- Refuse edits to ordinary positional-only and keyword-only parameter bindings
+  that the current function argument protocol cannot represent safely.
+
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 

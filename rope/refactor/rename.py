@@ -106,7 +106,9 @@ class Rename:
             resources = [self.resource]
         if resources is None:
             resources = self.project.get_python_files()
+        resources = list(resources)
         self.validate_changes(new_name)
+        occurrences.check_opaque_references(self.project, self.old_pyname, resources)
         changes = ChangeSet(f"Renaming <{self.old_name}> to <{new_name}>")
         finder = occurrences.create_finder(
             self.project,
@@ -197,12 +199,23 @@ class ChangeOccurrences:
         return word_finder.get_primary_at(self.offset)
 
     def _get_scope_offset(self):
-        scope = self.pymodule.get_scope().get_inner_scope_for_offset(self.offset)
+        scope = getattr(self.old_pyname, "binding_scope", None)
+        if scope is None or scope.get_kind() not in {
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        }:
+            scope = self.pymodule.get_scope().get_structural_scope_for_offset(
+                self.offset
+            )
         return scope.get_region()
 
     def get_changes(self, new_name, only_calls=False, reads=True, writes=True):
         changes = ChangeSet(f"Changing <{self.old_name}> occurrences to <{new_name}>")
         scope_start, scope_end = self._get_scope_offset()
+        occurrences.check_opaque_references(
+            self.project, self.old_pyname, [self.resource], (scope_start, scope_end)
+        )
         finder = occurrences.create_finder(
             self.project,
             self.old_name,
@@ -257,6 +270,16 @@ def rename_in_module(
 
 
 def _is_local(pyname):
+    binding_scope = getattr(pyname, "binding_scope", None)
+    if binding_scope is not None:
+        return not isinstance(
+            pyname, pynames.ParameterName
+        ) and binding_scope.get_kind() in (
+            "Function",
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        )
     module, lineno = pyname.get_definition_location()
     if lineno is None:
         return False
