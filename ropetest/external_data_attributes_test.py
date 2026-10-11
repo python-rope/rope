@@ -796,3 +796,641 @@ def test_early_imported_package_keeps_foreign_field_or_atomically_refuses(tmp_pa
         assert after["exit"] == 0 and after["stdout"] == "FOREIGN\n", after
     finally:
         project.close()
+
+
+# Module export and Unicode import regressions, using existing test helpers.
+
+
+def _module_data_project(directory, sources):
+    project = Project(
+        str(directory),
+        ropefolder=None,
+        save_history=False,
+        save_objectdb=False,
+        perform_doa=False,
+    )
+    resources = {}
+    for path, code in sources.items():
+        parent = project.root
+        parts = path.split("/")
+        for part in parts[:-1]:
+            parent = (
+                parent.get_child(part)
+                if parent.has_child(part)
+                else parent.create_folder(part)
+            )
+        resources[path] = parent.create_file(parts[-1])
+        resources[path].write(code)
+    project.root.create_file("sentinel.py").write("untouched = 'sentinel'\n")
+    return project, resources
+
+
+def _python_source_bytes(directory):
+    return {
+        path.relative_to(directory).as_posix(): path.read_bytes()
+        for path in directory.rglob("*.py")
+    }
+
+
+def _preserve_saved_foreign_field(
+    tmp_path, sources, reference, target="foreign-field", expect_success=False
+):
+    sources = dict(sources)
+    if target == "unrelated-global":
+        sources["subject.py"] = "unconnected = 'OK'\n" + sources["subject.py"].replace(
+            f"print({reference})", f"print({reference}, unconnected)"
+        )
+    expected = "FOREIGN OK\n" if target == "unrelated-global" else "FOREIGN\n"
+    project, resources = _module_data_project(tmp_path, sources)
+    try:
+        before = driver("import subject", tmp_path)
+        assert before["exit"] == 0 and before["stdout"] == expected, before
+        original = _python_source_bytes(tmp_path)
+        if target == "unrelated-global":
+            selected_path, marker, new_name = (
+                "subject.py",
+                "unconnected = 'OK'",
+                "changed_unconnected",
+            )
+        else:
+            selected_path = (
+                "foreign.py" if "foreign.py" in sources else "valuespkg/foreign.py"
+            )
+            marker, new_name = "field = 'FOREIGN'", "renamed_field"
+        resource = resources[selected_path]
+        offset = sources[selected_path].index(marker)
+        try:
+            changes = Rename(project, resource, offset).get_changes(new_name)
+        except exceptions.RefactoringError:
+            assert target == "foreign-field", "Unrelated global Rename must succeed"
+            assert not expect_success, "Ordinary referenced field Rename must succeed"
+            assert _python_source_bytes(tmp_path) == original
+        else:
+            # get_changes itself must leave every resource unchanged.
+            assert _python_source_bytes(tmp_path) == original
+            project.do(changes)
+            if target == "unrelated-global":
+                assert "changed_unconnected = 'OK'" in resource.read()
+                assert f"print({reference}, changed_unconnected)" in resource.read()
+                current = _python_source_bytes(tmp_path)
+                assert {
+                    key: value for key, value in current.items() if key != "subject.py"
+                } == {
+                    key: value for key, value in original.items() if key != "subject.py"
+                }
+            else:
+                assert "renamed_field = 'FOREIGN'" in resource.read()
+                assert (
+                    reference.replace(".field", ".renamed_field")
+                    in resources["subject.py"].read()
+                )
+            assert "field = 'OTHER'" in resources["subject.py"].read()
+        assert project.get_file("sentinel.py").read_bytes() == original["sentinel.py"]
+        after = driver("import subject", tmp_path)
+        assert after["exit"] == 0 and after["stdout"] == expected, after
+    finally:
+        project.close()
+
+
+_MODULE_DATA_SUBJECT = textwrap.dedent("""\
+    class Other:
+        field = 'OTHER'
+    class Owner:
+        import values as slot
+    saved = Owner.slot
+    Owner.slot = Other()
+    print(saved.old.field)
+    """)
+
+
+@pytest.mark.parametrize(
+    "case", ["factory-result", "module-alias", "legal-cycle", "nested-class"]
+)
+@pytest.mark.parametrize("target", ["foreign-field", "unrelated-global"])
+def test_saved_imported_module_data_keeps_field_safety_and_unrelated_rename(
+    tmp_path, case, target
+):
+    subject = _MODULE_DATA_SUBJECT
+    reference = "saved.old.field"
+    if case == "factory-result":
+        sources = {
+            "foreign.py": textwrap.dedent("""\
+                class Foreign:
+                    field = 'FOREIGN'
+                def make():
+                    return Foreign()
+                """),
+            "values.py": textwrap.dedent("""\
+                from foreign import make
+                old = make()
+                """),
+            "subject.py": subject,
+        }
+    elif case == "module-alias":
+        reference = "saved.alias.old.field"
+        sources = {
+            "foreign.py": textwrap.dedent("""\
+                class Foreign:
+                    field = 'FOREIGN'
+                old = Foreign()
+                """),
+            "values.py": "import foreign as alias\n",
+            "subject.py": subject.replace("saved.old.field", reference),
+        }
+    elif case == "legal-cycle":
+        sources = {
+            "foreign.py": textwrap.dedent("""\
+                import values as values_namespace
+                class Foreign:
+                    field = 'FOREIGN'
+                old = Foreign()
+                """),
+            "values.py": textwrap.dedent("""\
+                import foreign as foreign_namespace
+                old = foreign_namespace.old
+                """),
+            "subject.py": subject,
+        }
+    else:
+        reference = "saved.Inner.field"
+        sources = {
+            "foreign.py": textwrap.dedent("""\
+                class Outer:
+                    class Inner:
+                        field = 'FOREIGN'
+                old = Outer()
+                """),
+            "subject.py": textwrap.dedent("""\
+                class Other:
+                    field = 'OTHER'
+                class Owner:
+                    from foreign import old as slot
+                saved = Owner.slot
+                Owner.slot = Other()
+                print(saved.Inner.field)
+                """),
+        }
+    _preserve_saved_foreign_field(tmp_path, sources, reference, target)
+
+
+_IMPORT_SPAN_VALUES = textwrap.dedent("""\
+    class Foreign:
+        field = 'FOREIGN'
+    old = Foreign()
+    """)
+_IMPORT_SPAN_SUBJECT = textwrap.dedent("""\
+    from pkg.values import old as foreign
+    class Other:
+        field = 'OTHER'
+    class 容器:
+        标签 = '中'; import pkg.values as pkg
+    容器.pkg = Other()
+    print(foreign.field, 容器.pkg.field)
+    """)
+
+
+@pytest.mark.parametrize(
+    "kind, identifier, new_name",
+    [
+        ("package", "pkg", "renamed_pkg"),
+        ("module", "values", "renamed_values"),
+        ("alias", "pkg", "renamed_slot"),
+    ],
+)
+def test_dotted_import_source_and_local_alias_rename_with_unicode_prefix(
+    tmp_path, kind, identifier, new_name
+):
+    sources = {
+        "pkg/__init__.py": "",
+        "pkg/values.py": _IMPORT_SPAN_VALUES,
+        "subject.py": _IMPORT_SPAN_SUBJECT,
+    }
+    project, resources = _module_data_project(tmp_path, sources)
+    try:
+        before = driver("import subject", tmp_path)
+        assert before["exit"] == 0 and before["stdout"] == "FOREIGN OTHER\n", before
+        original = _python_source_bytes(tmp_path)
+        source = sources["subject.py"]
+        line = next(
+            value
+            for value in source.splitlines()
+            if "import pkg.values as pkg" in value
+        )
+        character_column = line.index("import pkg.values")
+        byte_column = len(line[:character_column].encode("utf-8"))
+        assert character_column == 14 and byte_column == 20
+        marker = "容器.pkg = Other()" if kind == "alias" else "import pkg.values as pkg"
+        # Public offsets are Unicode character offsets, including the source word.
+        offset = source.index(marker) + marker.index(identifier)
+        changes = Rename(project, resources["subject.py"], offset).get_changes(new_name)
+        assert _python_source_bytes(tmp_path) == original
+        project.do(changes)
+        subject = resources["subject.py"].read()
+        if kind == "alias":
+            values_path, init_path = "pkg/values.py", "pkg/__init__.py"
+            expected_subject = source.replace("as pkg", "as renamed_slot").replace(
+                "容器.pkg", "容器.renamed_slot"
+            )
+            slot_name = "renamed_slot"
+            # The source package/module spelling remains intact.
+            assert "import pkg.values as renamed_slot" in subject
+            assert "from pkg.values import old as foreign" in subject
+        else:
+            slot_name = "pkg"
+            target_module = (
+                "renamed_pkg.values" if kind == "package" else "pkg.renamed_values"
+            )
+            values_path = (
+                "renamed_pkg/values.py"
+                if kind == "package"
+                else "pkg/renamed_values.py"
+            )
+            init_path = (
+                "renamed_pkg/__init__.py" if kind == "package" else "pkg/__init__.py"
+            )
+            expected_subject = source.replace("pkg.values", target_module)
+            assert not project.get_file("pkg/values.py").exists()
+            if kind == "package":
+                assert not project.root.has_child("pkg")
+            assert f"import {target_module} as pkg" in subject
+            assert f"from {target_module} import old as foreign" in subject
+        assert subject == expected_subject
+        assert project.get_file(values_path).read() == sources["pkg/values.py"]
+        assert project.get_file(init_path).read() == ""
+        assert project.get_file("sentinel.py").read_bytes() == original["sentinel.py"]
+        after = driver("import subject", tmp_path)
+        assert after["exit"] == 0 and after["stdout"] == "FOREIGN OTHER\n", after
+        module = project.get_pymodule(resources["subject.py"])
+        finder = evaluate.ScopeNameFinder(module)
+        for marker, expected_path, expected_line, class_name in (
+            ("foreign.field", values_path, 2, "Foreign"),
+            (f"容器.{slot_name}.field", "subject.py", 3, "Other"),
+        ):
+            field_offset = subject.index(marker) + marker.rindex(".field") + 1
+            pyname = finder.get_pyname_at(field_offset)
+            assert pyname is not None
+            assert pyname.get_object() is not pyobjects.get_unknown()
+            owner_module = project.get_pymodule(project.get_file(expected_path))
+            expected_pyname = (
+                owner_module.get_attribute(class_name)
+                .get_object()
+                .get_attribute("field")
+            )
+            assert pyname is expected_pyname
+            defining, lineno = pyname.get_definition_location()
+            assert (
+                defining is not None and defining.get_resource().path == expected_path
+            )
+            assert lineno == expected_line
+    finally:
+        project.close()
+
+
+def test_saved_namespace_module_foreign_field_is_preserved_or_atomically_refused(
+    tmp_path,
+):
+    # Select a field from the real module inside a namespace package.
+    sources = {
+        "valuespkg/foreign.py": textwrap.dedent("""\
+            class Foreign:
+                field = 'FOREIGN'
+            old = Foreign()
+            """),
+        "subject.py": textwrap.dedent("""\
+            import valuespkg.foreign
+            class Other:
+                field = 'OTHER'
+            class Owner:
+                import valuespkg as slot
+            saved = Owner.slot
+            Owner.slot = Other()
+            print(saved.foreign.old.field)
+            """),
+    }
+    assert "valuespkg/__init__.py" not in sources
+    _preserve_saved_foreign_field(tmp_path, sources, "saved.foreign.old.field")
+
+
+def test_ordinary_referenced_foreign_field_rename_succeeds_without_external_write(
+    tmp_path,
+):
+    sources = {
+        "foreign.py": textwrap.dedent("""\
+            class Foreign:
+                field = 'FOREIGN'
+            """),
+        "subject.py": textwrap.dedent("""\
+            from foreign import Foreign
+            class Other:
+                field = 'OTHER'
+            saved = Foreign()
+            print(saved.field)
+            """),
+    }
+    _preserve_saved_foreign_field(tmp_path, sources, "saved.field", expect_success=True)
+
+
+_NAMESPACE_COMMON = textwrap.dedent("""class First:
+    field = 'FIRST'
+class Other:
+    field = 'OTHER'
+""")
+
+_NAMESPACE_PATTERN = _NAMESPACE_COMMON + textwrap.dedent("""def lookup(self, name):
+    if name == 'slot':
+        return First()
+    return object.__getattribute__(self, name)
+class Box:
+    match lookup:
+        case __getattribute__:
+            pass
+Box.slot = Other()
+print(Box.slot.field, Box().slot.field)
+""")
+
+_NAMESPACE_TUPLE = _NAMESPACE_COMMON + textwrap.dedent("""class Box:
+    slot = Other()
+Box.slot, spare = First(), 0
+print(Box.slot.field)
+""")
+
+_NAMESPACE_CLASS_ALIAS = _NAMESPACE_COMMON + textwrap.dedent("""class Box:
+    pass
+Box.slot = Other()
+alias = Box
+def replace():
+    alias.slot = First()
+replace()
+print(Box.slot.field)
+""")
+
+_NAMESPACE_WILDCARD = _NAMESPACE_COMMON + textwrap.dedent("""class Box:
+    pass
+Box.slot = First()
+saved = Box
+from values import *
+print(saved.slot.field, Box.slot.field)
+""")
+
+_NAMESPACE_WILDCARD_VALUES = textwrap.dedent("""class Foreign:
+    field = 'FOREIGN'
+class Box:
+    slot = Foreign()
+__all__ = ['Box']
+""")
+
+
+@pytest.mark.parametrize(
+    "code, values, expected",
+    [
+        pytest.param(
+            _NAMESPACE_PATTERN, None, "OTHER FIRST\n", id="pattern-class-hook"
+        ),
+        pytest.param(_NAMESPACE_TUPLE, None, "FIRST\n", id="tuple-class-slot"),
+        pytest.param(
+            _NAMESPACE_CLASS_ALIAS, None, "FIRST\n", id="deferred-class-alias"
+        ),
+        pytest.param(
+            _NAMESPACE_WILDCARD,
+            _NAMESPACE_WILDCARD_VALUES,
+            "FIRST FOREIGN\n",
+            id="wildcard-class-rebinding",
+        ),
+    ],
+)
+def test_unsafe_namespace_writes_atomically_refuse_field_rename(
+    tmp_path, code, values, expected
+):
+    project = Project(
+        str(tmp_path),
+        ropefolder=None,
+        save_history=False,
+        save_objectdb=False,
+        perform_doa=False,
+    )
+    try:
+        sources = {"subject.py": code, "sentinel.py": "untouched = 'sentinel'\n"}
+        if values is not None:
+            sources["values.py"] = values
+        resources = {}
+        for path, source in sources.items():
+            resource = project.root.create_file(path)
+            resource.write(source)
+            resources[path] = resource
+
+        before = driver("import subject", tmp_path)
+        assert before["exit"] == 0 and before["stdout"] == expected, before
+        snapshot = {path: resource.read_bytes() for path, resource in resources.items()}
+
+        # No Rope query primes inference: Rename is the first semantic consumer.
+        offset = code.index("field = 'FIRST'") + 1
+        with pytest.raises(exceptions.RefactoringError):
+            Rename(project, resources["subject.py"], offset).get_changes(
+                "changed_field"
+            )
+
+        assert {
+            path: resource.read_bytes() for path, resource in resources.items()
+        } == snapshot
+        after = driver("import subject", tmp_path)
+        assert after["exit"] == 0 and after["stdout"] == expected, after
+    finally:
+        project.close()
+
+
+@pytest.mark.parametrize(
+    "binding", ["pattern-capture", "except-alias", "loop-unpack", "annotated-local"]
+)
+@pytest.mark.parametrize("field", [1, 2])
+def test_lookup_factory_local_rebinding_keeps_actual_return_type_guarded(
+    tmp_path, binding, field
+):
+    classes = CLASSES
+    if binding == "pattern-capture":
+        factory = textwrap.dedent("""\
+            def choose(item):
+                match Other():
+                    case item:
+                        return item
+            """)
+    elif binding == "except-alias":
+        classes = CLASSES.replace("class First:", "class First(Exception):")
+        factory = textwrap.dedent("""\
+            def choose(item):
+                try:
+                    raise First()
+                except First as item:
+                    return item
+            """)
+    elif binding == "loop-unpack":
+        factory = textwrap.dedent("""\
+            def choose(item):
+                for item, spare in [(Other(), First())]:
+                    return item
+            """)
+    else:
+        factory = textwrap.dedent("""\
+            def choose(item):
+                item: object = Other()
+                return item
+            """)
+
+    hook = textwrap.dedent("""\
+        def __getattribute__(self, name):
+            if name == 'slot':
+                return choose(First())
+            return object.__getattribute__(self, name)
+        """)
+    tail = textwrap.dedent("""\
+        Box.slot = First()
+        print(Box.slot.field, Box().slot.field)
+        """)
+    expected = "1 2\n"
+    if binding == "except-alias":
+        hook = hook.replace("choose(First())", "choose(Other())")
+        tail = tail.replace("Box.slot = First()", "Box.slot = Other()")
+        expected = "2 1\n"
+    code = classes + factory + BOX + textwrap.indent(hook, "    ") + tail
+    sentinel = tmp_path / "sentinel.py"
+    sentinel.write_text("untouched = 'sentinel'\n", encoding="utf-8")
+    original_sentinel = sentinel.read_bytes()
+    exercise(tmp_path, code, field, expected, reject=True, warm=False)
+    assert sentinel.read_bytes() == original_sentinel
+
+
+_EXTRA_MAPPING_CLASS_IDENTITY = CLASSES + BOX + textwrap.dedent("""Box.slot = Other()
+saved = Box
+match {'replacement': First()}:
+    case {**Box}:
+        pass
+print(saved.slot.field, Box['replacement'].field)
+""")
+
+_EXTRA_STAR_CLASS_IDENTITY = CLASSES + BOX + textwrap.dedent("""Box.slot = Other()
+saved = Box
+match [First()]:
+    case [*Box]:
+        pass
+print(saved.slot.field, Box[0].field)
+""")
+
+_EXTRA_EXCEPT_CLASS_IDENTITY = CLASSES + BOX + textwrap.dedent("""Box.slot = Other()
+saved = Box
+try:
+    raise ValueError('replacement')
+except ValueError as Box:
+    print(saved.slot.field, str(Box))
+print(saved.slot.field)
+""")
+
+_EXTRA_EXCEPT_LOOKUP_HOOK = CLASSES + textwrap.dedent("""def lookup(self, name):
+    if name == 'slot':
+        return First()
+    return object.__getattribute__(self, name)
+class Box:
+    __getattribute__ = lookup
+    try:
+        raise ValueError('replacement')
+    except ValueError as __getattribute__:
+        pass
+Box.slot = Other()
+print(Box.slot.field, Box().slot.field)
+""")
+
+_EXTRA_IMPORT_ATTRIBUTE = CLASSES + textwrap.dedent("""class Box:
+    from values import old
+Box.old = First()
+print(Box.old.field)
+""")
+
+_EXTRA_IMPORT_VALUES = textwrap.dedent("""old = object()
+""")
+
+
+@pytest.mark.parametrize(
+    "code, values, marker, marker_offset, replacement, expected",
+    [
+        pytest.param(
+            _EXTRA_MAPPING_CLASS_IDENTITY,
+            None,
+            "field = 2",
+            1,
+            "changed_field",
+            "2 1\n",
+            id="mapping-rest-class-identity",
+        ),
+        pytest.param(
+            _EXTRA_STAR_CLASS_IDENTITY,
+            None,
+            "field = 2",
+            1,
+            "changed_field",
+            "2 1\n",
+            id="star-class-identity",
+        ),
+        pytest.param(
+            _EXTRA_EXCEPT_CLASS_IDENTITY,
+            None,
+            "field = 2",
+            1,
+            "changed_field",
+            "2 replacement\n2\n",
+            id="except-class-identity",
+        ),
+        pytest.param(
+            _EXTRA_EXCEPT_LOOKUP_HOOK,
+            None,
+            "field = 2",
+            1,
+            "changed_field",
+            "2 2\n",
+            id="except-clears-class-lookup-hook",
+        ),
+        pytest.param(
+            _EXTRA_IMPORT_ATTRIBUTE,
+            _EXTRA_IMPORT_VALUES,
+            "Box.old = First()",
+            len("Box.") + 1,
+            "changed_slot",
+            "1\n",
+            id="unaliased-import-backed-class-attribute",
+        ),
+    ],
+)
+def test_namespace_captures_and_import_backed_attribute_refuse_unsafe_rename(
+    tmp_path, code, values, marker, marker_offset, replacement, expected
+):
+    project = Project(
+        str(tmp_path),
+        ropefolder=None,
+        save_history=False,
+        save_objectdb=False,
+        perform_doa=False,
+    )
+    try:
+        sources = {"subject.py": code, "sentinel.py": "untouched = 'sentinel'\n"}
+        if values is not None:
+            sources["values.py"] = values
+        resources = {}
+        for path, source in sources.items():
+            resource = project.root.create_file(path)
+            resource.write(source)
+            resources[path] = resource
+
+        before = driver("import subject", tmp_path)
+        assert before["exit"] == 0 and before["stdout"] == expected, before
+        snapshot = {path: resource.read_bytes() for path, resource in resources.items()}
+        assert code.count(marker) == 1
+
+        with pytest.raises(exceptions.RefactoringError):
+            Rename(
+                project, resources["subject.py"], code.index(marker) + marker_offset
+            ).get_changes(replacement)
+
+        assert {
+            path: resource.read_bytes() for path, resource in resources.items()
+        } == snapshot
+        after = driver("import subject", tmp_path)
+        assert after["exit"] == 0 and after["stdout"] == expected, after
+    finally:
+        project.close()
