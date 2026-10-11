@@ -527,3 +527,809 @@ def test_lambda_storage_view_selects_instance_and_class_values_independently(
     assert ("observed = result.changed" in resource.read()) == (
         renamed_owner == expected_owner
     )
+
+
+def runtime_observed(source):
+    namespace = {}
+    exec(compile(source, "source_contract.py", "exec", dont_inherit=True), namespace)
+    return namespace["observed"]
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        "lambda supplied: (lambda *, option=None: supplied)",
+        "lambda supplied: (lambda option=supplied: option)",
+    ],
+)
+@pytest.mark.parametrize("renamed", ["first_field", "second_field"])
+def test_lambda_creation_values_are_isolated_between_calls(
+    model_project, factory, renamed
+):
+    source = (
+        "class First:\n    first_field = 11\n"
+        "class Second:\n    second_field = 22\n"
+        f"factory = {factory}\n"
+        "first = factory(First())\nsecond = factory(Second())\n"
+        "observed = (first().first_field, second().second_field)\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    first = evaluate.eval_str(pymodule.get_scope(), "first")
+    second = evaluate.eval_str(pymodule.get_scope(), "second")
+    assert first.get_object().source_function is second.get_object().source_function
+    assert first.get_object() is not second.get_object()
+    for expression, expected in [("second()", "Second"), ("first()", "First")]:
+        assert evaluate.eval_str(
+            pymodule.get_scope(), expression
+        ).get_object().get_type() is (pymodule[expected].get_object())
+    inner = first.get_object().source_function
+    assert inner.get_parameters()["option"].get_object() is pyobjects.get_unknown()
+    model_project.pycore.module_cache.forget_all_data()
+    assert inner.get_parameters()["option"].get_object() is pyobjects.get_unknown()
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(
+            model_project, resource, source.index(renamed + " =")
+        ).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == (11, 22)
+    other = "second_field" if renamed == "first_field" else "first_field"
+    assert f".{other}" in resource.read()
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "[value for value in (item,)][0]",
+        "[second for first, second in ((None, item),)][0]",
+        "[second for first in (item,) for second in (first,)][0]",
+        "{key: value for key, value in ((0, item),)}[0]",
+    ],
+)
+@pytest.mark.parametrize("renamed_owner", ["Payload", "Other"])
+def test_comprehension_call_overlay_drives_field_rename(
+    model_project, expression, renamed_owner
+):
+    source = (
+        "class Payload:\n    field = 42\n"
+        "class Other:\n    field = 99\n"
+        f"callback = lambda item: {expression}\n"
+        "result = callback(Payload())\nobserved = result.field\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    callback = pymodule["callback"].get_object()
+    parameter = callback.get_parameters()["item"]
+    assert (
+        pymodule["result"].get_object().get_type() is pymodule["Payload"].get_object()
+    )
+    assert parameter.get_object() is pyobjects.get_unknown()
+    model_project.pycore.module_cache.forget_all_data()
+    assert callback.get_parameters()["item"] is parameter
+    assert parameter.get_object() is pyobjects.get_unknown()
+    before = runtime_observed(source)
+    declaration = "field = 42" if renamed_owner == "Payload" else "field = 99"
+    model_project.do(
+        rename.Rename(model_project, resource, source.index(declaration)).get_changes(
+            "changed"
+        )
+    )
+    assert runtime_observed(resource.read()) == before == 42
+    assert ("observed = result.changed" in resource.read()) == (
+        renamed_owner == "Payload"
+    )
+
+
+@pytest.mark.parametrize(
+    "descriptor,body",
+    [
+        ("lambda self, item: self", "Owner"),
+        ("staticmethod(lambda item: item)", "Other"),
+        ("classmethod(lambda cls, item: item)", "Other"),
+    ],
+)
+def test_saved_lambda_keyword_rename_keeps_descriptor_and_source_identity(
+    model_project, descriptor, body
+):
+    source = (
+        "class Owner:\n    field = 1\n"
+        f"    callback = {descriptor}\n"
+        "class Other:\n    field = 2\n"
+        "saved = Owner().callback\nresult = saved(item=Other())\n"
+        "observed = result.field\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("item=Other()")
+    function = pymodule["saved"].get_object()
+    parameter = function.get_parameters()["item"]
+    assert evaluate.eval_location(pymodule, offset) is parameter
+    assert codeassist.get_definition_location(
+        model_project, source, offset, resource
+    ) == (resource, 3)
+    assert pymodule["result"].get_object().get_type() is pymodule[body].get_object()
+    assert parameter.get_object() is pyobjects.get_unknown()
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert "saved(changed=Other())" in resource.read()
+    assert runtime_observed(resource.read()) == before
+
+
+@pytest.mark.parametrize("kind", ["closure", "saved-bound"])
+@pytest.mark.parametrize("renamed_owner", ["Owner", "Other"])
+def test_saved_bound_lambda_is_not_bound_again(model_project, kind, renamed_owner):
+    source = (
+        "class Owner:\n    field = 1\n"
+        "    callback = lambda self, item: "
+        + ("(lambda: self)\n" if kind == "closure" else "self\n")
+        + "class Other:\n    field = 2\n"
+    )
+    source += (
+        "saved = Owner().callback\nresult = saved(Other())()\n"
+        if kind == "closure"
+        else "class Saved:\n    callback = Owner().callback\nresult = Saved().callback(Other())\n"
+    )
+    source += "observed = result.field\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    assert pymodule["result"].get_object().get_type() is pymodule["Owner"].get_object()
+    before = runtime_observed(source)
+    offset = source.index("field = " + ("1" if renamed_owner == "Owner" else "2"))
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == 1
+    assert ("observed = result.changed" in resource.read()) == (
+        renamed_owner == "Owner"
+    )
+
+
+@pytest.mark.parametrize("owner", ["module", "class", "global", "nonlocal-parameter"])
+def test_header_created_name_is_queryable_before_and_after_cache_reset(
+    model_project, owner
+):
+    if owner == "module":
+        source = "def inner(value=(target := str)):\n    return target\nobserved = inner() is str\n"
+    elif owner == "class":
+        source = "class Owner:\n    def inner(value=(target := str)):\n        return value\nobserved = Owner.target is str and Owner.inner() is str\n"
+    elif owner == "global":
+        source = "def owner():\n    global target\n    def inner(value=(target := str)):\n        return target\n    return inner\nobserved = owner()() is str and target is str\n"
+    else:
+        source = "def enclosing(target):\n    def owner():\n        nonlocal target\n        def inner(value=(target := str)):\n            return target\n        return inner\n    return owner()\nobserved = enclosing(int)() is str\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target :=")
+    binder = evaluate.eval_location(pymodule, offset)
+    assert binder is not None
+    location = codeassist.get_definition_location(
+        model_project, source, offset, resource
+    )
+    assert location[0] == resource
+    model_project.pycore.module_cache.forget_all_data()
+    assert evaluate.eval_location(pymodule, offset) is binder
+    assert (
+        codeassist.get_definition_location(model_project, source, offset, resource)
+        == location
+    )
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before is True
+    assert "target" not in resource.read()
+
+
+@pytest.mark.parametrize("selection", ["module", "lambda", "comprehension"])
+def test_nested_lambda_comprehension_shadowing_rename_preserves_each_binding(
+    model_project, selection
+):
+    source = (
+        "target = int\n"
+        "result = (lambda *, target: [target for target in target])(target=(str, bytes))\n"
+        "observed = (target is int, result == [str, bytes])\n"
+    )
+    resource = module(model_project, source)
+    markers = {
+        "module": "target = int",
+        "lambda": "target:",
+        "comprehension": "for target",
+    }
+    offset = source.index(markers[selection]) + (
+        4 if selection == "comprehension" else 0
+    )
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == (True, True)
+    if selection == "lambda":
+        assert "[target for target in changed]" in resource.read()
+        assert ")(changed=" in resource.read()
+    elif selection == "comprehension":
+        assert "[changed for changed in target]" in resource.read()
+    else:
+        assert "lambda *, target:" in resource.read()
+
+
+@pytest.mark.parametrize(
+    "expression",
+    ["lambda: (target := str)", "lambda: [(target := value) for value in [str]][0]"],
+)
+@pytest.mark.parametrize("operation", ["local", "outer", "occurrences"])
+def test_lambda_walrus_source_binding_does_not_escape_to_module(
+    model_project, expression, operation
+):
+    source = f"target = int\ncallback = {expression}\nobserved = (target is int, callback() is str)\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    local_offset = source.index("target :=")
+    local = evaluate.eval_location(pymodule, local_offset)
+    outer = pymodule["target"]
+    assert local is not outer
+    assert local.get_definition_location() == (pymodule, 2)
+    before = runtime_observed(source)
+    if operation == "occurrences":
+        changes = rename.ChangeOccurrences(
+            model_project, resource, local_offset
+        ).get_changes("changed")
+    else:
+        offset = local_offset if operation == "local" else 0
+        changes = rename.Rename(model_project, resource, offset).get_changes("changed")
+    model_project.do(changes)
+    assert runtime_observed(resource.read()) == before == (True, True)
+    assert ("target = int" in resource.read()) == (operation != "outer")
+    assert ("target :=" in resource.read()) == (operation == "outer")
+
+
+@pytest.mark.parametrize("mode", ["eager", "future", "lazy"])
+@pytest.mark.parametrize(
+    "class_body,selected",
+    [
+        ("target = bytes\n", "class"),
+        ("target: object = bytes\n", "class"),
+        ("target: object\n", "module"),
+        ("target = bytes\ndel target\n", "module"),
+        ("pass\n", "module"),
+    ],
+)
+def test_annotation_query_completion_and_rename_follow_class_namespace(
+    model_project, mode, class_body, selected
+):
+    source = prefix(mode) + "target = int\nclass Owner:\n"
+    source += indent(
+        class_body + "def func(value: target) -> target:\n    return value\n", "    "
+    )
+    source += "subject = Owner.func\ndef drive():\n    return subject(str)\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("value: "))
+    # Future-string get_type_hints uses the module namespace by its default contract.
+    expected = pymodule["target"]
+    if mode != "future" and selected == "class":
+        expected = pymodule["Owner"].get_object()["target"]
+    context = pymodule.get_source_binding_index().context_at(offset)
+    assert evaluate.eval_location(pymodule, offset) is expected
+    assert context.structural_scope.get_kind() == "Function"
+    assert context.environment.get_kind() == "Annotation"
+    assert (
+        context.annotation_policy.mode
+        == {"eager": "eager", "future": "future-string", "lazy": "lazy"}[mode]
+    )
+    assert codeassist.get_definition_location(
+        model_project, source, offset, resource
+    ) == (resource, expected.get_definition_location()[1])
+    proposals = codeassist.code_assist(
+        model_project, source, offset + 3, resource=resource, later_locals=False
+    )
+    assert "target" in {proposal.name for proposal in proposals}
+    model_project.pycore.module_cache.forget_all_data()
+    assert evaluate.eval_location(pymodule, offset) is expected
+    before = observe(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert observe(resource.read()) == before
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="type aliases require Python 3.12"
+)
+@pytest.mark.parametrize("owner", ["module", "class", "class-fallback", "nested"])
+def test_type_alias_outer_reference_rename_preserves_lazy_value(model_project, owner):
+    if owner == "module":
+        source = "target = int\ntype Alias = tuple[target, target]\nsubject = Alias\n"
+    elif owner == "class":
+        source = "target = int\nclass Owner:\n    target = bytes\n    type Alias = tuple[target, target]\nsubject = Owner.Alias\n"
+    elif owner == "class-fallback":
+        source = "target = int\nclass Owner:\n    type Alias = tuple[target, target]\nsubject = Owner.Alias\n"
+    else:
+        source = "target = int\ndef factory():\n    target = bytes\n    type Alias = tuple[target, target]\n    return Alias\nsubject = factory()\n"
+    source += "observed = tuple(item.__name__ for item in subject.__value__.__args__)\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("tuple["))
+    binding = evaluate.eval_location(pymodule, offset)
+    assert binding is not None and getattr(
+        binding, "is_refactoring_identity_safe", True
+    )
+    assert (
+        codeassist.get_definition_location(model_project, source, offset, resource)[0]
+        == resource
+    )
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="generic classes require Python 3.12"
+)
+@pytest.mark.parametrize("query_first", [False, True])
+def test_generic_alias_queries_remain_readable_and_refusal_is_project_atomic(
+    model_project, query_first
+):
+    source = "target = int\nclass Risk[target]:\n    target = str\n    type Alias = tuple[target, target]\n"
+    resource = module(model_project, source)
+    client = model_project.root.create_file("client.py")
+    client.write("from subject import target\nobserved = target is int\n")
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("tuple["))
+    before = {file: file.read() for file in (resource, client)}
+    if query_first:
+        assert codeassist.get_definition_location(
+            model_project, source, offset, resource
+        ) == (resource, 4)
+        assert finderrors.find_errors(model_project, resource) == []
+        proposals = codeassist.code_assist(
+            model_project, source, offset + 3, resource=resource
+        )
+        assert "target" in {proposal.name for proposal in proposals}
+    opaque = evaluate.eval_location(pymodule, offset)
+    assert opaque.get_object() is pyobjects.get_unknown()
+    assert not opaque.is_refactoring_identity_safe
+    for selected in [
+        offset,
+        source.index("[target]") + 1,
+        source.index("target = str"),
+    ]:
+        with pytest.raises(exceptions.RefactoringError, match="unresolved"):
+            rename.Rename(model_project, resource, selected).get_changes("changed")
+        assert {file: file.read() for file in before} == before
+    # The same module's unrelated exported source name remains independently editable.
+    model_project.do(rename.Rename(model_project, resource, 0).get_changes("changed"))
+    assert "from subject import changed" in client.read()
+    assert "type Alias = tuple[target, target]" in resource.read()
+
+
+def test_change_occurrences_checks_only_the_selected_structural_region(model_project):
+    source = (
+        "target = int\nenabled = True\nclass Risk:\n    if enabled:\n        target = str\n"
+        "    def method(value: target):\n        return value\n"
+        "def allowed():\n    return target\nobserved = allowed() is int\n"
+    )
+    resource = module(model_project, source)
+    before = runtime_observed(source)
+    offset = source.index("target", source.index("return "))
+    model_project.do(
+        rename.ChangeOccurrences(model_project, resource, offset).get_changes("int")
+    )
+    assert runtime_observed(resource.read()) == before is True
+    assert "return int" in resource.read()
+    assert "value: target" in resource.read()
+    resource.write(source)
+    with pytest.raises(exceptions.RefactoringError, match="unresolved"):
+        rename.ChangeOccurrences(model_project, resource, 0).get_changes("changed")
+    assert resource.read() == source
+
+
+@pytest.mark.parametrize(
+    "source,entry_marker,body_marker",
+    [
+        (
+            "lex_outer = int\ncallback = lambda lex_item=lex_outer: lex_item\n",
+            "=lex_outer",
+            ": lex_item",
+        ),
+        (
+            "lex_outer = [int]\nvalues = [lex_item for lex_item in lex_outer]\n",
+            "in lex_outer",
+            "[lex_item",
+        ),
+    ],
+)
+def test_completion_separates_expression_entry_from_local_body(
+    model_project, source, entry_marker, body_marker
+):
+    resource = module(model_project, source)
+    for marker, body in [(entry_marker, False), (body_marker, True)]:
+        start = source.index("lex_", source.index(marker))
+        proposals = {
+            item.name: item.scope
+            for item in codeassist.code_assist(
+                model_project, source, start + 4, resource=resource, later_locals=False
+            )
+        }
+        assert proposals["lex_outer"] == "global"
+        if body:
+            assert proposals["lex_item"] == "local"
+        else:
+            assert "lex_item" not in proposals
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("callback = lambda item: item\n", []),
+        ("values = [item for item in [int]]\n", []),
+        (
+            "callback = lambda item: (item, absent)\n",
+            [(1, "Unresolved variable absent")],
+        ),
+        (
+            "values = [item for item in [int] if absent]\n",
+            [(1, "Unresolved variable absent")],
+        ),
+        ("result = later\nlater = int\n", [(1, "Defined later later")]),
+    ],
+)
+def test_find_errors_preserves_real_diagnostics_without_expression_false_positives(
+    model_project, source, expected
+):
+    resource = module(model_project, source)
+    assert [
+        (error.lineno, error.error)
+        for error in finderrors.find_errors(model_project, resource)
+    ] == expected
+
+
+def test_introduce_parameter_rewrites_outer_capture_in_comprehension(model_project):
+    source = "value = int\ndef subject():\n    return [value for item in [str]]\nobserved = subject() == [int]\n"
+    resource = module(model_project, source)
+    before = runtime_observed(source)
+    operation = introduce_parameter.IntroduceParameter(
+        model_project, resource, source.index("value", source.index("return "))
+    )
+    model_project.do(operation.get_changes("provided"))
+    assert runtime_observed(resource.read()) == before is True
+    assert "def subject(provided=value)" in resource.read()
+    assert "[provided for item" in resource.read()
+    assert (
+        runtime_observed(resource.read() + "observed = subject(str) == [str]\n") is True
+    )
+    resource.write(source)
+    with pytest.raises(exceptions.RefactoringError):
+        introduce_parameter.IntroduceParameter(
+            model_project, resource, source.index("item in")
+        )
+    assert resource.read() == source
+
+
+@pytest.mark.parametrize("future", [False, True])
+def test_introduce_parameter_refuses_annotation_environment_atomically(
+    model_project, future
+):
+    source = "from __future__ import annotations\n" if future else ""
+    source += "value = int\ndef subject(item: value):\n    return item\n"
+    resource = module(model_project, source)
+    offset = source.index("value", source.index("item:"))
+    with pytest.raises(exceptions.RefactoringError, match="inside functions"):
+        introduce_parameter.IntroduceParameter(model_project, resource, offset)
+    assert resource.read() == source
+
+
+@pytest.mark.parametrize("renamed_owner", ["Owner", "Other"])
+def test_callable_instance_lambda_drives_field_rename(model_project, renamed_owner):
+    source = "class Owner:\n    field = 1\n    __call__ = lambda self, item: self\nclass Other:\n    field = 2\nresult = Owner()(Other())\nobserved = result.field\n"
+    resource = module(model_project, source)
+    before = runtime_observed(source)
+    offset = source.index("field = " + ("1" if renamed_owner == "Owner" else "2"))
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == 1
+    assert ("observed = result.changed" in resource.read()) == (
+        renamed_owner == "Owner"
+    )
+
+
+def test_callable_instance_lambda_keyword_has_canonical_formal_identity(model_project):
+    source = "class Owner:\n    __call__ = lambda self, item: item\nresult = Owner()(item=str)\nobserved = result is str\n"
+    resource = module(model_project, source)
+    offset = source.index("item=str")
+    pymodule = model_project.get_pymodule(resource)
+    binder = (
+        pymodule["Owner"].get_object()["__call__"].get_object().get_parameters()["item"]
+    )
+    assert evaluate.eval_location(pymodule, offset) is binder
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) is True
+    assert "Owner()(changed=str)" in resource.read()
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="type aliases require Python 3.12"
+)
+def test_class_type_alias_captures_generic_owner_without_capturing_class_values(
+    model_project,
+):
+    source = "T = int\nclass Owner[T]:\n    unrelated = bytes\n    type Alias = tuple[T, T]\nobserved = Owner.Alias.__value__.__args__ == (Owner.__type_params__[0],) * 2\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("T", source.index("type Alias"))
+    binder = evaluate.eval_location(pymodule, offset)
+    own = evaluate.eval_location(pymodule, source.index("[T]") + 1)
+    assert binder is own and binder is not pymodule["T"]
+    proposals = codeassist.code_assist(
+        model_project, source, offset + 1, resource=resource
+    )
+    assert "T" in {proposal.name for proposal in proposals}
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, source.index("[T]") + 1).get_changes("V")
+    )
+    assert runtime_observed(resource.read()) == before is True
+    assert "T = int" in resource.read()
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="generic functions require Python 3.12"
+)
+@pytest.mark.parametrize("expression", ["T", "(lambda: T)()"])
+def test_generic_annotation_query_remains_opaque_through_nested_lambda(
+    model_project, expression
+):
+    source = f"T = int\ndef subject[T](value: {expression}):\n    return value\nobserved = subject(str) is str\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("T", source.index("value: "))
+    binder = evaluate.eval_location(pymodule, offset)
+    assert not binder.is_refactoring_identity_safe
+    assert binder.get_object() is pyobjects.get_unknown()
+    assert (
+        codeassist.get_definition_location(model_project, source, offset, resource)[0]
+        == resource
+    )
+    proposals = codeassist.code_assist(
+        model_project, source, offset + 1, resource=resource
+    )
+    assert "T" in {proposal.name for proposal in proposals}
+    assert runtime_observed(source) is True
+    for selected in [offset, source.index("[T]") + 1]:
+        with pytest.raises(exceptions.RefactoringError, match="unresolved"):
+            rename.Rename(model_project, resource, selected).get_changes("V")
+        assert resource.read() == source
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 14), reason="annotation walrus requires eager annotations"
+)
+@pytest.mark.parametrize("owner", ["module", "class"])
+def test_eager_annotation_walrus_installs_its_declaration_binding(model_project, owner):
+    if owner == "module":
+        source = "def subject(value: (target := str)):\n    return value\nobserved = subject(int) is int and target is str\n"
+    else:
+        source = "target = int\nclass Owner:\n    def subject(value: (target := str)):\n        return value\nobserved = Owner.subject(int) is int and Owner.target is str and target is int\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target :=")
+    binding = evaluate.eval_location(pymodule, offset)
+    if owner == "class":
+        assert binding is pymodule["Owner"].get_object()["target"]
+        assert binding is not pymodule["target"]
+    else:
+        assert binding is pymodule["target"]
+    assert binding.get_definition_location()[0] is pymodule
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before is True
+
+
+@pytest.mark.parametrize("selection", ["outer", "class"])
+def test_class_lambda_default_walrus_does_not_change_outer_source_binding(
+    model_project, selection
+):
+    source = "target = int\nclass Owner:\n    callback = staticmethod(lambda value=(target := str): value)\nobserved = Owner.callback() is str and Owner.target is str and target is int\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target :=") if selection == "class" else 0
+    selected = evaluate.eval_location(pymodule, offset)
+    class_binding = evaluate.eval_location(pymodule, source.index("target :="))
+    assert class_binding is not pymodule["target"]
+    assert selected is (class_binding if selection == "class" else pymodule["target"])
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before is True
+
+
+@pytest.mark.parametrize("mode", ["eager", "future", "lazy"])
+@pytest.mark.parametrize("declaration", ["import", "function", "class", "late"])
+def test_class_annotation_namespace_obeys_declaration_order_and_name_shadowing(
+    model_project, mode, declaration
+):
+    source = prefix(mode) + "import typing\ntarget = int\nclass Owner:\n"
+    if declaration == "import":
+        body = "from builtins import str as target\n"
+        expression = "typing.get_type_hints(Owner.subject)['value'] is str"
+    elif declaration == "function":
+        body = "def target():\n    return bytes\n"
+        expression = "typing.get_type_hints(Owner.subject)['value']() is bytes"
+    elif declaration == "class":
+        body = "class target:\n    marker = 7\n"
+        expression = "typing.get_type_hints(Owner.subject)['value'].marker == 7"
+    else:
+        body = ""
+        expression = (
+            "typing.get_type_hints(Owner.subject)['value'] is bytes"
+            if mode == "lazy"
+            else "typing.get_type_hints(Owner.subject)['value'] is int"
+        )
+    body += "def subject(value: target):\n    return value\n"
+    if declaration == "late":
+        body += "target = bytes\n"
+    if mode == "future":
+        expression = "typing.get_type_hints(Owner.subject)['value'] is int"
+    source += indent(body, "    ")
+    source += f"observed = (Owner.subject(str) is str, {expression}, target is int)\n"
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    offset = source.index("target", source.index("value: "))
+    expected = pymodule["target"]
+    class_resolver = mode != "future" and (declaration != "late" or mode == "lazy")
+    if class_resolver:
+        expected = pymodule["Owner"].get_object()["target"]
+    assert evaluate.eval_location(pymodule, offset) is expected
+    proposals = codeassist.code_assist(
+        model_project, source, offset + 3, resource=resource, later_locals=False
+    )
+    assert "target" in {proposal.name for proposal in proposals}
+    before = runtime_observed(source)
+    # Renaming the outer source must leave independently declared class names intact.
+    model_project.do(
+        rename.Rename(
+            model_project, resource, source.index("target = int")
+        ).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == (True, True, True)
+    assert ("value: target" in resource.read()) == class_resolver
+
+
+@pytest.mark.parametrize(
+    "expression", ["lambda item: item", "[item for item in [str]]"]
+)
+def test_change_occurrences_limits_edits_to_expression_binding(
+    model_project, expression
+):
+    if "lambda" in expression:
+        source = f"item = int\ncallback = {expression}\nobserved = (callback(str) is str, item is int)\n"
+        offset = source.index("item:")
+    else:
+        source = f"item = int\nresult = {expression}\nobserved = (result == [str], item is int)\n"
+        offset = source.index("item", source.index("for "))
+    resource = module(model_project, source)
+    before = runtime_observed(source)
+    model_project.do(
+        rename.ChangeOccurrences(model_project, resource, offset).get_changes("changed")
+    )
+    assert runtime_observed(resource.read()) == before == (True, True)
+    assert "item = int" in resource.read()
+    assert "item is int" in resource.read()
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "[item for item in owners][0]",
+        "{0: item for item in owners}[0]",
+        "{item for item in owners}.pop()",
+        "tuple(item for item in owners)[0]",
+        "[right for left, right in ((other, owner),)][0]",
+        "(lambda ignored: owner)(other)",
+    ],
+)
+def test_independently_parsed_expression_queries_keep_legacy_value_scope(
+    model_project, expression
+):
+    source = (
+        "class Owner:\n    field = 1\nclass Other:\n    field = 2\n"
+        "owner = Owner()\nother = Other()\nitem = other\nowners = [owner]\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+    namespace = {}
+    exec(compile(source, "query_source.py", "exec", dont_inherit=True), namespace)
+    result = eval(expression, namespace)
+    assert type(result) is namespace["Owner"] and result.field == 1
+    item_offset = source.index("item = other")
+    source_binding = evaluate.eval_location(pymodule, item_offset)
+    assert source_binding.get_object().get_type() is pymodule["Other"].get_object()
+    for cold in (False, True):
+        if cold:
+            model_project.pycore.module_cache.forget_all_data()
+        inferred = evaluate.eval_str(pymodule.get_scope(), expression)
+        _, inferred_pair = evaluate.eval_str2(pymodule.get_scope(), expression)
+        assert inferred.get_object().get_type() is pymodule["Owner"].get_object()
+        assert inferred_pair.get_object().get_type() is pymodule["Owner"].get_object()
+        assert evaluate.eval_location(pymodule, item_offset) is source_binding
+        assert source_binding.get_object().get_type() is pymodule["Other"].get_object()
+    assert resource.read() == source
+    assert namespace["item"] is namespace["other"]
+
+
+def test_public_binding_tree_locates_local_region_and_preserves_rename_driver(
+    model_project,
+):
+    source = (
+        "item = int\nouter_only = bytes\ncallback = (\n"
+        "    lambda item: [\n        item\n        for item in item\n    ]\n)\n"
+        "observed = (callback([str, bytes]) == [str, bytes], item is int)\n"
+    )
+    resource = module(model_project, source)
+    pymodule = model_project.get_pymodule(resource)
+
+    def locate(module_, code, name):
+        # A client traverses binding environments separately from structural scopes.
+        (lambda_scope,) = module_.get_scope().get_binding_scopes()
+        (comp_scope,) = lambda_scope.get_binding_scopes()
+        assert lambda_scope.get_kind() == "Lambda"
+        assert comp_scope.get_kind() == "Comprehension"
+        assert "outer_only" not in lambda_scope.get_names()
+        assert "outer_only" not in comp_scope.get_names()
+        formal = lambda_scope["item"]
+        local = comp_scope[name]
+        assert local is not formal and formal is not module_["item"]
+        lambda_start, lambda_end = lambda_scope.get_region()
+        comp_start, comp_end = comp_scope.get_region()
+        assert lambda_start < comp_start < comp_end <= lambda_end
+        assert code[lambda_start:lambda_end].startswith("lambda item:")
+        assert code[comp_start:comp_end].startswith("[")
+        declaration = code.index(name, code.index("for "))
+        body = code.index(name, comp_start)
+        iterable = code.index("item", code.index("in item"))
+        assert evaluate.eval_location(module_, declaration) is local
+        assert evaluate.eval_location(module_, body) is local
+        assert evaluate.eval_location(module_, iterable) is formal
+        assert local.get_definition_location() == (module_, 6)
+        assert codeassist.get_definition_location(
+            model_project, code, body, resource
+        ) == (resource, 6)
+        return lambda_scope, comp_scope, local, declaration
+
+    lambda_scope, comp_scope, binding, declaration = locate(pymodule, source, "item")
+    model_project.pycore.module_cache.forget_all_data()
+    cold_lambda, cold_comp, cold_binding, _ = locate(pymodule, source, "item")
+    assert cold_lambda is lambda_scope and cold_comp is comp_scope
+    assert cold_binding is binding
+    before = runtime_observed(source)
+    model_project.do(
+        rename.Rename(model_project, resource, declaration).get_changes("changed")
+    )
+    after = resource.read()
+    assert runtime_observed(after) == before == (True, True)
+    assert "for changed in item" in after
+    assert "lambda item:" in after and "item = int" in after
+    updated = model_project.get_pymodule(resource)
+    _, _, renamed_binding, _ = locate(updated, after, "changed")
+    assert renamed_binding is not updated["item"]
+
+
+def test_calltip_reads_simple_source_lambda_without_changing_its_binding(model_project):
+    source = "callback = lambda item: item\nobserved = callback(str) is str\n"
+    resource = module(model_project, source)
+    offset = source.index("callback(str)") + 1
+    assert (
+        codeassist.get_calltip(model_project, source, offset, resource=resource)
+        == "lambda(item)"
+    )
+    assert runtime_observed(source) is True
+    assert resource.read() == source
