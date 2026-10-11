@@ -456,6 +456,20 @@ Also ``Pycore.analyze_module()`` collects object information for a
 module.  The collected information can be used to enhance rope's
 static object inference.
 
+For an undecorated module function stored by a single class-body name
+assignment, direct and saved instance accesses retain the receiver.  Inherited
+slots and imported functions keep the original function, class slot, and
+parameter definitions, so field and keyword renames use those definitions.
+Call analysis and saved object records also preserve the bound callable and
+receiver across closing and reopening a project.
+
+This inference uses the existing ordinary argument protocol and requires a
+positional parameter for the receiver, without positional-only or keyword-only
+parameters.  Recognized function writes to an instance, including aliases,
+remain unbound.  Override checks cover the storage, receiver, and access
+modules; arbitrary writes in other modules, decorated storage classes,
+metaclasses, and multiple storage assignments are outside this inference.
+
 
 `rope.base.taskhandle.TaskHandle`
 =================================

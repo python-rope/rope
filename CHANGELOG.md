@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Preserve receivers and source identities for ordinary functions stored on classes (@yangfan-yf-yf)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 
