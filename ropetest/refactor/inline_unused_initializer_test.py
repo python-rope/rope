@@ -334,3 +334,89 @@ def test_unrelated_local_deletion_does_not_block_outer_name_initializer(tmp_path
     changed = _single(tmp_path, code, "42\n")
     assert "target =" not in changed["subject.py"]
     assert "print(value)" in changed["subject.py"]
+
+
+def test_builtin_name_alias_is_still_inlined(tmp_path):
+    code = "target = len\nprint(target([1, 2]))\n"
+    changed = _single(tmp_path, code, "2\n")
+    assert changed["subject.py"] == "print(len([1, 2]))\n"
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_function_parameter_alias_is_still_inlined(tmp_path):
+    code = dedent("""\
+        def run(value):
+            target = value
+            print(target)
+        run(42)
+    """)
+    changed = _single(tmp_path, code, "42\n")
+    assert changed["subject.py"] == dedent("""\
+        def run(value):
+            print(value)
+        run(42)
+    """)
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_same_module_function_alias_is_still_inlined(tmp_path):
+    code = dedent("""\
+        def value():
+            return 42
+        target = value
+        print(target())
+    """)
+    changed = _single(tmp_path, code, "42\n")
+    assert changed["subject.py"] == dedent("""\
+        def value():
+            return 42
+        print(value())
+    """)
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_imported_module_alias_is_still_inlined(tmp_path):
+    code = "import math as value\ntarget = value\nprint(target.sqrt(4))\n"
+    changed = _single(tmp_path, code, "2.0\n")
+    assert changed["subject.py"] == "import math as value\nprint(value.sqrt(4))\n"
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_imported_value_alias_is_still_inlined(tmp_path):
+    code = "from math import pi as value\ntarget = value\nprint(target)\n"
+    changed = _single(tmp_path, code, "3.141592653589793\n")
+    assert changed["subject.py"] == "from math import pi as value\nprint(value)\n"
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_outer_name_remains_bound_across_unrelated_literal_and_pass(tmp_path):
+    code = dedent("""\
+        value = 42
+        unrelated = 0
+        pass
+        def run():
+            target = value
+            print(target)
+        run()
+    """)
+    changed = _single(tmp_path, code, "42\n")
+    assert changed["subject.py"] == dedent("""\
+        value = 42
+        unrelated = 0
+        pass
+        def run():
+            print(value)
+        run()
+    """)
+    assert changed["main.py"] == "import subject\n"
+
+
+def test_class_name_alias_removal_is_conservatively_atomic(tmp_path):
+    code = dedent("""\
+        class Box:
+            value = 42
+            target = value
+            print(target)
+        print(Box.value)
+    """)
+    _single(tmp_path, code, "42\n42\n", refuse=True)
