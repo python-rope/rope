@@ -617,6 +617,18 @@ Examples
 Rename
 ------
 
+Rope follows a single unconditional assignment such as ``Holder.value = Item()``
+when both classes are defined at module level in the same module and the value
+has ordinary data lookup behavior. Imported names in a class body retain their
+original source identity when the corresponding class attribute is replaced.
+
+Repeated or conditional writes, early or deferred reads, class rebinding,
+inheritance, and custom attribute lookup can leave the value uncertain. For
+these modeled writes, a potentially affected rename raises
+``rope.base.exceptions.RefactoringError`` before producing changes. This
+analysis is conservative and may refuse an otherwise safe rename; it does not
+infer arbitrary factories, descriptors, or dynamic cross-module assignments.
+
 Using rename refactoring:
 
 .. code-block:: python
