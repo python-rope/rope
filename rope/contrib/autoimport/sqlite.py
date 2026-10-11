@@ -15,9 +15,10 @@ from datetime import datetime
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
-from threading import local
+from threading import Lock, Thread, current_thread, local
 from typing import (
     TYPE_CHECKING,
+    Dict,
     Generator,
     Iterable,
     Iterator,
@@ -143,6 +144,8 @@ class AutoImport:
                 DeprecationWarning,
             )
         self.thread_local = local()
+        self._connections: Dict[Thread, sqlite3.Connection] = {}
+        self._connections_lock = Lock()
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
@@ -186,10 +189,15 @@ class AutoImport:
             else:
                 project_hash = calculate_project_hash(project.ropefolder.real_path)
             return sqlite3.connect(
-                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+                f"file:rope-{project_hash}:?mode=memory&cache=shared",
+                uri=True,
+                check_same_thread=False,
             )
         else:
-            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
+            return sqlite3.connect(
+                project.ropefolder.pathlib / "autoimport.db",
+                check_same_thread=False,
+            )
 
     @property
     def connection(self) -> sqlite3.Connection:
@@ -199,7 +207,7 @@ class AutoImport:
         This makes sure AutoImport can be shared across threads.
         """
         if not hasattr(self.thread_local, "connection"):
-            self.thread_local.connection = self.create_database_connection(
+            self.connection = self.create_database_connection(
                 project=self.project,
                 memory=self.memory,
             )
@@ -208,6 +216,14 @@ class AutoImport:
     @connection.setter
     def connection(self, value: sqlite3.Connection):
         self.thread_local.connection = value
+        # Keep track of every thread's connection, so close() can close them
+        # all. Connections of threads that have finished are closed here.
+        with self._connections_lock:
+            for thread, connection in list(self._connections.items()):
+                if not thread.is_alive():
+                    connection.close()
+                    del self._connections[thread]
+            self._connections[current_thread()] = value
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
@@ -458,9 +474,13 @@ class AutoImport:
         self.generate_modules_cache([module])
 
     def close(self):
-        """Close the autoimport database."""
+        """Close the autoimport database, including other threads' connections."""
         self.connection.commit()
-        self.connection.close()
+        with self._connections_lock:
+            connections = list(self._connections.values())
+            self._connections.clear()
+        for connection in connections:
+            connection.close()
 
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
