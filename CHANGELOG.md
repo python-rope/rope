@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Prevent unsafe initializer and annotation removal when inlining variables (@yangfan-yf-yf)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 
