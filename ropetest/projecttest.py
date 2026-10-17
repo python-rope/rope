@@ -5,6 +5,8 @@ import unittest
 from textwrap import dedent
 from unittest.mock import patch
 
+import pytest
+
 from rope.base.exceptions import ResourceNotFoundError, RopeError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
@@ -1195,3 +1197,19 @@ class RopeFolderTest(unittest.TestCase):
         ropefolder = self.project.ropefolder
         self.assertEqual(".f1/f2", ropefolder.path)
         self.assertTrue(ropefolder.exists())
+
+
+@pytest.mark.parametrize("parent", ["", "web"])
+def test_node_modules_excluded_from_project_scans_by_default(tmp_path, parent):
+    project = Project(tmp_path, ropefolder=None)
+    try:
+        src = project.root.create_folder("src")
+        module = src.create_file("app.py")
+        dependency = tmp_path / parent / "node_modules" / "dependency"
+        dependency.mkdir(parents=True)
+        (dependency / "build_helper.py").touch()
+
+        assert project.get_files() == {module}
+        assert project.get_source_folders() == [src]
+    finally:
+        project.close()
