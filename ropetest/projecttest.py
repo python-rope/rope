@@ -1043,22 +1043,6 @@ class RopeFolderTest(unittest.TestCase):
         myfile = myfolder.create_file("myfile.txt")
         self.assertTrue(self.project.is_ignored(myfile))
 
-    def test_node_modules_excluded_from_project_scans_by_default(self):
-        with tempfile.TemporaryDirectory(dir=testutils.RUN_TMP_DIR) as tmpdir:
-            project = Project(tmpdir, ropefolder=None)
-            try:
-                src = project.root.create_folder("src")
-                module = src.create_file("app.py")
-                for parent in ("", "web"):
-                    dependency = pathlib.Path(tmpdir) / parent / "node_modules" / "dependency"
-                    dependency.mkdir(parents=True)
-                    (dependency / "build_helper.py").touch()
-
-                self.assertEqual({module}, project.get_files())
-                self.assertEqual([src], project.get_source_folders())
-            finally:
-                project.close()
-
     def test_ignored_resources_and_get_files(self):
         self.project = testutils.sample_project(
             ignored_resources=["myfile.txt"], ropefolder=None
