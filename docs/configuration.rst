@@ -42,9 +42,6 @@ It will be used if ``[tool.rope]`` is not present in ``pyproject.toml`` or ``pyp
             "node_modules",
         ]
 
-By default, ``node_modules`` directories are ignored at any depth, avoiding
-scans of JavaScript dependencies in projects that also contain Python code.
-
 Additionally, you can run an executable function at startup of rope.
 
 .. code-block:: python3
