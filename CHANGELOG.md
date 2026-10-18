@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Honor native module and namespace precedence when resolving imports: regular packages and modules win over namespace-package directories, and namespace portions are combined across source folders
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 

@@ -6,7 +6,7 @@ import os
 import sys
 import warnings
 from contextlib import ExitStack
-from typing import Optional
+from typing import Optional, Union
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
@@ -142,24 +142,19 @@ class _Project:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None) -> Optional[File]:
+    def find_module(self, modname, folder=None) -> Optional[Union[File, Folder]]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
         """
-        for src in self.get_source_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        for src in self.get_python_path_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        if folder is not None:
-            module = _find_module_in_folder(folder, modname)
-            if module is not None:
-                return module
-        return None
+
+        def folders():
+            yield from self.get_source_folders()
+            yield from self.get_python_path_folders()
+            if folder is not None:
+                yield folder
+
+        return _find_module_in_folders(folders(), modname)
 
     def find_relative_module(self, modname, folder, level):
         for i in range(level - 1):
@@ -167,7 +162,7 @@ class _Project:
         if modname == "":
             return folder
         else:
-            return _find_module_in_folder(folder, modname)
+            return _find_module_in_folders([folder], modname)
 
     def is_ignored(self, resource):
         return False
@@ -437,22 +432,31 @@ def _realpath(path):
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
 
 
-def _find_module_in_folder(folder, modname):
-    module = folder
-    packages = modname.split(".")
-    for pkg in packages[:-1]:
-        if module.is_folder() and module.has_child(pkg):
-            module = module.get_child(pkg)
+def _find_module_in_folders(folders, modname):
+    for name in modname.split("."):
+        namespaces = []
+        for folder in folders:
+            if not folder.is_folder():
+                continue
+            package = folder.get_child(name) if folder.has_child(name) else None
+            if package is not None and package.is_folder():
+                if (
+                    package.has_child("__init__.py")
+                    and not package.get_child("__init__.py").is_folder()
+                ):
+                    module = package
+                    folders = [package]
+                    break
+                namespaces.append(package)
+            if folder.has_child(name + ".py"):
+                source = folder.get_child(name + ".py")
+                if not source.is_folder():
+                    module = source
+                    folders = []
+                    break
         else:
-            return None
-    if module.is_folder():
-        if (
-            module.has_child(packages[-1])
-            and module.get_child(packages[-1]).is_folder()
-        ):
-            return module.get_child(packages[-1])
-        elif (
-            module.has_child(packages[-1] + ".py")
-            and not module.get_child(packages[-1] + ".py").is_folder()
-        ):
-            return module.get_child(packages[-1] + ".py")
+            if not namespaces:
+                return None
+            module = namespaces[0]
+            folders = namespaces
+    return module
