@@ -100,13 +100,22 @@ class Scope:
         pass
 
     def get_region(self):
-        self._calculate_scope_regions_for_module()
+        global_scope = self._get_global_scope()
         node = self.pyobject.get_ast()
-        region = patchedast.node_region(node)
-        return region
-
-    def _calculate_scope_regions_for_module(self):
-        self._get_global_scope()._calculate_scope_regions()
+        if isinstance(node, ast.Module):
+            return (0, len(global_scope._get_source()))
+        start, end = global_scope._ast_lines[node]
+        if start is None or end is None:
+            raise exceptions.RopeError("Scope AST has no complete source positions")
+        decorators = getattr(node, "decorator_list", ())
+        if decorators:
+            decorator_start, _ = global_scope._ast_lines[decorators[0]]
+            if decorator_start is None:
+                raise exceptions.RopeError("Decorator AST has no source positions")
+            start = global_scope._region_source.rfind_token("@", 0, decorator_start)
+            if start is None:
+                raise exceptions.RopeError("Scope decorator has no source marker")
+        return (start, end)
 
     def in_region(self, offset):
         """Checks if offset is in scope region"""
@@ -134,10 +143,15 @@ class GlobalScope(Scope):
                 return self.builtin_names[name]
             raise exceptions.NameNotFoundError("name %s not found" % name)
 
+    @property
     @utils.saveit
-    def _calculate_scope_regions(self):
-        source = self._get_source()
-        patchedast.patch_ast(self.pyobject.get_ast(), source)
+    def _ast_lines(self):
+        return codeanalyze.ASTLinesAdapter(self._get_source())
+
+    @property
+    @utils.saveit
+    def _region_source(self):
+        return patchedast._Source(self._get_source())
 
     def _get_source(self):
         return self.pyobject.source_code
