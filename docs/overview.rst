@@ -400,7 +400,7 @@ Extract Method
 In these examples ``${region_start}`` and ``${region_end}`` show the
 selected region for extraction:
 
-.. code-block:: none
+.. code-block:: python
 
   def a_func():
       a = 1
@@ -421,7 +421,7 @@ After performing extract method we'll have:
 
 For multi-line extractions if we have:
 
-.. code-block:: none
+.. code-block:: python
 
   def a_func():
       a = 1
@@ -1265,7 +1265,7 @@ After running ``mod1`` either SOA or DOA on this module you can test:
 
 ``mod2.py``:
 
-.. code-block:: none
+.. code-block:: python
 
   import mod1
 
@@ -1406,6 +1406,13 @@ Parametrized objects:
 Nested expressions also allowed:
 
 - collections.Iterable[list[Foo]]
+
+Union alternatives:
+
+- Foo | Bar
+
+Attribute completion includes the attributes exposed by each resolved
+alternative.
 
 TODO:
 
