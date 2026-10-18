@@ -75,7 +75,7 @@ class Resource(os.PathLike):
         """Create this resource"""
 
     def exists(self):
-        return os.path.exists(self)
+        return self.project.fscommands.exists(self.real_path)
 
     @property
     def parent(self):
@@ -171,18 +171,12 @@ class Folder(Resource):
 
     def get_children(self):
         """Return the children of this folder"""
-        try:
-            children = os.listdir(self)
-        except OSError:
-            return []
+        children = self.project.fscommands.listdir(self.real_path)
         result = []
         for name in children:
-            try:
-                child = self.get_child(name)
-            except exceptions.ResourceNotFoundError:
-                continue
+            child = self.get_child(name)
             if not self.project.is_ignored(child):
-                result.append(self.get_child(name))
+                result.append(child)
         return result
 
     def create_file(self, file_name):

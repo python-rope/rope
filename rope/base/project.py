@@ -46,13 +46,13 @@ class _Project:
 
         """
         path = self._get_resource_path(resource_name)
-        if not os.path.exists(path):
+        if not self.fscommands.exists(path):
             raise exceptions.ResourceNotFoundError(
                 "Resource <%s> does not exist" % resource_name
             )
-        elif os.path.isfile(path):
+        elif self.fscommands.isfile(path):
             return File(self, resource_name)
-        elif os.path.isdir(path):
+        elif self.fscommands.isdir(path):
             return Folder(self, resource_name)
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
@@ -211,13 +211,22 @@ class Project(_Project):
 
         """
         if projectroot != "/":
-            projectroot = _realpath(projectroot).rstrip("/\\")
+            projectroot = (
+                _realpath(projectroot)
+                if fscommands is None
+                else fscommands.realpath(projectroot)
+            ).rstrip("/\\")
         assert isinstance(projectroot, str)
         self._address = projectroot
         self._ropefolder_name = ropefolder
-        if not os.path.exists(self._address):
-            os.mkdir(self._address)
-        elif not os.path.isdir(self._address):
+        filesystem = (
+            rope.base.fscommands.FileSystemCommands()
+            if fscommands is None
+            else fscommands
+        )
+        if not filesystem.exists(self._address):
+            filesystem.create_folder(self._address)
+        elif not filesystem.isdir(self._address):
             raise exceptions.RopeError("Project root exists and" " is not a directory")
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
@@ -254,7 +263,7 @@ class Project(_Project):
         ]
 
     def _get_resource_path(self, name):
-        return os.path.join(self._address, *name.split("/"))
+        return os.path.normpath(os.path.join(self._address, *name.split("/")))
 
     def _init_ropefolder(self):
         if self.ropefolder is not None and not self.ropefolder.exists():
