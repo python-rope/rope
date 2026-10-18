@@ -427,6 +427,13 @@ class that provides this interface.  ``rope.base.project.Project``
 accepts an ``fscommands`` argument.  You can use this argument to force
 rope to use your new class.
 
+The same interface owns resource queries: ``exists``, ``isfile``,
+``isdir``, ``listdir``, ``stat``, and ``realpath``.  A captured filesystem can
+therefore keep both reads and directory elections independent of later
+disk changes.  Resource observers obtain the original modification and size
+indicator from this same ``stat`` port.  Directory enumeration and metadata
+errors propagate to the caller.
+
 
 ``.ropeproject`` Folder
 =======================
