@@ -1,8 +1,9 @@
 import unittest
 from textwrap import dedent
 
-from rope.base import libutils
+from rope.base import exceptions, libutils
 from rope.base.pyobjects import get_base_type
+from rope.refactor import patchedast
 from ropetest import testutils
 
 
@@ -560,3 +561,141 @@ class PyCoreScopesTest(unittest.TestCase):
         )
 
         self.assertEqual(scope.get_scopes()[1].get_region(), (26, 47))
+
+    def test_scope_regions_with_normalized_import_alias(self):
+        alias = "u\u0301"
+        code = (
+            f"from os import path as {alias}\n"
+            f"def outer({alias}):\n"
+            "    def inner():\n"
+            f"        marker = 'π'; return {alias}.sep\n"
+            "    return inner\n"
+        )
+        scope = libutils.get_string_scope(self.project, code)
+        outer = scope.get_scopes()[0]
+        inner = outer.get_scopes()[0]
+
+        self.assertIs(scope, scope.get_inner_scope_for_offset(code.index(alias)))
+        self.assertIs(
+            inner, scope.get_inner_scope_for_offset(code.index(alias + ".sep"))
+        )
+        self.assertIs(inner.lookup("ú"), outer.lookup("ú"))
+        self.assertIsNot(inner.lookup("ú"), scope.lookup("ú"))
+
+    def test_decorated_scope_regions_preserve_raw_string_newlines(self):
+        for newline in ("\n", "\r\n", "\r"):
+            for definition in (
+                "def sample(value):\n    marker = 'π'; return value\n",
+                "async def sample(value):\n    marker = 'π'; return value\n",
+                "class Sample:\n    marker = 'π'; value = 1\n",
+            ):
+                with self.subTest(newline=newline, definition=definition):
+                    code = (
+                        "from os import path as u\u0301\n"
+                        "@(\n"
+                        "    # @ is not the decorator marker\n"
+                        "    decorate\n"
+                        ")\n"
+                        "@other\n"
+                        + definition
+                    ).replace("\n", newline)
+                    module = libutils.get_string_module(self.project, code)
+                    self.assertEqual(code, module.source_code)
+                    scope = module.get_scope()
+                    child = scope.get_scopes()[0]
+                    expected = (code.index("@("), len(code.rstrip("\r\n")))
+
+                    self.assertEqual((0, len(code)), scope.get_region())
+                    self.assertEqual(expected, child.get_region())
+                    self.assertIs(
+                        child,
+                        scope.get_inner_scope_for_offset(code.index("decorate") + 1),
+                    )
+                    self.assertFalse(child.in_region(expected[0]))
+                    self.assertTrue(child.in_region(expected[0] + 1))
+                    self.assertTrue(child.in_region(expected[1] - 1))
+                    self.assertFalse(child.in_region(expected[1]))
+
+    def test_scope_regions_use_the_decoded_resource_source(self):
+        for index, newline in enumerate(("\n", "\r\n", "\r")):
+            with self.subTest(newline=newline):
+                resource = testutils.create_module(self.project, "regions_%s" % index)
+                resource.write(
+                    "@(\n    decorate\n)\ndef sample():\n    return 'π'\n".replace(
+                        "\n", newline
+                    )
+                )
+                module = self.project.get_pymodule(resource)
+                source = module.source_code
+                self.assertNotIn("\r", source)
+                scope = module.get_scope()
+
+                self.assertEqual((0, len(source)), scope.get_region())
+                self.assertEqual(
+                    (source.index("@("), len(source.rstrip("\n"))),
+                    scope.get_scopes()[0].get_region(),
+                )
+
+    def test_scope_regions_with_normalized_alias_in_comprehensions(self):
+        alias = "u\u0301"
+        expressions = (
+            f"[({alias}, item) for item in values]",
+            f"{{({alias}, item) for item in values}}",
+            f"{{item: {alias} for item in values}}",
+            f"(({alias}, item) for item in values)",
+        )
+        for expression in expressions:
+            with self.subTest(expression=expression):
+                code = (
+                    f"from os import path as {alias}\n"
+                    "def sample(values):\n"
+                    f"    result = {expression}\n"
+                    "    return result\n"
+                )
+                scope = libutils.get_string_scope(self.project, code)
+                function = scope.get_scopes()[0]
+                comprehension = function.get_scopes()[0]
+
+                self.assertIs(
+                    comprehension,
+                    scope.get_inner_scope_for_offset(code.rindex(alias)),
+                )
+                self.assertIs(comprehension.lookup("ú"), scope.lookup("ú"))
+
+    def test_scope_region_does_not_partially_patch_the_module_ast(self):
+        code = "def sample(value):\n    return value\n"
+        module = libutils.get_string_module(self.project, code)
+        module.get_scope().get_scopes()[0].get_region()
+        patched = patchedast.patch_ast(module.get_ast(), code, sorted_children=True)
+
+        self.assertEqual(code, patchedast.write_ast(patched))
+
+    def test_scope_region_rejects_incomplete_source_positions(self):
+        scope = libutils.get_string_scope(self.project, "def sample(): pass\n")
+        child = scope.get_scopes()[0]
+        child.pyobject.get_ast().end_lineno = None
+
+        with self.assertRaisesRegex(exceptions.RopeError, "complete source positions"):
+            child.get_region()
+
+    def test_scope_decorator_marker_uses_python_line_boundaries(self):
+        for prefix in ("\f\n", "# leading\vcomment\n"):
+            with self.subTest(prefix=prefix):
+                code = (
+                    prefix
+                    + "@(\n"
+                    "    # @ is not the decorator marker\n"
+                    "    decorate\n"
+                    ")\n"
+                    "def sample():\n"
+                    "    pass\n"
+                )
+                scope = libutils.get_string_scope(self.project, code)
+                child = scope.get_scopes()[0]
+
+                self.assertEqual(
+                    (code.index("@("), len(code.rstrip("\n"))), child.get_region()
+                )
+                self.assertIs(
+                    child, scope.get_inner_scope_for_offset(code.index("decorate"))
+                )
