@@ -1,8 +1,6 @@
 import unittest
 from textwrap import dedent, indent
 
-import pytest
-
 from rope.base.oi.type_hinting import evaluate
 from rope.contrib.codeassist import code_assist
 from ropetest import testutils
@@ -269,14 +267,18 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
             class Sample(object):
                 {fix_indents(self._make_class_hint("str | threading.Thread"))}
                 def a_method(self):
-                    for i in self.a_attr.values():
-                        i.is_a""")
+                    self.a_attr.is_a""")
         result = self._assist(code)
-        try:
-            # Be sure, there isn't errors currently
-            self.assert_completion_in_result('is_alive', 'attribute', result)
-        except AssertionError as e:
-            pytest.xfail("failing configuration (but should work)")
+        self.assert_completion_in_result("is_alive", "attribute", result)
+
+    def test_hint_or_keeps_first_alternative_attributes(self):
+        code = dedent(f"""\
+            class Sample(object):
+                {fix_indents(self._make_class_hint("str | threading.Thread"))}
+                def a_method(self):
+                    self.a_attr.upp""")
+        result = self._assist(code)
+        self.assert_completion_in_result("upper", "builtin", result)
 
     def test_hint_nonexistent(self):
         code = dedent(f"""\
