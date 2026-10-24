@@ -194,6 +194,8 @@ def same_pyname(expected, pyname):
     """Check whether `expected` and `pyname` are the same"""
     if expected is None or pyname is None:
         return False
+    expected = getattr(expected, "source_pyname", expected)
+    pyname = getattr(pyname, "source_pyname", pyname)
     if expected == pyname:
         return True
     if not isinstance(
@@ -214,10 +216,33 @@ def unsure_pyname(pyname, unbound=True):
     """Return `True` if we don't know what this name references"""
     if pyname is None:
         return True
+    if not getattr(pyname, "is_refactoring_identity_safe", True):
+        return True
     if unbound and not isinstance(pyname, pynames.UnboundName):
         return False
     if pyname.get_object() == pyobjects.get_unknown():
         return True
+
+
+def check_opaque_references(project, pyname, resources, region=None):
+    if not getattr(pyname, "is_refactoring_identity_safe", True):
+        raise exceptions.RefactoringError(
+            "Cannot refactor a name with an unresolved source binding."
+        )
+    for resource in resources:
+        module = project.get_pymodule(resource)
+        index = module.get_source_binding_index()
+        for reference in index.opaque_references():
+            if region is not None:
+                start, _ = codeanalyze.ASTLinesAdapter(module.source_code)[
+                    reference.node
+                ]
+                if not region[0] <= start < region[1]:
+                    continue
+            if reference.may_reference(pyname):
+                raise exceptions.RefactoringError(
+                    "Cannot refactor a name possibly referenced in an unresolved annotation binding."
+                )
 
 
 class PyNameFilter:
