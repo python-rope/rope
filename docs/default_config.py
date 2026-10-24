@@ -28,6 +28,7 @@ def set_prefs(prefs):
     #        "venv",
     #        ".mypy_cache",
     #        ".pytest_cache",
+    #        "node_modules",
     #    ]
 
     # Specifies which files should be considered python files.  It is

@@ -2,6 +2,7 @@
 
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
+- #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 
 # Release 1.15.0
 

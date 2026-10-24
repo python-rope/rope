@@ -39,6 +39,7 @@ It will be used if ``[tool.rope]`` is not present in ``pyproject.toml`` or ``pyp
             ".tox",
             ".venv",
             "venv",
+            "node_modules",
         ]
 
 Additionally, you can run an executable function at startup of rope.

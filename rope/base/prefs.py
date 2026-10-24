@@ -67,6 +67,7 @@ class Prefs:
             "venv",
             ".mypy_cache",
             ".pytest_cache",
+            "node_modules",
         ],
         description=dedent("""
             Specify which files and folders to ignore in the project.
