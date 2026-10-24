@@ -4,6 +4,7 @@ from textwrap import dedent
 
 from rope.base import exceptions, libutils
 from rope.base.builtins import BuiltinClass, File
+from rope.base.project import Project
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pynamesdef import AssignedName
 from rope.base.pyobjects import AbstractFunction, get_base_type
@@ -329,6 +330,81 @@ class PyCoreTest(unittest.TestCase):
         samplepkg = testutils.create_package(self.project, "sample", src)
         found_module = self.project.find_module("sample")
         self.assertEqual(samplepkg, found_module)
+
+    def test_find_module_prefers_module_to_namespace_directory(self):
+        self.project.root.create_folder("sample")
+        samplemod = testutils.create_module(self.project, "sample")
+        self.assertEqual(samplemod, self.project.find_module("sample"))
+
+    def test_find_module_retains_namespace_directory(self):
+        namespace = self.project.root.create_folder("sample")
+        self.project.close()
+        self.project = Project(self.project.address, source_folders=[""])
+        self.assertEqual(namespace, self.project.find_module("sample"))
+
+    def test_find_nested_module_does_not_search_shadowed_namespace(self):
+        namespace = self.project.root.create_folder("sample")
+        testutils.create_module(self.project, "child", namespace)
+        testutils.create_module(self.project, "sample")
+        self.assertIsNone(self.project.find_module("sample.child"))
+
+    def test_find_module_defers_namespace_to_later_source_module(self):
+        first = self.project.root.create_folder("first")
+        second = self.project.root.create_folder("second")
+        first.create_folder("sample")
+        samplemod = testutils.create_module(self.project, "sample", second)
+        self.project.close()
+        self.project = Project(self.project.address, source_folders=["first", "second"])
+        self.assertEqual(samplemod, self.project.find_module("sample"))
+
+    def test_find_module_defers_namespace_to_later_regular_package(self):
+        first = self.project.root.create_folder("first")
+        second = self.project.root.create_folder("second")
+        namespace = first.create_folder("sample")
+        testutils.create_module(self.project, "child", namespace)
+        package = testutils.create_package(self.project, "sample", second)
+        self.project.close()
+        self.project = Project(self.project.address, source_folders=["first", "second"])
+        self.assertEqual(package, self.project.find_module("sample"))
+        self.assertIsNone(self.project.find_module("sample.child"))
+
+    def test_find_nested_module_searches_namespace_portions(self):
+        first = self.project.root.create_folder("first")
+        second = self.project.root.create_folder("second")
+        first.create_folder("sample")
+        namespace = second.create_folder("sample")
+        samplemod = testutils.create_module(self.project, "child", namespace)
+        self.project.close()
+        self.project = Project(self.project.address, source_folders=["first", "second"])
+        self.assertEqual(samplemod, self.project.find_module("sample.child"))
+
+    def test_relative_import_prefers_config_module_to_namespace_directory(self):
+        package = testutils.create_package(self.project, "sample")
+        package.create_folder("config")
+        config = testutils.create_module(self.project, "config", package)
+        config.write("class FlextCliConfig:\n    pass\n")
+        consumer = testutils.create_module(self.project, "consumer", package)
+        consumer.write("from .config import FlextCliConfig\n")
+        expected = self.project.get_pymodule(config)["FlextCliConfig"].get_object()
+        actual = self.project.get_pymodule(consumer)["FlextCliConfig"].get_object()
+        self.assertEqual(expected, actual)
+
+    def test_relative_import_keeps_regular_package_precedence(self):
+        package = testutils.create_package(self.project, "sample")
+        testutils.create_module(self.project, "config", package)
+        config = testutils.create_package(self.project, "config", package)
+        config.get_child("__init__.py").write("class Configuration:\n    pass\n")
+        consumer = testutils.create_module(self.project, "consumer", package)
+        consumer.write("from .config import Configuration\n")
+        expected = self.project.get_pymodule(config)["Configuration"].get_object()
+        actual = self.project.get_pymodule(consumer)["Configuration"].get_object()
+        self.assertEqual(expected, actual)
+
+    def test_relative_module_does_not_search_unrelated_source_roots(self):
+        package = testutils.create_package(self.project, "sample")
+        testutils.create_module(self.project, "config")
+        with self.assertRaises(exceptions.ModuleNotFoundError):
+            self.project.get_relative_module("config", package, 1)
 
     def test_source_folders_preference(self):
         testutils.create_package(self.project, "pkg1")
