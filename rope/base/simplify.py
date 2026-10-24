@@ -26,7 +26,10 @@ def real_code(source):
     for start, end, matchgroups in ignored_regions(source):
         if source[start] == "#":
             replacement = " " * (end - start)
-        elif "f" in matchgroups.get("prefix", "").lower():
+        elif any(
+            prefix in matchgroups.get("prefix", "").lower()
+            for prefix in ("f", "t")
+        ):
             replacement = None
         else:
             replacement = '"%s"' % (" " * (end - start - 2))
