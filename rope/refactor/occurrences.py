@@ -36,12 +36,11 @@ calling the `create_finder()` function.
 """
 
 import contextlib
-import re
+import io
+import tokenize
 from typing import Iterator
 
 from rope.base import (
-    ast,
-    codeanalyze,
     evaluate,
     exceptions,
     pynames,
@@ -311,14 +310,6 @@ class _TextualFinder:
     def __init__(self, name, docs=False):
         self.name = name
         self.docs = docs
-        self.comment_pattern = _TextualFinder.any("comment", [r"#[^\n]*"])
-        self.string_pattern = _TextualFinder.any(
-            "string", [codeanalyze.get_string_pattern()]
-        )
-        self.f_string_pattern = _TextualFinder.any(
-            "fstring", [codeanalyze.get_formatted_string_pattern()]
-        )
-        self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source: str) -> Iterator[int]:
         if not self._fast_file_query(source):
@@ -326,26 +317,24 @@ class _TextualFinder:
         if self.docs:
             searcher = self._normal_search
         else:
-            searcher = self._re_search
+            searcher = self._token_search
         yield from searcher(source)
 
-    def _re_search(self, source: str) -> Iterator[int]:
-        for match in self.pattern.finditer(source):
-            if match.groupdict()["occurrence"]:
-                yield match.start("occurrence")
-            elif match.groupdict()["fstring"]:
-                f_string = match.groupdict()["fstring"]
-                for offset in self._search_in_f_string(f_string):
-                    yield match.start("fstring") + offset
+    def _token_search(self, source: str) -> Iterator[int]:
+        """Yield the offsets of every NAME token equal to the searched name.
 
-    def _search_in_f_string(self, f_string: str) -> Iterator[int]:
-        tree = ast.parse(f_string)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and node.id == self.name:
-                yield node.col_offset
-            elif isinstance(node, ast.Attribute) and node.attr == self.name:
-                assert node.end_col_offset is not None
-                yield node.end_col_offset - len(self.name)
+        Python 3.12+ tokenizes f-string replacement fields as ordinary
+        tokens, so names are found even inside PEP 701 f-strings whose
+        replacement fields reuse the outer quote, where regex matching and
+        ``ast.parse`` of a truncated capture fail.
+        """
+        line_starts = [0]
+        for line in source.splitlines(keepends=True):
+            line_starts.append(line_starts[-1] + len(line))
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type == tokenize.NAME and token.string == self.name:
+                row, column = token.start
+                yield line_starts[row - 1] + column
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0
@@ -371,23 +360,6 @@ class _TextualFinder:
             return resource.read()
         else:
             return pymodule.source_code
-
-    def _get_occurrence_pattern(self, name):
-        occurrence_pattern = _TextualFinder.any("occurrence", ["\\b" + name + "\\b"])
-        pattern = re.compile(
-            occurrence_pattern
-            + "|"
-            + self.comment_pattern
-            + "|"
-            + self.string_pattern
-            + "|"
-            + self.f_string_pattern
-        )
-        return pattern
-
-    @staticmethod
-    def any(name, list_):
-        return "(?P<%s>" % name + "|".join(list_) + ")"
 
 
 class _OccurrenceToolsCreator:
