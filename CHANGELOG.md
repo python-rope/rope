@@ -3,6 +3,7 @@
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
+- #893 Fix changing constructor signatures for classes defined inside functions (@SAY-5)
 
 # Release 1.15.0
 
