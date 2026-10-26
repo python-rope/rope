@@ -17,7 +17,7 @@ from rope.base.exceptions import ModuleNotFoundError
 # At present rope.base.prefs starts with `# type:ignore`.
 # As a result, mypy knows nothing about Prefs and get_config.
 from rope.base.prefs import Prefs, get_config  # type: ignore
-from rope.base.resources import File, Folder, _ResourceMatcher
+from rope.base.resources import File, Folder, Resource, _ResourceMatcher
 
 try:
     import cPickle as pickle  # type: ignore
@@ -187,18 +187,28 @@ class _Project(ABC):
     def close(self):
         """Closes project open resources"""
 
-    @abstractmethod
-    def _get_resource_path(self, name: str) -> str: ...
-
     @property
     @abstractmethod
     def ropefolder(self) -> Optional[Folder]:
         # FIXME: use class-level ReadOnly attribute when they become available (PEP-767)
         ...
 
+    @abstractmethod
+    def _get_resource_path(self, name: str) -> str: ...
+
+    @abstractmethod
+    def get_files(self) -> list[Resource]:
+        return []
+
+    @abstractmethod
+    def get_python_files(self) -> list[Resource]:
+        return []
+
 
 class Project(_Project):
     """A Project containing files and folders"""
+
+    file_list: _FileListCacher
 
     def __init__(
         self, projectroot, fscommands=None, ropefolder=".ropeproject", **prefs
@@ -248,10 +258,10 @@ class Project(_Project):
             folder = self.get_resource(path)
             self._custom_source_folders.append(folder)
 
-    def get_files(self):
-        return self.file_list.get_files()
+    def get_files(self) -> list[Resource]:
+        return list(self.file_list.get_files())
 
-    def get_python_files(self):
+    def get_python_files(self) -> list[Resource]:
         """Returns all python files available in the project"""
         return [
             resource
@@ -338,10 +348,10 @@ class NoProject(_Project):
         universal_name = _realpath(name).replace(os.path.sep, "/")
         return super().get_resource(universal_name)
 
-    def get_files(self):
+    def get_files(self) -> list[Resource]:
         return []
 
-    def get_python_files(self):
+    def get_python_files(self) -> list[Resource]:
         return []
 
     def close(self):
@@ -355,6 +365,8 @@ def get_no_project() -> NoProject:
 
 
 class _FileListCacher:
+    files: set[Resource]
+
     def __init__(self, project):
         self.project = project
         self.files = None
@@ -363,7 +375,7 @@ class _FileListCacher:
         )
         self.project.add_observer(rawobserver)
 
-    def get_files(self):
+    def get_files(self) -> set[Resource]:
         if self.files is None:
             self.files = set()
             self._add_files(self.project.root)
