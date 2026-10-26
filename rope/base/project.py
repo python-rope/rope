@@ -173,9 +173,6 @@ class _Project(ABC):
     def is_ignored(self, resource):
         return False
 
-    def _get_resource_path(self, name):
-        pass
-
     @property
     @utils.saveit
     def history(self):
@@ -189,6 +186,9 @@ class _Project(ABC):
     @abstractmethod
     def close(self):
         """Closes project open resources"""
+
+    @abstractmethod
+    def _get_resource_path(self, name: str) -> str: ...
 
     @property
     @abstractmethod
@@ -259,7 +259,7 @@ class Project(_Project):
             if self.pycore.is_python_file(resource)
         ]
 
-    def _get_resource_path(self, name):
+    def _get_resource_path(self, name: str) -> str:
         return os.path.join(self._address, *name.split("/"))
 
     def _init_ropefolder(self):
@@ -330,7 +330,7 @@ class NoProject(_Project):
         fscommands = rope.base.fscommands.FileSystemCommands()
         super().__init__(fscommands)
 
-    def _get_resource_path(self, name):
+    def _get_resource_path(self, name: str) -> str:
         real_name = name.replace("/", os.path.sep)
         return _realpath(real_name)
 
