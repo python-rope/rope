@@ -6,7 +6,7 @@ package.
 """
 
 import rope.base.builtins  # Use full qualification for clarity.
-from rope.base import arguments, evaluate, pynames, pyobjects, utils
+from rope.base import arguments, ast, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
@@ -141,6 +141,9 @@ def _parameter_objects(pyobject):
 
 @_ignore_inferred
 def _infer_assignment(assignment, pymodule):
+    assign_node = assignment.type_hint or assignment.ast_node
+    if isinstance(assign_node, ast.pattern):
+        return pyobjects.get_unknown()
     result = _follow_pyname(assignment, pymodule)
     if result is None:
         return None
