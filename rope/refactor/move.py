@@ -99,6 +99,7 @@ class MoveMethod:
           will be applied to all python files.
 
         """
+        functionutils._check_signature_parameters(self.pyfunction)
         changes = ChangeSet("Moving method <%s>" % self.method_name)
         if resources is None:
             resources = self.project.get_python_files()
@@ -188,6 +189,7 @@ class MoveMethod:
         return resource, start, end, body
 
     def get_new_method(self, name):
+        functionutils._check_signature_parameters(self.pyfunction)
         return "{}\n{}".format(
             self._get_new_header(name),
             sourceutils.fix_indentation(

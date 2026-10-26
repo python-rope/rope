@@ -1,9 +1,28 @@
 import ast
 from typing import List, Tuple
 
-from rope.base import pyobjects, worder
+from rope.base import exceptions, pyobjects, worder
 from rope.base.builtins import Lambda
 from rope.base.codeanalyze import SourceLinesAdapter
+
+
+def _get_function_signature(pyfunction):
+    """Read the original signature without using the legacy editable model."""
+    pymodule = pyfunction.get_module()
+    word_finder = worder.Worder(pymodule.source_code)
+    start = pymodule.lines.get_line_start(pyfunction.get_ast().lineno)
+    if isinstance(pyfunction, Lambda):
+        return word_finder.get_lambda_and_args(start)
+    return word_finder.get_function_and_args_in_header(start)
+
+
+def _check_signature_parameters(pyfunction):
+    """Refuse parameter kinds the legacy signature writer cannot preserve."""
+    arguments = pyfunction.get_ast().args
+    if arguments.posonlyargs or arguments.kwonlyargs:
+        raise exceptions.RefactoringError(
+            "This refactoring does not support positional-only or keyword-only parameters."
+        )
 
 
 class DefinitionInfo:
@@ -59,15 +78,7 @@ class DefinitionInfo:
 
     @staticmethod
     def read(pyfunction):
-        pymodule = pyfunction.get_module()
-        word_finder = worder.Worder(pymodule.source_code)
-        lineno = pyfunction.get_ast().lineno
-        start = pymodule.lines.get_line_start(lineno)
-        if isinstance(pyfunction, Lambda):
-            call = word_finder.get_lambda_and_args(start)
-        else:
-            call = word_finder.get_function_and_args_in_header(start)
-        return DefinitionInfo._read(pyfunction, call)
+        return DefinitionInfo._read(pyfunction, _get_function_signature(pyfunction))
 
 
 class CallInfo:

@@ -62,6 +62,7 @@ class IntroduceParameter:
         )
 
     def get_changes(self, new_parameter):
+        functionutils._check_signature_parameters(self.pyfunction)
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter, self._get_primary()))
         collector = codeanalyze.ChangeCollector(self.resource.read())

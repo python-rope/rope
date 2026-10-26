@@ -45,11 +45,13 @@ class PyFunction(pyobjects.PyFunction):
         return rope.base.oi.soi.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):
-        if len(pyobjects) == len(self.arguments.args):
-            if self.arguments.vararg:
-                pyobjects.append(rope.base.builtins.get_list())
-            if self.arguments.kwarg:
-                pyobjects.append(rope.base.builtins.get_dict())
+        count = len(self.get_param_names(special_args=False))
+        pyobjects[:] = pyobjects[:count]
+        pyobjects.extend([None] * (count - len(pyobjects)))
+        if self.arguments.vararg:
+            pyobjects.append(rope.base.builtins.get_list())
+        if self.arguments.kwarg:
+            pyobjects.append(rope.base.builtins.get_dict())
 
     def _set_parameter_pyobjects(self, pyobjects):
         if pyobjects is not None:
@@ -76,13 +78,53 @@ class PyFunction(pyobjects.PyFunction):
         return self.get_ast().name
 
     def get_param_names(self, special_args=True):
-        # TODO: handle tuple parameters
-        result = [node.arg for node in self.arguments.args if isinstance(node, ast.arg)]
-        if special_args:
-            if self.arguments.vararg:
-                result.append(self.arguments.vararg.arg)
-            if self.arguments.kwarg:
-                result.append(self.arguments.kwarg.arg)
+        return [
+            name
+            for kind, name in self.get_parameter_layout()
+            if special_args or kind not in ("vararg", "kwarg")
+        ]
+
+    def get_parameter_layout(self):
+        """Return binding kinds in the order used by parameter object slots."""
+        result = [("posonly", node.arg) for node in self.arguments.posonlyargs]
+        result.extend(("positional", node.arg) for node in self.arguments.args)
+        result.extend(("kwonly", node.arg) for node in self.arguments.kwonlyargs)
+        if self.arguments.vararg:
+            result.append(("vararg", self.arguments.vararg.arg))
+        if self.arguments.kwarg:
+            result.append(("kwarg", self.arguments.kwarg.arg))
+        return tuple(result)
+
+    def get_positional_param_names(self):
+        return [
+            name
+            for kind, name in self.get_parameter_layout()
+            if kind in ("posonly", "positional")
+        ]
+
+    def get_keyword_param_names(self):
+        return [
+            name
+            for kind, name in self.get_parameter_layout()
+            if kind in ("positional", "kwonly")
+        ]
+
+    def get_parameter_defaults(self):
+        positional = self.arguments.posonlyargs + self.arguments.args
+        defaults = self.arguments.defaults
+        result = {
+            node.arg: default
+            for node, default in zip(
+                positional[len(positional) - len(defaults) :], defaults
+            )
+        }
+        result.update(
+            (node.arg, default)
+            for node, default in zip(
+                self.arguments.kwonlyargs, self.arguments.kw_defaults
+            )
+            if default is not None
+        )
         return result
 
     def get_kind(self):
@@ -96,9 +138,14 @@ class PyFunction(pyobjects.PyFunction):
         if isinstance(self.parent, PyClass):
             for decorator in self.decorators:
                 pyname = rope.base.evaluate.eval_node(scope, decorator)
-                if pyname == rope.base.builtins.builtins["staticmethod"]:
+                if pyname is None:
+                    continue
+                decorator_object = pyname.get_object()
+                if not isinstance(decorator_object, rope.base.builtins.BuiltinClass):
+                    continue
+                if decorator_object.builtin is staticmethod:
                     return "staticmethod"
-                if pyname == rope.base.builtins.builtins["classmethod"]:
+                if decorator_object.builtin is classmethod:
                     return "classmethod"
             return "method"
         return "function"
@@ -133,6 +180,7 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
+        self._receiver_attributes_collected = False
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -141,6 +189,30 @@ class PyClass(pyobjects.PyClass):
 
     def get_name(self):
         return self.get_ast().name
+
+    def _get_structural_attributes(self):
+        attributes = super()._get_structural_attributes()
+        if (
+            self.structural_attributes is not None
+            and not self._receiver_attributes_collected
+        ):
+            # Resolve decorators only after all class bindings exist and the
+            # structural visitor's recursion guard has been released.
+            self._receiver_attributes_collected = True
+            self.attributes.set(None)
+            visitor = self.visitor_class(self.pycore, self)
+            visitor.names = attributes
+            try:
+                for defined in self.defineds:
+                    if (
+                        isinstance(defined, PyFunction)
+                        and defined.get_kind() != "staticmethod"
+                    ):
+                        visitor.visit_method_attributes(defined.get_ast())
+            finally:
+                # get_kind() can cache a view before the receiver fields exist.
+                self.attributes.set(None)
+        return attributes
 
     def _create_concluded_attributes(self):
         result = {}
@@ -587,10 +659,10 @@ class _GlobalVisitor(_ScopeVisitor):
 
 
 class _ClassVisitor(_ScopeVisitor):
-    def _FunctionDef(self, node):
-        _ScopeVisitor._FunctionDef(self, node)
-        if len(node.args.args) > 0:
-            first = node.args.args[0]
+    def visit_method_attributes(self, node):
+        positional = node.args.posonlyargs + node.args.args
+        if positional:
+            first = positional[0]
             new_visitor = None
             if isinstance(first, ast.arg):
                 new_visitor = _ClassInitVisitor(self, first.arg)

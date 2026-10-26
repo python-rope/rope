@@ -147,6 +147,12 @@ class AbstractFunction(PyObject):
     def get_param_names(self, special_args=True):
         return []
 
+    def get_positional_param_names(self):
+        return self.get_param_names(special_args=False)
+
+    def get_keyword_param_names(self):
+        return self.get_param_names(special_args=False)
+
     def get_returned_object(self, args):
         return get_unknown()
 

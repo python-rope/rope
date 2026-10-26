@@ -98,6 +98,7 @@ class ChangeSignature:
 
     @utils.deprecated()
     def normalize(self):
+        functionutils._check_signature_parameters(self.pyname.get_object())
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), [ArgumentNormalizer()]
         )
@@ -105,6 +106,7 @@ class ChangeSignature:
 
     @utils.deprecated()
     def remove(self, index):
+        functionutils._check_signature_parameters(self.pyname.get_object())
         changer = _FunctionChangers(
             self.pyname.get_object(),
             self.get_definition_info(),
@@ -114,6 +116,7 @@ class ChangeSignature:
 
     @utils.deprecated()
     def add(self, index, name, default=None, value=None):
+        functionutils._check_signature_parameters(self.pyname.get_object())
         changer = _FunctionChangers(
             self.pyname.get_object(),
             self.get_definition_info(),
@@ -123,6 +126,7 @@ class ChangeSignature:
 
     @utils.deprecated()
     def inline_default(self, index):
+        functionutils._check_signature_parameters(self.pyname.get_object())
         changer = _FunctionChangers(
             self.pyname.get_object(),
             self.get_definition_info(),
@@ -132,6 +136,7 @@ class ChangeSignature:
 
     @utils.deprecated()
     def reorder(self, new_ordering):
+        functionutils._check_signature_parameters(self.pyname.get_object())
         changer = _FunctionChangers(
             self.pyname.get_object(),
             self.get_definition_info(),
@@ -156,6 +161,7 @@ class ChangeSignature:
         in the project are searched.
 
         """
+        functionutils._check_signature_parameters(self.pyname.get_object())
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self._definfo(), changers
         )
@@ -326,10 +332,19 @@ class _ChangeCallsInModule:
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             if not occurrence.is_called() and not occurrence.is_defined():
                 continue
+            primary, pyname = occurrence.get_primary_and_pyname()
+            if pyname is not None:
+                pyfunction = pyname.get_object()
+                if (
+                    isinstance(pyfunction, pyobjects.PyClass)
+                    and "__init__" in pyfunction
+                ):
+                    pyfunction = pyfunction["__init__"].get_object()
+                if isinstance(pyfunction, pyobjects.PyFunction):
+                    functionutils._check_signature_parameters(pyfunction)
             start, end = occurrence.get_primary_range()
             begin_parens, end_parens = word_finder.get_word_parens_range(end - 1)
             if occurrence.is_called():
-                primary, pyname = occurrence.get_primary_and_pyname()
                 changed_call = self.call_changer.change_call(
                     primary, pyname, self.source[start:end_parens]
                 )
