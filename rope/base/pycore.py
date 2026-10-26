@@ -131,7 +131,11 @@ class PyCore:
         """Returns project source folders"""
         return self.project.get_source_folders()
 
-    def resource_to_pyobject(self, resource, force_errors=False):
+    def resource_to_pyobject(
+        self,
+        resource,
+        force_errors=False,
+    ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
         return self.module_cache.get_pymodule(resource, force_errors)
 
     @utils.deprecated("Use `project.get_python_files` instead")

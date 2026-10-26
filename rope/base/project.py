@@ -27,6 +27,8 @@ except ImportError:
 
 class _Project(ABC):
     prefs: Prefs
+    data_files: _DataFiles
+    _custom_source_folders: list[Folder]
 
     def __init__(self, fscommands):
         self.observers = []
@@ -35,7 +37,7 @@ class _Project(ABC):
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
 
-    def get_resource(self, resource_name):
+    def get_resource(self, resource_name: str) -> Resource:
         """Get a resource in a project.
 
         `resource_name` is the path of a resource in a project.  It is
@@ -58,7 +60,7 @@ class _Project(ABC):
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
 
-    def get_python_path_folders(self):
+    def get_python_path_folders(self) -> list[Folder]:
         result = []
         for src in self.prefs.get("python_path", []) + sys.path:
             with contextlib.suppress(exceptions.ResourceNotFoundError):
@@ -102,24 +104,34 @@ class _Project(ABC):
     def get_pycore(self):
         return self.pycore
 
-    def get_file(self, path):
+    def get_file(self, path: str) -> File:
         """Get the file with `path` (it may not exist)"""
         return File(self, path)
 
-    def get_folder(self, path):
+    def get_folder(self, path: str) -> Folder:
         """Get the folder with `path` (it may not exist)"""
         return Folder(self, path)
 
     def get_prefs(self):
         return self.prefs
 
-    def get_relative_module(self, name, folder, level):
+    def get_relative_module(
+        self,
+        name: str,
+        folder: Folder,
+        level: int,
+    ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
         module = self.find_relative_module(name, folder, level)
         if module is None:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_relative_module(self, modname, folder, level):
+    def find_relative_module(
+        self,
+        modname: str,
+        folder: Folder,
+        level: int,
+    ) -> Optional[Resource]:
         for i in range(level - 1):
             folder = folder.parent
         if modname == "":
@@ -137,7 +149,7 @@ class _Project(ABC):
 
     @property
     @utils.saveit
-    def pycore(self):
+    def pycore(self) -> pycore.PyCore:
         return pycore.PyCore(self)
 
     @abstractmethod
@@ -336,9 +348,9 @@ class Project(_Project):
 
 
 class NoProject(_Project):
-    """A null object for holding out of project files.
+    """A null object for holding out-of-project files.
 
-    This class is singleton use `get_no_project` global function
+    This class is a singleton, use `get_no_project` global function.
     """
 
     _no_project: Optional[NoProject] = None
@@ -352,7 +364,7 @@ class NoProject(_Project):
         real_name = name.replace("/", os.path.sep)
         return _realpath(real_name)
 
-    def get_resource(self, name):
+    def get_resource(self, name: str) -> Resource:
         universal_name = _realpath(name).replace(os.path.sep, "/")
         return super().get_resource(universal_name)
 
@@ -447,7 +459,7 @@ class _DataFiles:
         return self.project.get_file(path)
 
 
-def _realpath(path):
+def _realpath(path: str) -> str:
     """Return the real path of `path`
 
     Is equivalent to ``realpath(abspath(expanduser(path)))``.
@@ -468,7 +480,7 @@ def _realpath(path):
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
 
 
-def _find_module_in_folder(folder, modname):
+def _find_module_in_folder(folder: Folder, modname: str) -> Optional[Resource]:
     module = folder
     packages = modname.split(".")
     for pkg in packages[:-1]:
@@ -487,3 +499,4 @@ def _find_module_in_folder(folder, modname):
             and not module.get_child(packages[-1] + ".py").is_folder()
         ):
             return module.get_child(packages[-1] + ".py")
+    return None
