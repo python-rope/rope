@@ -11,7 +11,7 @@ import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
@@ -503,7 +503,7 @@ class AutoImport:
             data = (
                 versioning.calculate_version_hash(self.project),
                 json.dumps(versioning.get_version_hash_data(self.project)),
-                datetime.utcnow().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             )
             assert models.Metadata.columns == [
                 "version_hash",
