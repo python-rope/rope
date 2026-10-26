@@ -618,6 +618,26 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(2, len(source_folders))
         self.assertTrue(self.project.root in source_folders and src in source_folders)
 
+    def test_multi_source_folders_with_a_package_at_the_root(self):
+        # A package sitting directly at the root used to end the search
+        # there, leaving every sibling folder unscanned -- so `src` was
+        # never a source folder and nothing under it could be resolved.
+        testutils.create_package(self.project, "rootpkg")
+        src = self.project.root.create_folder("src")
+        testutils.create_package(self.project, "package", src)
+        source_folders = self.project.get_source_folders()
+        self.assertEqual(2, len(source_folders))
+        self.assertTrue(self.project.root in source_folders and src in source_folders)
+
+    def test_a_subpackage_is_not_a_source_folder(self):
+        # Descending into a package would make `package.sub` importable
+        # as plain `sub`.
+        src = self.project.root.create_folder("src")
+        package = testutils.create_package(self.project, "package", src)
+        testutils.create_package(self.project, "sub", package)
+        source_folders = self.project.get_source_folders()
+        self.assertEqual([src], source_folders)
+
     def test_folder_is_pathlike(self):
         resource = self.project.root.create_folder("src")
         self.assertIsInstance(resource, Folder)
