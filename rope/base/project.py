@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import warnings
+from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from typing import Optional
 
@@ -24,7 +25,7 @@ except ImportError:
     import pickle  # type: ignore
 
 
-class _Project:
+class _Project(ABC):
     prefs: Prefs
 
     def __init__(self, fscommands):
@@ -185,8 +186,9 @@ class _Project:
     def pycore(self):
         return pycore.PyCore(self)
 
+    @abstractmethod
     def close(self):
-        warnings.warn("Cannot close a NoProject", DeprecationWarning, stacklevel=2)
+        """Closes project open resources"""
 
     ropefolder = None
 
@@ -333,6 +335,9 @@ class NoProject(_Project):
 
     def get_python_files(self):
         return []
+
+    def close(self):
+        warnings.warn("Cannot close a NoProject", DeprecationWarning, stacklevel=2)
 
     _no_project = None
 
