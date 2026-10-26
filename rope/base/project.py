@@ -7,7 +7,7 @@ import sys
 import warnings
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
-from typing import Optional
+from typing import Optional, cast
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
@@ -65,6 +65,11 @@ class _Project(ABC):
         for src in self.prefs.get("python_path", []) + sys.path:
             with contextlib.suppress(exceptions.ResourceNotFoundError):
                 src_folder = get_no_project().get_resource(src)
+
+                # FIXME: it shouldn't be supported, but what if someone
+                #        provided a .py file in python_path?
+                src_folder = cast(Folder, src_folder)
+
                 result.append(src_folder)
         return result
 
