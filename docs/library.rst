@@ -610,6 +610,13 @@ them. If it is ``None`` all python modules in the project will be
 analyzed.  Using this parameter, IDEs can let the user limit the files
 on which a refactoring should be applied.
 
+When renaming a namespace package directory without an ``__init__.py``,
+the default project-wide operation also moves the directory. With an
+explicit resource list, the directory moves only when all of its Python
+files are selected and the package has at least one Python file. Selecting
+only importing modules updates those files while leaving the directory
+in place, as with an ordinary package whose initializer is not selected.
+
 
 Examples
 ========
