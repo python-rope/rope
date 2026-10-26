@@ -11,7 +11,7 @@ from typing import Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
-from rope.base import exceptions, history, pycore, taskhandle, utils
+from rope.base import exceptions, history, pycore, pyobjectsdef, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 
 # At present rope.base.prefs starts with `# type:ignore`.
@@ -58,36 +58,12 @@ class _Project(ABC):
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
 
-    def get_module(self, name, folder=None):
-        """Returns a `PyObject` if the module was found."""
-        # check if this is a builtin module
-        pymod = self.pycore.builtin_module(name)
-        if pymod is not None:
-            return pymod
-        module = self.find_module(name, folder)
-        if module is None:
-            raise ModuleNotFoundError("Module %s not found" % name)
-        return self.pycore.resource_to_pyobject(module)
-
     def get_python_path_folders(self):
         result = []
         for src in self.prefs.get("python_path", []) + sys.path:
             with contextlib.suppress(exceptions.ResourceNotFoundError):
                 src_folder = get_no_project().get_resource(src)
                 result.append(src_folder)
-        return result
-
-    # INFO: It was decided not to cache source folders, since:
-    #  - Does not take much time when the root folder contains
-    #    packages, that is most of the time
-    #  - We need a separate resource observer; `self.observer`
-    #    does not get notified about module and folder creations
-    def get_source_folders(self):
-        """Returns project source folders"""
-        if self.root is None:
-            return []
-        result = list(self._custom_source_folders)
-        result.extend(self.pycore._find_source_folders(self.root))
         return result
 
     def validate(self, folder):
@@ -142,25 +118,6 @@ class _Project(ABC):
         if module is None:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
-
-    def find_module(self, modname, folder=None) -> Optional[File]:
-        """Returns a resource corresponding to the given module
-
-        returns None if it can not be found
-        """
-        for src in self.get_source_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        for src in self.get_python_path_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        if folder is not None:
-            module = _find_module_in_folder(folder, modname)
-            if module is not None:
-                return module
-        return None
 
     def find_relative_module(self, modname, folder, level):
         for i in range(level - 1):
@@ -257,6 +214,57 @@ class Project(_Project):
         for path in self.prefs.get("source_folders", []):
             folder = self.get_resource(path)
             self._custom_source_folders.append(folder)
+
+    # INFO: It was decided not to cache source folders, since:
+    #  - Does not take much time when the root folder contains
+    #    packages, that is most of the time
+    #  - We need a separate resource observer; `self.observer`
+    #    does not get notified about module and folder creations
+    def get_source_folders(self) -> list[Folder]:
+        """Returns project source folders"""
+        if self.root is None:
+            return []
+        result = list(self._custom_source_folders)
+        result.extend(self.pycore._find_source_folders(self.root))
+        return result
+
+    def find_module(
+        self,
+        modname: str,
+        folder: Optional[Folder] = None,
+    ) -> Optional[Resource]:
+        """Returns a resource corresponding to the given module
+
+        returns None if it can not be found
+        """
+        for src in self.get_source_folders():
+            module = _find_module_in_folder(src, modname)
+            if module is not None:
+                return module
+        for src in self.get_python_path_folders():
+            module = _find_module_in_folder(src, modname)
+            if module is not None:
+                return module
+        if folder is not None:
+            module = _find_module_in_folder(folder, modname)
+            if module is not None:
+                return module
+        return None
+
+    def get_module(
+        self,
+        name: str,
+        folder: Optional[Folder] = None,
+    ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
+        """Returns a `PyObject` if the module was found."""
+        # check if this is a builtin module
+        pymod = self.pycore.builtin_module(name)
+        if pymod is not None:
+            return pymod
+        module = self.find_module(name, folder)
+        if module is None:
+            raise ModuleNotFoundError("Module %s not found" % name)
+        return self.pycore.resource_to_pyobject(module)
 
     def get_files(self) -> list[Resource]:
         return list(self.file_list.get_files())
