@@ -21,6 +21,7 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -295,6 +296,7 @@ class InlineVariable(_Inliner):
             remove=remove,
             region=region,
             docs=docs,
+            check_lambda=True,
         )
 
     def _init_imports(self):
@@ -314,6 +316,7 @@ class InlineVariable(_Inliner):
 
             filters.insert(0, check_aim)
         finder = occurrences.Finder(self.project, self.name, filters=filters)
+        _check_lambda_occurrences(finder, self.project.get_pymodule(resource))
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True
         )
@@ -619,12 +622,23 @@ class _InlineFunctionCallsForModuleHandle:
 
 
 def _inline_variable(
-    project, pymodule, pyname, name, remove=True, region=None, docs=False
+    project,
+    pymodule,
+    pyname,
+    name,
+    remove=True,
+    region=None,
+    docs=False,
+    check_lambda=False,
 ):
     definition = _getvardef(pymodule, pyname)
     start, end = _assigned_lineno(pymodule, pyname)
 
     occurrence_finder = occurrences.create_finder(project, name, pyname, docs=docs)
+    if check_lambda:
+        _check_lambda_occurrences(
+            occurrence_finder, pymodule, region=region, writes=False
+        )
     changed_source = rename.rename_in_module(
         occurrence_finder,
         definition,
@@ -681,10 +695,129 @@ def _add_imports(project, source, resource, imports):
 
 def _get_pyname(project, resource, offset):
     pymodule = project.get_pymodule(resource)
+    word_range = worder.Worder(pymodule.source_code, True).get_word_range(offset)
+    if word_range in _lambda_owned_name_ranges(pymodule):
+        raise exceptions.RefactoringError(
+            "Inlining lambda-local bindings is not supported."
+        )
     pyname = evaluate.eval_location(pymodule, offset)
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()
     return pyname
+
+
+def _check_lambda_occurrences(finder, pymodule, region=None, writes=True):
+    owned = _lambda_owned_name_ranges(pymodule)
+    if not owned:
+        return
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        if occurrence.is_a_fixed_primary():
+            continue
+        if not writes and occurrence.is_written():
+            continue
+        start, _ = occurrence.get_primary_range()
+        if region is not None and not region[0] <= start < region[1]:
+            continue
+        if occurrence.get_word_range() in owned:
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable into lambda-local bindings."
+            )
+
+
+def _lambda_owned_name_ranges(pymodule):
+    """Find lambda-local tokens and attribute lookups that depend on them."""
+    ranges = set()
+    lines = pymodule.lines
+    words = worder.Worder(pymodule.source_code, True)
+
+    def offset(lineno, column):
+        # AST columns count UTF-8 bytes; Rope offsets count source characters.
+        prefix = lines.get_line(lineno).encode("utf-8")[:column]
+        return lines.get_line_start(lineno) + len(prefix.decode("utf-8"))
+
+    def node_range(node):
+        return (
+            offset(node.lineno, node.col_offset),
+            offset(node.end_lineno, node.end_col_offset),
+        )
+
+    def record(node):
+        ranges.add(node_range(node))
+
+    def defaults(node):
+        return [*node.args.defaults, *filter(None, node.args.kw_defaults)]
+
+    def uses_local_name(node):
+        if isinstance(node, ast.Name):
+            return node_range(node) in ranges
+        # Creating a lambda does not evaluate its body or bind its parameters.
+        children = (
+            defaults(node)
+            if isinstance(node, ast.Lambda)
+            else list(ast.iter_child_nodes(node))
+        )
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Lambda):
+            children.append(node.func.body)
+        return any(uses_local_name(child) for child in children)
+
+    def assigned_names(node):
+        names = set()
+        if isinstance(node, ast.NamedExpr):
+            names.add(node.target.id)
+        children = (
+            defaults(node)
+            if isinstance(node, ast.Lambda)
+            else ast.iter_child_nodes(node)
+        )
+        for child in children:
+            names.update(assigned_names(child))
+        return names
+
+    def visit(node, bound):
+        if isinstance(node, ast.Lambda):
+            arguments = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
+            arguments.extend(arg for arg in (node.args.vararg, node.args.kwarg) if arg)
+            for arg in arguments:
+                record(arg)
+            for default in defaults(node):
+                visit(default, bound)
+            local = bound | {arg.arg for arg in arguments} | assigned_names(node.body)
+            visit(node.body, local)
+        elif isinstance(
+            node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+        ):
+            # The first iterable is outside the comprehension's local bindings.
+            visit(node.generators[0].iter, bound)
+            names = {
+                child.id
+                for generator in node.generators
+                for child in ast.walk(generator.target)
+                if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
+            }
+            local = bound - names
+            for index, generator in enumerate(node.generators):
+                visit(generator.target, local)
+                if index:
+                    visit(generator.iter, local)
+                for condition in generator.ifs:
+                    visit(condition, local)
+            values = (
+                [node.key, node.value] if isinstance(node, ast.DictComp) else [node.elt]
+            )
+            for value in values:
+                visit(value, local)
+        else:
+            if isinstance(node, ast.Name) and node.id in bound:
+                record(node)
+            for child in ast.iter_child_nodes(node):
+                visit(child, bound)
+            if isinstance(node, ast.Attribute) and uses_local_name(node.value):
+                # The attr token resolves through the receiver, not its spelling.
+                end = offset(node.end_lineno, node.end_col_offset)
+                ranges.add(words.get_word_range(end - 1))
+
+    visit(pymodule.get_ast(), set())
+    return ranges
 
 
 def _remove_from(project, pyname, source, resource):
