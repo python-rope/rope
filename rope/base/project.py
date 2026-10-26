@@ -190,7 +190,11 @@ class _Project(ABC):
     def close(self):
         """Closes project open resources"""
 
-    ropefolder = None
+    @property
+    @abstractmethod
+    def ropefolder(self) -> Optional[Folder]:
+        # FIXME: use class-level ReadOnly attribute when they become available (PEP-767)
+        ...
 
 
 class Project(_Project):
@@ -299,9 +303,10 @@ class Project(_Project):
         self.prefs.set(key, value)
 
     @property
-    def ropefolder(self):
+    def ropefolder(self) -> Optional[Folder]:
         if self._ropefolder_name is not None:
             return self.get_folder(self._ropefolder_name)
+        return None
 
     def validate(self, folder=None):
         if folder is None:
@@ -317,6 +322,8 @@ class NoProject(_Project):
 
     This class is singleton use `get_no_project` global function
     """
+
+    ropefolder: Optional[Folder] = None
 
     def __init__(self):
         fscommands = rope.base.fscommands.FileSystemCommands()
