@@ -323,6 +323,7 @@ class NoProject(_Project):
     This class is singleton use `get_no_project` global function
     """
 
+    _no_project: Optional[NoProject] = None
     ropefolder: Optional[Folder] = None
 
     def __init__(self):
@@ -346,10 +347,8 @@ class NoProject(_Project):
     def close(self):
         warnings.warn("Cannot close a NoProject", DeprecationWarning, stacklevel=2)
 
-    _no_project = None
 
-
-def get_no_project():
+def get_no_project() -> NoProject:
     if NoProject._no_project is None:
         NoProject._no_project = NoProject()
     return NoProject._no_project
