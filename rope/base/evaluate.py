@@ -103,6 +103,7 @@ class ScopeNameFinder:
             elif isinstance(pyobject, pyobjects.AbstractFunction):
                 parameter_name = rope.base.pynames.ParameterName()
                 return (None, parameter_name)
+            return (None, None)
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope
