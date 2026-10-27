@@ -45,6 +45,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
+        self.assertGreater(len(self.pycore.object_info.objectdb.db), 0)
 
     def test_passing_arguments(self):
         file_path = "sample.py"
@@ -164,10 +165,11 @@ class PythonFileRunnerTest(unittest.TestCase):
         self.assertEqual("run", self.get_output_file_content(file_path))
 
     def test_making_runner_when_doi_is_disabled(self):
-        self.project.set("enable_doi", False)
+        self.project.set("perform_doa", False)
         file_path = "sample.py"
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
+        self.assertEqual(len(self.pycore.object_info.objectdb.db), 0)
