@@ -67,7 +67,7 @@ class PythonFileRunner:
         self._init_data_receiving()
         send_info = "-"
         if self.receiver:
-            send_info = self.receiver.get_send_info()
+            env["ROPE_DOA_SOCK"] = self.receiver.get_send_info()
         args = [
             sys.executable,
             runmod_path,
