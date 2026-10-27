@@ -213,8 +213,9 @@ def __rope_start_everything():
                 return path
 
         def close(self):
-            self.sender.close()
             sys.settrace(None)
+            threading.settrace(None)
+            self.sender.close()
 
     def _realpath(path):
         return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
