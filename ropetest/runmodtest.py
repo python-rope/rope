@@ -1,9 +1,34 @@
+import multiprocessing
 import os
 import unittest
+from contextlib import contextmanager
 from textwrap import dedent
+
+import pytest
 
 from rope.base import exceptions
 from ropetest import testutils
+
+
+@contextmanager
+def assert_collects_doa_data(project):
+    assert len(project.pycore.object_info.objectdb.db) == 0
+    yield
+    assert len(project.pycore.object_info.objectdb.db) > 0
+
+
+@pytest.fixture
+def captured_run_module(project, tmp_path):
+    def _run_module(file):
+        runner = project.pycore.run_module(
+            file,
+            stdout=stdout.open("w"),
+        )
+        runner.wait_process()
+        return stdout.read_text()
+
+    stdout = tmp_path / "stdout"
+    return _run_module
 
 
 class PythonFileRunnerTest(unittest.TestCase):
@@ -173,3 +198,38 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
         self.assertEqual(len(self.pycore.object_info.objectdb.db), 0)
+
+
+class TestRunModMultiprocessing:
+    """run_module spawns multiprocessing in their different start modes"""
+
+    SCRIPT = dedent("""\
+        import multiprocessing as mp
+
+        def work():
+            print("child ran")
+
+        if __name__ == "__main__":
+            mp.set_start_method("{start_method}")
+            p = mp.Process(target=work)
+            p.start()
+            p.join()
+    """)
+
+    @pytest.mark.parametrize(
+        "start_method",
+        multiprocessing.get_all_start_methods()
+    )
+    def test_multiprocessing_startmethod(
+        self,
+        project,
+        mod1,
+        captured_run_module,
+        start_method,
+    ):
+        mod1.write(self.SCRIPT.format(start_method=start_method))
+
+        with assert_collects_doa_data(project):
+            stdout = captured_run_module(mod1)
+
+        assert stdout == "child ran\n"
