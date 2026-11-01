@@ -146,16 +146,21 @@ class PyCore:
         )
 
     def _find_source_folders(self, folder):
-        for resource in folder.get_folders():
-            if self._is_package(resource):
-                return [folder]
         result = []
-        for resource in folder.get_files():
-            if resource.name.endswith(".py"):
-                result.append(folder)
-                break
-        for resource in folder.get_folders():
-            result.extend(self._find_source_folders(resource))
+        subfolders = folder.get_folders()
+        if any(self._is_package(resource) for resource in subfolders):
+            result.append(folder)
+        else:
+            for resource in folder.get_files():
+                if resource.name.endswith(".py"):
+                    result.append(folder)
+                    break
+        for resource in subfolders:
+            # Inside a package the subfolders are subpackages, not roots
+            # of their own -- descending would make `pkg.sub` importable
+            # as plain `sub`.
+            if not self._is_package(resource):
+                result.extend(self._find_source_folders(resource))
         return result
 
     def run_module(self, resource, args=None, stdin=None, stdout=None):
