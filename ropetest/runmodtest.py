@@ -1,8 +1,10 @@
 import multiprocessing
 import os
+import re
 import unittest
 from contextlib import contextmanager
 from textwrap import dedent
+from unittest.mock import patch
 
 import pytest
 
@@ -198,6 +200,20 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
         self.assertEqual(len(self.pycore.object_info.objectdb.db), 0)
+
+    def test_pass_sendinfo_in_environ(self):
+        file_path = "sample.py"
+        self.make_sample_python_file(file_path)
+        file_resource = self.project.get_resource(file_path)
+
+        with patch('subprocess.Popen') as mock_popen:
+            runner = self.pycore.run_module(file_resource)
+
+        args = mock_popen.call_args.kwargs['args']
+        self.assertEqual(args[2], '-') # send_info
+
+        env = mock_popen.call_args.kwargs['env']
+        self.assertIsNotNone(re.fullmatch(r"\d+:[a-zA-Z0-9+/]+=*", env["ROPE_DOA_SOCK"]))
 
 
 class TestRunModMultiprocessing:
