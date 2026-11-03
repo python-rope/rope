@@ -486,6 +486,12 @@ class _RealFinder:
         if double not in ("==", "<=", ">=", "!="):
             for op in [single, double, triple]:
                 if op.endswith("="):
+                    for end in range(next_char, next_char + len(op) - 1):
+                        if self.code[end] in ")]":
+                            # A subscript index is read, unlike an unpacking target.
+                            parens_start = self._find_parens_start(end)
+                            if self._find_primary_start(end) < parens_start:
+                                return None
                     return op
 
     def get_primary_range(self, offset):

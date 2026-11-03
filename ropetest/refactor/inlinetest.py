@@ -354,6 +354,26 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index("a_func") + 1)
         self.assertEqual("print(1)\n", self.mod.read())
 
+    def test_parameters_used_as_subscript_assignment_indices(self):
+        code = dedent("""\
+            registry = {}
+            def get_registry():
+                return registry
+            def register(name, value):
+                get_registry()[name] = value
+            register("cache", 42)
+        """)
+        refactored = self._inline(code, code.index("register") + 1)
+        self.assertEqual(
+            dedent("""\
+                registry = {}
+                def get_registry():
+                    return registry
+                get_registry()["cache"] = 42
+            """),
+            refactored,
+        )
+
     def test_parameters_renaming_for_passed_statements(self):
         self.mod.write(dedent("""\
             def a_func(param):
