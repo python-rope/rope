@@ -511,6 +511,102 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
+    def test_extract_method_to_an_existing_function_name(self):
+        code = dedent("""\
+            def helper():
+                return 42
+
+            def a_func(a):
+                return a + 1
+        """)
+        start = code.index("a + 1")
+        end = start + len("a + 1")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "helper")
+
+    def test_extract_method_shadowing_a_used_builtin(self):
+        code = dedent("""\
+            def a_func(a):
+                return a + 1
+
+            print(len([1]))
+        """)
+        start = code.index("a + 1")
+        end = start + len("a + 1")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, "len")
+
+    def test_extract_method_with_the_name_of_a_global_function(self):
+        code = dedent("""\
+            def helper():
+                return 1
+
+            class AClass(object):
+                def a_func(self, a):
+                    return a + helper()
+        """)
+        start = code.index("a + helper()")
+        end = start + len("a + helper()")
+        refactored = self.do_extract_method(code, start, end, "helper")
+        expected = dedent("""\
+            def helper():
+                return 1
+
+            class AClass(object):
+                def a_func(self, a):
+                    return self.helper(a)
+
+                def helper(self, a):
+                    return a + helper()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_variable_to_an_existing_parameter_name(self):
+        code = dedent("""\
+            def a_func(a, b):
+                c = a * 2
+                return c + b
+        """)
+        start = code.index("a * 2")
+        end = start + len("a * 2")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_variable(code, start, end, "b")
+
+    def test_extract_variable_shadowing_a_used_global(self):
+        code = dedent("""\
+            LIMIT = 3
+            def a_func(a):
+                c = a * 2
+                return c + LIMIT
+        """)
+        start = code.index("a * 2")
+        end = start + len("a * 2")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_variable(code, start, end, "LIMIT")
+
+    def test_extract_variable_to_a_name_used_in_another_function(self):
+        code = dedent("""\
+            def another_func():
+                b = 1
+                return b
+
+            def a_func(a):
+                return a * 2
+        """)
+        start = code.index("a * 2")
+        end = start + len("a * 2")
+        refactored = self.do_extract_variable(code, start, end, "b")
+        expected = dedent("""\
+            def another_func():
+                b = 1
+                return b
+
+            def a_func(a):
+                b = a * 2
+                return b
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_function_and_argument_as_parameter(self):
         code = dedent("""\
             def a_func(arg):

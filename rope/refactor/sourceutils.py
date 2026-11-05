@@ -1,4 +1,5 @@
-from rope.base import codeanalyze
+from rope.base import builtins, codeanalyze, exceptions
+from rope.refactor import occurrences
 
 
 def get_indents(lines, lineno):
@@ -91,3 +92,35 @@ def get_body_region(defined):
 
 def get_indent(project):
     return project.prefs.get("indent_size", 4)
+
+
+def check_new_name(pymodule, scope, name, replaced=None):
+    """Raise `RefactoringError` if `name` is already in use in `scope`
+
+    `name` is in use if it is defined in `scope`, or if defining it in
+    `scope` would shadow a name that is used there.  Uses of `replaced`
+    are ignored, because the refactoring replaces them with `name`.
+    """
+    pyname = scope.get_names().get(name)
+    if pyname is not None and not isinstance(pyname, builtins.BuiltinName):
+        raise exceptions.RefactoringError(
+            f"Invalid refactoring target name. '{name}' is already defined"
+            " in the target scope."
+        )
+    # Methods do not see the names defined in their class body
+    if scope.get_kind() == "Class":
+        return
+    pyname = scope.lookup(name)
+    if pyname is None or occurrences.same_pyname(replaced, pyname):
+        return
+    start = pymodule.lines.get_line_start(scope.get_body_start())
+    end = pymodule.lines.get_line_end(scope.get_end())
+    finder = occurrences.create_finder(
+        pymodule.pycore.project, name, pyname, keywords=False
+    )
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        if start <= occurrence.offset <= end:
+            raise exceptions.RefactoringError(
+                f"Invalid refactoring target name. '{name}' would shadow"
+                " a name used in the target scope."
+            )

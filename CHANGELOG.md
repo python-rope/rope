@@ -3,6 +3,7 @@
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
+- #924, #930 Refuse new names already in use in extract method/variable, introduce parameter and method object (@aliassar)
 
 # Release 1.15.1
 
