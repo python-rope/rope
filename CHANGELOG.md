@@ -4,6 +4,11 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 
+# Release 1.15.1
+
+- #xxx Change runmod.py to pass DOA channel credential in a more secure manner,
+  see CVE-XXX (@AliAAlMousa, @lieryan)
+
 # Release 1.15.0
 
 - #850 Update and pin black version in pre-commit and Github Actions (@lieryan)

@@ -2,18 +2,17 @@ import base64
 import contextlib
 import hashlib
 import hmac
+import os
+import socket
+import subprocess
+import sys
+import threading
+
 
 try:
     import cPickle as pickle  # type: ignore
 except ImportError:
     import pickle  # type: ignore
-import marshal
-import os
-import socket
-import subprocess
-import sys
-import tempfile
-import threading
 
 
 def _compat_compare_digest(a, b):
@@ -67,7 +66,7 @@ class PythonFileRunner:
         self._init_data_receiving()
         send_info = "-"
         if self.receiver:
-            send_info = self.receiver.get_send_info()
+            env["ROPE_DOA_SOCK"] = self.receiver.get_send_info()
         args = [
             sys.executable,
             runmod_path,
@@ -93,13 +92,7 @@ class PythonFileRunner:
     def _init_data_receiving(self):
         if self.analyze_data is None:
             return
-        # Disabling FIFO data transfer due to blocking when running
-        # unittests in the GUI.
-        # XXX: Handle FIFO data transfer for `rope.ui.testview`
-        if True or os.name == "nt":
-            self.receiver = _SocketReceiver()
-        else:
-            self.receiver = _FIFOReceiver()
+        self.receiver = _SocketReceiver()
         self.receiving_thread = threading.Thread(target=self._receive_information)
         self.receiving_thread.daemon = True
         self.receiving_thread.start()
@@ -203,30 +196,3 @@ class _SocketReceiver(_MessageReceiver):
                 break
         my_file.close()
         conn.close()
-
-
-class _FIFOReceiver(_MessageReceiver):
-    def __init__(self):
-        # XXX: this is insecure and might cause race conditions
-        self.file_name = self._get_file_name()
-        os.mkfifo(self.file_name)
-
-    def _get_file_name(self):
-        prefix = tempfile.gettempdir() + "/__rope_"
-        i = 0
-        while os.path.exists(prefix + str(i).rjust(4, "0")):
-            i += 1
-        return prefix + str(i).rjust(4, "0")
-
-    def get_send_info(self):
-        return self.file_name
-
-    def receive_data(self):
-        my_file = open(self.file_name, "rb")
-        while True:
-            try:
-                yield marshal.load(my_file)
-            except EOFError:
-                break
-        my_file.close()
-        os.remove(self.file_name)
