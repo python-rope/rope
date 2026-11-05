@@ -7,11 +7,11 @@ import sys
 import warnings
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
-from typing import Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
-from rope.base import exceptions, history, pycore, pyobjectsdef, taskhandle, utils
+from rope.base import exceptions, history, pycore, taskhandle, utils
 from rope.base.exceptions import ModuleNotFoundError
 
 # At present rope.base.prefs starts with `# type:ignore`.
@@ -23,6 +23,10 @@ try:
     import cPickle as pickle  # type: ignore
 except ImportError:
     import pickle  # type: ignore
+
+
+if TYPE_CHECKING:
+    from rope.base import pyobjectsdef
 
 
 class _Project(ABC):
