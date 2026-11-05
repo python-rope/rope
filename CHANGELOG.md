@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Route resource existence, directory enumeration, and observer metadata through the filesystem commands owner: FileSystemCommands gained exists/isfile/isdir/listdir/stat/realpath and project, resource, and observer queries no longer bypass custom fscommands
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
