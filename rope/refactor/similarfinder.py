@@ -269,9 +269,25 @@ class StatementMatch(Match):
 
 
 class CodeTemplate:
+    _dollar_name_pattern = r"(?P<name>\$\{[^\s\$\}]*\})"
+
     def __init__(self, template):
         self.template = template
         self._find_names()
+
+    @classmethod
+    def _get_pattern(cls):
+        if cls._match_pattern is None:
+            pattern = "|".join(
+                (
+                    codeanalyze.get_comment_pattern(),
+                    codeanalyze.get_string_pattern(),
+                    f"(?P<fstring>{codeanalyze.get_formatted_string_pattern()})",
+                    cls._dollar_name_pattern,
+                )
+            )
+            cls._match_pattern = re.compile(pattern)
+        return cls._match_pattern
 
     def _find_names(self):
         self.names = {}
@@ -282,6 +298,29 @@ class CodeTemplate:
                 if name not in self.names:
                     self.names[name] = []
                 self.names[name].append((start, end))
+
+            elif "fstring" in match.groupdict() and match.group("fstring") is not None:
+                self._fstring_case(match)
+
+    def _fstring_case(self, fstring_match: re.Match):
+        """Needed because CodeTemplate._match_pattern short circuits
+        as soon as it sees a '#', even if that '#' is inside a f-string
+        that has a ${variable}."""
+
+        string_start, string_end = fstring_match.span("fstring")
+
+        for match in re.finditer(self._dollar_name_pattern, self.template):
+            if match.start("name") < string_start:
+                continue
+
+            if match.end("name") > string_end:
+                break
+
+            start, end = match.span("name")
+            name = self.template[start + 2 : end - 1]
+            if name not in self.names:
+                self.names[name] = []
+            self.names[name].append((start, end))
 
     def get_names(self):
         return self.names.keys()
@@ -297,19 +336,6 @@ class CodeTemplate:
         return result
 
     _match_pattern = None
-
-    @classmethod
-    def _get_pattern(cls):
-        if cls._match_pattern is None:
-            pattern = (
-                codeanalyze.get_comment_pattern()
-                + "|"
-                + codeanalyze.get_string_pattern()
-                + "|"
-                + r"(?P<name>\$\{[^\s\$\}]*\})"
-            )
-            cls._match_pattern = re.compile(pattern)
-        return cls._match_pattern
 
 
 class _RopeVariable:
