@@ -2373,18 +2373,11 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
-        refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent("""\
-            def foo(a):
-                if i, c := new_func(a):
-                    i += 1
-                    c += 1
-                print(i)
-
-            def new_func(a):
-                return (i := a == (c := 5))
-        """)
-        self.assertEqual(expected, refactored)
+        with self.assertRaisesRegex(
+            rope.base.exceptions.RefactoringError,
+            "Extracted piece cannot contain named expression \\(:= operator\\).",
+        ):
+            self.do_extract_method(code, start, end, "new_func")
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_expression_with_inline_assignment_in_inner_expression(
