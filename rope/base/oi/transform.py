@@ -4,7 +4,7 @@ import os
 import re
 
 import rope.base.builtins  # Use full qualification for clarity.
-from rope.base import exceptions
+from rope.base import classfunctions, exceptions, pynames, pyobjects
 
 
 class PyObjectToTextual:
@@ -42,6 +42,13 @@ class PyObjectToTextual:
 
     def PyFunction_to_textual(self, pyobject):
         return self._defined_to_textual(pyobject)
+
+    def BoundFunction_to_textual(self, pyobject):
+        return (
+            "bound_function",
+            self.transform(pyobject.function),
+            self.transform(pyobject.receiver.get_object()),
+        )
 
     def PyClass_to_textual(self, pyobject):
         return self._defined_to_textual(pyobject)
@@ -205,6 +212,12 @@ class TextualToPyObject:
         type = self.transform(textual[1])
         if type is not None:
             return rope.base.pyobjects.PyObject(type)
+
+    def bound_function_to_pyobject(self, textual):
+        function = self.transform(textual[1])
+        receiver = self.transform(textual[2])
+        if isinstance(function, pyobjects.PyFunction) and receiver is not None:
+            return classfunctions.BoundFunction(function, pynames.UnboundName(receiver))
 
     def _get_pymodule(self, path):
         resource = self.path_to_resource(path)
