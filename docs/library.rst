@@ -569,6 +569,13 @@ folder.
 
 * ``rope.refactor.inline``:
   Inline occurrences of a method/variable/parameter.
+  Removing a variable definition can raise ``RefactoringError`` when it would
+  discard an unused initializer that is not known to be safe, remove a module
+  or class annotation, or leave reads outside the selected occurrences.
+  ``remove=False`` keeps the definition while replacing selected reads.
+  Selecting resources that exclude the defining module also keeps its
+  definition.  Function-local annotations, safe literals, and proven bound
+  names remain eligible for removal.
 
 * ``rope.refactor.usefunction``:
   Try to use a function wherever possible.
