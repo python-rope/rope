@@ -485,14 +485,6 @@ class _ExceptionalConditionChecker:
             )
         if usefunction._yield_count(node):
             raise RefactoringError("Extracted piece cannot have yield statements.")
-        if not hasattr(
-            ast, "PyCF_ALLOW_TOP_LEVEL_AWAIT"
-        ) and _AsyncStatementFinder.has_errors(extracted):
-            raise RefactoringError(
-                "Extracted piece can only have async/await "
-                "statements if Rope is running on Python "
-                "3.8 or higher"
-            )
         if count == 1 and not usefunction._returns_last(node):
             raise RefactoringError("Return should be the last statement.")
         if info.region != info.lines_region:
@@ -1078,23 +1070,6 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
     def check_loop(self):
         if self.loop_count < 1:
             self.error = True
-
-    def _FunctionDef(self, node):
-        pass
-
-    def _ClassDef(self, node):
-        pass
-
-
-class _AsyncStatementFinder(_BaseErrorFinder):
-    def __init__(self):
-        self.error = False
-
-    def _AsyncFor(self, node):
-        self.error = True
-
-    def _AsyncWith(self, node):
-        self.error = True
 
     def _FunctionDef(self, node):
         pass

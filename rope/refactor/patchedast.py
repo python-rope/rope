@@ -466,21 +466,33 @@ class _PatchingASTWalker:
 
     def _arguments(self, node):
         children = []
-        args = list(node.args)
-        defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
-        for index, (arg, default) in enumerate(zip(args, defaults)):
+        positional = list(node.posonlyargs) + list(node.args)
+        defaults = [None] * (len(positional) - len(node.defaults)) + list(node.defaults)
+        for index, (arg, default) in enumerate(zip(positional, defaults)):
             if index > 0:
                 children.append(",")
             self._add_args_to_children(children, arg, default)
-        if node.vararg is not None:
-            if args:
+            if node.posonlyargs and index + 1 == len(node.posonlyargs):
+                children.extend([",", "/"])
+        if node.vararg is not None or node.kwonlyargs:
+            if positional:
                 children.append(",")
-            children.extend(["*", node.vararg.arg])
+            children.append("*")
+            if node.vararg is not None:
+                children.append(self._star_parameter(node.vararg))
+        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+            children.append(",")
+            self._add_args_to_children(children, arg, default)
         if node.kwarg is not None:
-            if args or node.vararg is not None:
+            if positional or node.vararg is not None or node.kwonlyargs:
                 children.append(",")
-            children.extend(["**", node.kwarg.arg])
+            children.extend(["**", self._star_parameter(node.kwarg)])
         self._handle(node, children)
+
+    @staticmethod
+    def _star_parameter(arg):
+        """An annotated ``*args``/``**kwargs`` is walked as a node, else by name."""
+        return arg if arg.annotation is not None else arg.arg
 
     def _add_args_to_children(self, children, arg, default):
         if isinstance(arg, (list, tuple)):
@@ -590,7 +602,10 @@ class _PatchingASTWalker:
         self._handle(node, [str(node.value)])
 
     def _arg(self, node):
-        self._handle(node, [node.arg])
+        children = [node.arg]
+        if node.annotation is not None:
+            children.extend([":", node.annotation])
+        self._handle(node, children)
 
     def _Pass(self, node):
         self._handle(node, ["pass"])
