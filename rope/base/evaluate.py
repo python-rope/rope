@@ -103,6 +103,22 @@ class ScopeNameFinder:
             elif isinstance(pyobject, pyobjects.AbstractFunction):
                 parameter_name = rope.base.pynames.ParameterName()
                 return (None, parameter_name)
+        # A class data overlay must not replace the imported source symbol.
+        if holding_scope.get_kind() == "Class":
+            from rope.base import externaldata
+
+            imported = externaldata.import_source_name(
+                holding_scope,
+                lineno,
+                offset,
+                self.worder.get_word_at(offset),
+                self.worder.get_primary_at(offset),
+                self.worder.get_from_module(offset),
+                self.worder.is_from_aliased(offset),
+                self.worder.is_from_statement_module(offset),
+            )
+            if imported is not None:
+                return (None, imported)
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope
