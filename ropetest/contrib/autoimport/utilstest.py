@@ -34,6 +34,13 @@ def test_get_modname_single_file(typing_path):
     assert utils.get_modname_from_path(typing_path, typing_path) == "typing"
 
 
+def test_get_modname_external(example_external_package_path):
+    assert utils.get_modname_from_path(
+        example_external_package_path,
+        example_external_package_path,
+    ) == "external_fixturepkg"
+
+
 def test_get_modname_folder(
     example_external_package_path,
     example_external_package_module_path,
