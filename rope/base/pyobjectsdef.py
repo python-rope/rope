@@ -454,6 +454,22 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _AugAssign(self, node):
         pass
 
+    def _add_match_capture(self, node, name):
+        if name is not None:
+            assignment = pynamesdef.AssignmentValue(node)
+            self._assigned(name, assignment)
+
+    def _MatchAs(self, node):
+        self._add_match_capture(node, node.name)
+        self.generic_visit(node)
+
+    def _MatchStar(self, node):
+        self._add_match_capture(node, node.name)
+
+    def _MatchMapping(self, node):
+        self._add_match_capture(node, node.rest)
+        self.generic_visit(node)
+
     def _For(self, node):
         self._update_evaluated(node.target, node.iter, ".__iter__().next()")
         for child in node.body + node.orelse:
