@@ -4,6 +4,7 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
+- #831 Preserve external imported names when renaming their local bindings (@ryanchou1994)
 
 # Release 1.15.1
 
