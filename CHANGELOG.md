@@ -4,6 +4,7 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
+- #935 Rename variables declared `nonlocal` in inner functions together with the enclosing function's variable (@ryanchou1994)
 
 # Release 1.15.1
 
