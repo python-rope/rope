@@ -471,6 +471,13 @@ class _PythonCodeAssist:
         return pyname.get_object()
 
     def _is_defined_after(self, scope, pyname, lineno):
+        binding_scope = getattr(pyname, "binding_scope", None)
+        if binding_scope is not None and binding_scope.get_kind() in {
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        }:
+            return False
         location = pyname.get_definition_location()
         if location is not None and location[1] is not None:
             if (
@@ -492,6 +499,25 @@ class _PythonCodeAssist:
         start = fixsyntax._logical_start(lines, lineno)
         indents = fixsyntax._get_line_indents(lines[start - 1])
         inner_scope = module_scope.get_inner_scope_for_line(start, indents)
+        transferred = fixer.commenter.transferred_offset(self.offset)
+        if code.startswith(self.code[: self.offset]):
+            context = pymodule.get_source_binding_index().context_at(
+                max(0, transferred if self.starting else transferred - 1)
+            )
+            if context.role in {
+                "parameter-annotation",
+                "return-annotation",
+                "function-default",
+                "lambda-formal",
+                "lambda-default",
+                "lambda-body",
+                "comprehension-first-iter",
+                "comprehension-inner",
+                "comprehension-store",
+                "type-parameter-token",
+                "type-parameter-expression",
+            }:
+                inner_scope = context.environment
         if self.word_finder.is_a_name_after_from_import(self.offset):
             return self._from_import_completions(pymodule)
         if self.expression.strip() != "":

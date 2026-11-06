@@ -214,6 +214,22 @@ class PyModule(pyobjects.PyModule):
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
+    @utils.saveit
+    def get_source_binding_index(self):
+        from rope.base.sourcebindings import SourceBindingIndex
+
+        return SourceBindingIndex(self)
+
+    def get_attributes(self):
+        if ":=" in self.source_code:
+            self.get_source_binding_index().prepare_header_bindings()
+        return super().get_attributes()
+
+    def get_attribute(self, name):
+        if ":=" in self.source_code:
+            self.get_source_binding_index().prepare_header_bindings()
+        return super().get_attribute(name)
+
     @property
     @utils.saveit
     def lines(self):

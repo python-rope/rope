@@ -1,5 +1,5 @@
 import rope.base.change  # Use fully qualified names for clarity.
-from rope.base import codeanalyze, evaluate, exceptions, worder
+from rope.base import codeanalyze, evaluate, exceptions, pyscopes, worder
 from rope.refactor import functionutils, occurrences, sourceutils
 
 
@@ -39,13 +39,25 @@ class IntroduceParameter:
         self.resource = resource
         self.offset = offset
         self.pymodule = self.project.get_pymodule(self.resource)
-        scope = self.pymodule.get_scope().get_inner_scope_for_offset(offset)
-        if scope.get_kind() != "Function":
+        context = self.pymodule.get_source_binding_index().context_at(offset)
+        scope = context.environment
+        self.name, self.pyname = self._get_name_and_pyname()
+        binding_scope = getattr(self.pyname, "binding_scope", None)
+        if (
+            scope.get_kind() in {"Lambda", "Comprehension"}
+            and context.annotation_owner is None
+            and (
+                binding_scope is None
+                or binding_scope.get_kind()
+                not in {"Lambda", "Comprehension", "TypeParameters"}
+            )
+        ):
+            scope = context.structural_scope
+        if not isinstance(scope, pyscopes.FunctionScope):
             raise exceptions.RefactoringError(
                 "Introduce parameter should be performed inside functions"
             )
         self.pyfunction = scope.pyobject
-        self.name, self.pyname = self._get_name_and_pyname()
         if self.pyname is None:
             raise exceptions.RefactoringError(
                 "Cannot find the definition of <%s>" % self.name
@@ -62,6 +74,15 @@ class IntroduceParameter:
         )
 
     def get_changes(self, new_parameter):
+        args = self.pyfunction.get_ast().args
+        if args.posonlyargs or args.kwonlyargs:
+            raise exceptions.RefactoringError(
+                "Introduce parameter cannot rewrite unsupported parameter categories."
+            )
+        if not getattr(self.pyname, "is_refactoring_identity_safe", True):
+            raise exceptions.RefactoringError(
+                "Cannot refactor a name with an unsupported source binding."
+            )
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter, self._get_primary()))
         collector = codeanalyze.ChangeCollector(self.resource.read())
