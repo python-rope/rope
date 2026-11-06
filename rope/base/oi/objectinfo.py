@@ -1,7 +1,28 @@
+import json
 import warnings
 
-from rope.base import exceptions, resourceobserver
+from rope.base import exceptions, pyobjects, resourceobserver
 from rope.base.oi import memorydb, objectdb, transform
+
+_CALL_LAYOUT_PREFIX = "!parameter-layout-v1:"
+
+
+def _is_layout_key(key):
+    return isinstance(key, str) and key.startswith(_CALL_LAYOUT_PREFIX)
+
+
+def _call_scope_key(pyfunction, key):
+    if isinstance(pyfunction, pyobjects.PyFunction):
+        layout = pyfunction.get_parameter_layout()
+        kind = pyfunction.get_kind()
+        if kind != "function" or any(
+            parameter_kind in ("posonly", "kwonly") for parameter_kind, _ in layout
+        ):
+            # Scope keys also appear as JSON object keys in the persisted database.
+            return _CALL_LAYOUT_PREFIX + json.dumps(
+                (key, kind, layout), separators=(",", ":")
+            )
+    return key
 
 
 class ObjectInfoManager:
@@ -71,10 +92,14 @@ class ObjectInfoManager:
         result = self.get_exact_returned(pyobject, args)
         if result is not None:
             return result
-        path, key = self._get_scope(pyobject)
+        path, key = self._get_call_scope(pyobject)
         if path is None:
             return None
         for call_info in self.objectdb.get_callinfos(path, key):
+            if _is_layout_key(key) and len(call_info.get_parameters()) != len(
+                pyobject.get_param_names(special_args=False)
+            ):
+                continue
             returned = call_info.get_returned()
             if returned and returned[0] not in ("unknown", "none"):
                 result = returned
@@ -85,8 +110,10 @@ class ObjectInfoManager:
             return self.to_pyobject(result)
 
     def get_exact_returned(self, pyobject, args):
-        path, key = self._get_scope(pyobject)
+        path, key = self._get_call_scope(pyobject)
         if path is not None:
+            if args is None:
+                return None
             returned = self.objectdb.get_returned(
                 path, key, self._args_to_textual(pyobject, args)
             )
@@ -100,7 +127,7 @@ class ObjectInfoManager:
         return textual_args
 
     def get_parameter_objects(self, pyobject):
-        path, key = self._get_scope(pyobject)
+        path, key = self._get_call_scope(pyobject)
         if path is None:
             return None
         arg_count = len(pyobject.get_param_names(special_args=False))
@@ -108,6 +135,8 @@ class ObjectInfoManager:
         parameters = [None] * arg_count
         for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
+            if _is_layout_key(key) and len(args) != arg_count:
+                continue
             for index, arg in enumerate(args[:arg_count]):
                 old = parameters[index]
                 if self.validation.is_more_valid(arg, old):
@@ -120,12 +149,17 @@ class ObjectInfoManager:
             return [self.to_pyobject(parameter) for parameter in parameters]
 
     def get_passed_objects(self, pyfunction, parameter_index):
-        path, key = self._get_scope(pyfunction)
+        path, key = self._get_call_scope(pyfunction)
         if path is None:
             return []
         result = []
+        count = len(pyfunction.get_param_names(special_args=False))
+        if parameter_index >= count:
+            return result
         for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
+            if _is_layout_key(key) and len(args) != count:
+                continue
             if len(args) > parameter_index:
                 parameter = self.to_pyobject(args[parameter_index])
                 if parameter is not None:
@@ -145,7 +179,8 @@ class ObjectInfoManager:
 
     def function_called(self, pyfunction, params, returned=None):
         function_text = self.to_textual(pyfunction)
-        params_text = tuple(self.to_textual(param) for param in params)
+        count = len(pyfunction.get_param_names(special_args=False))
+        params_text = tuple(self.to_textual(param) for param in params[:count])
         returned_text = ("unknown",)
         if returned is not None:
             returned_text = self.to_textual(returned)
@@ -164,7 +199,20 @@ class ObjectInfoManager:
                 return self.to_pyobject(result)
 
     def _save_data(self, function, args, returned=("unknown",)):
-        self.objectdb.add_callinfo(function[1], function[2], args, returned)
+        pyfunction = self.to_pyobject(function)
+        if not isinstance(pyfunction, pyobjects.PyFunction):
+            return
+        path, key = self._get_call_scope(pyfunction)
+        count = len(pyfunction.get_param_names(special_args=False))
+        if path is None or (_is_layout_key(key) and len(args) < count):
+            return
+        self.objectdb.add_callinfo(path, key, args[:count], returned)
+
+    def _get_call_scope(self, pyfunction):
+        path, key = self._get_scope(pyfunction)
+        if path is not None:
+            key = _call_scope_key(pyfunction, key)
+        return path, key
 
     def _get_scope(self, pyobject):
         resource = pyobject.get_module().get_resource()
@@ -206,11 +254,43 @@ class TextualValidation:
         return self.to_pyobject.path_to_resource(path) is not None
 
     def is_scope_valid(self, path, key):
+        call_key = None
+        if _is_layout_key(key):
+            call_key = key
+            try:
+                encoded = json.loads(key[len(_CALL_LAYOUT_PREFIX) :])
+            except (ValueError, TypeError):
+                return False
+            if not (
+                isinstance(encoded, list)
+                and len(encoded) == 3
+                and isinstance(encoded[0], str)
+                and encoded[1] in ("function", "method", "staticmethod", "classmethod")
+                and isinstance(encoded[2], list)
+                and all(
+                    isinstance(parameter, list)
+                    and len(parameter) == 2
+                    and parameter[0]
+                    in ("posonly", "positional", "kwonly", "vararg", "kwarg")
+                    and isinstance(parameter[1], str)
+                    for parameter in encoded[2]
+                )
+            ):
+                return False
+            key = encoded[0]
+        elif not isinstance(key, str):
+            return False
         if key == "":
             textual = ("defined", path)
         else:
             textual = ("defined", path, key)
-        return self.to_pyobject(textual) is not None
+        pyobject = self.to_pyobject(textual)
+        if call_key is not None:
+            return (
+                isinstance(pyobject, pyobjects.PyFunction)
+                and _call_scope_key(pyobject, key) == call_key
+            )
+        return pyobject is not None
 
 
 class _FileListObserver:

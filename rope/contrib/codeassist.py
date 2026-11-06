@@ -1,9 +1,13 @@
+import io
 import keyword
 import sys
+import tokenize
 import warnings
 
 from rope.base import (
+    ast,
     builtins,
+    codeanalyze,
     evaluate,
     exceptions,
     libutils,
@@ -335,6 +339,13 @@ class NamedParamProposal(CompletionProposal):
 
         Returns None if there is no default value for this param.
         """
+        if isinstance(self._function, pyobjects.PyFunction):
+            default = self._function.get_parameter_defaults().get(self.argname)
+            if default is None:
+                return None
+            return ast.get_source_segment(
+                self._function.get_module().source_code, default
+            )
         definfo = functionutils.DefinitionInfo.read(self._function)
         for arg, default in definfo.args_with_defaults:
             if self.argname == arg:
@@ -526,7 +537,7 @@ class _PythonCodeAssist:
                     pyobject = pyobject["__call__"].get_object()
                 if isinstance(pyobject, pyobjects.AbstractFunction):
                     param_names = []
-                    param_names.extend(pyobject.get_param_names(special_args=False))
+                    param_names.extend(pyobject.get_keyword_param_names())
                     result = {}
                     for name in param_names:
                         if name.startswith(self.starting):
@@ -609,8 +620,14 @@ class PyDocExtractor:
         if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
             return
         if isinstance(pyobject, pyobjects.AbstractFunction):
-            result = self._get_function_signature(pyobject, add_module=True)
-            if remove_self and self._is_method(pyobject):
+            result = self._get_function_signature(
+                pyobject, add_module=True, remove_self=remove_self
+            )
+            if (
+                remove_self
+                and self._is_method(pyobject)
+                and not self._has_parameter_kinds(pyobject)
+            ):
                 return result.replace("(self)", "()").replace("(self, ", "(")
             return result
 
@@ -663,16 +680,89 @@ class PyDocExtractor:
             result.extend(self._get_super_methods(super_class, name))
         return result
 
-    def _get_function_signature(self, pyfunction, add_module=False):
+    def _get_function_signature(self, pyfunction, add_module=False, remove_self=False):
         location = self._location(pyfunction, add_module)
         if isinstance(pyfunction, pyobjects.PyFunction):
-            info = functionutils.DefinitionInfo.read(pyfunction)
-            return location + info.to_string()
+            if self._has_parameter_kinds(pyfunction):
+                signature = functionutils._get_function_signature(pyfunction)
+                if signature.endswith(":"):
+                    signature = signature[:-1]
+                if remove_self and self._is_method(pyfunction):
+                    signature = self._remove_self(pyfunction, signature)
+                return location + signature
+            return location + functionutils.DefinitionInfo.read(pyfunction).to_string()
         else:
             return "{}({})".format(
                 location + pyfunction.get_name(),
                 ", ".join(pyfunction.get_param_names()),
             )
+
+    @staticmethod
+    def _has_parameter_kinds(pyfunction):
+        args = pyfunction.arguments
+        return bool(args.posonlyargs or args.kwonlyargs)
+
+    @staticmethod
+    def _remove_self(pyfunction, signature):
+        args = pyfunction.arguments
+        positional = args.posonlyargs + args.args
+        if not positional or positional[0].arg != "self":
+            return signature
+        receiver = positional[0]
+        defaults = pyfunction.get_parameter_defaults()
+        last = defaults.get("self", receiver)
+        pymodule = pyfunction.get_module()
+        lines = pymodule.lines
+
+        def offset(lineno, column):
+            prefix = lines.get_line(lineno).encode("utf-8")[:column]
+            return lines.get_line_start(lineno) + len(prefix.decode("utf-8"))
+
+        origin = pymodule.source_code.index(
+            signature, lines.get_line_start(pyfunction.get_ast().lineno)
+        )
+        start = offset(receiver.lineno, receiver.col_offset) - origin
+        end = offset(last.end_lineno, last.end_col_offset) - origin
+        signature_lines = codeanalyze.SourceLinesAdapter(signature)
+
+        def token_offset(token):
+            return signature_lines.get_line_start(token.start[0]) + token.start[1]
+
+        tokens = [
+            token
+            for token in tokenize.generate_tokens(io.StringIO(signature).readline)
+            if token.type
+            not in (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.ENDMARKER)
+            and token_offset(token) >= start
+        ]
+        depth = 0
+        boundary = None
+        for index, token in enumerate(tokens):
+            if token.string in ("(", "[", "{"):
+                depth += 1
+            elif token.string in (")", "]", "}"):
+                if depth:
+                    depth -= 1
+                else:
+                    boundary = index
+                    break
+            elif token.string == "," and depth == 0 and token_offset(token) >= end:
+                boundary = index
+                break
+        if boundary is None:
+            return signature
+        index = boundary + (tokens[boundary].string == ",")
+        if (
+            len(args.posonlyargs) == 1
+            and index < len(tokens)
+            and tokens[index].string == "/"
+        ):
+            index += 1
+            if index < len(tokens) and tokens[index].string == ",":
+                index += 1
+        if index < len(tokens):
+            end = token_offset(tokens[index])
+        return signature[:start] + signature[end:]
 
     def _location(self, pyobject, add_module=False):
         location = []

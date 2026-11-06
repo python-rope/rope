@@ -234,6 +234,43 @@ Note, however, that the use of ``automatic_soa`` is discouraged, because it may
 slow down saving considerably.
 
 
+Function Parameter Information
+------------------------------
+
+For ordinary functions and methods, ``PyFunction.get_parameters()`` includes
+positional-only and keyword-only bindings.  A ``ParameterName.index`` is an
+object slot, not a position in the source signature.  The regular slots are
+ordered as positional-only, positional-or-keyword, then keyword-only;
+``*args`` and ``**kwargs`` bindings follow them.  Signature separators do not
+occupy slots.
+
+``get_param_names(special_args=False)`` returns the regular names in this
+order.  ``get_parameter_layout()`` returns a tuple of ``(kind, name)`` pairs
+for all bindings, with kinds ``posonly``, ``positional``, ``kwonly``,
+``vararg``, and ``kwarg``.  Use ``get_positional_param_names()`` and
+``get_keyword_param_names()`` when matching positional and keyword
+arguments.  In particular, a keyword with the same name as a positional-only
+parameter can belong to ``**kwargs`` and is not a reference to that parameter.
+
+``get_parameter_defaults()`` maps names to their default-expression AST
+nodes.  Required parameters are absent from this mapping; an explicit
+``=None`` has an AST node.  Defaults belong to the definition's enclosing
+scope.  These APIs describe bindings and do not serialize a modified signature.
+They do not provide a general annotation-expression scope model; existing
+same-name annotation shadowing remains a separate limitation.
+
+Change Signature, Introduce Parameter, Inline Parameter, and Move Method
+raise ``RefactoringError`` for signatures containing positional-only or
+keyword-only parameters before generating changes.  Use Function refuses
+keyword-only parameters.  Existing positional-only Inline Method calls remain
+supported, while keyword-only Inline Method calls are refused.  Call inference
+keeps unknown ``*args`` and ``**kwargs`` expansions conservative.
+
+Local to Field requires a named positional receiver.  It refuses methods with
+no positional parameters and static methods, while retaining instance-method
+and class-method field conversions.
+
+
 Closing The Project
 -------------------
 
