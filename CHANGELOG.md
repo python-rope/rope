@@ -4,6 +4,7 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
+- #920 Resolve inherited class attributes along the C3 method resolution order (@marlon-costa-dc)
 
 # Release 1.15.1
 

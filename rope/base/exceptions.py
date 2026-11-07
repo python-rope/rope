@@ -34,6 +34,15 @@ class BadIdentifierError(RopeError):
     """The name cannot be resolved"""
 
 
+class InconsistentHierarchyError(RopeError):
+    """A class hierarchy has no method resolution order
+
+    Python refuses to create such a class: its bases are cyclic,
+    repeated, or cannot be merged by the C3 linearization.
+
+    """
+
+
 class ModuleSyntaxError(RopeError):
     """Module has syntax errors
 

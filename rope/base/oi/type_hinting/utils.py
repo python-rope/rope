@@ -14,12 +14,10 @@ def get_super_func(pyfunc):
     if not isinstance(pyfunc.parent, PyClass):
         return
 
-    for cls in get_mro(pyfunc.parent)[1:]:
-        try:
-            superfunc = cls.get_attribute(pyfunc.get_name()).get_object()
-        except AttributeNotFoundError:
-            pass
-        else:
+    for cls in _source_ancestors(pyfunc.parent):
+        attributes = cls._get_own_attributes()
+        if pyfunc.get_name() in attributes:
+            superfunc = attributes[pyfunc.get_name()].get_object()
             if isinstance(superfunc, PyFunction):
                 return superfunc
 
@@ -34,9 +32,10 @@ def get_super_assignment(pyname):
     except TypeError:
         return
     else:
-        for super_pyclass in get_mro(pyclass)[1:]:
-            if attr_name in super_pyclass:
-                return super_pyclass[attr_name]
+        for super_pyclass in _source_ancestors(pyclass):
+            attributes = super_pyclass._get_own_attributes()
+            if attr_name in attributes:
+                return attributes[attr_name]
 
 
 def get_class_with_attr_name(pyname):
@@ -63,6 +62,19 @@ def get_lineno_for_node(assign_node):
     if hasattr(assign_node, "lineno") and assign_node.lineno is not None:
         return assign_node.lineno
     return 1
+
+
+def _source_ancestors(pyclass):
+    """Return the ancestors with source, in method resolution order
+
+    A hierarchy Python refuses to create has no method resolution order;
+    its ancestors follow the bases as `get_mro()` lists them.
+
+    """
+    mro = pyclass.get_consistent_mro()
+    if mro is None:
+        mro = get_mro(pyclass)
+    return [cls for cls in mro[1:] if isinstance(cls, PyClass)]
 
 
 def get_mro(pyclass):
