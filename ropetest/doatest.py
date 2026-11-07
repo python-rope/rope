@@ -27,7 +27,13 @@ class DOATest(unittest.TestCase):
         # Simulated attacker writing to the socket
         # Assume the attacker guesses the port correctly; 3037 is used by
         # default if it is available.
-        attacker_proc = multiprocessing.Process(
+        # Never fork this (multi-threaded) test process: see
+        # rope.contrib.autoimport.sqlite._process_pool.
+        methods = multiprocessing.get_all_start_methods()
+        context = multiprocessing.get_context(
+            "forkserver" if "forkserver" in methods else "spawn"
+        )
+        attacker_proc = context.Process(
             target=cve_2014_3539_attacker, args=(receiver.data_port, payload)
         )
 

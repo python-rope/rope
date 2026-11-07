@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import multiprocessing
 import re
 import secrets
 import sqlite3
@@ -11,11 +12,11 @@ import sys
 import warnings
 from collections import OrderedDict
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
-from threading import local
+from threading import Lock, local
 from typing import (
     TYPE_CHECKING,
     Generator,
@@ -55,11 +56,23 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
 
+def _process_pool() -> ProcessPoolExecutor:
+    """Return a pool whose workers never come from forking this process.
+
+    Forking a process that has threads (an editor, a language server or a
+    test runner usually do) can deadlock the child. ``forkserver`` (the
+    POSIX default since Python 3.14) or ``spawn`` start workers cleanly.
+    """
+    methods = multiprocessing.get_all_start_methods()
+    method = "forkserver" if "forkserver" in methods else "spawn"
+    return ProcessPoolExecutor(mp_context=multiprocessing.get_context(method))
+
+
 def get_future_names(
     packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
 ) -> Generator[Future[Collection[Name]], None, None]:
     """Get all names as futures."""
-    with ProcessPoolExecutor() as executor:
+    with _process_pool() as executor:
         for package in packages:
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
@@ -143,6 +156,9 @@ class AutoImport:
                 DeprecationWarning,
             )
         self.thread_local = local()
+        # Every thread gets its own connection; close() closes all of them.
+        self._connections: list[sqlite3.Connection] = []
+        self._connections_lock = Lock()
         self.connection = self.create_database_connection(
             project=project,
             memory=memory,
@@ -186,10 +202,14 @@ class AutoImport:
             else:
                 project_hash = calculate_project_hash(project.ropefolder.real_path)
             return sqlite3.connect(
-                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+                f"file:rope-{project_hash}:?mode=memory&cache=shared",
+                uri=True,
+                check_same_thread=False,
             )
         else:
-            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
+            return sqlite3.connect(
+                project.ropefolder.pathlib / "autoimport.db", check_same_thread=False
+            )
 
     @property
     def connection(self) -> sqlite3.Connection:
@@ -199,7 +219,7 @@ class AutoImport:
         This makes sure AutoImport can be shared across threads.
         """
         if not hasattr(self.thread_local, "connection"):
-            self.thread_local.connection = self.create_database_connection(
+            self.connection = self.create_database_connection(
                 project=self.project,
                 memory=self.memory,
             )
@@ -208,6 +228,8 @@ class AutoImport:
     @connection.setter
     def connection(self, value: sqlite3.Connection):
         self.thread_local.connection = value
+        with self._connections_lock:
+            self._connections.append(value)
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
@@ -390,7 +412,7 @@ class AutoImport:
             models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
-        with ProcessPoolExecutor() as executor:
+        with _process_pool() as executor:
             for file in resources:
                 job_set.started_job(f"Working on {file.path}")
                 module = self._resource_to_module(file, underlined)
@@ -458,9 +480,12 @@ class AutoImport:
         self.generate_modules_cache([module])
 
     def close(self):
-        """Close the autoimport database."""
-        self.connection.commit()
-        self.connection.close()
+        """Close the autoimport database, including connections other threads opened."""
+        with self._connections_lock:
+            connections, self._connections = self._connections, []
+        for connection in connections:
+            connection.commit()
+            connection.close()
 
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
@@ -503,7 +528,7 @@ class AutoImport:
             data = (
                 versioning.calculate_version_hash(self.project),
                 json.dumps(versioning.get_version_hash_data(self.project)),
-                datetime.utcnow().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             )
             assert models.Metadata.columns == [
                 "version_hash",

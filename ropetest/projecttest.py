@@ -5,6 +5,7 @@ import unittest
 from textwrap import dedent
 from unittest.mock import patch
 
+from rope.base import libutils
 from rope.base.exceptions import ResourceNotFoundError, RopeError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
@@ -23,6 +24,15 @@ class ProjectTest(unittest.TestCase):
         self.project_root = self.project.address
         self._make_sample_project()
         self.no_project = NoProject()
+
+    def test_deprecated_relative_still_returns_the_project_relative_path(self):
+        with self.assertWarns(DeprecationWarning):
+            relative = libutils.relative(self.project_root, self.sample_path)
+        self.assertEqual(
+            libutils.path_relative_to_project_root(self.project, self.sample_path),
+            relative,
+        )
+        self.assertEqual(self.sample_file, relative)
 
     def _make_sample_project(self):
         self.sample_file = "sample_file.txt"
@@ -115,9 +125,8 @@ class ProjectTest(unittest.TestCase):
         file = self.project.get_resource(file_path)
         file.write("sample notes")
         self.assertEqual(file_path, file.path)
-        self.assertEqual(
-            "sample notes", open(os.path.join(self.project.address, file_path)).read()
-        )
+        with open(os.path.join(self.project.address, file_path)) as written:
+            self.assertEqual("sample notes", written.read())
 
     def test_failing_when_creating_file_inside_non_existent_folder(self):
         with self.assertRaises(ResourceNotFoundError):

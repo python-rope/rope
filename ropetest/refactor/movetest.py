@@ -459,7 +459,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.origin_module.write(code)
         with self.assertRaisesRegex(
             exceptions.RefactoringError,
-            "Move refactoring should be performed on a global class, function or variable\.",
+            r"Move refactoring should be performed on a global class, function or variable\.",
         ):
             mover = move.create_move(
                 self.project, self.origin_module, code.index("CONSTANT") + 1
@@ -472,7 +472,7 @@ class MoveRefactoringTest(unittest.TestCase):
         """))
         with self.assertRaisesRegex(
             exceptions.RefactoringError,
-            "Moving global elements to the same module\.",
+            r"Moving global elements to the same module\.",
         ):
             self._move(self.origin_module, self.origin_module.read().index("a_func"), self.origin_module)
 

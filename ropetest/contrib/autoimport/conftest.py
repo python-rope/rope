@@ -1,4 +1,7 @@
+import importlib.machinery
+import importlib.util
 import pathlib
+import sys
 
 import pytest
 
@@ -43,6 +46,17 @@ def example_external_package_path(
 
 @pytest.fixture
 def compiled_lib():
-    import _sqlite3
+    """Return one stdlib extension module that this interpreter loads from a file.
 
-    return "_sqlite3", pathlib.Path(_sqlite3.__file__)
+    Which modules are shared libraries depends on how the interpreter was
+    built (python-build-standalone links _sqlite3 statically, so it has no
+    ``__file__``), so the module is discovered from the import system instead
+    of being hard-coded.
+    """
+    for name in sorted(sys.stdlib_module_names):
+        spec = importlib.util.find_spec(name)
+        if spec is not None and isinstance(
+            spec.loader, importlib.machinery.ExtensionFileLoader
+        ):
+            return name, pathlib.Path(spec.origin)
+    pytest.fail("this interpreter loads no stdlib extension module from a file")

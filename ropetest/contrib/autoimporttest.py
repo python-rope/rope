@@ -1,4 +1,5 @@
 import unittest
+from contextlib import closing
 
 from rope.contrib.autoimport import sqlite as autoimport
 from rope.contrib.autoimport.defs import Alias
@@ -12,9 +13,12 @@ class AutoImportTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
-        self.importer = autoimport.AutoImport(self.project, observe=False)
+        self.importer = autoimport.AutoImport(
+            self.project, observe=False, memory=True
+        )
 
     def tearDown(self):
+        self.importer.close()
         testutils.remove_project(self.project)
         super().tearDown()
 
@@ -87,7 +91,8 @@ class AutoImportTest(unittest.TestCase):
         self.assertEqual(["mod1"], self.importer.get_modules("_myvar"))
 
     def test_caching_underlined_names_passing_to_the_constructor(self):
-        importer = autoimport.AutoImport(self.project, False, True)
+        importer = autoimport.AutoImport(self.project, False, True, memory=True)
+        self.addCleanup(importer.close)
         self.mod1.write("_myvar = None\n")
         importer.update_resource(self.mod1)
         self.assertEqual(["mod1"], importer.get_modules("_myvar"))
@@ -178,12 +183,12 @@ class AutoImportTest(unittest.TestCase):
 
 
 def test_search_submodule(project, external_fixturepkg):
-    importer = autoimport.AutoImport(project, observe=False)
-    importer.update_module("external_fixturepkg")
-    import_statement = ("from external_fixturepkg import mod1", "mod1")
-    assert import_statement in importer.search("mod1", exact_match=True)
-    assert import_statement in importer.search("mo")
-    assert import_statement in importer.search("mod1")
+    with closing(autoimport.AutoImport(project, observe=False, memory=True)) as importer:
+        importer.update_module("external_fixturepkg")
+        import_statement = ("from external_fixturepkg import mod1", "mod1")
+        assert import_statement in importer.search("mod1", exact_match=True)
+        assert import_statement in importer.search("mo")
+        assert import_statement in importer.search("mod1")
 
 
 class AutoImportObservingTest(unittest.TestCase):
@@ -193,9 +198,12 @@ class AutoImportObservingTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, "mod1")
         self.pkg = testutils.create_package(self.project, "pkg")
         self.mod2 = testutils.create_module(self.project, "mod2", self.pkg)
-        self.importer = autoimport.AutoImport(self.project, observe=True)
+        self.importer = autoimport.AutoImport(
+            self.project, observe=True, memory=True
+        )
 
     def tearDown(self):
+        self.importer.close()
         testutils.remove_project(self.project)
         super().tearDown()
 
