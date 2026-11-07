@@ -123,6 +123,30 @@ def test_multithreading(
     assert [("from pkg1 import foo", "foo")] == results
 
 
+def test_close_closes_connections_of_other_threads(project: Project):
+    autoimport = AutoImport(project, memory=True)
+    with ThreadPoolExecutor(1) as tp:
+        worker_connection = tp.submit(lambda: autoimport.connection).result()
+
+    autoimport.close()
+
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        worker_connection.execute("SELECT 1")
+
+
+def test_connections_of_finished_threads_are_closed(project: Project):
+    with closing(AutoImport(project, memory=True)) as autoimport:
+        with ThreadPoolExecutor(1) as tp:
+            worker_connection = tp.submit(lambda: autoimport.connection).result()
+
+        # The next new connection closes the ones left by finished threads
+        with ThreadPoolExecutor(1) as tp:
+            tp.submit(lambda: autoimport.connection).result()
+
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            worker_connection.execute("SELECT 1")
+
+
 def test_connection(project: Project, project2: Project):
     ai1 = AutoImport(project)
     ai2 = AutoImport(project)
