@@ -21,13 +21,18 @@ class SimilarFinderTest(unittest.TestCase):
         return similarfinder.SimilarFinder(pymodule, **kwds)
 
     def _assert_try_else_with_finally_regions(self, handler):
-        source = (
-            "before = module.Model\n"
-            "try:\n    value = 1\n"
-            + handler
-            + " ValueError:\n    value = 2\n"
-            "else:\n    value = module.Model\n"
-            "finally:\n    value = 3\n"
+        source = dedent(
+            f"""\
+            before = module.Model
+            try:
+                value = 1
+            {handler} ValueError:
+                value = 2
+            else:
+                value = module.Model
+            finally:
+                value = 3
+            """
         )
         first = source.index("module.Model")
         last = source.rindex("module.Model")

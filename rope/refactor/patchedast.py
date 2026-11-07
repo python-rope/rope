@@ -625,44 +625,17 @@ class _PatchingASTWalker:
             children.append(node.step)
         self._handle(node, children)
 
-    def _TryFinally(self, node):
-        # @todo fixme
-        is_there_except_handler = False
-        not_empty_body = True
-        if len(node.finalbody) == 1:
-            try:
-                is_there_except_handler = isinstance(
-                    node.handlers[0], ast.ExceptHandler
-                )
-                not_empty_body = True
-            except IndexError:
-                pass
-        children = []
-        if not_empty_body or not is_there_except_handler:
-            children.extend(["try", ":"])
-        children.extend(node.body)
-        children.extend(node.handlers)
-        if node.orelse:
-            children.extend(["else", ":"])
-            children.extend(node.orelse)
-        children.extend(["finally", ":"])
-        children.extend(node.finalbody)
-        self._handle(node, children)
-
-    def _TryExcept(self, node):
+    def _Try(self, node):
         children = ["try", ":"]
         children.extend(node.body)
         children.extend(node.handlers)
         if node.orelse:
             children.extend(["else", ":"])
             children.extend(node.orelse)
+        if node.finalbody:
+            children.extend(["finally", ":"])
+            children.extend(node.finalbody)
         self._handle(node, children)
-
-    def _Try(self, node):
-        if len(node.finalbody):
-            self._TryFinally(node)
-        else:
-            self._TryExcept(node)
 
     def _TryStar(self, node):
         self._Try(node)
