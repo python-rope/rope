@@ -276,6 +276,8 @@ class DOITextualToPyObject(TextualToPyObject):
                 return result
 
     def _find_occurrence(self, name, source):
+        if not name.isidentifier():
+            return
         pattern = re.compile(r"^\s*class\s*" + name + r"\b")
         lines = source.split("\n")
         for i in range(len(lines)):
