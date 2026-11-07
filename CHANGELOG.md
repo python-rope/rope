@@ -3,7 +3,13 @@
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
+- #933 Add type annotations to project.py (@lieryan)
 - #920 Resolve inherited class attributes along the C3 method resolution order (@marlon-costa-dc)
+
+# Release 1.15.1
+
+- #xxx Change runmod.py to pass DOA channel credential in a more secure manner,
+  see GHSA-64m2-4gp9-7cqx/CVE-XXX for details (@AliAAlMousa, @lieryan)
 
 # Release 1.15.0
 
