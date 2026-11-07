@@ -4,7 +4,9 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
-- #119 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
+- #119, #928 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
+- #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
+- #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
 
 # Release 1.15.1
 
