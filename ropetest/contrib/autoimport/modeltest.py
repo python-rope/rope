@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 from typing import Any
 
 import pytest
@@ -8,7 +9,8 @@ from rope.contrib.autoimport import models
 
 @pytest.fixture
 def empty_db():
-    return sqlite3.connect(":memory:")
+    with closing(sqlite3.connect(":memory:")) as connection:
+        yield connection
 
 
 class TestQuery:
