@@ -4,6 +4,7 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
+- #918 Add `match_filter` and `import_filter` hooks to `Restructure` (@marlon-costa-dc)
 
 # Release 1.15.1
 
