@@ -1,6 +1,8 @@
 import collections
+import io
 import numbers
 import re
+import tokenize
 import warnings
 from itertools import chain
 
@@ -775,24 +777,32 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _get_surrounding_parens(self, node: ast.MatchSequence):
+        """The sequence's own ``[...]``/``(...)`` delimiters, if it has them.
+
+        The text between the node's start and its first pattern can also
+        hold grouping parentheses of that pattern -- ``case (("a" | b), c)``
+        -- which the AST does not represent.  The sequence is delimited only
+        when the bracket at its first character is the one closed at its
+        last character; ``case (1), (2)`` starts and ends with parentheses
+        that belong to its elements.
+        """
         node_start, node_end = self.ast_adapter[node]
-        first_pattern_start, _ = self.ast_adapter[node.patterns[0]]
-        _, last_pattern_end = self.ast_adapter[node.patterns[-1]]
-        opening_paren = self.source[node_start:first_pattern_start].strip()
-        closing_paren = self.source[last_pattern_end:node_end].strip()
-
-        if opening_paren not in ["[", "(", ""]:
-            warnings.warn(
-                f"Unexpected character in MatchSequence's opening_paren <{opening_paren}>; please report!",
-                RuntimeWarning,
-            )
-
-        if closing_paren not in ["]", ")", ""]:
-            warnings.warn(
-                f"Unexpected character in MatchSequence's closing_paren <{closing_paren}>; please report!",
-                RuntimeWarning,
-            )
-        return opening_paren, closing_paren
+        segment = self.source[node_start:node_end]
+        pairs = {"[": "]", "(": ")"}
+        if segment[:1] not in pairs or segment[-1:] != pairs[segment[0]]:
+            return "", ""
+        depth = 0
+        for token in tokenize.generate_tokens(io.StringIO(segment).readline):
+            if token.type != tokenize.OP or token.string not in "()[]{}":
+                continue
+            depth += 1 if token.string in "([{" else -1
+            if depth == 0:
+                end_row = segment.count("\n") + 1
+                end_col = len(segment) - (segment.rfind("\n") + 1)
+                if token.end != (end_row, end_col):
+                    return "", ""
+                return segment[0], segment[-1]
+        return "", ""
 
     def _MatchStar(self, node):
         self._handle(node, ["*", node.name or "_"])

@@ -4,6 +4,7 @@
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
+- #882 Match MatchSequence delimiters by tokenizing the node segment (@marlon-costa-dc)
 
 # Release 1.15.1
 
