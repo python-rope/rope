@@ -5,6 +5,7 @@
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #933 Add type annotations to project.py (@lieryan)
 - #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
+- #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
 
 # Release 1.15.1
 

@@ -97,6 +97,42 @@ class ChangeSignatureTest(unittest.TestCase):
             self.mod.read(),
         )
 
+    def test_removing_argument_preserves_non_ascii_defaults(self):
+        self.mod.write(dedent("""\
+            def a_func(unused, label="café", value=7):
+                pass
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("a_func") + 1
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(0)]))
+        self.assertEqual(
+            dedent("""\
+                def a_func(label="café", value=7):
+                    pass
+            """),
+            self.mod.read(),
+        )
+
+    def test_normalizing_call_preserves_non_ascii_arguments(self):
+        self.mod.write(dedent("""\
+            def a_func(label, value):
+                pass
+            a_func("中文", value=7)
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("a_func") + 1
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentNormalizer()]))
+        self.assertEqual(
+            dedent("""\
+                def a_func(label, value):
+                    pass
+                a_func("中文", 7)
+            """),
+            self.mod.read(),
+        )
+
     def test_raising_exceptions_for_non_functions(self):
         self.mod.write("a_var = 10")
         with self.assertRaises(rope.base.exceptions.RefactoringError):
