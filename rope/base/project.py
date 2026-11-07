@@ -221,7 +221,9 @@ class Project(_Project):
         self._init_prefs(prefs)
         if ropefolder is not None:
             self.prefs.add("ignored_resources", ropefolder)
-        self._init_source_folders()
+        for path in self.prefs.get("source_folders", []):
+            folder = self.get_resource(path)
+            self._custom_source_folders.append(folder)
 
     def __repr__(self):
         return '<{}.{} "{}">'.format(
@@ -229,12 +231,6 @@ class Project(_Project):
             self.__class__.__name__,
             self.address,
         )
-
-    @utils.deprecated("Delete once deprecated functions are gone")
-    def _init_source_folders(self):
-        for path in self.prefs.get("source_folders", []):
-            folder = self.get_resource(path)
-            self._custom_source_folders.append(folder)
 
     # INFO: It was decided not to cache source folders, since:
     #  - Does not take much time when the root folder contains

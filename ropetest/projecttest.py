@@ -115,9 +115,8 @@ class ProjectTest(unittest.TestCase):
         file = self.project.get_resource(file_path)
         file.write("sample notes")
         self.assertEqual(file_path, file.path)
-        self.assertEqual(
-            "sample notes", open(os.path.join(self.project.address, file_path)).read()
-        )
+        with open(os.path.join(self.project.address, file_path)) as written:
+            self.assertEqual("sample notes", written.read())
 
     def test_failing_when_creating_file_inside_non_existent_folder(self):
         with self.assertRaises(ResourceNotFoundError):

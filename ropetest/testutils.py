@@ -102,8 +102,8 @@ def skipNotPOSIX():
 
 def time_limit(timeout):
     if not any(procname in sys.argv[0] for procname in {"pytest", "py.test"}):
-        # no-op when running tests without pytest
-        return lambda *args, **kwargs: lambda func: func
+        # no-op when running tests without pytest: leave the test unchanged
+        return lambda func: func
 
     # do a local import so we don't import pytest when running without pytest
     import pytest
