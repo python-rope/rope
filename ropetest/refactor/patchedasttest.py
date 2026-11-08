@@ -168,6 +168,42 @@ class PatchedASTTest(unittest.TestCase):
         start = source.index("...")
         checker.check_region("Ellipsis", start, start + len("..."))
 
+    def test_positional_only_and_keyword_only_parameters(self):
+        source = "def f(a, /, b, *, c):\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "arguments",
+            ["arg", "", ",", " ", "/", "", ",", " ", "arg", "", ",", " ", "*",
+             "", ",", " ", "arg"],
+        )
+
+    def test_bare_star_keyword_only_parameter_with_default(self):
+        source = "def f(*, key=None):\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "arguments", ["*", "", ",", " ", "arg", "", "=", "", "NameConstant"]
+        )
+
+    def test_annotated_parameters_are_walked_as_nodes(self):
+        source = "def f(a: g(1), b: h(2)) -> None:\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("arguments", ["arg", "", ",", " ", "arg"])
+        start = source.index("g(1)")
+        checker.check_region("Call", start, start + len("g(1)"))
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    def test_annotated_star_parameters(self):
+        source = "def f(*args: int, **kwargs: str):\n    pass\n"
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children(
+            "arguments", ["*", "", "arg", "", ",", " ", "**", "", "arg"]
+        )
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
     def test_ass_name_node(self):
         source = "a = 10\n"
         ast_frag = patchedast.get_patched_ast(source, True)
