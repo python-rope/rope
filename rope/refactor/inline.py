@@ -587,7 +587,7 @@ class _InlineFunctionCallsForModuleHandle:
         )
         if returns:
             name = returned
-            if name is None:
+            if not name:
                 name = "None"
             change_collector.add_change(
                 line_end,

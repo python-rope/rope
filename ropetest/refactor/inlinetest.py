@@ -29,6 +29,30 @@ class InlineTest(unittest.TestCase):
         self.project.do(changes)
         return self.mod.read()
 
+    def test_inlining_bare_return_in_generator_expression(self):
+        code = dedent("""\
+            class MyTokenizer:
+                def tokenize(self, text):
+                    return
+
+                def itokenize(self, text):
+                    return (t for t in self.tokenize(text))
+        """)
+        namespace = {}
+        exec(self._inline(code, code.index("tokenize(")), namespace)
+        with self.assertRaises(TypeError):
+            namespace["MyTokenizer"]().itokenize("")
+
+    def test_inlining_bare_return_as_expression(self):
+        code = dedent("""\
+            def f():
+                return
+            result = f()
+        """)
+        namespace = {}
+        exec(self._inline(code, code.index("f(")), namespace)
+        self.assertIsNone(namespace["result"])
+
     def test_simple_case(self):
         code = dedent("""\
             a_var = 10
