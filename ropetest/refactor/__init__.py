@@ -877,11 +877,11 @@ class LocalToFieldTest(unittest.TestCase):
         self.assertEqual(expected, self.mod.read())
 
     def test_raising_exception_when_performed_on_a_global_var(self):
-        self.mod.write("var = 10\n")
+        self.mod.write(dedent("""\
+            var = 10
+        """))
         with self.assertRaises(RefactoringError):
-            self._perform_convert_local_variable_to_field(
-                self.mod, self.mod.read().index("var") + 1
-            )
+            LocalToField(self.project, self.mod, 0)
 
     def test_raising_exception_when_performed_on_field(self):
         code = dedent("""\
@@ -891,9 +891,7 @@ class LocalToFieldTest(unittest.TestCase):
         """)
         self.mod.write(code)
         with self.assertRaises(RefactoringError):
-            self._perform_convert_local_variable_to_field(
-                self.mod, self.mod.read().index("var") + 1
-            )
+            LocalToField(self.project, self.mod, code.index("var") + 1)
 
     def test_raising_exception_when_performed_on_a_parameter(self):
         code = dedent("""\
@@ -903,9 +901,45 @@ class LocalToFieldTest(unittest.TestCase):
         """)
         self.mod.write(code)
         with self.assertRaises(RefactoringError):
-            self._perform_convert_local_variable_to_field(
-                self.mod, self.mod.read().index("var") + 1
-            )
+            LocalToField(self.project, self.mod, code.index("var") + 1)
+
+    def test_raising_exception_when_performed_on_a_function_local(self):
+        code = dedent("""\
+            def a_func():
+                var = 10
+        """)
+        self.mod.write(code)
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, code.index("var"))
+
+    def test_raising_exception_when_performed_on_a_class_variable(self):
+        code = dedent("""\
+            class A:
+                var = 10
+        """)
+        self.mod.write(code)
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, code.index("var"))
+
+    def test_raising_exception_when_performed_on_an_unresolved_name(self):
+        code = dedent("""\
+            class A:
+                def a_func(self):
+                    missing
+        """)
+        self.mod.write(code)
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, code.index("missing"))
+
+    def test_raising_exception_when_performed_on_a_builtin(self):
+        code = dedent("""\
+            class A:
+                def a_func(self):
+                    len([])
+        """)
+        self.mod.write(code)
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, code.index("len"))
 
     # NOTE: This situation happens a lot and is normally not an error
     # @testutils.assert_raises(RefactoringError)

@@ -8,17 +8,17 @@ class LocalToField:
         self.resource = resource
         self.offset = offset
 
-    def get_changes(self):
-        name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.project.get_pymodule(self.resource)
-        pyname = evaluate.eval_location(this_pymodule, self.offset)
-        if not self._is_a_method_local(pyname):
+        self.pyname = evaluate.eval_location(this_pymodule, self.offset)
+        if not self._is_a_method_local(self.pyname):
             raise exceptions.RefactoringError(
                 "Convert local variable to field should be performed on "
                 "a local variable of a method."
             )
 
-        pymodule, lineno = pyname.get_definition_location()
+    def get_changes(self):
+        name = worder.get_name_at(self.resource, self.offset)
+        pymodule, lineno = self.pyname.get_definition_location()
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         # Not checking redefinition
         # self._check_redefinition(name, function_scope)
@@ -40,12 +40,13 @@ class LocalToField:
         return new_name
 
     def _is_a_method_local(self, pyname):
+        if not isinstance(pyname, pynames.AssignedName):
+            return False
         pymodule, lineno = pyname.get_definition_location()
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         parent = holding_scope.parent
         return (
-            isinstance(pyname, pynames.AssignedName)
-            and pyname in holding_scope.get_names().values()
+            pyname in holding_scope.get_names().values()
             and holding_scope.get_kind() == "Function"
             and parent is not None
             and parent.get_kind() == "Class"
