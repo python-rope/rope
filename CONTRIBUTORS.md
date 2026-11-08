@@ -94,6 +94,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/marlon-costa-dc"><img src="https://avatars.githubusercontent.com/u/128386606?v=4?s=100" width="100px;" alt="Marlon Costa"/><br /><sub><b>Marlon Costa</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=marlon-costa-dc" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/marcoeangeli"><img src="https://avatars.githubusercontent.com/u/32369626?v=4?s=100" width="100px;" alt="Marco E Angeli Ayello"/><br /><sub><b>Marco E Angeli Ayello</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=marcoeangeli" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Jinyong-Li"><img src="https://avatars.githubusercontent.com/u/209943074?v=4?s=100" width="100px;" alt="Jinyong Li"/><br /><sub><b>Jinyong Li</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=Jinyong-Li" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/aliassar"><img src="https://avatars.githubusercontent.com/u/64643471?v=4?s=100" width="100px;" alt="Ali Assar"/><br /><sub><b>Ali Assar</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=aliassar" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

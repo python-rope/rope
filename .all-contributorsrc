@@ -636,6 +636,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "aliassar",
+      "name": "Ali Assar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64643471?v=4",
+      "profile": "https://github.com/aliassar",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
