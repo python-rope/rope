@@ -5,6 +5,7 @@
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
 - #926, #929 Raise RefactoringError instead of IndexError/ModuleSyntaxError when extracting an empty or whitespace-only region (@aliassar)
 - #933 Add type annotations to project.py (@lieryan)
+- #882 Match MatchSequence delimiters by tokenizing the node segment (@marlon-costa-dc)
 - #119, #928 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
 - #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
 - #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
