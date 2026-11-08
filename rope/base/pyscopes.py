@@ -46,6 +46,10 @@ class Scope:
             return self.parent._propagated_lookup(name)
         return None
 
+    def get_binding_scopes(self):
+        module = self._get_global_scope().pyobject
+        return module.get_source_binding_index().children_of(self)
+
     def get_propagated_names(self):
         """Return the visible names of this scope
 
@@ -155,6 +159,9 @@ class GlobalScope(Scope):
     def get_inner_scope_for_offset(self, offset):
         return self._scope_finder.get_holding_scope_for_offset(self, offset)
 
+    def get_structural_scope_for_offset(self, offset):
+        return self._scope_finder.get_holding_scope_for_offset(self, offset)
+
     @property
     @utils.saveit
     def _scope_finder(self):
@@ -211,12 +218,16 @@ class FunctionScope(Scope):
     def _get_names(self):
         if self.names is None:
             self._visit_function()
+        module = self.pyobject.get_module()
+        module.get_source_binding_index().install_unsupported_formals(self)
+        if ":=" in module.source_code:
+            module.get_source_binding_index().prepare_header_bindings(self)
         return self.names
 
     def _visit_function(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for n in ast.iter_child_nodes(self.pyobject.get_ast()):
+            for n in self.pyobject.get_ast().body:
                 new_visitor.visit(n)
             self.names = new_visitor.names
             self.names.update(self.pyobject.get_parameters())

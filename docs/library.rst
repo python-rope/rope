@@ -875,6 +875,53 @@ It provides two new search methods:
  -  search() - simpler wrapper around search_full with a basic sorting algorithm
 
 
+Source binding environments
+---------------------------
+
+The structural scope of an expression and the environment in which its names
+are resolved can differ. Function annotations use their declaration or
+annotation environment; lambda parameters and comprehension targets have their
+own bindings. The existing ``GlobalScope.get_inner_scope_for_offset(offset)``
+continues to return the structural scope. Its explicit
+``get_structural_scope_for_offset(offset)`` alias has the same behavior.
+
+A module's ``get_source_binding_index()`` provides source identity queries:
+
+.. code-block:: python
+
+  pymodule = project.get_pymodule(resource)
+  index = pymodule.get_source_binding_index()
+  context = index.context_at(offset)
+  environment = context.environment
+  structural_scope = context.structural_scope
+  binding = index.binding_for_token(offset)
+
+``context_for_node(node)`` resolves a node from that module's AST. Source
+queries in ``rope.base.evaluate`` use these environments while keeping source
+identities separate from call-time values. A lambda's private argument matcher
+handles its own positional, keyword and creation-time default values; it does
+not change the ordinary ``Arguments`` or ``PyFunction`` parameter protocols.
+Unknown argument expansion or conflicting values remain unknown.
+
+When a directly assigned class attribute and a directly assigned instance
+attribute in ``__init__`` hold different lambdas, attribute value views select
+the class or initialized instance value independently. This selection does not
+replace their source names or change the ordinary class attribute protocol.
+
+Ordinary positional-only and keyword-only parameters are represented by
+distinct readable source names, so their bodies do not fall back to same-named
+outer variables. Their call inference and signature rewriting are outside this
+model's supported range. Rename refuses edits to these parameter bindings, and
+introduce-parameter refuses to rewrite such a signature. Queries still return
+definition locations and an unknown value. An unresolved generic annotation
+binding likewise refuses a potentially affected edit before any source changes.
+
+The model does not provide arbitrary dynamic class namespace inference. For
+example, assigning a lambda to ``Owner.callback`` after the class definition
+can leave attribute inference unknown; source binding identity is not a promise
+of complete dynamic value inference. Inline safety for deferred annotations and
+initializer removal is outside the source model's new consumer scope.
+
 Cross-Project Refactorings
 --------------------------
 
