@@ -112,6 +112,15 @@ class InlineMethod(_Inliner):
         self.others_generator = _DefinitionGenerator(
             self.project, self.pyfunction, body=body
         )
+        for name, default in self.others_generator.definition_params.items():
+            if default is not None:
+                default, imports = move.moving_code_with_imports(
+                    self.project, self.resource, f"{name} = ({default})\n"
+                )
+                self.imports.extend(imports)
+                self.others_generator.definition_params[name] = default.split("=", 1)[
+                    1
+                ].strip()
 
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
