@@ -1,5 +1,8 @@
+import sys
+import types
 import unittest
 from textwrap import dedent
+from unittest.mock import patch
 
 import rope.base.exceptions
 from rope.refactor import inline
@@ -825,6 +828,62 @@ class InlineTest(unittest.TestCase):
             """),
             self.mod2.read(),
         )
+
+    def test_inlining_multiline_default(self):
+        code = dedent("""\
+            def f(x=(1 +
+                     2)):
+                return x
+            result = f()
+        """)
+        namespace = {}
+        exec(self._inline(code, code.index("f(")), namespace)
+        self.assertEqual(3, namespace["result"])
+
+    def test_inlining_string_default_with_future_import(self):
+        self.mod.write(dedent("""\
+            from __future__ import annotations
+
+            def f(sep=' '):
+                return sep
+        """))
+        self.mod2.write(dedent("""\
+            from __future__ import annotations
+            from mod import f
+
+            result = f()
+        """))
+        self._inline2(self.mod, self.mod.read().index("f("))
+        module = types.ModuleType("mod")
+        exec(self.mod.read(), module.__dict__)
+        namespace = {}
+        with patch.dict(sys.modules, {"mod": module}):
+            exec(self.mod2.read(), namespace)
+        self.assertEqual(" ", namespace["result"])
+
+    def test_inlining_method_imports_default_dependencies(self):
+        self.mod.write(dedent("""\
+            import sys
+
+            class Base:
+                def __init__(self, text):
+                    self.raw = text
+
+                def split(self, sep=None, maxsplit=sys.maxsize):
+                    return self.raw.split(sep, maxsplit)[0]
+        """))
+        self.mod2.write(dedent("""\
+            from mod import Base
+
+            result = Base('Beautiful is better').split()
+        """))
+        self._inline2(self.mod, self.mod.read().index("def split") + 5)
+        module = types.ModuleType("mod")
+        exec(self.mod.read(), module.__dict__)
+        namespace = {}
+        with patch.dict(sys.modules, {"mod": module}):
+            exec(self.mod2.read(), namespace)
+        self.assertEqual("Beautiful", namespace["result"])
 
     def test_adding_needed_imports_in_the_dest_module_removing_selfs(self):
         self.mod.write(dedent("""\
