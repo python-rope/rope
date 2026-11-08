@@ -29,7 +29,7 @@ def test_get_package_source_venv_in_project_dir(example_external_package_path, p
     # technically being inside the project folder.
 
     # Set up actual venv in project folder:
-    project_venv_path = project.root.pathlib/".venv"
+    project_venv_path = project.root.pathlib / ".venv"
     venv.create(project_venv_path)
 
     # Crude approximation of a package installed into this venv:
