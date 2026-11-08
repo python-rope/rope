@@ -2,6 +2,7 @@ import warnings
 from keyword import iskeyword
 
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -121,6 +122,10 @@ class Rename:
         for file_ in resources:
             job_set.started_job(file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)
+            source = new_content if new_content is not None else file_.read()
+            new_exports = self._rename_in_all(file_, source, new_name)
+            if new_exports is not None:
+                new_content = new_exports
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
@@ -129,6 +134,34 @@ class Rename:
             if self._is_allowed_to_move(resources, resource):
                 self._rename_module(resource, new_name, changes)
         return changes
+
+    def _rename_in_all(self, resource, source, new_name):
+        if "__all__" not in source:
+            return None
+        pymodule = self.project.get_pymodule(resource)
+        if not occurrences.same_pyname(
+            self.old_pyname, pymodule.get_attributes().get(self.old_name)
+        ):
+            return None
+        lines = codeanalyze.ASTLinesAdapter(source)
+        collector = codeanalyze.ChangeCollector(source)
+        for node in ast.parse(source).body:
+            if isinstance(node, ast.Assign):
+                targets = node.targets
+            elif isinstance(node, ast.AnnAssign):
+                targets = [node.target]
+            else:
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id == "__all__"
+                for target in targets
+            ) or not isinstance(node.value, (ast.List, ast.Tuple)):
+                continue
+            for element in node.value.elts:
+                if isinstance(element, ast.Constant) and element.value == self.old_name:
+                    start, end = lines[element]
+                    collector.add_change(start, end, repr(new_name))
+        return collector.get_changed()
 
     def validate_changes(
         self,

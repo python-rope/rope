@@ -1,6 +1,8 @@
 import sys
 import unittest
 from textwrap import dedent
+from types import ModuleType
+from unittest.mock import patch
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences
@@ -52,6 +54,163 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
     def test_simple_global_variable_renaming(self):
         refactored = self._local_rename("a_var = 20\n", 2, "new_var")
         self.assertEqual("new_var = 20\n", refactored)
+
+    def test_renaming_exported_name_keeps_star_import_working(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod2 = testutils.create_module(self.project, "mod2")
+        code = dedent("""\
+            __all__ = ['old_name']
+            old_name = 1
+        """)
+        mod1.write(code)
+        mod2.write(dedent("""\
+            from mod1 import *
+            result = old_name
+        """))
+        self._rename(mod1, code.rindex("old_name"), "new_name")
+        module = ModuleType("mod1")
+        exec(mod1.read(), module.__dict__)
+        namespace = {}
+        with patch.dict(sys.modules, {"mod1": module}):
+            exec(mod2.read(), namespace)
+        self.assertEqual(1, namespace["result"])
+        self.assertEqual(
+            dedent("""\
+                __all__ = ['new_name']
+                new_name = 1
+            """),
+            mod1.read(),
+        )
+
+    def test_renaming_exported_function_and_class(self):
+        mod = testutils.create_module(self.project, "mod")
+        for declaration in ("def old_name(): pass", "class old_name: pass"):
+            with self.subTest(declaration=declaration):
+                code = dedent("""\
+                    __all__ = ['old_name']
+                """) + declaration + "\n"
+                mod.write(code)
+                self._rename(mod, code.rindex("old_name"), "new_name")
+                self.assertEqual(code.replace("old_name", "new_name"), mod.read())
+
+    def test_renaming_reexported_name_from_importing_module(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod1.write(dedent("""\
+            old_name = 1
+        """))
+        code = dedent("""\
+            from mod1 import old_name
+            __all__ = ['old_name']
+        """)
+        mod2.write(code)
+        self._rename(mod2, code.index("old_name"), "new_name")
+        self.assertEqual(code.replace("old_name", "new_name"), mod2.read())
+        self.assertEqual("new_name = 1\n", mod1.read())
+
+    def test_renaming_exports_preserves_other_strings_and_scopes(self):
+        code = dedent("""\
+            old_name = 1
+            other = 'old_name'
+            __all__ = ['old_name', 'other', 'old_name_extra']
+            # old_name
+            def f():
+                __all__ = ['old_name']
+            class C:
+                __all__ = ['old_name']
+        """)
+        refactored = self._local_rename(code, 0, "new_name")
+        self.assertEqual(
+            dedent("""\
+                new_name = 1
+                other = 'old_name'
+                __all__ = ['new_name', 'other', 'old_name_extra']
+                # old_name
+                def f():
+                    __all__ = ['old_name']
+                class C:
+                    __all__ = ['old_name']
+            """),
+            refactored,
+        )
+
+    def test_renaming_local_name_does_not_change_exports(self):
+        code = dedent("""\
+            __all__ = ['old_name']
+            old_name = 1
+            def f():
+                old_name = 2
+                return old_name
+        """)
+        refactored = self._local_rename(code, code.index("old_name = 2"), "new_name")
+        self.assertEqual(
+            dedent("""\
+                __all__ = ['old_name']
+                old_name = 1
+                def f():
+                    new_name = 2
+                    return new_name
+            """),
+            refactored,
+        )
+
+    def test_renaming_exported_name_respects_resources(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod1.write(dedent("""\
+            old_name = 1
+        """))
+        code = dedent("""\
+            from mod1 import old_name
+            __all__ = ['old_name']
+        """)
+        mod2.write(code)
+        self._rename(mod1, 0, "new_name", resources=[mod1])
+        self.assertEqual(code, mod2.read())
+
+    def test_renaming_exports_ignores_unrelated_modules_and_aliases(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod3 = testutils.create_module(self.project, "mod3")
+        mod1.write(dedent("""\
+            old_name = 1
+        """))
+        code = dedent("""\
+            old_name = 2
+            __all__ = ['old_name']
+        """)
+        mod2.write(code)
+        mod3.write(dedent("""\
+            from mod1 import old_name as alias
+            __all__ = ['alias']
+        """))
+        self._rename(mod1, 0, "new_name")
+        self.assertEqual(code, mod2.read())
+        self.assertEqual(
+            dedent("""\
+                from mod1 import new_name as alias
+                __all__ = ['alias']
+            """),
+            mod3.read(),
+        )
+
+    def test_renaming_literal_exports_with_unicode_and_annotations(self):
+        mod = testutils.create_module(self.project, "mod")
+        for export in (
+            "__all__ = ('old_name',)",
+            "__all__: list[str] = ['old_name']",
+            "label = 'é'; __all__ = ['old_name']",
+            "__all__ = ['old_' 'name']",
+            "__all__ = ['old_\\x6eame']",
+        ):
+            with self.subTest(export=export):
+                code = "old_name = 1\n" + export + "\n"
+                mod.write(code)
+                self._rename(mod, 0, "new_name")
+                namespace = {}
+                exec(mod.read(), namespace)
+                self.assertEqual(["new_name"], list(namespace["__all__"]))
+                self.assertEqual(1, namespace[namespace["__all__"][0]])
 
     def test_variable_renaming_only_in_its_scope(self):
         refactored = self._local_rename(
