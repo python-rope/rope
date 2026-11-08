@@ -1,5 +1,5 @@
-from abc import abstractmethod, ABC
-from typing import List, Tuple, Optional, Protocol
+from abc import ABC, abstractmethod
+from typing import List, Optional, Protocol, Tuple
 
 
 class ImportStatement:

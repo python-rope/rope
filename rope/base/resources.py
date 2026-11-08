@@ -66,6 +66,7 @@ class Resource(os.PathLike):
 
     def is_dir(self):
         """Alias for `is_folder()`"""
+        return self.is_folder()
 
     def is_folder(self):
         """Return True if the resource is a Folder"""

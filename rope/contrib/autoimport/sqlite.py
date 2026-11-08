@@ -17,6 +17,7 @@ from itertools import chain
 from pathlib import Path
 from threading import local
 from typing import (
+    TYPE_CHECKING,
     Generator,
     Iterable,
     Iterator,
@@ -24,7 +25,6 @@ from typing import (
     Optional,
     Set,
     Tuple,
-    TYPE_CHECKING,
 )
 
 from rope.base import exceptions, libutils, resourceobserver, taskhandle, versioning
@@ -50,7 +50,6 @@ from rope.contrib.autoimport.utils import (
     sort_and_deduplicate_tuple,
 )
 from rope.refactor import importutils
-
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -569,14 +568,17 @@ class AutoImport:
         return list(OrderedDict.fromkeys(folder_paths))
 
     def _safe_iterdir(self, folder: Path):
-        dirs = folder.iterdir()
-        while True:
-            try:
-                yield next(dirs)
-            except PermissionError:
-                pass
-            except StopIteration:
-                break
+        try:
+            dirs = folder.iterdir()
+            while True:
+                try:
+                    yield next(dirs)
+                except PermissionError:
+                    pass
+                except StopIteration:
+                    break
+        except PermissionError:
+            pass
 
     def _get_available_packages(self) -> List[Package]:
         packages: List[Package] = [

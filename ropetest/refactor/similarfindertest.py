@@ -20,6 +20,36 @@ class SimilarFinderTest(unittest.TestCase):
         pymodule = self.project.get_pymodule(self.mod)
         return similarfinder.SimilarFinder(pymodule, **kwds)
 
+    def _assert_try_else_with_finally_regions(self, handler):
+        source = dedent(
+            f"""\
+            before = module.Model
+            try:
+                value = 1
+            {handler} ValueError:
+                value = 2
+            else:
+                value = module.Model
+            finally:
+                value = 3
+            """
+        )
+        first = source.index("module.Model")
+        last = source.rindex("module.Model")
+        size = len("module.Model")
+        finder = self._create_finder(source)
+        self.assertEqual(
+            [(first, first + size), (last, last + size)],
+            sorted(finder.get_match_regions("module.Model")),
+        )
+
+    def test_matching_try_else_with_finally(self):
+        self._assert_try_else_with_finally_regions("except")
+
+    @testutils.only_for("3.11")
+    def test_matching_try_star_else_with_finally(self):
+        self._assert_try_else_with_finally_regions("except*")
+
     def test_trivial_case(self):
         finder = self._create_finder("")
         self.assertEqual([], list(finder.get_match_regions("10")))

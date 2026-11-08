@@ -1,8 +1,13 @@
 import unittest
 from textwrap import dedent
 
-from rope.base.prefs import get_preferred_import_style, ImportStyle, Prefs, ImportPrefs
-from rope.base.prefs import DEFAULT_IMPORT_STYLE
+from rope.base.prefs import (
+    DEFAULT_IMPORT_STYLE,
+    ImportPrefs,
+    ImportStyle,
+    Prefs,
+    get_preferred_import_style,
+)
 from rope.refactor.importutils import ImportTools, add_import, importinfo
 from ropetest import testutils
 

@@ -65,7 +65,7 @@ class FileSystemCommands:
 class SubversionCommands:
     def __init__(self, *args):
         self.normal_actions = FileSystemCommands()
-        import pysvn  # type:ignore
+        import pysvn  # type: ignore
 
         self.client = pysvn.Client()
 
@@ -115,9 +115,9 @@ class MercurialCommands:
         self.repo = self.hg.hg.repository(self.ui, root)
 
     def _import_mercurial(self):
-        import mercurial.commands  # type:ignore
-        import mercurial.hg  # type:ignore
-        import mercurial.ui  # type:ignore
+        import mercurial.commands  # type: ignore
+        import mercurial.hg  # type: ignore
+        import mercurial.ui  # type: ignore
 
         return mercurial
 

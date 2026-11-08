@@ -24,7 +24,7 @@ rope -- the world's most advanced open source Python refactoring library
 
 .. |Codecov badge| image:: https://codecov.io/gh/python-rope/rope/graph/badge.svg?token=pU08MBXFIS
    :target: https://codecov.io/gh/python-rope/rope
-   :alt: Codecov 
+   :alt: Codecov
 
 Overview
 ========
