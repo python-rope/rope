@@ -1,9 +1,36 @@
+import multiprocessing
 import os
+import re
 import unittest
+from contextlib import contextmanager
 from textwrap import dedent
+from unittest.mock import patch
+
+import pytest
 
 from rope.base import exceptions
 from ropetest import testutils
+
+
+@contextmanager
+def assert_collects_doa_data(project):
+    assert len(project.pycore.object_info.objectdb.db) == 0
+    yield
+    assert len(project.pycore.object_info.objectdb.db) > 0
+
+
+@pytest.fixture
+def captured_run_module(project, tmp_path):
+    def _run_module(file):
+        runner = project.pycore.run_module(
+            file,
+            stdout=stdout.open("w"),
+        )
+        runner.wait_process()
+        return stdout.read_text()
+
+    stdout = tmp_path / "stdout"
+    return _run_module
 
 
 class PythonFileRunnerTest(unittest.TestCase):
@@ -45,6 +72,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
+        self.assertGreater(len(self.pycore.object_info.objectdb.db), 0)
 
     def test_passing_arguments(self):
         file_path = "sample.py"
@@ -164,10 +192,60 @@ class PythonFileRunnerTest(unittest.TestCase):
         self.assertEqual("run", self.get_output_file_content(file_path))
 
     def test_making_runner_when_doi_is_disabled(self):
-        self.project.set("enable_doi", False)
+        self.project.set("perform_doa", False)
         file_path = "sample.py"
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEqual("run", self.get_output_file_content(file_path))
+        self.assertEqual(len(self.pycore.object_info.objectdb.db), 0)
+
+    def test_pass_sendinfo_in_environ(self):
+        file_path = "sample.py"
+        self.make_sample_python_file(file_path)
+        file_resource = self.project.get_resource(file_path)
+
+        with patch('subprocess.Popen') as mock_popen:
+            runner = self.pycore.run_module(file_resource)
+
+        args = mock_popen.call_args.kwargs['args']
+        self.assertEqual(args[2], '-') # send_info
+
+        env = mock_popen.call_args.kwargs['env']
+        self.assertIsNotNone(re.fullmatch(r"\d+:[a-zA-Z0-9+/]+=*", env["ROPE_DOA_SOCK"]))
+
+
+class TestRunModMultiprocessing:
+    """run_module spawns multiprocessing in their different start modes"""
+
+    SCRIPT = dedent("""\
+        import multiprocessing as mp
+
+        def work():
+            print("child ran")
+
+        if __name__ == "__main__":
+            mp.set_start_method("{start_method}")
+            p = mp.Process(target=work)
+            p.start()
+            p.join()
+    """)
+
+    @pytest.mark.parametrize(
+        "start_method",
+        multiprocessing.get_all_start_methods()
+    )
+    def test_multiprocessing_startmethod(
+        self,
+        project,
+        mod1,
+        captured_run_module,
+        start_method,
+    ):
+        mod1.write(self.SCRIPT.format(start_method=start_method))
+
+        with assert_collects_doa_data(project):
+            stdout = captured_run_module(mod1)
+
+        assert stdout == "child ran\n"

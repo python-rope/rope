@@ -507,6 +507,16 @@ class WordRangeFinderTest(unittest.TestCase):
             self._make_offset_annotation(code, word_finder.is_from_aliased),
         )
 
+    def test_is_from_aliased_at_end_of_file_without_newline(self):
+        code = "from os import system"
+        word_finder = worder.Worder(code)
+        self.assertFalse(word_finder.is_from_aliased(code.index("system")))
+
+    def test_is_import_statement_aliased_module_at_end_of_file_without_newline(self):
+        code = "import os"
+        word_finder = worder.Worder(code)
+        self.assertFalse(word_finder.is_import_statement_aliased_module(code.index("os")))
+
     def test_is_from_with_from_import_and_multiline_parens(self):
         code = "from mod import \\\n  (f,\n  g, h)\n"
         word_finder = worder.Worder(code)
