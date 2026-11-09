@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Keep keyword labels of unresolved calls separate from same-named variables during renaming.
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
