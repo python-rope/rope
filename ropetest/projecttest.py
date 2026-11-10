@@ -774,6 +774,8 @@ class TestProjectGetResource:
             case "devnull":
                 return pathlib.Path(os.devnull)
             case "mkfifo":
+                if not hasattr(os, "mkfifo"):
+                    pytest.skip()
                 fifo_path = project.address + "/fifo"
                 os.mkfifo(fifo_path)
                 return pathlib.Path(fifo_path)
