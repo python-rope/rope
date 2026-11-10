@@ -547,18 +547,6 @@ class ProjectTest(unittest.TestCase):
             myfile = self.project.get_file("myfolder/myfile.txt")
             myfile.create()
 
-    def test_simple_path_to_resource(self):
-        myfile = self.project.root.create_file("myfile.txt")
-        self.assertEqual(myfile, path_to_resource(self.project, myfile.real_path))
-        self.assertEqual(
-            myfile, path_to_resource(self.project, myfile.real_path, type="file")
-        )
-        myfolder = self.project.root.create_folder("myfolder")
-        self.assertEqual(myfolder, path_to_resource(self.project, myfolder.real_path))
-        self.assertEqual(
-            myfolder, path_to_resource(self.project, myfolder.real_path, type="folder")
-        )
-
     @testutils.skipNotPOSIX()
     def test_ignoring_symlinks_inside_project(self):
         project2 = testutils.sample_project(folder_name="sampleproject2")
@@ -734,6 +722,16 @@ class TestProjectGetResource:
         assert isinstance(resource, File)
         assert resource.path == "../sample_file.txt"
         assert resource.real_path.endswith("sample_project/../sample_file.txt")
+
+    def test_simple_path_to_resource(self, sample_project):
+        myfile = sample_project.root.create_file("myfile.txt")
+        assert myfile == path_to_resource(sample_project, myfile.real_path)
+        assert myfile == path_to_resource(sample_project, myfile.real_path, type="file")
+
+        myfolder = sample_project.root.create_folder("myfolder")
+        assert myfolder == path_to_resource(sample_project, myfolder.real_path)
+        assert myfolder == path_to_resource(sample_project, myfolder.real_path, type="folder")
+
 
 
 class TestProjectGetModule:
