@@ -5,7 +5,7 @@ import unittest
 from textwrap import dedent
 from unittest.mock import patch
 
-from rope.base.exceptions import ResourceNotFoundError, RopeError
+from rope.base import exceptions
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
 from rope.base.project import NoProject, Project, _realpath
@@ -51,7 +51,7 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual("sample text\n", projectFile.read())
 
     def test_getting_not_existing_project_file(self):
-        with self.assertRaises(ResourceNotFoundError):
+        with self.assertRaises(exceptions.ResourceNotFoundError):
             self.project.get_resource("DoesNotExistFile.txt")
 
     def test_writing_in_project_files(self):
@@ -66,7 +66,7 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(newFile is not None)
 
     def test_creating_files_that_already_exist(self):
-        with self.assertRaises(RopeError):
+        with self.assertRaises(exceptions.RopeError):
             self.project.root.create_file(self.sample_file)
 
     def test_making_root_folder_if_it_does_not_exist(self):
@@ -85,7 +85,7 @@ class ProjectTest(unittest.TestCase):
             project_root.touch()
             assert project_root.exists() and project_root.is_file()
 
-            with self.assertRaises(RopeError):
+            with self.assertRaises(exceptions.RopeError):
                 Project(project_root)
 
     def test_creating_folders(self):
@@ -96,13 +96,13 @@ class ProjectTest(unittest.TestCase):
 
     def test_making_folder_that_already_exists(self):
         folderName = "SampleFolder"
-        with self.assertRaises(RopeError):
+        with self.assertRaises(exceptions.RopeError):
             self.project.root.create_folder(folderName)
             self.project.root.create_folder(folderName)
 
     def test_failing_if_creating_folder_while_file_already_exists(self):
         folderName = "SampleFolder"
-        with self.assertRaises(RopeError):
+        with self.assertRaises(exceptions.RopeError):
             self.project.root.create_file(folderName)
             self.project.root.create_folder(folderName)
 
@@ -120,7 +120,7 @@ class ProjectTest(unittest.TestCase):
         )
 
     def test_failing_when_creating_file_inside_non_existent_folder(self):
-        with self.assertRaises(ResourceNotFoundError):
+        with self.assertRaises(exceptions.ResourceNotFoundError):
             self.project.root.create_file("NonexistentFolder/SomeFile.txt")
 
     def test_nested_directories(self):
@@ -151,7 +151,7 @@ class ProjectTest(unittest.TestCase):
         )
 
     def test_removing_non_existent_files(self):
-        with self.assertRaises(ResourceNotFoundError):
+        with self.assertRaises(exceptions.ResourceNotFoundError):
             self.project.get_resource("NonExistentFile.txt").remove()
 
     def test_removing_nested_files(self):
@@ -533,13 +533,13 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(myfolder.is_folder())
 
     def test_exception_when_creating_twice(self):
-        with self.assertRaises(RopeError):
+        with self.assertRaises(exceptions.RopeError):
             myfile = self.project.get_file("myfile.txt")
             myfile.create()
             myfile.create()
 
     def test_exception_when_parent_does_not_exist(self):
-        with self.assertRaises(ResourceNotFoundError):
+        with self.assertRaises(exceptions.ResourceNotFoundError):
             myfile = self.project.get_file("myfolder/myfile.txt")
             myfile.create()
 
