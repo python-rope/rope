@@ -630,19 +630,14 @@ class ProjectTest(unittest.TestCase):
         self.assertIsInstance(os.fspath(resource), str)
 
 
-class TestProjectGetModuleResource:
+class TestProjectGetResource:
     """
-    Test cases for Project methods related to getting files, resources, or
-    modules:
+    Test cases for Project methods related to getting files/folders:
 
     - Project.get_resource
     - Project.get_file
     - Project.get_folder
-    - Project.get_module
-    - Project.find_module
-    - Project.get_relative_module
-    - Project.find_relative_module
-
+    - libutils.path_to_resource
     """
 
     @pytest.fixture
@@ -681,27 +676,12 @@ class TestProjectGetModuleResource:
         file.touch()
         return path
 
-    def test_get_module_non_existent_module(self, project):
-        with pytest.raises(
-            exceptions.ModuleNotFoundError,
-            match="Module doesnotexistmodule not found",
-        ):
-            project.get_module("doesnotexistmodule")
-
     def test_get_resource_getting_not_existing_project_file(self, project):
         with pytest.raises(
             exceptions.ResourceNotFoundError,
             match="Resource <DoesNotExistFile.txt> does not exist",
         ):
             project.get_resource("DoesNotExistFile.txt")
-
-    def test_get_relative_module_non_existent_module(self, project):
-        src = project.root.create_folder("src")
-        with pytest.raises(
-            exceptions.ModuleNotFoundError,
-            match="Module ..doesnotexistmodule not found",
-        ):
-            project.get_relative_module("..doesnotexistmodule", folder=src, level=2)
 
     def test_no_project_get_resource_special_file(self, no_project, special_file):
         with pytest.raises(
@@ -766,6 +746,32 @@ class TestProjectGetModuleResource:
         assert isinstance(resource, File)
         assert resource.path == "../sample_file.txt"
         assert resource.real_path.endswith("sample_project/../sample_file.txt")
+
+
+class TestProjectGetModule:
+    """
+    Test cases for Project methods related to getting modules:
+
+    - Project.get_module
+    - Project.find_module
+    - Project.get_relative_module
+    - Project.find_relative_module
+    """
+
+    def test_get_module_non_existent_module(self, project):
+        with pytest.raises(
+            exceptions.ModuleNotFoundError,
+            match="Module doesnotexistmodule not found",
+        ):
+            project.get_module("doesnotexistmodule")
+
+    def test_get_relative_module_non_existent_module(self, project):
+        src = project.root.create_folder("src")
+        with pytest.raises(
+            exceptions.ModuleNotFoundError,
+            match="Module ..doesnotexistmodule not found",
+        ):
+            project.get_relative_module("..doesnotexistmodule", folder=src, level=2)
 
 
 class ResourceObserverTest(unittest.TestCase):
