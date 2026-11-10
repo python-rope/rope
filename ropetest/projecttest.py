@@ -201,7 +201,7 @@ class ProjectTest(unittest.TestCase):
         with patch('rope.base.resources.File.is_folder') as is_folder2:
             assert self.project.get_resource(self.sample_file).is_dir() == is_folder2.return_value
 
-    def testget_children(self):
+    def test_get_children(self):
         children = self.project.get_resource(self.sample_folder).get_children()
         self.assertEqual([], children)
 
