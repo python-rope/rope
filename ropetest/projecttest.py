@@ -24,7 +24,6 @@ class ProjectTest(unittest.TestCase):
         )
         self.project_root = self.project.address
         self._make_sample_project()
-        self.no_project = NoProject()
 
     def _make_sample_project(self):
         """
