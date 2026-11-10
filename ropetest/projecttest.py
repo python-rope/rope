@@ -631,6 +631,49 @@ class ProjectTest(unittest.TestCase):
         self.assertIsInstance(os.fspath(resource), str)
 
 
+class ProjectGetModuleResourceTest(unittest.TestCase):
+    """
+    Test cases for Project methods related to getting files, resources, or
+    modules:
+
+    - Project.get_resource
+    - Project.get_file
+    - Project.get_folder
+    - Project.get_module
+    - Project.find_module
+    - Project.get_relative_module
+    - Project.find_relative_module
+
+    """
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.project = testutils.sample_project(
+            foldername="sampleproject", ropefolder=None
+        )
+        self.project_root = self.project.address
+        self._make_sample_project()
+        self.no_project = NoProject()
+
+    def _make_sample_project(self):
+        self.sample_file = "sample_file.txt"
+        self.sample_path = os.path.join(self.project_root, "sample_file.txt")
+        if not os.path.exists(self.project_root):
+            os.mkdir(self.project_root)
+        self.sample_folder = "sample_folder"
+        os.mkdir(os.path.join(self.project_root, self.sample_folder))
+        sample = open(self.sample_path, "w")
+        sample.write("sample text\n")
+        sample.close()
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        unittest.TestCase.tearDown(self)
+
+    def test_non_existent_module(self):
+        with self.assertRaises(exceptions.ModuleNotFoundError):
+            self.project.get_module("doesnotexistmodule")
+
+
 class ResourceObserverTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
