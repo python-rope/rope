@@ -50,10 +50,6 @@ class ProjectTest(unittest.TestCase):
         projectFile = self.project.get_resource(self.sample_file)
         self.assertEqual("sample text\n", projectFile.read())
 
-    def test_getting_not_existing_project_file(self):
-        with self.assertRaises(exceptions.ResourceNotFoundError):
-            self.project.get_resource("DoesNotExistFile.txt")
-
     def test_writing_in_project_files(self):
         project_file = self.project.get_resource(self.sample_file)
         project_file.write("another text\n")
@@ -672,6 +668,10 @@ class ProjectGetModuleResourceTest(unittest.TestCase):
     def test_non_existent_module(self):
         with self.assertRaises(exceptions.ModuleNotFoundError):
             self.project.get_module("doesnotexistmodule")
+
+    def test_getting_not_existing_project_file(self):
+        with self.assertRaises(exceptions.ResourceNotFoundError):
+            self.project.get_resource("DoesNotExistFile.txt")
 
 
 class ResourceObserverTest(unittest.TestCase):
