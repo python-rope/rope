@@ -910,9 +910,23 @@ class TestProjectGetResource:
             assert isinstance(resource, File)
             assert resource.exists()
 
+    def test_get_resource_getting_existing_resource_with_double_dot(
+        self, sample_project, file_outside_project
+    ):
+        sample_project.set("_integrator.disable_projectroot_validation", False)
+
+        assert file_outside_project == "../sample_file.txt"
+        with pytest.raises(
+            exceptions.ResourceNotFoundError,
+            match="Resource <../sample_file.txt> is not inside project directory",
+        ):
+             sample_project.get_resource(file_outside_project)
+
     def test_get_resource_getting_existing_resource_with_double_dot_disable_projectroot_check(
         self, sample_project, file_outside_project
     ):
+        sample_project.set("_integrator.disable_projectroot_validation", True)
+
         assert file_outside_project == "../sample_file.txt"
         resource = sample_project.get_resource(file_outside_project)
         assert isinstance(resource, File)

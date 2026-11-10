@@ -26,6 +26,7 @@ def sample_project(foldername=None, **kwds):
         "automatic_soa": False,
         "ignored_resources": [".ropeproject", "*.pyc"],
         "import_dynload_stdmods": False,
+        "_integrator.disable_projectroot_validation": False,
     }
     prefs.update(kwds)
     project = rope.base.project.Project(root, **prefs)

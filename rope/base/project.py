@@ -3,10 +3,12 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import pathlib
 import sys
 import warnings
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
+from functools import cached_property
 from typing import TYPE_CHECKING, Optional, cast
 
 import rope.base.fscommands  # Use full qualification for clarity.
@@ -299,9 +301,18 @@ class Project(_Project):
         ]
 
     def _get_resource_path(self, name: str) -> str:
-        _, name = os.path.splitdrive(name)
-        name = name.replace(os.path.sep, "/").lstrip("/")
-        return os.path.join(self._address, *name.split("/"))
+        if self.prefs._integrator.disable_projectroot_validation:
+            return os.path.join(self._address, *name.split("/"))
+        else:
+            _, name = os.path.splitdrive(name)
+            name = name.replace(os.path.sep, "/").lstrip("/")
+            path = self._address_pathlib.joinpath(*name.split("/"))
+            norm_path = pathlib.PurePath(os.path.normpath(path))
+            if not norm_path.is_relative_to(self._address_pathlib):
+                raise exceptions.ResourceNotFoundError(
+                    f"Resource <{name}> is not inside project directory"
+                )
+            return str(norm_path)
 
     def _init_ropefolder(self):
         if self.ropefolder is not None and not self.ropefolder.exists():
@@ -356,6 +367,10 @@ class Project(_Project):
 
     root = property(lambda self: self.get_resource(""))
     address = property(lambda self: self._address)
+
+    @cached_property
+    def _address_pathlib(self):
+        return pathlib.Path(os.path.normpath(self._address))
 
 
 class NoProject(_Project):
