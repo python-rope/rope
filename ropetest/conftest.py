@@ -57,6 +57,7 @@ def no_project():
 def project(session_venv, session_venv_site_packages):
     project = testutils.sample_project(
         python_path=[str(session_venv_site_packages)],
+        ropefolder=None,
     )
     yield project
     testutils.remove_project(project)
