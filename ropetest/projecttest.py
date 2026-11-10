@@ -27,6 +27,11 @@ class ProjectTest(unittest.TestCase):
         self.no_project = NoProject()
 
     def _make_sample_project(self):
+        """
+        Sample project structure
+        /sample_file.txt    -- "sample text\n"
+        /sample_folder
+        """
         self.sample_file = "sample_file.txt"
         self.sample_path = os.path.join(self.project_root, "sample_file.txt")
         if not os.path.exists(self.project_root):
@@ -43,10 +48,6 @@ class ProjectTest(unittest.TestCase):
 
     def test_project_creation(self):
         self.assertEqual(_realpath(self.project_root), self.project.address)
-
-    def test_getting_project_file(self):
-        project_file = self.project.get_resource(self.sample_file)
-        self.assertTrue(project_file is not None)
 
     def test_project_file_reading(self):
         projectFile = self.project.get_resource(self.sample_file)
@@ -644,6 +645,23 @@ class TestProjectGetModuleResource:
 
     """
 
+    @pytest.fixture
+    def sample_project(self, project):
+        """
+        Sample project structure
+        /sample_file.txt    -- "sample text\n"
+        /sample_folder
+        """
+        project_root = project.address
+        sample_file = "sample_file.txt"
+        sample_path = os.path.join(project_root, "sample_file.txt")
+        if not os.path.exists(project_root):
+            os.mkdir(project_root)
+        sample_folder = "sample_folder"
+        os.mkdir(os.path.join(project_root, sample_folder))
+        pathlib.Path(sample_path).write_text("sample text\n")
+        return project
+
     @pytest.fixture(params=["devnull", "mkfifo"])
     def special_file(self, request, project) -> pathlib.Path:
         match request.param:
@@ -689,6 +707,20 @@ class TestProjectGetModuleResource:
             match=f"Resource <{special_file}> does not exist",
         ):
             project.get_resource(str(special_file))
+
+    def test_get_resource_getting_existing_project_file(self, sample_project):
+        project_file = sample_project.get_resource("sample_file.txt")
+        assert isinstance(project_file, File)
+
+    def test_get_resource_getting_existing_project_folder(self, sample_project):
+        project_file = sample_project.get_resource("sample_folder")
+        assert isinstance(project_file, Folder)
+
+    def test_get_resource_getting_existing_resource_with_slash(self, sample_project):
+        # for project files, slashes are interpreted as relative to project directory
+        project_file = sample_project.get_resource("/sample_file.txt")
+        assert isinstance(project_file, File)
+        assert project_file.pathlib.is_relative_to(sample_project.address)
 
 
 
