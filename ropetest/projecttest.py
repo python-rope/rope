@@ -671,6 +671,15 @@ class TestProjectGetModuleResource:
                 fifo_path = project.address + "/fifo"
                 os.mkfifo(fifo_path)
                 return pathlib.Path(fifo_path)
+            case _:
+                assert False
+
+    @pytest.fixture
+    def file_outside_project(self, project):
+        path = "../sample_file.txt"
+        file = pathlib.Path(project.address) / path
+        file.touch()
+        return path
 
     def test_get_module_non_existent_module(self, project):
         with pytest.raises(
@@ -716,13 +725,47 @@ class TestProjectGetModuleResource:
         project_file = sample_project.get_resource("sample_folder")
         assert isinstance(project_file, Folder)
 
-    def test_get_resource_getting_existing_resource_with_slash(self, sample_project):
-        # for project files, slashes are interpreted as relative to project directory
+    def test_project_get_resource_getting_existing_resource_with_slash(
+        self, sample_project
+    ):
+        """
+        for Project.get_resource(), starting slashes are interpreted as
+        relative to project directory
+        """
         project_file = sample_project.get_resource("/sample_file.txt")
         assert isinstance(project_file, File)
         assert project_file.pathlib.is_relative_to(sample_project.address)
 
+        with tempfile.NamedTemporaryFile() as tmp:
+            assert tmp.name.startswith("/")
+            with pytest.raises(
+                exceptions.ResourceNotFoundError,
+                match="Resource <.*> does not exist",
+            ):
+                project_file = sample_project.get_resource(tmp.name)
 
+    def test_no_project_get_resource_getting_existing_resource_with_slash(
+        self, no_project, file_outside_project
+    ):
+        """
+        for NoProject.get_resource(), starting slashes are interpreted as
+        absolute path relative to project root. NoProject should be used to get
+        resources for files/folders that's not part of a project.
+        """
+        with tempfile.NamedTemporaryFile() as tmp:
+            assert tmp.name.startswith("/")
+            project_file = no_project.get_resource(tmp.name)
+            assert isinstance(project_file, File)
+            assert project_file.exists()
+
+    def test_get_resource_getting_existing_resource_with_double_dot_disable_projectroot_check(
+        self, sample_project, file_outside_project
+    ):
+        assert file_outside_project == "../sample_file.txt"
+        resource = sample_project.get_resource(file_outside_project)
+        assert isinstance(resource, File)
+        assert resource.path == "../sample_file.txt"
+        assert resource.real_path.endswith("sample_project/../sample_file.txt")
 
 
 class ResourceObserverTest(unittest.TestCase):
