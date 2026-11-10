@@ -16,34 +16,40 @@ from rope.base.resources import File, Folder
 from ropetest import testutils
 
 
-class ProjectTest(unittest.TestCase):
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.project = testutils.sample_project(
-            foldername="sampleproject", ropefolder=None
-        )
-        self.project_root = self.project.address
-        self._make_sample_project()
+@pytest.fixture
+def sample_project(project):
+    """
+    Sample project structure
+    /sample_file.txt    -- "sample text\n"
+    /sample_folder
+    """
+    project_root = project.address
+    sample_file = "sample_file.txt"
+    sample_path = os.path.join(project_root, "sample_file.txt")
+    if not os.path.exists(project_root):
+        os.mkdir(project_root)
+    sample_folder = "sample_folder"
+    os.mkdir(os.path.join(project_root, sample_folder))
+    pathlib.Path(sample_path).write_text("sample text\n")
+    return project
 
-    def _make_sample_project(self):
-        """
-        Sample project structure
-        /sample_file.txt    -- "sample text\n"
-        /sample_folder
-        """
+
+class ProjectTest(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def setup(self, sample_project):
+        self.project = sample_project
+        self.project_root = self.project.address
         self.sample_file = "sample_file.txt"
         self.sample_path = os.path.join(self.project_root, "sample_file.txt")
-        if not os.path.exists(self.project_root):
-            os.mkdir(self.project_root)
         self.sample_folder = "sample_folder"
-        os.mkdir(os.path.join(self.project_root, self.sample_folder))
-        sample = open(self.sample_path, "w")
-        sample.write("sample text\n")
-        sample.close()
 
-    def tearDown(self):
+    @pytest.fixture
+    def project(self):
+        project = testutils.sample_project(
+            foldername="sampleproject", ropefolder=None
+        )
+        yield project
         testutils.remove_project(self.project)
-        unittest.TestCase.tearDown(self)
 
     def test_project_creation(self):
         self.assertEqual(_realpath(self.project_root), self.project.address)
@@ -638,23 +644,6 @@ class TestProjectGetResource:
     - Project.get_folder
     - libutils.path_to_resource
     """
-
-    @pytest.fixture
-    def sample_project(self, project):
-        """
-        Sample project structure
-        /sample_file.txt    -- "sample text\n"
-        /sample_folder
-        """
-        project_root = project.address
-        sample_file = "sample_file.txt"
-        sample_path = os.path.join(project_root, "sample_file.txt")
-        if not os.path.exists(project_root):
-            os.mkdir(project_root)
-        sample_folder = "sample_folder"
-        os.mkdir(os.path.join(project_root, sample_folder))
-        pathlib.Path(sample_path).write_text("sample text\n")
-        return project
 
     @pytest.fixture(params=["devnull", "mkfifo"])
     def special_file(self, request, project) -> pathlib.Path:
