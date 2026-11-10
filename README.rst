@@ -42,16 +42,6 @@ Since version 1.0.0, rope no longer supports running on Python 2.
 If you need Python 2 support, then check out the `python2` branch or the 0.x.x
 releases.
 
-Installation
-============
-
-Install rope using pip:
-
-.. code-block:: bash
-
-    pip install rope
-
-
 Getting Started
 ===============
 
