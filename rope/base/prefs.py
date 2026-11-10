@@ -299,7 +299,7 @@ class _RopeConfigSource(Source):
     name: str = "config.py"
     run_globals: Dict
 
-    def __init__(self, ropefolder: Folder):
+    def __init__(self, ropefolder: Optional[Folder]):
         self.ropefolder = ropefolder
         self.run_globals = {}
 
@@ -330,7 +330,7 @@ class _RopeConfigSource(Source):
         return asdict(prefs)
 
 
-def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
+def get_config(root: Folder, ropefolder: Optional[Folder]) -> PyToolConfig:
     custom_sources = [_RopeConfigSource(ropefolder)]
     config = PyToolConfig(
         "rope",
