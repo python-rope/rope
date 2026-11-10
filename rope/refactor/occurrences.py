@@ -373,7 +373,11 @@ class _TextualFinder:
             return pymodule.source_code
 
     def _get_occurrence_pattern(self, name):
-        occurrence_pattern = _TextualFinder.any("occurrence", ["\\b" + name + "\\b"])
+        # A name directly followed by a quote is a string prefix, e.g. the
+        # ``f`` in ``f"..."``, never a reference to the name.
+        occurrence_pattern = _TextualFinder.any(
+            "occurrence", ["\\b" + name + "\\b(?![\"'])"]
+        )
         pattern = re.compile(
             occurrence_pattern
             + "|"
