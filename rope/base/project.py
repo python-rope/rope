@@ -55,14 +55,14 @@ class _Project(ABC):
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
             raise exceptions.ResourceNotFoundError(
-                "Resource <%s> does not exist" % resource_name
+                f"Resource <{resource_name}> does not exist"
             )
         elif os.path.isfile(path):
             return File(self, resource_name)
         elif os.path.isdir(path):
             return Folder(self, resource_name)
         else:
-            raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
+            raise exceptions.ResourceNotFoundError(f"Unknown resource {resource_name}")
 
     def get_python_path_folders(self) -> list[Folder]:
         result = []
@@ -132,7 +132,7 @@ class _Project(ABC):
     ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
         module = self.find_relative_module(name, folder, level)
         if module is None:
-            raise ModuleNotFoundError("Module %s not found" % name)
+            raise ModuleNotFoundError(f"Module {name} not found")
         return self.pycore.resource_to_pyobject(module)
 
     def find_relative_module(
@@ -284,7 +284,7 @@ class Project(_Project):
             return pymod
         module = self.find_module(name, folder)
         if module is None:
-            raise ModuleNotFoundError("Module %s not found" % name)
+            raise ModuleNotFoundError(f"Module {name} not found")
         return self.pycore.resource_to_pyobject(module)
 
     def get_files(self) -> list[Resource]:

@@ -5,6 +5,7 @@ from venv import EnvBuilder
 
 import pytest
 
+import rope.base.project
 from rope.base import resources
 from ropetest import testutils
 
@@ -45,6 +46,11 @@ def session_venv_python_executable(session_venv):
 
     # Yield the Python executable path
     yield python_executable
+
+
+@pytest.fixture
+def no_project():
+    return rope.base.project.get_no_project()
 
 
 @pytest.fixture

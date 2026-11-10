@@ -644,13 +644,52 @@ class TestProjectGetModuleResource:
 
     """
 
+    @pytest.fixture(params=["devnull", "mkfifo"])
+    def special_file(self, request, project) -> pathlib.Path:
+        match request.param:
+            case "devnull":
+                return pathlib.Path(os.devnull)
+            case "mkfifo":
+                fifo_path = project.address + "/fifo"
+                os.mkfifo(fifo_path)
+                return pathlib.Path(fifo_path)
+
     def test_get_module_non_existent_module(self, project):
-        with pytest.raises(exceptions.ModuleNotFoundError):
+        with pytest.raises(
+            exceptions.ModuleNotFoundError,
+            match="Module doesnotexistmodule not found",
+        ):
             project.get_module("doesnotexistmodule")
 
     def test_get_resource_getting_not_existing_project_file(self, project):
-        with pytest.raises(exceptions.ResourceNotFoundError):
+        with pytest.raises(
+            exceptions.ResourceNotFoundError,
+            match="Resource <DoesNotExistFile.txt> does not exist",
+        ):
             project.get_resource("DoesNotExistFile.txt")
+
+    def test_get_relative_module_non_existent_module(self, project):
+        src = project.root.create_folder("src")
+        with pytest.raises(
+            exceptions.ModuleNotFoundError,
+            match="Module ..doesnotexistmodule not found",
+        ):
+            project.get_relative_module("..doesnotexistmodule", folder=src, level=2)
+
+    def test_no_project_get_resource_special_file(self, no_project, special_file):
+        with pytest.raises(
+            exceptions.ResourceNotFoundError,
+            match=f"Unknown resource {special_file}",
+        ):
+            no_project.get_resource(str(special_file))
+
+    def test_project_get_resource_special_file(self, project, special_file):
+        with pytest.raises(
+            exceptions.ResourceNotFoundError,
+            match=f"Resource <{special_file}> does not exist",
+        ):
+            project.get_resource(str(special_file))
+
 
 
 
