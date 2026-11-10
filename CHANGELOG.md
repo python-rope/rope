@@ -9,6 +9,7 @@
 - #119, #928 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
 - #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
 - #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
+- #950 Reorganise projecttest.py and improve test coverages (@lieryan)
 
 # Release 1.15.1
 
