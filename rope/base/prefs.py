@@ -152,9 +152,9 @@ class Prefs:
 
     extension_modules: List[str] = field(
         default_factory=list,
-        description="""
-Builtin and c-extension modules that are allowed to be imported and inspected by rope.
-        """,
+        description=dedent("""
+            Builtin and c-extension modules that are allowed to be imported and inspected by rope.
+        """),
     )
 
     import_dynload_stdmods: bool = field(
