@@ -1,7 +1,7 @@
 import rope.base.ast
 import rope.base.oi.soi
 import rope.base.pynames
-from rope.base import arguments, evaluate, nameanalyze, pyobjects
+from rope.base import arguments, classfunctions, evaluate, nameanalyze, pyobjects
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes, followed_calls):
@@ -75,6 +75,9 @@ class SOAVisitor(rope.base.ast.RopeNodeVisitor):
         return arguments.MixedArguments(self_pyname, base_args, self.scope)
 
     def _call(self, pyfunction, args):
+        if isinstance(pyfunction, classfunctions.BoundFunction):
+            args = pyfunction.bind_arguments(args)
+            pyfunction = pyfunction.function
         if isinstance(pyfunction, pyobjects.PyFunction):
             if self.follow is not None:
                 before = self._parameter_objects(pyfunction)
