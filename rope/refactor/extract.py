@@ -440,6 +440,7 @@ class _ExceptionalConditionChecker:
             self.one_line_conditions(info)
         else:
             self.multi_line_conditions(info)
+        self.new_name_conditions(info)
 
     def base_conditions(self, info):
         if not info.extracted.strip():
@@ -511,6 +512,15 @@ class _ExceptionalConditionChecker:
             raise RefactoringError(
                 "Extracted piece cannot contain the start of a block without the end."
             )
+
+    def new_name_conditions(self, info):
+        if info.make_global:
+            scope = info.global_scope
+        elif info.variable or info.global_:
+            scope = info.scope
+        else:
+            scope = info.scope.parent
+        sourceutils.check_new_name(info.pymodule, scope, info.new_name)
 
     def _is_region_on_a_word(self, info):
         if (

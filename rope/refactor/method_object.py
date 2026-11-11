@@ -37,6 +37,7 @@ class MethodObject:
                 stacklevel=2,
             )
             classname = new_class_name
+        sourceutils.check_new_name(self.pymodule, self.pymodule.get_scope(), classname)
         collector = codeanalyze.ChangeCollector(self.pymodule.source_code)
         start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(

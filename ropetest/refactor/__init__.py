@@ -181,6 +181,19 @@ class MethodObjectTest(unittest.TestCase):
         with self.assertRaises(RefactoringError):
             MethodObject(self.project, self.mod, code.index("my_var"))
 
+    def test_refusing_an_existing_class_name(self):
+        code = dedent("""\
+            class _New(object):
+                pass
+
+            def func():
+                return 1
+        """)
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index("func"))
+        with self.assertRaises(RefactoringError):
+            replacer.get_changes("_New")
+
     def test_changing_the_module(self):
         code = dedent("""\
             def func():
@@ -992,6 +1005,29 @@ class IntroduceParameterTest(unittest.TestCase):
         with self.assertRaises(RefactoringError):
             self._introduce_parameter(offset, "p1")
             self.assertEqual("def f(p1=var):\n    b = p1 + c\n", self.mod.read())
+
+    def test_refusing_an_existing_parameter_name(self):
+        code = dedent("""\
+            var = 1
+            def f(a):
+                b = var
+        """)
+        self.mod.write(code)
+        offset = self.mod.read().rindex("var")
+        with self.assertRaises(RefactoringError):
+            self._introduce_parameter(offset, "a")
+
+    def test_refusing_a_name_used_in_the_function(self):
+        code = dedent("""\
+            var = 1
+            other = 2
+            def f():
+                b = var + other
+        """)
+        self.mod.write(code)
+        offset = self.mod.read().index("var +")
+        with self.assertRaises(RefactoringError):
+            self._introduce_parameter(offset, "other")
 
     def test_failing_when_not_inside(self):
         self.mod.write("var = 10\nb = var\n")
