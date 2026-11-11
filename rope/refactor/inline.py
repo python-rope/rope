@@ -21,6 +21,7 @@ from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -267,6 +268,8 @@ class InlineVariable(_Inliner):
             resources = [self.original]
             if remove and self.original != self.resource:
                 resources.append(self.resource)
+        if remove and self.resource in resources:
+            self._check_initializer_removal(resources, only_current)
         changes = ChangeSet("Inline variable <%s>" % self.name)
         jobset = task_handle.create_jobset("Calculating changes", len(resources))
 
@@ -282,6 +285,78 @@ class InlineVariable(_Inliner):
                     changes.add_change(ChangeContents(resource, result))
             jobset.finished_job()
         return changes
+
+    def _check_initializer_removal(self, resources, only_current):
+        initializer = self.pyname.assignments[0].ast_node
+        statement = next(
+            (
+                node
+                for node in ast.walk(self.pymodule.get_ast())
+                if isinstance(node, (ast.Assign, ast.AnnAssign))
+                and node.value is initializer
+            ),
+            None,
+        )
+        statement_region = (
+            codeanalyze.ASTLinesAdapter(self.pymodule.source_code)[statement]
+            if statement is not None
+            else None
+        )
+        local_annotation = isinstance(statement, ast.AnnAssign) and (
+            isinstance(statement.target, ast.Name)
+            and self.pymodule.get_scope()
+            .get_inner_scope_for_line(statement.lineno)
+            .get_kind()
+            == "Function"
+        )
+        if isinstance(statement, ast.AnnAssign) and not local_annotation:
+            raise exceptions.RefactoringError(
+                "Cannot discard a variable annotation while inlining."
+            )
+        bound_name = isinstance(initializer, ast.Name) and _is_bound_initializer_name(
+            self.pymodule, statement, initializer
+        )
+        if isinstance(initializer, ast.Name) and not bound_name:
+            raise exceptions.RefactoringError(
+                "Cannot discard an initializer name that may be unbound."
+            )
+        finder = occurrences.create_finder(
+            self.project, self.name, self.pyname, imports=False
+        )
+        has_reads = False
+        for resource in self.project.get_python_files():
+            for occurrence in finder.find_occurrences(resource=resource):
+                start, _ = occurrence.get_primary_range()
+                if (
+                    resource == self.resource
+                    and statement_region is not None
+                    and (statement_region[0] <= start < statement_region[1])
+                ):
+                    continue
+                if occurrence.is_written() or occurrence.is_a_fixed_primary():
+                    continue
+                has_reads = True
+                if resource not in resources or (
+                    only_current
+                    and resource == self.original
+                    and not self.region[0] <= start < self.region[1]
+                ):
+                    raise exceptions.RefactoringError(
+                        "Cannot remove a variable referenced outside the selected occurrences."
+                    )
+        if has_reads:
+            return
+        plain_assignment = (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+        )
+        if not (plain_assignment or local_annotation) or not (
+            bound_name or _is_pure_unused_initializer(initializer)
+        ):
+            raise exceptions.RefactoringError(
+                "Cannot discard an unused variable initializer while inlining."
+            )
 
     def _change_main_module(self, remove, only_current, docs):
         region = None
@@ -644,6 +719,118 @@ def _inline_variable(
     else:
         source = changed_source
     return source
+
+
+def _is_bound_initializer_name(pymodule, statement, initializer):
+    if statement is None:
+        return False
+    scope = pymodule.get_scope().get_inner_scope_for_line(statement.lineno)
+    if scope.get_kind() == "Class":
+        return False
+    pyname = evaluate.eval_node(scope, initializer)
+    if any(
+        isinstance(node, ast.Name)
+        and node.id == initializer.id
+        and isinstance(node.ctx, ast.Del)
+        and evaluate.eval_node(
+            pymodule.get_scope().get_inner_scope_for_line(node.lineno), node
+        )
+        is pyname
+        for node in ast.walk(pymodule.get_ast())
+    ):
+        return False
+    if isinstance(pyname, rope.base.builtins.BuiltinName):
+        return True
+    if isinstance(pyname, pynames.ParameterName):
+        return True
+    parents = {
+        child: node
+        for node in ast.walk(pymodule.get_ast())
+        for child in ast.iter_child_nodes(node)
+    }
+    anchor = statement
+    while anchor in parents:
+        owner = parents[anchor]
+        for _, block in ast.iter_fields(owner):
+            if not isinstance(block, list) or anchor not in block:
+                continue
+            for previous in reversed(block[: block.index(anchor)]):
+                binding_scope = pymodule.get_scope().get_inner_scope_for_line(
+                    previous.lineno
+                )
+                if (
+                    isinstance(previous, ast.Assign)
+                    and len(previous.targets) == 1
+                    and isinstance(previous.targets[0], ast.Name)
+                ):
+                    if previous.targets[0].id == initializer.id:
+                        if (
+                            evaluate.eval_node(binding_scope, previous.targets[0])
+                            is pyname
+                        ):
+                            return True
+                        break
+                    if _is_pure_unused_initializer(previous.value):
+                        continue
+                if isinstance(
+                    previous, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
+                    if (
+                        previous.name == initializer.id
+                        and pyname is not None
+                        and pyname.get_definition_location()
+                        == (pymodule, previous.lineno)
+                    ):
+                        return True
+                    if isinstance(previous, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        arguments = previous.args
+                        parameters = (
+                            arguments.posonlyargs
+                            + arguments.args
+                            + arguments.kwonlyargs
+                            + [arguments.vararg, arguments.kwarg]
+                        )
+                        if not (
+                            previous.decorator_list
+                            or arguments.defaults
+                            or any(arguments.kw_defaults)
+                            or previous.returns
+                            or any(
+                                parameter.annotation
+                                for parameter in parameters
+                                if parameter is not None
+                            )
+                            or getattr(previous, "type_params", ())
+                        ):
+                            continue
+                    break
+                if isinstance(previous, (ast.Import, ast.ImportFrom)):
+                    matching = any(
+                        (alias.asname or alias.name.split(".")[0]) == initializer.id
+                        for alias in previous.names
+                    )
+                    if (
+                        matching
+                        and evaluate.eval_node(binding_scope, initializer) is pyname
+                    ):
+                        return True
+                    break
+                if isinstance(previous, ast.Pass):
+                    continue
+                break
+        anchor = owner
+    return False
+
+
+def _is_pure_unused_initializer(node):
+    # literal_eval accepts set(); even that name may be rebound to user code.
+    if any(isinstance(child, ast.Call) for child in ast.walk(node)):
+        return False
+    try:
+        ast.literal_eval(node)
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 def _getvardef(pymodule, pyname):
