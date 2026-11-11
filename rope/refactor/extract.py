@@ -443,6 +443,10 @@ class _ExceptionalConditionChecker:
         self.new_name_conditions(info)
 
     def base_conditions(self, info):
+        if not info.extracted.strip():
+            raise RefactoringError(
+                "Extracted piece should contain at least one expression or statement."
+            )
         if info.region[1] > info.scope_region[1]:
             raise RefactoringError("Bad region selected for extract method")
 

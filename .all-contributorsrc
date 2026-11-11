@@ -627,6 +627,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Jinyong-Li",
+      "name": "Jinyong Li",
+      "avatar_url": "https://avatars.githubusercontent.com/u/209943074?v=4",
+      "profile": "https://github.com/Jinyong-Li",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "aliassar",
+      "name": "Ali Assar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64643471?v=4",
+      "profile": "https://github.com/aliassar",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",
