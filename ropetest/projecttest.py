@@ -769,16 +769,16 @@ class TestProjectGetResource:
     """
 
     @pytest.fixture(params=["devnull", "mkfifo"])
-    def special_file(self, request, project) -> pathlib.Path:
+    def special_file(self, request, project) -> str:
         match request.param:
             case "devnull":
-                return pathlib.Path(os.devnull)
+                return os.devnull
             case "mkfifo":
                 if not hasattr(os, "mkfifo"):
                     pytest.skip()
                 fifo_path = project.address + "/fifo"
                 os.mkfifo(fifo_path)
-                return pathlib.Path(fifo_path)
+                return fifo_path
             case _:
                 assert False
 
@@ -802,18 +802,30 @@ class TestProjectGetResource:
             project.get_resource("DoesNotExistFile.txt")
 
     def test_no_project_get_resource_special_file(self, no_project, special_file):
+        match os.name, special_file:
+            case "nt", os.devnull:
+                expected_message = f"Unknown resource //./nul"
+            case _:
+                expected_message = f"Unknown resource {special_file}"
+
         with pytest.raises(
             exceptions.ResourceNotFoundError,
-            match=f"Unknown resource {special_file}",
+            match=expected_message,
         ):
-            no_project.get_resource(str(special_file))
+            no_project.get_resource(special_file)
 
     def test_project_get_resource_special_file(self, project, special_file):
+        match os.name, special_file:
+            case "nt", os.devnull:
+                expected_message = f"Unknown resource nul"
+            case _:
+                expected_message = f"Resource <{special_file}> does not exist"
+
         with pytest.raises(
             exceptions.ResourceNotFoundError,
-            match=f"Resource <{special_file}> does not exist",
+            match=expected_message,
         ):
-            project.get_resource(str(special_file))
+            project.get_resource(special_file)
 
     def test_get_resource_getting_existing_project_file(self, sample_project):
         project_file = sample_project.get_resource("sample_file.txt")
@@ -823,38 +835,80 @@ class TestProjectGetResource:
         project_file = sample_project.get_resource("sample_folder")
         assert isinstance(project_file, Folder)
 
-    def test_project_get_resource_getting_existing_resource_with_slash(
-        self, sample_project
-    ):
-        """
-        for Project.get_resource(), starting slashes are interpreted as
-        relative to project directory
-        """
-        project_file = sample_project.get_resource("/sample_file.txt")
-        assert isinstance(project_file, File)
-        assert project_file.pathlib.is_relative_to(sample_project.address)
+    class TestAbsoluteProjectPath:
+        @pytest.fixture
+        def slash_path(self, request, tmp_path, monkeypatch) -> str:
+            monkeypatch.chdir(tmp_path)
+            file_path = tmp_path / "sample_file.txt"
+            file_path.touch()
+            assert file_path.exists()
+            _, path = os.path.splitdrive(file_path)
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            assert tmp.name.startswith("/")
+            match request.param:
+                case "ospathsep":
+                    """
+                    Create an absolute/drive-relative path to a file that
+                    exists (minus the drive name on Windows) that starts with
+                    os.path.sep, for example:
+                    - on POSIX: "/tmp/foobar"
+                    - on Windows: "\\Users\\Xyz\\AppData\\Local\\Temp\\foobar"
+                    """
+                    value = str(path)
+                    assert value.startswith(os.path.sep)
+
+                case "forward-slash":
+                    """
+                    Create an absolute/drive-relative path to a file that
+                    exists (minus the drive name on Windows) that starts with
+                    forward slash, for example:
+                    - on POSIX: "/tmp/foobar"
+                    - on Windows: "/Users/Xyz/AppData/Local/Temp/foobar"
+                    """
+                    value = str(path).replace(os.path.sep, "/")
+                    assert value.startswith("/")
+
+                case _:
+                    raise pytest.fail("Invalid fixture request for slash_path")
+            return value
+
+        def test_project_get_resource_absolute_project_path(self, sample_project):
+            """
+            For Project.get_resource(), absolute path (paths starting with a slash)
+            is interpreted as absolute project path, i.e. relative to the project
+            root.
+            """
+            project_file = sample_project.get_resource("/sample_file.txt")
+            assert isinstance(project_file, File)
+            assert project_file.pathlib.is_relative_to(sample_project.address)
+
+        @pytest.mark.parametrize("slash_path", ["ospathsep", "forward-slash"], indirect=True)
+        def test_get_resource_absolute_path_to_existing_file(
+            self, sample_project, slash_path
+        ):
+            """
+            slash_path is a file that exists, but cannot be retrieved by
+            Project since absolute paths are treated as relative to project
+            root.
+            """
             with pytest.raises(
                 exceptions.ResourceNotFoundError,
                 match="Resource <.*> does not exist",
             ):
-                project_file = sample_project.get_resource(tmp.name)
+                sample_project.get_resource(slash_path)
 
-    def test_no_project_get_resource_getting_existing_resource_with_slash(
-        self, no_project, file_outside_project
-    ):
-        """
-        for NoProject.get_resource(), starting slashes are interpreted as
-        absolute path relative to project root. NoProject should be used to get
-        resources for files/folders that's not part of a project.
-        """
-        with tempfile.NamedTemporaryFile() as tmp:
-            assert tmp.name.startswith("/")
-            project_file = no_project.get_resource(tmp.name)
-            assert isinstance(project_file, File)
-            assert project_file.exists()
+        @pytest.mark.parametrize("slash_path", ["ospathsep", "forward-slash"], indirect=True)
+        def test_no_project_get_resource_absolute_path_to_existing_file(
+            self, no_project, slash_path
+        ):
+            """
+            For NoProject.get_resource(), absolute paths (i.e. paths starting
+            with a slash) is interpreted like normal absolute filesystem path.
+            NoProject.get_resource() should be used to get resources for
+            files/folders that's not part of a project.
+            """
+            resource = no_project.get_resource(slash_path)
+            assert isinstance(resource, File)
+            assert resource.exists()
 
     def test_get_resource_getting_existing_resource_with_double_dot_disable_projectroot_check(
         self, sample_project, file_outside_project
@@ -863,7 +917,7 @@ class TestProjectGetResource:
         resource = sample_project.get_resource(file_outside_project)
         assert isinstance(resource, File)
         assert resource.path == "../sample_file.txt"
-        assert resource.real_path.endswith("sample_project/../sample_file.txt")
+        assert resource.real_path.endswith("sample_project/../sample_file.txt".replace("/", os.path.sep))
 
 
     #############################
