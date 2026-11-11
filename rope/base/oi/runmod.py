@@ -84,7 +84,9 @@ def __rope_start_everything():
             args = []
             returned = ("unknown",)
             code = frame.f_code
-            for argname in code.co_varnames[: code.co_argcount]:
+            for argname in code.co_varnames[
+                : code.co_argcount + code.co_kwonlyargcount
+            ]:
                 try:
                     argvalue = self._object_to_persisted_form(frame.f_locals[argname])
                     args.append(argvalue)

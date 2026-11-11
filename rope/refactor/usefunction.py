@@ -48,6 +48,10 @@ class UseFunction:
             )
 
     def get_changes(self, resources=None, task_handle=taskhandle.DEFAULT_TASK_HANDLE):
+        if self.pyfunction.get_ast().args.kwonlyargs:
+            raise exceptions.RefactoringError(
+                "Use function does not support keyword-only parameters."
+            )
         if resources is None:
             resources = self.project.get_python_files()
         changes = change.ChangeSet("Using function <%s>" % self.pyfunction.get_name())

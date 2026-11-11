@@ -49,10 +49,12 @@ def infer_parameter_objects(pyfunction):
 
 def _handle_first_parameter(pyobject, parameters):
     kind = pyobject.get_kind()
+    if not pyobject.get_positional_param_names():
+        return
     if not parameters:
-        if not pyobject.get_param_names(special_args=False):
-            return
         parameters.append(pyobjects.get_unknown())
+    if parameters[0] is not None and parameters[0] != pyobjects.get_unknown():
+        return
     if kind == "method":
         parameters[0] = pyobjects.PyObject(pyobject.parent)
     if kind == "classmethod":
