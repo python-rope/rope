@@ -1,4 +1,5 @@
 """Rope preferences."""
+import warnings
 from dataclasses import asdict, dataclass
 from enum import Enum
 from textwrap import dedent
@@ -9,6 +10,10 @@ from pytoolconfig import PyToolConfig, UniversalKey, field
 from pytoolconfig.sources import Source
 
 from rope.base.resources import Folder
+
+
+class InvalidPreferenceKey(AttributeError):
+    pass
 
 
 @dataclass
@@ -152,9 +157,9 @@ class Prefs:
 
     extension_modules: List[str] = field(
         default_factory=list,
-        description="""
-Builtin and c-extension modules that are allowed to be imported and inspected by rope.
-        """,
+        description=dedent("""
+            Builtin and c-extension modules that are allowed to be imported and inspected by rope.
+        """),
     )
 
     import_dynload_stdmods: bool = field(
@@ -256,12 +261,31 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         description="Preferences for Import Organiser",
     )
 
+    def _get_child_pref(self, key):
+        prefix, _, pref_name = key.rpartition(".")
+        if prefix == "":
+            pref = self
+        elif prefix in ["autoimport", "imports", "_integrator"]:
+            pref = getattr(self, prefix)
+        else:
+            warnings.warn(f"Invalid pref key <{key}>", RuntimeWarning)
+            raise InvalidPreferenceKey(key)
+        return pref, pref_name
+
     def set(self, key: str, value: Any):
         """Set the value of `key` preference to `value`."""
         if key in self.callbacks:
             self.callbacks[key](value)
         else:
-            setattr(self, key, value)
+            try:
+                pref, pref_name = self._get_child_pref(key)
+            except InvalidPreferenceKey:
+                pass
+            else:
+                if not hasattr(pref, pref_name):
+                    warnings.warn(f"Invalid pref key <{key}>", RuntimeWarning)
+
+                setattr(pref, pref_name, value)
 
     def add(self, key: str, value: Any):
         """Add an entry to a list preference
@@ -269,13 +293,21 @@ Builtin and c-extension modules that are allowed to be imported and inspected by
         Add `value` to the list of entries for the `key` preference.
 
         """
-        if getattr(self, key) is None:
-            self[key] = []
-        getattr(self, key).append(value)
+        pref, pref_name = self._get_child_pref(key)
+        try:
+            if getattr(pref, pref_name) is None:
+                self[pref_name] = []
+            getattr(pref, pref_name).append(value)
+        except AttributeError as e:
+            raise InvalidPreferenceKey(f"{key}: {str(e)}") from e
 
     def get(self, key: str, default: Any = None):
         """Get the value of the key preference"""
-        return getattr(self, key, default)
+        try:
+            pref, pref_name = self._get_child_pref(key)
+        except InvalidPreferenceKey:
+            return default
+        return getattr(pref, pref_name, default)
 
     def add_callback(self, key: str, callback: Callable):
         """Add `key` preference with `callback` function
@@ -299,7 +331,7 @@ class _RopeConfigSource(Source):
     name: str = "config.py"
     run_globals: Dict
 
-    def __init__(self, ropefolder: Folder):
+    def __init__(self, ropefolder: Optional[Folder]):
         self.ropefolder = ropefolder
         self.run_globals = {}
 
@@ -330,7 +362,7 @@ class _RopeConfigSource(Source):
         return asdict(prefs)
 
 
-def get_config(root: Folder, ropefolder: Folder) -> PyToolConfig:
+def get_config(root: Folder, ropefolder: Optional[Folder]) -> PyToolConfig:
     custom_sources = [_RopeConfigSource(ropefolder)]
     config = PyToolConfig(
         "rope",

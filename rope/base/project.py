@@ -310,7 +310,7 @@ class Project(_Project):
             self._create_recursively(folder.parent)
         folder.create()
 
-    def _init_prefs(self, prefs):
+    def _init_prefs(self, prefs: dict):
         config = get_config(self.root, self.ropefolder).parse()
         self.prefs = config
         self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
