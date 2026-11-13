@@ -300,6 +300,7 @@ class Project(_Project):
 
     def _get_resource_path(self, name: str) -> str:
         _, name = os.path.splitdrive(name)
+        name = name.replace(os.path.sep, "/").lstrip("/")
         return os.path.join(self._address, *name.split("/"))
 
     def _init_ropefolder(self):
