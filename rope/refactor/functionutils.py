@@ -1,7 +1,6 @@
-import ast
 from typing import List, Tuple
 
-from rope.base import pyobjects, worder
+from rope.base import ast, pyobjects, worder
 from rope.base.builtins import Lambda
 from rope.base.codeanalyze import ASTLinesAdapter
 

@@ -1,4 +1,3 @@
-import ast
 import textwrap
 import unittest
 from textwrap import dedent
@@ -6,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 import rope.base.evaluate
-from rope.base import codeanalyze, exceptions, libutils, worder
+from rope.base import ast, codeanalyze, exceptions, libutils, worder
 from rope.base.codeanalyze import (
     ASTLinesAdapter,
     LogicalLineFinder,
