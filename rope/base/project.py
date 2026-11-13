@@ -177,12 +177,10 @@ class _Project(ABC):
     def _get_resource_path(self, name: str) -> str: ...
 
     @abstractmethod
-    def get_files(self) -> list[Resource]:
-        return []
+    def get_files(self) -> list[Resource]: ...
 
     @abstractmethod
-    def get_python_files(self) -> list[Resource]:
-        return []
+    def get_python_files(self) -> list[Resource]: ...
 
 
 class Project(_Project):
@@ -304,15 +302,34 @@ class Project(_Project):
         if self.prefs._integrator.disable_projectroot_validation:
             return os.path.join(self._address, *name.split("/"))
         else:
-            _, name = os.path.splitdrive(name)
-            name = name.replace(os.path.sep, "/").lstrip("/")
-            path = self._address_pathlib.joinpath(*name.split("/"))
-            norm_path = pathlib.PurePath(os.path.normpath(path))
-            if not norm_path.is_relative_to(self._address_pathlib):
-                raise exceptions.ResourceNotFoundError(
-                    f"Resource <{name}> is not inside project directory"
+            validated_path, errors = self._validate_resource_path(name)
+            if errors:
+                raise errors[0]
+            return os.path.join(self._address, *name.split("/"))
+
+    def _validate_resource_path(
+        self, original_name: str
+    ) -> tuple[str, list[Exception]]:
+        errors: list[Exception] = []
+        drive, name = os.path.splitdrive(original_name)
+        if drive:
+            errors.append(
+                exceptions.ResourceNotFoundError(
+                    f"Invalid resource name <{original_name}: must not contain drive name",
+                ),
+            )
+
+        name = name.replace(os.path.sep, "/").lstrip("/")
+
+        path = self._address_pathlib.joinpath(*name.split("/"))
+        validated_path = pathlib.PurePath(os.path.normpath(path))
+        if not validated_path.is_relative_to(self._address_pathlib):
+            errors.append(
+                exceptions.ResourceNotFoundError(
+                    f"Resource <{original_name}> is not inside project directory"
                 )
-            return str(norm_path)
+            )
+        return str(validated_path), errors
 
     def _init_ropefolder(self):
         if self.ropefolder is not None and not self.ropefolder.exists():
