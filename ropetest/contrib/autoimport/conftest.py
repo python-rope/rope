@@ -6,6 +6,15 @@ from ropetest import testutils
 
 
 @pytest.fixture
+def project(session_venv, session_venv_site_packages):
+    project = testutils.sample_project(
+        python_path=[str(session_venv_site_packages)],
+    )
+    yield project
+    testutils.remove_project(project)
+
+
+@pytest.fixture
 def mod1(project):
     mod1 = testutils.create_module(project, "mod1")
     return mod1
