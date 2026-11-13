@@ -183,12 +183,12 @@ class FindItTest(unittest.TestCase):
         # predicate must recognise it too.
         code = dedent("""\
             class C(object):
-                async def target(self):
+                async\tdef target(self):
                     pass
 
-                async def run(self):
+                async\tdef run(self):
                     await self.target()
-        """).replace("async def", "async\tdef")
+        """)
         call_offset = code.rindex("target")
         result = find_definition(self.project, code, call_offset)
         def_offset = code.index("target")
