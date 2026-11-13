@@ -879,6 +879,12 @@ class TestProjectGetResource:
         def myfolder(self, sample_project):
             return sample_project.root.create_folder("myfolder")
 
+        @pytest.fixture
+        def out_of_project_file(self, tmp_path, no_project):
+            file = tmp_path / "oop.txt"
+            file.touch()
+            return no_project.get_resource(str(file))
+
         def test_project_file_no_type(self, sample_project, myfile):
             resource = path_to_resource(sample_project, myfile.real_path)
 
@@ -902,6 +908,13 @@ class TestProjectGetResource:
 
             assert resource == myfolder
             assert myfolder.project == sample_project
+
+        def test_out_of_project_file(self, sample_project, no_project, out_of_project_file):
+            resource = path_to_resource(sample_project, out_of_project_file.real_path)
+
+            assert resource == out_of_project_file
+            assert out_of_project_file.project != sample_project
+            assert out_of_project_file.project == no_project
 
 
     ####################
