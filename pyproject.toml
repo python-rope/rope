@@ -91,6 +91,10 @@ exclude_also = [
     "raise NotImplementedError()",
 ]
 
+[tool.coverage.html]
+show_contexts = true
+
+
 [tool.isort]
 profile = "black"
 
