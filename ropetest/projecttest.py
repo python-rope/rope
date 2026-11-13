@@ -865,18 +865,43 @@ class TestProjectGetResource:
         assert resource.path == "../sample_file.txt"
         assert resource.real_path.endswith("sample_project/../sample_file.txt")
 
+
     #############################
     # libutils.path_to_resource #
     #############################
 
-    def test_simple_path_to_resource(self, sample_project):
-        myfile = sample_project.root.create_file("myfile.txt")
-        assert myfile == path_to_resource(sample_project, myfile.real_path)
-        assert myfile == path_to_resource(sample_project, myfile.real_path, type="file")
+    class TestPathToResource:
+        @pytest.fixture
+        def myfile(self, sample_project):
+            return sample_project.root.create_file("myfile.txt")
 
-        myfolder = sample_project.root.create_folder("myfolder")
-        assert myfolder == path_to_resource(sample_project, myfolder.real_path)
-        assert myfolder == path_to_resource(sample_project, myfolder.real_path, type="folder")
+        @pytest.fixture
+        def myfolder(self, sample_project):
+            return sample_project.root.create_folder("myfolder")
+
+        def test_project_file_no_type(self, sample_project, myfile):
+            resource = path_to_resource(sample_project, myfile.real_path)
+
+            assert resource == myfile
+            assert myfile.project == sample_project
+
+        def test_project_file_with_type(self, sample_project, myfile):
+            resource = path_to_resource(sample_project, myfile.real_path, type="file")
+
+            assert resource == myfile
+            assert myfile.project == sample_project
+
+        def test_project_folder_no_type(self, sample_project, myfolder):
+            resource = path_to_resource(sample_project, myfolder.real_path)
+
+            assert resource == myfolder
+            assert myfolder.project == sample_project
+
+        def test_project_folder_with_type(self, sample_project, myfolder):
+            resource = path_to_resource(sample_project, myfolder.real_path, type="folder")
+
+            assert resource == myfolder
+            assert myfolder.project == sample_project
 
 
     ####################
