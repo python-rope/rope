@@ -45,6 +45,10 @@ def get_class_with_attr_name(pyname):
     :return: rope.base.pyobjectsdef.PyClass, str
     :rtype: tuple
     """
+    import rope.base.pynamesdef
+
+    if not isinstance(pyname, rope.base.pynamesdef.AssignedName):
+        return None
     lineno = get_lineno_for_node(pyname.assignments[0].ast_node)
     holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
     pyobject = holding_scope.pyobject

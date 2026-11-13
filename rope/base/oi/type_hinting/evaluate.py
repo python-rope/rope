@@ -4,6 +4,21 @@ import re
 
 from rope.base import utils as base_utils
 from rope.base.oi.type_hinting import utils
+from rope.base.pyobjects import AbstractClass
+
+
+class UnionType(AbstractClass):
+    """Attributes available from the alternatives in a union hint."""
+
+    def __init__(self, alternatives):
+        super().__init__()
+        self.alternatives = alternatives
+
+    def get_attributes(self):
+        attributes = {}
+        for alternative in self.alternatives:
+            attributes.update(alternative.get_attributes())
+        return attributes
 
 
 class SymbolBase:
@@ -313,8 +328,7 @@ def evaluate(self, pyobject):
 @method(symbol("or"))  # type: ignore
 @method(symbol("|"))
 def evaluate(self, pyobject):
-    # TODO: Implement me
-    raise NotImplementedError
+    return UnionType((self.first.evaluate(pyobject), self.second.evaluate(pyobject)))
 
 
 class Compiler:
