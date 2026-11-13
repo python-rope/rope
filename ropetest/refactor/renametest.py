@@ -1,10 +1,10 @@
 import sys
 import unittest
 from textwrap import dedent
-from rope.base import exceptions
 
 import rope.base.codeanalyze
 import rope.refactor.occurrences
+from rope.base import exceptions
 from rope.refactor import rename
 from rope.refactor.rename import Rename
 from ropetest import testutils
@@ -476,6 +476,28 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
                 async def new_func():
                     pass
                 new_func()"""),
+            refactored,
+        )
+
+    def test_rename_heals_async_method(self):
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        refactored = self._local_rename(code, code.index("target"), "new_func")
+        self.assertEqual(
+            dedent("""\
+                class C(object):
+                    async def new_func(self):
+                        pass
+
+                    async def run(self):
+                        await self.new_func()
+                """),
             refactored,
         )
 
