@@ -479,7 +479,7 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
-    def test_rename_heals_async_method(self):
+    def test_rename_async_method(self):
         code = dedent("""\
             class C(object):
                 async def target(self):
