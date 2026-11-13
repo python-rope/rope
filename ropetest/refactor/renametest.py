@@ -353,6 +353,30 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, code.index('abc'), "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_not_renaming_f_string_prefix(self):
+        code = dedent("""\
+            f = open("out.txt", "w")
+            f.write(f"{f.name}")
+        """)
+        expected = dedent("""\
+            fh = open("out.txt", "w")
+            fh.write(f"{fh.name}")
+        """)
+        refactored = self._local_rename(code, 0, "fh")
+        self.assertEqual(expected, refactored)
+
+    def test_not_renaming_bytes_string_prefix(self):
+        code = dedent("""\
+            b = 1
+            print(b"x", rb"y", b)
+        """)
+        expected = dedent("""\
+            new_b = 1
+            print(b"x", rb"y", new_b)
+        """)
+        refactored = self._local_rename(code, 0, "new_b")
+        self.assertEqual(expected, refactored)
+
     def test_not_renaming_string_contents_in_f_string(self):
         refactored = self._local_rename(
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
