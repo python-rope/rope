@@ -98,6 +98,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/gadievron"><img src="https://avatars.githubusercontent.com/u/223177581?v=4&size=100" width="100px" height="100px" alt="Gadi Evron"/><br /><sub><b>Gadi Evron</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=gadievron" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/chinghar"><img src="https://avatars.githubusercontent.com/u/88904275?v=4&size=100" width="100px" height="100px" alt="chinghar"/><br /><sub><b>chinghar</b></sub></a><br /><a href="https://github.com/python-rope/rope/commits?author=chinghar" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
