@@ -645,6 +645,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "gadievron",
+      "name": "Gadi Evron",
+      "avatar_url": "https://avatars.githubusercontent.com/u/223177581?v=4",
+      "profile": "https://github.com/gadievron",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "projectName": "rope",

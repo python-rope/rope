@@ -35,10 +35,10 @@ Overview
 .. _`rope`: https://github.com/python-rope/rope
 
 
-Most Python syntax up to Python 3.10 is supported. Please file bugs and contribute
+Standard Python syntax is supported up to Python 3.15. Please file bugs and contribute
 patches if you encounter gaps.
 
-Since version 1.0.0, rope no longer support running on Python 2.
+Since version 1.0.0, rope no longer supports running on Python 2.
 If you need Python 2 support, then check out the `python2` branch or the 0.x.x
 releases.
 
@@ -57,7 +57,7 @@ Why use Rope?
 =============
 
 - Rope aims to provide powerful and safe refactoring
-- Rope is light on dependency, Rope only depends on Python itself
+- Rope is light on dependencies, Rope only depends on Python itself
 - Unlike PyRight or PyLance, Rope does not depend on Node.js
 - Unlike PyLance or PyCharm, Rope is open source.
 - Unlike PyRight and PyLance, Rope is written in Python itself, so if you experience problems, you would be able to debug and hack it yourself in a language that you are already familiar with
