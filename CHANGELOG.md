@@ -1,8 +1,22 @@
 # **Upcoming release**
 
+- #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
 - #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
+- #922 Classify autoimport project sources by path containment (@marlon-costa-dc)
+- #926, #929 Raise RefactoringError instead of IndexError/ModuleSyntaxError when extracting an empty or whitespace-only region (@aliassar)
+- #933 Add type annotations to project.py (@lieryan)
+- #119, #928 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
+- #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
+- #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
+- #826, #940 Keep star imports in other modules when inlining a function or method (@chinghar)
+- #948, #949 Don't treat string prefixes such as the `f` in `f"..."` as occurrences when renaming a variable named `f`, `b`, `u`, `rf`, etc. (@aliassar)
+
+# Release 1.15.1
+
+- #xxx Change runmod.py to pass DOA channel credential in a more secure manner,
+  see GHSA-64m2-4gp9-7cqx/CVE-XXX for details (@AliAAlMousa, @lieryan)
 
 # Release 1.15.0
 

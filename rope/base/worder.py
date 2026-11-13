@@ -310,7 +310,8 @@ class _RealFinder:
         word_start = self._find_word_start(offset - 1)
         line_start = self._get_line_start(word_start)
         prev_word = self.code[line_start:word_start].strip()
-        return prev_word in ["def", "class"]
+        # normalize whitespace so `async  def` / `async\tdef` (valid Python) match too
+        return " ".join(prev_word.split()) in ["def", "class", "async def"]
 
     def _find_first_non_space_char(self, offset):
         if offset >= len(self.code):
@@ -425,6 +426,8 @@ class _RealFinder:
             return False
         try:
             end = self._find_word_end(offset)
+            if not self._has_enough_len_for_as(end):
+                return False
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
             return self.code[as_start : as_end + 1] == "as"

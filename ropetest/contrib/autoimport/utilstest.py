@@ -14,6 +14,25 @@ def test_get_package_source_not_project(mod1_path):
     assert utils.get_package_source(mod1_path, None, "") == Source.UNKNOWN
 
 
+def test_get_package_source_project_prefix_is_not_ancestry(project):
+    sibling = Path(project.address + "-other") / "module.py"
+    assert utils.get_package_source(sibling, project, "module") == Source.UNKNOWN
+
+
+def test_get_package_source_project_sibling(project):
+    sibling = project.root.pathlib.with_name(project.root.pathlib.name + "-other")
+    sibling.mkdir()
+    module = sibling / "outside.py"
+    module.touch()
+    try:
+        assert utils.get_package_source(module, project, "outside") == Source.UNKNOWN
+        escaped = project.root.pathlib / ".." / sibling.name / module.name
+        assert utils.get_package_source(escaped, project, "outside") == Source.UNKNOWN
+    finally:
+        module.unlink()
+        sibling.rmdir()
+
+
 def test_get_package_source_pytest(example_external_package_path):
     # pytest is not installed as part of the standard library
     # but should be installed into site_packages,

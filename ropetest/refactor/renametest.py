@@ -377,6 +377,30 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, code.index('abc'), "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_not_renaming_f_string_prefix(self):
+        code = dedent("""\
+            f = open("out.txt", "w")
+            f.write(f"{f.name}")
+        """)
+        expected = dedent("""\
+            fh = open("out.txt", "w")
+            fh.write(f"{fh.name}")
+        """)
+        refactored = self._local_rename(code, 0, "fh")
+        self.assertEqual(expected, refactored)
+
+    def test_not_renaming_bytes_string_prefix(self):
+        code = dedent("""\
+            b = 1
+            print(b"x", rb"y", b)
+        """)
+        expected = dedent("""\
+            new_b = 1
+            print(b"x", rb"y", new_b)
+        """)
+        refactored = self._local_rename(code, 0, "new_b")
+        self.assertEqual(expected, refactored)
+
     def test_not_renaming_string_contents_in_f_string(self):
         refactored = self._local_rename(
             "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
@@ -503,6 +527,28 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    def test_rename_async_method(self):
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        refactored = self._local_rename(code, code.index("target"), "new_func")
+        self.assertEqual(
+            dedent("""\
+                class C(object):
+                    async def new_func(self):
+                        pass
+
+                    async def run(self):
+                        await self.new_func()
+                """),
+            refactored,
+        )
+
     def test_renaming_await(self):
         code = dedent("""\
             async def b_func():
@@ -547,6 +593,18 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             """),
             mod2.read(),
         )
+
+    def test_renaming_from_import_at_end_of_file_without_newline(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod1.write("def a_func():\n    pass\n")
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod2.write("from mod1 import a_func")
+        mod3 = testutils.create_module(self.project, "mod3")
+        mod3.write("from mod2 import a_func\na_func()\n")
+        self._rename(mod3, mod3.read().rindex("a_func"), "new_func")
+        self.assertEqual("def new_func():\n    pass\n", mod1.read())
+        self.assertEqual("from mod1 import new_func", mod2.read())
+        self.assertEqual("from mod2 import new_func\nnew_func()\n", mod3.read())
 
     def test_renaming_functions_across_modules_from_import(self):
         mod1 = testutils.create_module(self.project, "mod1")
