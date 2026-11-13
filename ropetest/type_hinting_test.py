@@ -66,6 +66,47 @@ class DocstringParamHintingTest(AbstractHintingTest):
         self.assert_completion_in_result("is_alive", "attribute", result)
 
 
+    def test_hint_param_follows_the_method_resolution_order(self):
+        code = dedent('''\
+            class Base(object):
+                def a_method(self, a_arg):
+                    """:type a_arg: threading.Thread"""
+
+
+            class Left(Base):
+                pass
+
+
+            class Right(Base):
+                def a_method(self, a_arg):
+                    """:type a_arg: threading.Event"""
+
+
+            class Sample(Left, Right):
+                def a_method(self, a_arg):
+                    a_arg.is_''')
+        result = self._assist(code)
+        self.assert_completion_in_result("is_set", "attribute", result)
+        self.assert_completion_not_in_result("is_alive", "attribute", result)
+
+
+    def test_hint_param_on_a_hierarchy_python_refuses(self):
+        code = dedent('''\
+            class Base(object):
+                def a_method(self, a_arg):
+                    """:type a_arg: threading.Thread"""
+
+
+            class Left(Base):
+                pass
+
+
+            class Sample(Base, Left):
+                def a_method(self, a_arg):
+                    a_arg.is_''')
+        result = self._assist(code)
+        self.assert_completion_in_result("is_alive", "attribute", result)
+
 class DocstringReturnHintingTest(AbstractHintingTest):
     def test_hierarchical_hint_rtype(self):
         code = dedent('''\

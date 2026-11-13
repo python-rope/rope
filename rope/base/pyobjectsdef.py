@@ -133,20 +133,57 @@ class PyClass(pyobjects.PyClass):
         rope.base.pyobjects.PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
+        self._mro = self.get_module()._get_concluded_data()
+        self._linearizing = False
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
             self._superclasses.set(self._get_bases())
         return self._superclasses.get()
 
+    def get_mro(self):
+        return self._linearize(strict=True)
+
+    def get_consistent_mro(self):
+        return self._linearize(strict=False)
+
+    def _linearize(self, strict):
+        if self._mro.get() is None:
+            bases = self.get_superclasses()
+            if self._linearizing:
+                if not strict:
+                    return None
+                raise exceptions.InconsistentHierarchyError(
+                    "Cyclic class inheritance: %s" % self.get_name()
+                )
+            self._linearizing = True
+            try:
+                mro = pyobjects.linearize(self, bases, strict=strict)
+            finally:
+                self._linearizing = False
+            if mro is None:
+                return None
+            self._mro.set(mro)
+        return self._mro.get()
+
     def get_name(self):
         return self.get_ast().name
 
     def _create_concluded_attributes(self):
         result = {}
-        for base in reversed(self.get_superclasses()):
-            result.update(base.get_attributes())
+        mro = self.get_consistent_mro()
+        if mro is None:
+            # A hierarchy Python refuses to create has no method resolution
+            # order; its attributes are inherited along the bases.
+            for base in reversed(self.get_superclasses()):
+                result.update(base.get_attributes())
+            return result
+        for ancestor in reversed(mro[1:]):
+            result.update(ancestor._get_own_attributes())
         return result
+
+    def _get_own_attributes(self):
+        return self._get_structural_attributes()
 
     def _get_bases(self):
         result = []

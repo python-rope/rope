@@ -133,6 +133,82 @@ class AbstractClass(PyObject):
     def get_superclasses(self):
         return []
 
+    def get_mro(self):
+        """Return the method resolution order of this class
+
+        The order is the C3 linearization Python uses for ``__mro__``,
+        starting with this class.
+
+        Raises `rope.base.exceptions.InconsistentHierarchyError` when
+        Python would refuse to create the class.
+
+        """
+        return linearize(self, self.get_superclasses())
+
+    def get_consistent_mro(self):
+        """Return `get_mro()`, or `None` when Python would refuse the class
+
+        Unlike `get_mro()`, this never raises
+        `rope.base.exceptions.InconsistentHierarchyError`.
+
+        """
+        return linearize(self, self.get_superclasses(), strict=False)
+
+    def _get_own_attributes(self):
+        """Return the attributes this class defines itself
+
+        These are the attributes the method resolution order selects
+        from this class.
+
+        """
+        return self.get_attributes()
+
+
+def linearize(cls, bases, strict=True):
+    """Return the C3 linearization of `cls` declared with `bases`
+
+    Raises `rope.base.exceptions.InconsistentHierarchyError` for repeated
+    bases and for bases whose orders cannot be merged.  When `strict` is
+    false, these hierarchies, which Python refuses to create, return
+    `None` instead.
+
+    """
+    for index, base in enumerate(bases):
+        if any(base is previous for previous in bases[:index]):
+            if not strict:
+                return None
+            raise exceptions.InconsistentHierarchyError(
+                "Duplicate base class in %s: %s" % (cls.get_name(), base.get_name())
+            )
+    if strict:
+        sequences = [list(base.get_mro()) for base in bases]
+    else:
+        sequences = [base.get_consistent_mro() for base in bases]
+        if any(sequence is None for sequence in sequences):
+            return None
+        sequences = [list(sequence) for sequence in sequences]
+    sequences.append(list(bases))
+    result = [cls]
+    while True:
+        sequences = [sequence for sequence in sequences if sequence]
+        if not sequences:
+            return result
+        for sequence in sequences:
+            head = sequence[0]
+            if not any(head is item for other in sequences for item in other[1:]):
+                break
+        else:
+            if not strict:
+                return None
+            raise exceptions.InconsistentHierarchyError(
+                "Cannot create a consistent method resolution order for %s"
+                % cls.get_name()
+            )
+        result.append(head)
+        for sequence in sequences:
+            if sequence[0] is head:
+                del sequence[0]
+
 
 class AbstractFunction(PyObject):
     def __init__(self):
