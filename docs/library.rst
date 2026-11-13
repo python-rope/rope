@@ -853,7 +853,12 @@ by passing memory=False to AutoImport constructor. This default will change in
 the future, if you want to always store the autoimport cache in-memory, then
 you need to explicitly pass memory=True.
 
-It must be closed when done with the ``AutoImport.close()`` method.
+It must be closed when done with the ``AutoImport.close()`` method. When
+sharing an instance across threads, wait for worker threads to finish before
+calling ``close()``. It raises ``RopeError`` rather than closing a connection
+owned by a live worker thread. A worker can close its own connection sooner
+with ``close_thread_connection()``. Connections left by finished workers are
+closed when another thread creates a connection or when ``close()`` runs.
 
 AutoImport can search for a name from both modules and statements you can import from them.
 
