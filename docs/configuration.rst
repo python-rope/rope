@@ -75,6 +75,11 @@ imports.* Options
 
 .. autopytoolconfigtable:: rope.base.prefs.ImportPrefs
 
+_integrator.* Options
+-----------------
+
+.. autopytoolconfigtable:: rope.base.prefs.IntegratorPrefs
+
 Old Configuration File
 ----------------------
 This is a sample config.py. While this config.py works and all options here

@@ -17,6 +17,30 @@ class InvalidPreferenceKey(AttributeError):
 
 
 @dataclass
+class IntegratorPrefs:
+    disable_projectroot_validation: bool = field(
+        default=True,
+        description=dedent("""
+            The default value for this preference will change in the future.
+
+            If ``False``, ``Project()`` methods (e.g. ``get_resource``,
+            ``get_file``, ``get_folder()`` will no longer return
+            ``File``/``Folder`` to files that are not under ``projectroot``.
+
+            You should normally use ``libutils.path_to_resource()`` to get
+            ``File``/``Folder``, which would automatically attach files outside
+            the project to ``NoProject()``.
+
+            In the future, rope will start enforcing ``projectroot`` by
+            default.  You should update your integrations to always use
+            ``libutils.path_to_resource()`` and test your integrations with
+            this set to ``False`` to test that future behavior; or pin this
+            preference to ``True``.
+        """),
+    )
+
+
+@dataclass
 class AutoimportPrefs:
     # underlined: bool = field(
     #     default=False, description="Cache underlined (private) modules")
@@ -215,6 +239,7 @@ class Prefs:
             imports.
         """),
     )
+
     type_hinting_factory: str = field(
         "rope.base.oi.type_hinting.factory.default_type_hinting_factory",
         description=dedent("""
@@ -259,6 +284,13 @@ class Prefs:
     imports: ImportPrefs = field(
         default_factory=ImportPrefs,
         description="Preferences for Import Organiser",
+    )
+    _integrator: IntegratorPrefs = field(
+        default_factory=IntegratorPrefs,
+        description=dedent("""
+            Preference for editor/IDE integrators, usually should not be
+            modified by end users unless you really know what you're doing.
+        """),
     )
 
     def _get_child_pref(self, key):

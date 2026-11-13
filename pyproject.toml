@@ -91,6 +91,9 @@ exclude_also = [
     "raise NotImplementedError()",
 ]
 
+[tool.coverage.html]
+show_contexts = true
+
 [tool.isort]
 profile = "black"
 
@@ -105,6 +108,7 @@ python_files = [
 markers = [
     "time_limit: sets a maximum amount of time the test can run",
 ]
+addopts = "--cov-report=html"
 
 [build-system]
 requires = [

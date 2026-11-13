@@ -6,7 +6,7 @@ from textwrap import dedent
 import pytest
 
 import rope.base.evaluate
-from rope.base import codeanalyze, exceptions, libutils, worder
+from rope.base import codeanalyze, exceptions, libutils, pyobjects, worder
 from rope.base.codeanalyze import (
     ASTLinesAdapter,
     LogicalLineFinder,
@@ -777,6 +777,19 @@ class ScopeNameFinderTest(unittest.TestCase):
         pkg2_pyobject = self.project.get_pymodule(pkg2)
         found_pyname = name_finder.get_pyname_at(mod1.read().index("pkg2") + 1)
         self.assertEqual(pkg2_pyobject, found_pyname.get_object())
+
+    def test_relative_modules_module_not_found(self):
+        pkg1 = testutils.create_package(self.project, "pkg1")
+        pkg2 = testutils.create_package(self.project, "pkg2", pkg1)
+        mod1 = testutils.create_module(self.project, "mod1", pkg1)
+        mod2 = testutils.create_module(self.project, "mod2", pkg2)
+        code = "from ..module_not_found import a_func\n"
+        mod2.write(code)
+        mod2_scope = self.project.get_pymodule(mod2).get_scope()
+        name_finder = rope.base.evaluate.ScopeNameFinder(mod2_scope.pyobject)
+        mod1_pyobject = self.project.get_pymodule(mod1)
+        found_pyname = name_finder.get_pyname_at(code.index("module_not_found") + 1)
+        self.assertIs(found_pyname.get_object(), pyobjects.get_unknown())
 
     def test_get_pyname_at_on_language_keywords(self):
         code = dedent("""\
