@@ -146,12 +146,6 @@ class FindItTest(unittest.TestCase):
         result = find_definition(self.project, code, code.index("var"))
         self.assertEqual(mod1, result.resource)
         self.assertEqual(0, result.offset)
-
-    # worder's is_a_class_or_function_name_in_header only recognised the
-    # canonical `def`/`class` prefixes, so an `async def` method header was
-    # not treated as a definition and find_definition resolved a call via
-    # self to the call site itself (never the def).
-
     def test_find_definition_of_async_method(self):
         code = dedent("""\
             class C(object):
@@ -223,7 +217,6 @@ class FindItTest(unittest.TestCase):
         self.assertEqual(2, result.count("renamed"))
 
     def test_find_definition_of_sync_method_still_resolves(self):
-        # regression control: sync methods must keep resolving
         code = dedent("""\
             class C(object):
                 def target(self):
@@ -239,7 +232,6 @@ class FindItTest(unittest.TestCase):
         self.assertEqual(def_offset, result.offset)
 
     def test_find_definition_of_module_level_async_function(self):
-        # control: module-level async defs already resolve correctly
         code = dedent("""\
             async def target():
                 pass
