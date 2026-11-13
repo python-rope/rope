@@ -479,6 +479,28 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    def test_rename_async_method(self):
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        refactored = self._local_rename(code, code.index("target"), "new_func")
+        self.assertEqual(
+            dedent("""\
+                class C(object):
+                    async def new_func(self):
+                        pass
+
+                    async def run(self):
+                        await self.new_func()
+                """),
+            refactored,
+        )
+
     def test_renaming_await(self):
         code = dedent("""\
             async def b_func():
