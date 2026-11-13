@@ -66,3 +66,6 @@ html_css_files = ["rope.css"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
+
+# suppress third-party generated warnings
+suppress_warnings = ["docutils"]

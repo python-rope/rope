@@ -546,6 +546,18 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             mod2.read(),
         )
 
+    def test_renaming_from_import_at_end_of_file_without_newline(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod1.write("def a_func():\n    pass\n")
+        mod2 = testutils.create_module(self.project, "mod2")
+        mod2.write("from mod1 import a_func")
+        mod3 = testutils.create_module(self.project, "mod3")
+        mod3.write("from mod2 import a_func\na_func()\n")
+        self._rename(mod3, mod3.read().rindex("a_func"), "new_func")
+        self.assertEqual("def new_func():\n    pass\n", mod1.read())
+        self.assertEqual("from mod1 import new_func", mod2.read())
+        self.assertEqual("from mod2 import new_func\nnew_func()\n", mod3.read())
+
     def test_renaming_functions_across_modules_from_import(self):
         mod1 = testutils.create_module(self.project, "mod1")
         mod1.write(dedent("""\

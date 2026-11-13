@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Literal, Optional
 
     from rope.base.project import Project
-    from rope.base.resources import Resource, File, Folder
+    from rope.base.resources import File, Folder, Resource
 
     GenerateKind = Literal[
         "variable",

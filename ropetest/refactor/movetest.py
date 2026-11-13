@@ -8,9 +8,8 @@ from rope.base import exceptions
 from rope.refactor import move
 from ropetest import testutils
 
-
 if TYPE_CHECKING:
-    from rope.base import resources, project
+    from rope.base import project, resources
 
 class MoveRefactoringTest(unittest.TestCase):
     project: project.Project
@@ -603,7 +602,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 import mod4
                 print(mod4)"""
-            ), 
+            ),
             self.origin_module.read(),
         )
 
@@ -801,6 +800,19 @@ class MoveRefactoringTest(unittest.TestCase):
             import pkg2.pkg3.pkg4.origin_module_in_pkg
             print(pkg2.pkg3.pkg4.origin_module_in_pkg)""")
         self.assertEqual(expected, self.mod1.read())
+
+    def test_moving_module_referenced_by_relative_import(self) -> None:
+        self.mod4.write(dedent("""\
+            from .mod5 import a
+            print(a)
+        """))
+        self.mod5.write("a = 1\n")
+        self._move(self.mod5, None, self.destination_pkg_root)
+        expected = dedent("""\
+            from destination_pkg_root.mod5 import a
+            print(a)
+        """)
+        self.assertEqual(expected, self.mod4.read())
 
     def test_moving_package_with_from_and_normal_imports(self) -> None:
         code = dedent("""\
@@ -1423,7 +1435,7 @@ class MoveRefactoringTest(unittest.TestCase):
             dedent("""\
                 def hello(func):
                     return func
-            """), 
+            """),
             self.origin_module.read(),
         )
         self.assertEqual(

@@ -1,9 +1,9 @@
 import ast
-from typing import Tuple, List
+from typing import List, Tuple
 
 from rope.base import pyobjects, worder
 from rope.base.builtins import Lambda
-from rope.base.codeanalyze import SourceLinesAdapter
+from rope.base.codeanalyze import ASTLinesAdapter
 
 
 class DefinitionInfo:
@@ -209,6 +209,7 @@ class ArgumentMapping:
 class _BaseFunctionParser:
     call: str
     implicit_arg: bool
+    _lines: ASTLinesAdapter
 
     def __init__(self, call: str, implicit_arg: bool, is_lambda: bool = False):
         self.call = call
@@ -229,19 +230,17 @@ class _BaseFunctionParser:
     def is_called_as_a_method(self):
         return self.implicit_arg and "." in self.call[: self.first_parens]
 
-    def _get_source_range(self, tree):
-        start = self._lines.get_line_start(tree.lineno) + tree.col_offset
-        end = self._lines.get_line_start(tree.end_lineno) + tree.end_col_offset
-        return self._lines.code[start:end]
+    def _get_source_range(self, tree: ast.AST) -> str:
+        source = self._lines.get_source_segment(tree)
+        assert source is not None
+        return source
 
 
 class _FunctionDefParser(_BaseFunctionParser):
-    _lines: SourceLinesAdapter
-
     def __init__(self, call, implicit_arg, is_lambda=False):
         super().__init__(call, implicit_arg, is_lambda=False)
         _modified_call = "def " + call.rstrip(":") + ": pass"
-        self._lines = SourceLinesAdapter(_modified_call)
+        self._lines = ASTLinesAdapter(_modified_call)
         self.ast = ast.parse(_modified_call).body[0]
         assert isinstance(self.ast, ast.FunctionDef)
 
@@ -278,12 +277,11 @@ class _FunctionDefParser(_BaseFunctionParser):
 
 
 class _FunctionCallParser(_BaseFunctionParser):
-    _lines: SourceLinesAdapter
     ast: ast.Call
 
     def __init__(self, call, implicit_arg, is_lambda=False):
         super().__init__(call, implicit_arg, is_lambda=False)
-        self._lines = SourceLinesAdapter(call)
+        self._lines = ASTLinesAdapter(call)
         self.ast = ast.parse(call).body[0].value
         assert isinstance(self.ast, ast.Call)
 
