@@ -9,7 +9,7 @@ from textwrap import dedent, indent
 
 import pytest
 
-from rope.base import evaluate, pyobjects
+from rope.base import change, evaluate, pyobjects
 from rope.base.fscommands import FileSystemCommands
 from rope.base.project import NoProject, Project, get_no_project
 from rope.refactor import patchedast, rename, similarfinder
@@ -396,6 +396,39 @@ class CapturedFileSystem(FileSystemCommands):
 
     def stat(self, path):
         return self.states[path]
+
+
+@pytest.mark.parametrize("captured", [False, True])
+@pytest.mark.parametrize(
+    "destination, expected",
+    [("", "source.py"), ("existing", "existing/source.py"), ("late", "late")],
+)
+def test_move_destination_uses_project_filesystem(
+    tmp_path, captured, destination, expected
+):
+    root = tmp_path / "project"
+    (root / "existing").mkdir(parents=True)
+    (root / "source.py").write_text("value = 1\n", encoding="utf-8")
+    commands = CapturedFileSystem((str(root),)) if captured else FileSystemCommands()
+    if captured:
+        shutil.rmtree(root)
+        (root / "late").mkdir(parents=True)
+    project = Project(
+        str(root),
+        fscommands=commands,
+        ropefolder=None,
+        save_objectdb=False,
+        save_history=False,
+    )
+    try:
+        source = project.get_resource("source.py")
+        assert change.MoveResource(source, destination).new_resource.path == expected
+        assert (
+            change.MoveResource(source, destination, exact=True).new_resource.path
+            == destination
+        )
+    finally:
+        project.close()
 
 
 def test_local_and_external_snapshot_resources_ignore_changed_disk(tmp_path):

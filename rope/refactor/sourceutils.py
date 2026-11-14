@@ -38,11 +38,11 @@ def fix_indentation(code: str, new_indents: int) -> str:
     return indent_lines(code, new_indents - min_indents)
 
 
-def add_methods(pymodule, class_scope, methods_sources):
+def add_methods(pymodule, class_scope, methods_sources, *, at_end=False):
     source_code = pymodule.source_code
     lines = pymodule.lines
     insertion_line = class_scope.get_end()
-    if class_scope.get_scopes():
+    if not at_end and class_scope.get_scopes():
         insertion_line = class_scope.get_scopes()[-1].get_end()
     insertion_offset = lines.get_line_end(insertion_line)
     methods = "\n\n" + "\n\n".join(methods_sources)
