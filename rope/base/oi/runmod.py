@@ -1,6 +1,8 @@
 def __rope_start_everything():
+    import ast
     import os
     import socket
+    import struct
     import sys
 
     try:
@@ -63,6 +65,7 @@ def __rope_start_everything():
     class _FunctionCallDataSender:
         def __init__(self, send_info, project_root):
             self.project_root = project_root
+            self._source_provenance = {}
             if send_info[0].isdigit():
                 port, key = send_info.split(":", 1)
                 self.sender = _SocketSender(int(port), key)
@@ -99,11 +102,133 @@ def __rope_start_everything():
                     self._object_to_persisted_form(frame.f_code),
                     tuple(args),
                     returned,
+                    self._get_body_provenance(code),
                 )
                 self.sender.send_data(data)
             except TypeError:
                 pass
             return self.on_function_call
+
+        def _get_body_provenance(self, code):
+            source_path = self._path(code.co_filename)
+            if source_path is None:
+                return None
+            try:
+                with open(source_path, "rb") as source_file:
+                    source = source_file.read()
+                cache_key = (source_path, code.co_filename)
+                cached = self._source_provenance.get(cache_key)
+                if cached is None or cached[0] != source:
+                    tree = ast.parse(source, filename=code.co_filename)
+                    compiled = compile(
+                        source,
+                        code.co_filename,
+                        "exec",
+                        dont_inherit=True,
+                        optimize=sys.flags.optimize,
+                    )
+                    signatures = []
+                    pending = [compiled]
+                    while pending:
+                        compiled_code = pending.pop()
+                        signatures.append(self._code_signature(compiled_code))
+                        pending.extend(
+                            value
+                            for value in compiled_code.co_consts
+                            if isinstance(value, types.CodeType)
+                        )
+                    cached = (source, tree, signatures)
+                    self._source_provenance[cache_key] = cached
+                _, tree, signatures = cached
+                runtime_signature = self._code_signature(code)
+                if signatures.count(runtime_signature) != 1:
+                    return None
+                functions = [
+                    node
+                    for node in ast.walk(tree)
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and node.name == code.co_name
+                    and code.co_firstlineno
+                    in (
+                        node.lineno,
+                        min(
+                            [node.lineno]
+                            + [item.lineno for item in node.decorator_list]
+                        ),
+                    )
+                ]
+                if len(functions) != 1:
+                    return None
+                body = ast.Module(body=functions[0].body, type_ignores=[])
+                body_version = (
+                    "function-body-v1:"
+                    + hashlib.sha256(
+                        ast.dump(body, include_attributes=False).encode("utf-8")
+                    ).hexdigest()
+                )
+                module_version = hashlib.sha256(
+                    ast.dump(tree, include_attributes=False).encode("utf-8")
+                ).hexdigest()
+                return ("function-body-v1", body_version, module_version)
+            except (OSError, SyntaxError, ValueError, TypeError, RecursionError):
+                return None
+
+        def _code_signature(self, code):
+            fields = (
+                "co_argcount",
+                "co_posonlyargcount",
+                "co_kwonlyargcount",
+                "co_nlocals",
+                "co_stacksize",
+                "co_flags",
+                "co_code",
+                "co_names",
+                "co_varnames",
+                "co_filename",
+                "co_name",
+                "co_qualname",
+                "co_firstlineno",
+                "co_linetable",
+                "co_exceptiontable",
+                "co_freevars",
+                "co_cellvars",
+            )
+            return (
+                tuple((field, getattr(code, field, None)) for field in fields),
+                tuple(self._constant_signature(value) for value in code.co_consts),
+                tuple(code.co_positions()) if hasattr(code, "co_positions") else None,
+                tuple(code.co_lines()) if hasattr(code, "co_lines") else None,
+                (
+                    getattr(code, "co_lnotab", None)
+                    if not hasattr(code, "co_linetable")
+                    else None
+                ),
+            )
+
+        def _constant_signature(self, value):
+            value_type = type(value)
+            if value_type in (str, bytes, int, bool, type(None)):
+                return (value_type.__name__, value)
+            if value is Ellipsis:
+                return ("ellipsis", value)
+            if value_type is float:
+                return ("float", struct.pack("!d", value))
+            if value_type is complex:
+                return ("complex", struct.pack("!dd", value.real, value.imag))
+            if isinstance(value, types.CodeType):
+                return ("code", self._code_signature(value))
+            if value_type is tuple:
+                return (
+                    "tuple",
+                    tuple(self._constant_signature(item) for item in value),
+                )
+            if value_type is frozenset:
+                counts = {}
+                for item in value:
+                    signature = self._constant_signature(item)
+                    counts[signature] = counts.get(signature, 0) + 1
+                return ("frozenset", frozenset(counts.items()))
+            raise TypeError("unsupported code constant")
 
         def _is_an_interesting_call(self, frame):
             # if frame.f_code.co_name in ['?', '<module>']:

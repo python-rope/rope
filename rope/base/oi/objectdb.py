@@ -28,9 +28,9 @@ class ObjectDB:
     def get_files(self):
         return self.files.keys()
 
-    def get_returned(self, path, key, args):
+    def get_returned(self, path, key, args, return_version=None):
         scope_info = self._get_scope_info(path, key, readonly=True)
-        result = scope_info.get_returned(args)
+        result = scope_info.get_returned(args, return_version=return_version)
         if self.validation.is_value_valid(result):
             return result
 
@@ -40,15 +40,15 @@ class ObjectDB:
         if self.validation.is_value_valid(result):
             return result
 
-    def get_callinfos(self, path, key):
+    def get_callinfos(self, path, key, return_version=None):
         scope_info = self._get_scope_info(path, key, readonly=True)
-        return scope_info.get_call_infos()
+        return scope_info.get_call_infos(return_version=return_version)
 
-    def add_callinfo(self, path, key, args, returned):
+    def add_callinfo(self, path, key, args, returned, return_version=None):
         scope_info = self._get_scope_info(path, key, readonly=False)
-        old_returned = scope_info.get_returned(args)
+        old_returned = scope_info.get_returned(args, return_version=return_version)
         if self.validation.is_more_valid(returned, old_returned):
-            scope_info.add_call(args, returned)
+            scope_info.add_call(args, returned, return_version=return_version)
 
     def add_pername(self, path, key, name, value):
         scope_info = self._get_scope_info(path, key, readonly=False)
@@ -106,13 +106,13 @@ class _NullScopeInfo:
         if self.error_on_write:
             raise NotImplementedError()
 
-    def get_returned(self, parameters):
+    def get_returned(self, parameters, return_version=None):
         pass
 
-    def get_call_infos(self):
+    def get_call_infos(self, return_version=None):
         return []
 
-    def add_call(self, parameters, returned):
+    def add_call(self, parameters, returned, return_version=None):
         if self.error_on_write:
             raise NotImplementedError()
 
@@ -137,13 +137,13 @@ class ScopeInfo:
     def save_per_name(self, name, value):
         pass
 
-    def get_returned(self, parameters):
+    def get_returned(self, parameters, return_version=None):
         pass
 
-    def get_call_infos(self):
+    def get_call_infos(self, return_version=None):
         pass
 
-    def add_call(self, parameters, returned):
+    def add_call(self, parameters, returned, return_version=None):
         pass
 
 

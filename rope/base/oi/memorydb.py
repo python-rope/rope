@@ -98,6 +98,7 @@ class ScopeInfo(objectdb.ScopeInfo):
     def __init__(self):
         self.call_info = {}
         self.per_name = {}
+        self.return_versions = {}
 
     def get_per_name(self, name):
         return self.per_name.get(name, None)
@@ -105,27 +106,45 @@ class ScopeInfo(objectdb.ScopeInfo):
     def save_per_name(self, name, value):
         self.per_name[name] = value
 
-    def get_returned(self, parameters):
+    def get_returned(self, parameters, return_version=None):
+        if (
+            return_version is not None
+            and self.return_versions.get(parameters) != return_version
+        ):
+            return None
         return self.call_info.get(parameters, None)
 
-    def get_call_infos(self):
+    def get_call_infos(self, return_version=None):
         for args, returned in self.call_info.items():
+            if (
+                return_version is not None
+                and self.return_versions.get(args) != return_version
+            ):
+                returned = None
             yield objectdb.CallInfo(args, returned)
 
-    def add_call(self, parameters, returned):
+    def add_call(self, parameters, returned, return_version=None):
+        if return_version is None and self.return_versions.get(parameters) is not None:
+            return
         self.call_info[parameters] = returned
+        self.return_versions[parameters] = return_version
 
     def __getstate__(self):
-        original_data = (self.call_info, self.per_name)
+        original_data = (self.call_info, self.per_name, self.return_versions)
         encoded = python_to_json(original_data, version=2)
         encoded["$"] = "ScopeInfo"
         return encoded
 
     def __setstate__(self, data):
-        if isinstance(data, tuple) and len(data) == 2:
+        if isinstance(data, tuple):
             # legacy pickle-based serialization
-            self.call_info, self.per_name = data
+            decoded = data
         else:
             # new serialization
             assert data["$"] == "ScopeInfo"
-            self.call_info, self.per_name = json_to_python(data)
+            decoded = json_to_python(data)
+        if len(decoded) == 2:
+            self.call_info, self.per_name = decoded
+            self.return_versions = {}
+        else:
+            self.call_info, self.per_name, self.return_versions = decoded
