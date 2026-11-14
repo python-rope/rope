@@ -337,23 +337,23 @@ class _TextualFinder:
             elif item.type == tokenize.STRING and item.string.lower().startswith(
                 ("f", "rf")
             ):
-                module = ast.parse(item.string)
-                positions = codeanalyze.ASTLinesAdapter(item.string)
-                for offset in self._formatted_offsets(
-                    item.string, module.body[0].value, positions
-                ):
+                for offset in self._fstring_ast_search(item.string):
                     yield line_starts[row - 1] + column + offset
 
-    def _formatted_offsets(self, source, node, positions) -> Iterator[int]:
-        for value in node.values:
-            if not isinstance(value, ast.FormattedValue):
-                continue
-            start, end = positions[value.value]
-            # AST spans omit the grouping that permits continuation indentation.
-            for offset in self._token_search("(" + source[start:end] + ")"):
-                yield start + offset - 1
-            if value.format_spec is not None:
-                yield from self._formatted_offsets(source, value.format_spec, positions)
+    def _fstring_ast_search(self, source: str) -> Iterator[int]:
+        expr = ast.parse(source, mode="eval")
+        positions = codeanalyze.ASTLinesAdapter(source)
+        for n in ast.walk(expr):
+            start, end = positions[n]
+            match n:
+                case ast.Name(id=self.name) if start is not None:
+                    yield start
+                case ast.Attribute(attr=self.name) if end is not None:
+                    yield end - len(n.attr)
+                case ast.keyword(arg=self.name) if start is not None:
+                    yield start
+                case _:
+                    continue
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0

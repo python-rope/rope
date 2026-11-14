@@ -377,6 +377,22 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, code.index('abc'), "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_keyword_arg_occurrences_in_f_string(self):
+        code = dedent("""\
+            def func(target):
+                print(target)
+
+            print(f"{func(target=10)}")
+        """)
+        expected = dedent("""\
+            def func(new_var):
+                print(new_var)
+
+            print(f"{func(new_var=10)}")
+        """)
+        refactored = self._local_rename(code, code.index('target'), "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_not_renaming_f_string_prefix(self):
         code = dedent("""\
             f = open("out.txt", "w")
