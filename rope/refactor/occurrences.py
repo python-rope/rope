@@ -374,12 +374,6 @@ class _TextualFinder:
     def _fast_file_query(self, source):
         return self.name in source
 
-    def _get_source(self, resource, pymodule):
-        if resource is not None:
-            return resource.read()
-        else:
-            return pymodule.source_code
-
 
 class _OccurrenceToolsCreator:
     def __init__(self, project, resource=None, pymodule=None, docs=False):
