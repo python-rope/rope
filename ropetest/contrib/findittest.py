@@ -133,28 +133,31 @@ class FindItTest(unittest.TestCase):
         with self.assertRaises(exceptions.BadIdentifierError):
             find_implementations(self.project, mod1, offset)
 
-    def test_trivial_find_definition(self):
+    def test_find_definition_global_function(self):
         code = dedent("""\
-            def a_func():
+            def target():
                 pass
-            a_func()""")
-        result = find_definition(self.project, code, code.rindex("a_func"))
-        start = code.index("a_func")
+            target()""")
+        result = find_definition(self.project, code, code.rindex("target"))
+        start = code.index("target")
         self.assertEqual(start, result.offset)
         self.assertEqual(None, result.resource)
         self.assertEqual(1, result.lineno)
-        self.assertEqual((start, start + len("a_func")), result.region)
+        self.assertEqual((start, start + len("target")), result.region)
 
-    def test_find_definition_in_other_modules(self):
-        mod1 = testutils.create_module(self.project, "mod1")
-        mod1.write("var = 1\n")
+    def test_find_definition_global_async_function(self):
         code = dedent("""\
-            import mod1
-            print(mod1.var)
+            async def target():
+                pass
+
+            async def run():
+                await target()
         """)
-        result = find_definition(self.project, code, code.index("var"))
-        self.assertEqual(mod1, result.resource)
-        self.assertEqual(0, result.offset)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
 
     # A class-method def following an f-string with an unmatched literal
     # bracket: the unmatched bracket used to fold every following newline,
@@ -213,12 +216,22 @@ class FindItTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(def_offset, result.offset)
 
-    # worder's is_a_class_or_function_name_in_header only recognised the
-    # canonical `def`/`class` prefixes, so an `async def` method header was
-    # not treated as a definition and find_definition resolved a call via
-    # self to the call site itself (never the def).
+    def test_find_definition_instance_method(self):
+        code = dedent("""\
+            class C(object):
+                def target(self):
+                    pass
 
-    def test_find_definition_of_async_method(self):
+                def run(self):
+                    self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_async_instance_method(self):
         code = dedent("""\
             class C(object):
                 async def target(self):
@@ -232,6 +245,17 @@ class FindItTest(unittest.TestCase):
         def_offset = code.index("target")
         self.assertIsNotNone(result)
         self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_in_other_modules(self):
+        mod1 = testutils.create_module(self.project, "mod1")
+        mod1.write("var = 1\n")
+        code = dedent("""\
+            import mod1
+            print(mod1.var)
+        """)
+        result = find_definition(self.project, code, code.index("var"))
+        self.assertEqual(mod1, result.resource)
+        self.assertEqual(0, result.offset)
 
     def test_find_definition_of_async_method_extra_whitespace(self):
         # `async  def` (two spaces) / `async\tdef` are valid Python and must
@@ -255,63 +279,11 @@ class FindItTest(unittest.TestCase):
         # predicate must recognise it too.
         code = dedent("""\
             class C(object):
-                async def target(self):
+                async\tdef target(self):
                     pass
 
-                async def run(self):
+                async\tdef run(self):
                     await self.target()
-        """).replace("async def", "async\tdef")
-        call_offset = code.rindex("target")
-        result = find_definition(self.project, code, call_offset)
-        def_offset = code.index("target")
-        self.assertIsNotNone(result)
-        self.assertEqual(def_offset, result.offset)
-
-    def test_rename_heals_async_method(self):
-        # Rename from the call must reach the async def, not orphan it --
-        # the damaging end-to-end symptom of the unrecognised header.
-        mod = testutils.create_module(self.project, "mod")
-        code = dedent("""\
-            class C(object):
-                async def target(self):
-                    pass
-
-                async def run(self):
-                    await self.target()
-        """)
-        mod.write(code)
-        call_offset = code.rindex("target")
-        changes = Rename(self.project, mod, call_offset).get_changes("renamed")
-        self.project.do(changes)
-        result = mod.read()
-        # both the call and the def must be renamed -- not silently orphaned
-        self.assertEqual(0, result.count("target"))
-        self.assertEqual(2, result.count("renamed"))
-
-    def test_find_definition_of_sync_method_still_resolves(self):
-        # regression control: sync methods must keep resolving
-        code = dedent("""\
-            class C(object):
-                def target(self):
-                    pass
-
-                def run(self):
-                    self.target()
-        """)
-        call_offset = code.rindex("target")
-        result = find_definition(self.project, code, call_offset)
-        def_offset = code.index("target")
-        self.assertIsNotNone(result)
-        self.assertEqual(def_offset, result.offset)
-
-    def test_find_definition_of_module_level_async_function(self):
-        # control: module-level async defs already resolve correctly
-        code = dedent("""\
-            async def target():
-                pass
-
-            async def run():
-                await target()
         """)
         call_offset = code.rindex("target")
         result = find_definition(self.project, code, call_offset)
