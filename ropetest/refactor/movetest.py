@@ -1259,6 +1259,15 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertIn("from pkg.destination_module_in_pkg import Thing as Alias", self.mod4.read())
         self.assertIn("values = pkg.destination_module_in_pkg.Thing(), Alias(), other", self.mod4.read())
 
+    def test_moving_global_retargets_a_consumer_with_only_an_alias(self):
+        self.origin_module_in_pkg.write("value = 1\n")
+        self.mod4.write("from .origin_module_in_pkg import value as old\nresult = old\n")
+        self._move(self.origin_module_in_pkg, 0, self.destination_module_in_pkg)
+        self.assertEqual(
+            "from pkg.destination_module_in_pkg import value as old\nresult = old\n",
+            self.mod4.read(),
+        )
+
     def test_moving_modules_into_package(self) -> None:
         """Move global function where the destination module is in a package"""
         code = dedent("""\

@@ -2550,6 +2550,11 @@ class MoveGlobal:
                 source = self._retarget_aliased_imports(file_, source, dest)
                 if source != file_.read():
                     changes.add_change(ChangeContents(file_, source))
+            else:
+                source = file_.read()
+                changed = self._retarget_aliased_imports(file_, source, dest)
+                if changed != source:
+                    changes.add_change(ChangeContents(file_, changed))
             job_set.finished_job()
         return changes
 
