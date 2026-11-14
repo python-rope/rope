@@ -142,6 +142,13 @@ the changes it made.  Calculating those changes can be time consuming.
 See the `rope.base.taskhandle.TaskHandle`_ section for measuring its
 progress or interrupting it.
 
+To offer similar-code extraction only when it finds other matches, call
+``extractor.get_similar_occurrences()`` before asking the user to confirm
+that option. It returns the number of matching regions, including the
+selected region, without building or applying a ``ChangeSet``. A result
+greater than one means similar extraction would affect at least one
+additional region.
+
 
 Previewing And Performing Changes
 ---------------------------------

@@ -1439,6 +1439,41 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_get_similar_occurrences_for_variable(self):
+        code = dedent("""\
+            a = 1
+            b = 1
+        """)
+        testmod = testutils.create_module(self.project, "testmod")
+        testmod.write(code)
+        start = code.index("1")
+        extractor = extract.ExtractVariable(self.project, testmod, start, start + 1)
+
+        self.assertEqual(2, extractor.get_similar_occurrences())
+
+    def test_get_similar_occurrences_for_method(self):
+        code = dedent("""\
+            a = 1
+            b = 1
+        """)
+        testmod = testutils.create_module(self.project, "testmod")
+        testmod.write(code)
+        start = code.index("1")
+        extractor = extract.ExtractMethod(self.project, testmod, start, start + 1)
+
+        self.assertEqual(2, extractor.get_similar_occurrences())
+
+    def test_get_similar_occurrences_with_no_other_matches(self):
+        code = dedent("""\
+            a = 1
+        """)
+        testmod = testutils.create_module(self.project, "testmod")
+        testmod.write(code)
+        start = code.index("1")
+        extractor = extract.ExtractMethod(self.project, testmod, start, start + 1)
+
+        self.assertEqual(1, extractor.get_similar_occurrences())
+
     def test_extract_method_and_similar_expressions(self):
         code = dedent("""\
             a = 1

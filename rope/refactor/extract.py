@@ -68,21 +68,36 @@ class _ExtractRefactoring:
         """
         extracted_name, kind = self._get_kind_from_name(extracted_name, kind)
 
+        info = self._create_info(extracted_name, similar, global_, kind)
+        new_contents = _ExtractPerformer(info).extract()
+        changes = ChangeSet(f"Extract {info.kind} <{extracted_name}>")
+        changes.add_change(ChangeContents(self.resource, new_contents))
+        return changes
+
+    def get_similar_occurrences(self, global_=False, kind=None):
+        """Return the number of regions similar extraction would affect.
+
+        This checks the same extraction constraints and match rules as
+        :meth:`get_changes` without creating changes. ``global_`` and ``kind``
+        have the same meaning as in :meth:`get_changes`.
+        """
+        info = self._create_info("", similar=True, global_=global_, kind=kind)
+        return len(_ExtractPerformer(info)._collect_matches().matches)
+
+    def _create_info(self, extracted_name, similar, global_, kind):
+        kind = self._get_kind(kind)
         info = _ExtractInfo(
             self.project,
             self.resource,
             self.start_offset,
             self.end_offset,
             extracted_name,
-            variable=self._get_kind(kind) == "variable",
+            variable=kind == "variable",
             similar=similar,
             make_global=global_,
         )
-        info.kind = self._get_kind(kind)
-        new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet(f"Extract {info.kind} <{extracted_name}>")
-        changes.add_change(ChangeContents(self.resource, new_contents))
-        return changes
+        info.kind = kind
+        return info
 
     def _get_kind_from_name(self, extracted_name, kind):
         for sign, selected_kind in self.kind_prefixes.items():
@@ -308,10 +323,14 @@ class _ExtractPerformer:
             region = match.get_region()
             content.add_change(region[0], region[1], replacement.substitute(mapping))
 
-    def _collect_info(self):
+    def _collect_matches(self):
         extract_collector = _ExtractCollector(self.info)
         self._find_definition(extract_collector)
         self._find_matches(extract_collector)
+        return extract_collector
+
+    def _collect_info(self):
+        extract_collector = self._collect_matches()
         self._find_definition_location(extract_collector)
         return extract_collector
 
