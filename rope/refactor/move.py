@@ -22,6 +22,7 @@ from rope.base import (
 )
 from rope.base.change import ChangeContents, ChangeSet, MoveResource
 from rope.refactor import functionutils, importutils, occurrences, rename, sourceutils
+from rope.refactor.importutils import importinfo
 from rope.refactor.importutils.module_imports import (
     get_first_decorator_or_function_start_line,
 )
@@ -263,9 +264,27 @@ class MoveGlobal:
         )
         self.import_tools = self.tools.import_tools
 
-    def _import_filter(self, stmt):
+    def _import_filter(self, stmt, folder=None):
+        """Select the statements that import the moved name or its source module.
+
+        ``folder`` is the importing module's folder; relative statements are
+        resolved from it to the module they import.
+        """
         module_name = libutils.modname(self.source)
 
+        if (
+            isinstance(stmt.import_info, importutils.FromImport)
+            and stmt.import_info.level
+        ):
+            context = importinfo.ImportContext(self.project, folder)
+            imported = stmt.import_info.get_imported_resource(context)
+            source = self._source_import_resource()
+            if imported == source:
+                return True
+            basename = module_name.rsplit(".", 1)[-1]
+            return imported == source.parent and any(
+                basename == name for name, alias in stmt.import_info.names_and_aliases
+            )
         if isinstance(stmt.import_info, importutils.NormalImport):
             # Affect any statement that imports the source module
             return any(
@@ -358,29 +377,65 @@ class MoveGlobal:
                 changes.add_change(self._source_module_changes(dest))
             elif file_ == dest:
                 changes.add_change(self._dest_module_changes(dest))
-            elif self.tools.occurs_in_module(resource=file_):
-                pymodule = self.project.get_pymodule(file_)
-                # Changing occurrences
-                placeholder = "__rope_renaming_%s_" % self.old_name
-                source = self.tools.rename_in_module(placeholder, resource=file_)
-                should_import = source is not None
-                # Removing out of date imports
-                pymodule = self.tools.new_pymodule(pymodule, source)
-                source = self.import_tools.organize_imports(
-                    pymodule, sort=False, import_filter=self._import_filter
-                )
-                # Adding new import
-                if should_import:
-                    pymodule = self.tools.new_pymodule(pymodule, source)
-                    source, imported = importutils.add_import(
-                        self.project, pymodule, self._new_modname(dest), self.old_name
-                    )
-                    source = source.replace(placeholder, imported)
-                source = self.tools.new_source(pymodule, source)
-                if source != file_.read():
+            else:
+                original = source = file_.read()
+                if self.tools.occurs_in_module(resource=file_):
+                    source = self._rewrite_global_occurrences(file_, dest)
+                source = self._retarget_aliased_imports(file_, source, dest)
+                if source != original:
                     changes.add_change(ChangeContents(file_, source))
             job_set.finished_job()
         return changes
+
+    def _rewrite_global_occurrences(self, file_, dest):
+        pymodule = self.project.get_pymodule(file_)
+        placeholder = "__rope_renaming_%s_" % self.old_name
+        source = self.tools.rename_in_module(placeholder, resource=file_)
+        should_import = source is not None
+        pymodule = self.tools.new_pymodule(pymodule, source)
+        source = self.import_tools.organize_imports(
+            pymodule,
+            sort=False,
+            import_filter=lambda stmt: self._import_filter(stmt, file_.parent),
+        )
+        if should_import:
+            pymodule = self.tools.new_pymodule(pymodule, source)
+            source, imported = importutils.add_import(
+                self.project, pymodule, self._new_modname(dest), self.old_name
+            )
+            source = source.replace(placeholder, imported)
+        return self.tools.new_source(pymodule, source)
+
+    def _source_import_resource(self):
+        if self.source.name == "__init__.py":
+            return self.source.parent
+        return self.source
+
+    def _retarget_aliased_imports(self, resource, source, dest):
+        pymodule = libutils.get_string_module(self.project, source, resource)
+        imports = self.import_tools.module_imports(pymodule)
+        context = importinfo.ImportContext(self.project, resource.parent)
+        origin = self._source_import_resource()
+        for stmt in tuple(imports.imports):
+            info = stmt.import_info
+            if not isinstance(info, importutils.FromImport):
+                continue
+            aliases = [
+                (name, alias)
+                for name, alias in info.names_and_aliases
+                if name == self.old_name and alias is not None
+            ]
+            if not aliases or info.get_imported_resource(context) != origin:
+                continue
+            stmt.import_info = importutils.FromImport(
+                info.module_name,
+                info.level,
+                [pair for pair in info.names_and_aliases if pair not in aliases],
+            )
+            imports.add_import(
+                importutils.FromImport(self._new_modname(dest), 0, aliases)
+            )
+        return imports.get_changed_source()
 
     def _source_module_changes(self, dest):
         placeholder = "__rope_moving_%s_" % self.old_name
@@ -441,7 +496,7 @@ class MoveGlobal:
             sort=False,
             selfs=False,
             unused=True,
-            import_filter=self._import_filter,
+            import_filter=lambda stmt: self._import_filter(stmt, dest.parent),
         )
         return ChangeContents(dest, source)
 
