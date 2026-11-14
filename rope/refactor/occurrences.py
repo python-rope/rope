@@ -38,6 +38,7 @@ calling the `create_finder()` function.
 import contextlib
 import io
 import tokenize
+from itertools import accumulate
 from typing import Iterator
 
 from rope.base import (
@@ -328,9 +329,7 @@ class _TextualFinder:
         Complete string tokens expose replacement expressions through Python's
         native AST; expression tokens retain their source coordinates.
         """
-        line_starts = [0]
-        for line in source.splitlines(keepends=True):
-            line_starts.append(line_starts[-1] + len(line))
+        line_starts = [0, *accumulate(map(len, source.splitlines(keepends=True)))]
         for item in tokenize.generate_tokens(io.StringIO(source).readline):
             row, column = item.start
             if item.type == tokenize.NAME and item.string == self.name:
