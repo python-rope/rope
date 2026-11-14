@@ -161,3 +161,30 @@ def test_cross_module_transfer_rejects_mutation_through_builtins_namespace(tmp_p
         assert target.read() == destination
     finally:
         project.close()
+
+
+def test_cross_module_transfer_preserves_builtin_type_annotations(tmp_path):
+    project = Project(str(tmp_path), ropefolder=None)
+    try:
+        origin = project.root.create_file("origin.py")
+        target = project.root.create_file("target.py")
+        origin.write(
+            "class Origin:\n    @staticmethod\n"
+            "    def compute(value: int) -> int:\n        return value + 1\n"
+        )
+        target.write("class Target:\n    pass\n")
+        before = runpy.run_path(origin.real_path)["Origin"].compute
+        project.do(
+            MoveMethod.get_class_changes(
+                project,
+                [(origin, origin.read().index("compute"), "compute")],
+                target,
+                target.read().index("Target"),
+                resources=[origin, target],
+            )
+        )
+        after = runpy.run_path(target.real_path)["Target"].compute
+        assert after(4) == before(4)
+        assert after.__annotations__ == before.__annotations__
+    finally:
+        project.close()

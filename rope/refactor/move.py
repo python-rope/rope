@@ -1498,45 +1498,41 @@ class MoveMethod:
             scope = scope.parent
         return True
 
-    @staticmethod
-    def _check_class_move_definition_time(function, destination):
-        """Refuse a definition whose defaults may change with its definition time.
-
-        The destination class body runs at another moment, so a default
-        (and an annotation that is still evaluated eagerly after the move)
-        is only proven unchanged when it is a literal. The transfer carries a
-        postponing `from __future__ import annotations` with the method, so
-        annotations run at definition time only when neither module
-        postpones them.
-        """
+    @classmethod
+    def _check_class_move_definition_time(cls, function, destination):
+        """Require literal defaults and stable definition-time annotations."""
         node = function.get_ast()
-        arguments = node.args
-        expressions = list(arguments.defaults) + [
-            value for value in arguments.kw_defaults if value is not None
-        ]
+        for expression in cls._signature_defaults(node):
+            cls._require_transfer_literal(expression)
         if all(
             module.get_source_binding_index().policy.mode == "eager"
             for module in (function.get_module(), destination.get_module())
         ):
-            expressions.extend(
-                arg.annotation
-                for arg in (
-                    *arguments.posonlyargs,
-                    *arguments.args,
-                    *arguments.kwonlyargs,
-                    *(arg for arg in (arguments.vararg, arguments.kwarg) if arg),
-                )
-                if arg.annotation is not None
-            )
-            if node.returns is not None:
-                expressions.append(node.returns)
-        for expression in expressions:
-            try:
-                ast.literal_eval(expression)
-            except (ValueError, TypeError, SyntaxError):
-                raise exceptions.RefactoringError(
-                    "Transfer cannot prove definition-time evaluation."
-                ) from None
+            index = function.get_module().get_source_binding_index()
+            for expression in cls._signature_annotations(node):
+                if isinstance(expression, ast.Name):
+                    origin = evaluate.eval_node(
+                        index.context_for_node(expression).environment, expression
+                    )
+                    target = destination.get_scope().lookup(expression.id)
+                    if origin is not None and target is not None:
+                        builtin = getattr(origin.get_object(), "builtin", None)
+                        if (
+                            isinstance(builtin, type)
+                            and getattr(builtins, expression.id, None) is builtin
+                            and getattr(target.get_object(), "builtin", None) is builtin
+                        ):
+                            continue
+                cls._require_transfer_literal(expression)
+
+    @staticmethod
+    def _require_transfer_literal(expression):
+        try:
+            ast.literal_eval(expression)
+        except (ValueError, TypeError, SyntaxError):
+            raise exceptions.RefactoringError(
+                "Transfer cannot prove definition-time evaluation."
+            ) from None
 
     _DYNAMIC_NAMESPACE_CALLS = frozenset(("globals", "vars", "locals", "exec", "eval"))
     _BUILTIN_MODULE_NAMES = frozenset(("builtins", "__builtins__"))
