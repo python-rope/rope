@@ -219,3 +219,12 @@ def test_unresolved_alias_cycle_rejects_before_any_effect(native_project):
     with pytest.raises(exceptions.RefactoringError, match="Unproven"):
         mover.get_changes(target, destination_offset=target.read().index("Target"))
     assert (source.read(), target.read()) == before
+
+
+def test_move_global_class_empties_the_old_module(native_project):
+    source = _write(native_project, "old.py", "class Contract: pass\n")
+    target = _write(native_project, "new.py", "")
+    mover = move.MoveClass(native_project, source, source.read().index("Contract"))
+    native_project.do(mover.get_changes(target))
+    assert not source.read()
+    assert target.read().strip() == "class Contract: pass"

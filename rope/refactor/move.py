@@ -103,6 +103,8 @@ class MoveMethod:
         destination_offset,
         resources=None,
         task_handle=taskhandle.DEFAULT_TASK_HANDLE,
+        *,
+        match_filter=None,
     ):
         """Transfer decorated methods to an existing class in one ChangeSet.
 
@@ -121,6 +123,7 @@ class MoveMethod:
         Overrides, ambiguous references and changed global bindings fail
         before any resource is written. ``resources`` bounds the reference
         search and must include all source and destination resources.
+        ``match_filter`` can exclude sites independently proven by the caller.
         """
         destination_module = project.get_pymodule(destination_resource)
         binding = evaluate.eval_location(destination_module, destination_offset)
@@ -213,6 +216,12 @@ class MoveMethod:
             for resource in selected:
                 module = project.get_pymodule(resource)
                 for occurrence in finder.find_occurrences(pymodule=module):
+                    if (
+                        not occurrence.is_defined()
+                        and match_filter is not None
+                        and not match_filter(occurrence)
+                    ):
+                        continue
                     actual = occurrence.get_pyname()
                     if (
                         occurrences.unsure_pyname(name, unbound=False)
@@ -2293,7 +2302,8 @@ class MoveClass:
             for (start, end), replacement in edits[resource].items():
                 if resource != self.source or not first <= start < last:
                     collector.add_change(start, end, replacement)
-            planned[resource] = collector.get_changed() or source
+            changed = collector.get_changed()
+            planned[resource] = source if changed is None else changed
         module = libutils.get_string_module(self.project, planned[dest], dest)
         if path:
             scope = module.get_scope()
