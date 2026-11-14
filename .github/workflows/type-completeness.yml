@@ -1,0 +1,14 @@
+name: Type completeness ratchet
+
+on: [pull_request]
+
+jobs:
+  completeness:
+    name: Type completeness ratchet
+    runs-on: ubuntu-latest
+    steps:
+    - id: completeness
+      uses: Bibo-Joshi/pyright-type-completeness@1.0.0
+      with:
+        package-name: rope
+        install-command: "touch rope/py.typed && pip install ."
