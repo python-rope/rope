@@ -319,6 +319,12 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_occurrence_in_t_string(self):
+        code = 'a = 20\na_string = f(t"{a}(", ")")\n'
+        expected = 'new_var = 20\na_string = f(t"{new_var}(", ")")\n'
+        refactored = self._local_rename(code, 0, "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_renaming_occurrence_in_nested_f_string(self):
         code = dedent("""\
             a_var = 20
