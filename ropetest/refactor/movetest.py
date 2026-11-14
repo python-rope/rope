@@ -563,6 +563,58 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEqual(expected, self.destination_module.read())
         self.assertEqual("", self.origin_module_in_pkg.read())
 
+    def test_moving_global_replaces_relative_from_imports_in_consumers(self) -> None:
+        """A relative from-import of the moved name is rewritten like an absolute one"""
+        self.origin_module_in_pkg.write("class AClass:\n    pass\n")
+        self.mod4.write("from .origin_module_in_pkg import AClass\na_var = AClass()\n")
+        self._move(self.origin_module_in_pkg, 6, self.destination_module_in_pkg)
+        self.assertEqual(
+            "import pkg.destination_module_in_pkg\n"
+            "a_var = pkg.destination_module_in_pkg.AClass()\n",
+            self.mod4.read(),
+        )
+
+    def test_moving_global_replaces_relative_package_imports_in_consumers(self) -> None:
+        """A relative import of the source module is rewritten to the destination"""
+        self.origin_module_in_pkg.write("class AClass:\n    pass\n")
+        self.mod4.write(
+            "from . import origin_module_in_pkg\n"
+            "a_var = origin_module_in_pkg.AClass()\n"
+        )
+        self._move(self.origin_module_in_pkg, 6, self.destination_module_in_pkg)
+        self.assertEqual(
+            "import pkg.destination_module_in_pkg\n"
+            "a_var = pkg.destination_module_in_pkg.AClass()\n",
+            self.mod4.read(),
+        )
+
+    def test_moving_global_retargets_package_init_import_and_alias(self) -> None:
+        package = testutils.create_package(self.project, "origin", self.pkg)
+        origin = package.get_child("__init__.py")
+        origin.write("class Thing: pass\nother = 1\n")
+        self.mod4.write(
+            "from . import origin\n"
+            "from .origin import Thing as Alias, other\n"
+            "values = origin.Thing(), Alias(), other\n"
+        )
+        self._move(origin, 6, self.destination_module_in_pkg)
+        result = self.mod4.read()
+        self.assertNotIn("from . import origin", result)
+        self.assertIn("from .origin import other", result)
+        self.assertIn("from pkg.destination_module_in_pkg import Thing as Alias", result)
+        self.assertIn(
+            "values = pkg.destination_module_in_pkg.Thing(), Alias(), other", result
+        )
+
+    def test_moving_global_retargets_a_consumer_with_only_an_alias(self) -> None:
+        self.origin_module_in_pkg.write("value = 1\n")
+        self.mod4.write("from .origin_module_in_pkg import value as old\nresult = old\n")
+        self._move(self.origin_module_in_pkg, 0, self.destination_module_in_pkg)
+        self.assertEqual(
+            "from pkg.destination_module_in_pkg import value as old\nresult = old\n",
+            self.mod4.read(),
+        )
+
     def test_moving_modules_into_package(self) -> None:
         """Move global function where the destination module is in a package"""
         code = dedent("""\
