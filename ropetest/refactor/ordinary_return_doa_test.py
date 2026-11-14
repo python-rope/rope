@@ -195,8 +195,11 @@ def _assert_observations(observations):
     "validation", [False, True], ids=["default-validation", "validation-enabled"]
 )
 def test_public_doa_opaque_return_write_reopen_and_unrelated_observations(
-    tmp_path, validation
+    tmp_path, validation, monkeypatch
 ):
+    # Both helper versions have equal length and may be written in one second.
+    # A timestamp-based pyc could otherwise make the second run execute old code.
+    monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "1")
     directory = tmp_path / "project"
     _write_resources(directory, HELPER_BEFORE)
     observations = []
@@ -204,6 +207,7 @@ def test_public_doa_opaque_return_write_reopen_and_unrelated_observations(
     try:
         libutils.analyze_module(project, project.get_file("controls.py"))
         _run_public_doa(project, directory, "2\n")
+        assert not list(directory.rglob("*.pyc"))
         observations.append(_observe(project, "Other"))
         project.close()
         project = _open_project(directory, validation)
