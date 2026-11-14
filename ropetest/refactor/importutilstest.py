@@ -392,6 +392,62 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports.remove_unused_imports()
         self.assertEqual(code, module_with_imports.get_changed_source())
 
+    def test_not_removing_from_import_shadowed_by_inherited_attribute(self):
+        self.mod1.write(dedent("""\
+            bar = 10
+        """))
+        code = dedent("""\
+            from pkg1.mod1 import bar
+            class Parent:
+                bar = 1
+            class Child(Parent):
+                baz = bar
+        """)
+        self.mod.write(code)
+        module_with_imports = self.import_tools.module_imports(
+            self.project.get_module("mod")
+        )
+        module_with_imports.remove_unused_imports()
+        self.assertEqual(code, module_with_imports.get_changed_source())
+
+    def test_not_removing_module_import_shadowed_by_inherited_attribute(self):
+        code = dedent("""\
+            import pkg1.mod1
+            class Parent:
+                pkg1 = 1
+            class Child(Parent):
+                module = pkg1.mod1
+        """)
+        self.mod.write(code)
+        module_with_imports = self.import_tools.module_imports(
+            self.project.get_module("mod")
+        )
+        module_with_imports.remove_unused_imports()
+        self.assertEqual(code, module_with_imports.get_changed_source())
+
+    def test_removing_import_shadowed_by_class_body_attribute(self):
+        code = dedent("""\
+            import pkg1
+            class Parent:
+                pkg1 = 1
+            class Child(Parent):
+                pkg1 = 2
+                value = pkg1
+        """)
+        self.mod.write(code)
+        module_with_imports = self.import_tools.module_imports(
+            self.project.get_module("mod")
+        )
+        module_with_imports.remove_unused_imports()
+        expected = dedent("""\
+            class Parent:
+                pkg1 = 1
+            class Child(Parent):
+                pkg1 = 2
+                value = pkg1
+        """)
+        self.assertEqual(expected, module_with_imports.get_changed_source())
+
     def test_adding_imports(self):
         self.mod.write("\n")
         pymod = self.project.get_module("mod")

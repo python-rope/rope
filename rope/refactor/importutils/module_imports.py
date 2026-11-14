@@ -511,6 +511,9 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
         name = primary.split(".")[0]
         if propagated:
             names = self.pyobject.get_scope().get_propagated_names()
+        elif self.pyobject.get_scope().get_kind() == "Class":
+            # Inherited attributes are not visible as bare names in a class body.
+            names = self.pyobject.get_scope().get_defined_names()
         else:
             names = self.pyobject.get_scope().get_names()
         return name in names or self.parent.is_bound(name, propagated=True)
