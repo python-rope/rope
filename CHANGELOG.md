@@ -1,8 +1,19 @@
 # __Upcoming release__
 
+# Release 1.15.2+dc.7
+
+- Integrate the latest upstream master while retaining upstream 1.15.2 as the
+  published base. Preserve typed project APIs, UTF-8 function signatures, star
+  imports during inlining, and native try-statement regions.
+- Bind a PEP 613 TypeAlias assignment to its value.
+- Reject class method transfers when the destination exposes a mutable
+  builtins namespace during class construction.
+- Resolve references in string-sequence declarations before later rebindings
+  or extensions of the referenced name.
 - Moving a global rewrites a consumer's relative import of the moved name
   (`from .origin import Name`, `from . import origin`) like the absolute form;
-  the stale relative import no longer survives the move.
+  the stale relative import no longer survives the move. Imports through a
+  package initializer and aliased from-imports follow the move as well.
 - `Project(..., config_files=False)` takes preferences only from the supplied
   `prefs` over the defaults, without reading `pyproject.toml`, the ropefolder
   `config.py` or the global configuration.
@@ -11,6 +22,18 @@
   `name += [...]` of literal strings. A bare annotation never rebinds it, and a
   non-literal extension yields `()`. It previously returned the first
   assignment, which diverged from the module's effective `__all__`.
+- #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
+- #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
+- #896 patchedast cleanup and refactoring (@lieryan)
+- #905 Ignore `node_modules` directories by default when scanning project files and source folders. (@marcoeangeli)
+- #922 Classify autoimport project sources by path containment (@marlon-costa-dc)
+- #926, #929 Raise RefactoringError instead of IndexError/ModuleSyntaxError when extracting an empty or whitespace-only region (@aliassar)
+- #933 Add type annotations to project.py (@lieryan)
+- #119, #928 Fix IndexError in rename and find occurrences when a `from` import is the last thing in a module without a trailing newline (@mcepl)
+- #921 Patch the else suite of try statements that also have a finally (@marlon-costa-dc)
+- #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
+- #826, #940 Keep star imports in other modules when inlining a function or method (@chinghar)
+- #948, #949 Don't treat string prefixes such as the `f` in `f"..."` as occurrences when renaming a variable named `f`, `b`, `u`, `rf`, etc. (@aliassar)
 
 # Release 1.15.2+dc.6
 

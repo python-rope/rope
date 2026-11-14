@@ -37,8 +37,8 @@ candidate can be reviewed by content identity before installation or publication
 The selected artifact version comes from the producer's ``pyproject.toml``,
 never from a previously installed distribution in the build environment.
 The artifact checker reads that manifest with ``toml``, declared in the development
-extra as well as the release extra, on every supported Python version including
-Python 3.10. Both the producer and the isolated ``wheel[dev]`` consumer install it.
+extra as well as the release extra. Both the producer and the isolated
+``wheel[dev]`` consumer install it.
 The release workflow downloads those published assets and runs the same
 ``make artifact-check`` against them; a locally rebuilt wheel is not a substitute
 for that published-artifact receipt.

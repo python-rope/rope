@@ -426,6 +426,8 @@ class _RealFinder:
             return False
         try:
             end = self._find_word_end(offset)
+            if not self._has_enough_len_for_as(end):
+                return False
             as_end = min(self._find_word_end(end + 1), len(self.code))
             as_start = self._find_word_start(as_end)
             return self.code[as_start : as_end + 1] == "as"

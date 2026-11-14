@@ -1534,13 +1534,21 @@ class SourceBindingIndex:
         visited = set()
         declared = False
         suffix = ()
-        while (id(body), name) not in visited:
+        before = None
+        forward = False
+        while (id(body), name, before) not in visited:
             # Python binds the last direct assignment; a later ``+=`` extends
             # it and a bare annotation never rebinds an assigned name.
             found = False
             value = None
             extensions = []
             for statement in body:
+                if (
+                    before is not None
+                    and (statement.lineno, statement.col_offset) >= before
+                    and found
+                ):
+                    break
                 if isinstance(statement, ast.AugAssign):
                     if (
                         found
@@ -1561,6 +1569,12 @@ class SourceBindingIndex:
                 ) or (found and statement.value is None):
                     continue
                 found = True
+                declaration = statement
+                if (
+                    before is not None
+                    and (statement.lineno, statement.col_offset) >= before
+                ):
+                    forward = True
                 value = statement.value
                 extensions = []
             if not found:
@@ -1573,7 +1587,7 @@ class SourceBindingIndex:
                         body = classes[0].body
                         continue
                 return () if declared else None
-            visited.add((id(body), name))
+            visited.add((id(body), name, before))
             declared = True
             extended = ()
             for extension in extensions:
@@ -1584,7 +1598,7 @@ class SourceBindingIndex:
             suffix = extended + suffix
             if isinstance(value, (ast.List, ast.Tuple, ast.Set)):
                 items = self._literal_strings(value)
-                return () if items is None else items + suffix
+                return () if forward or items is None else items + suffix
             if (
                 isinstance(value, ast.Call)
                 and isinstance(value.func, ast.Name)
@@ -1596,6 +1610,10 @@ class SourceBindingIndex:
             if not isinstance(value, ast.Name):
                 return ()
             name = value.id
+            # References read the binding at the declaration, not at the end
+            # of the module. Follow a forward-only reference only to report a
+            # cycle; it cannot supply a value.
+            before = declaration.lineno, declaration.col_offset
             body = module_body
         raise ValueError("Cyclic native string-sequence declaration: %s" % name)
 

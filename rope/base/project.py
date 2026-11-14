@@ -7,8 +7,9 @@ import sys
 import sysconfig
 import types
 import warnings
+from abc import ABC, abstractmethod
 from contextlib import ExitStack
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
@@ -18,7 +19,7 @@ from rope.base.exceptions import ModuleNotFoundError
 # At present rope.base.prefs starts with `# type:ignore`.
 # As a result, mypy knows nothing about Prefs and get_config.
 from rope.base.prefs import Prefs, get_config  # type: ignore
-from rope.base.resources import File, Folder, _ResourceMatcher
+from rope.base.resources import File, Folder, Resource, _ResourceMatcher
 
 try:
     import cPickle as pickle  # type: ignore
@@ -26,8 +27,14 @@ except ImportError:
     import pickle  # type: ignore
 
 
-class _Project:
+if TYPE_CHECKING:
+    from rope.base import pyobjects, pyobjectsdef
+
+
+class _Project(ABC):
     prefs: Prefs
+    data_files: _DataFiles
+    _custom_source_folders: list[Folder]
 
     def __init__(self, fscommands, external_project=None):
         self.observers = []
@@ -37,7 +44,7 @@ class _Project:
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
 
-    def get_resource(self, resource_name):
+    def get_resource(self, resource_name: str) -> Resource:
         """Get a resource in a project.
 
         `resource_name` is the path of a resource in a project.  It is
@@ -60,7 +67,9 @@ class _Project:
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
 
-    def get_module(self, name, folder=None):
+    def get_module(
+        self, name: str, folder: Optional[Folder] = None
+    ) -> pyobjects.AbstractModule:
         """Returns a `PyObject` if the module was found."""
         # check if this is a builtin module
         pymod = self.pycore.builtin_module(name)
@@ -125,15 +134,15 @@ class _Project:
             return None
         return self.pycore.resource_to_pyobject(declared_origin)
 
-    def get_python_path_folders(self):
+    def get_python_path_folders(self) -> list[Resource]:
         result = []
         external = (
             get_no_project() if self.external_project is None else self.external_project
         )
         for src in self.prefs.get("python_path", []) + sys.path:
             with contextlib.suppress(exceptions.ResourceNotFoundError):
-                src_folder = external.get_resource(src)
-                result.append(src_folder)
+                result.append(external.get_resource(src))
+
         return result
 
     # INFO: It was decided not to cache source folders, since:
@@ -141,7 +150,7 @@ class _Project:
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
-    def get_source_folders(self):
+    def get_source_folders(self) -> list[Folder]:
         """Returns project source folders"""
         if self.root is None:
             return []
@@ -185,24 +194,31 @@ class _Project:
     def get_pycore(self):
         return self.pycore
 
-    def get_file(self, path):
+    def get_file(self, path: str) -> File:
         """Get the file with `path` (it may not exist)"""
         return File(self, path)
 
-    def get_folder(self, path):
+    def get_folder(self, path: str) -> Folder:
         """Get the folder with `path` (it may not exist)"""
         return Folder(self, path)
 
     def get_prefs(self):
         return self.prefs
 
-    def get_relative_module(self, name, folder, level):
+    def get_relative_module(
+        self,
+        name: str,
+        folder: Folder,
+        level: int,
+    ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
         module = self.find_relative_module(name, folder, level)
         if module is None:
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
-    def find_module(self, modname, folder=None) -> Optional[Union[File, Folder]]:
+    def find_module(
+        self, modname: str, folder: Optional[Folder] = None
+    ) -> Optional[Resource]:
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
@@ -216,7 +232,12 @@ class _Project:
 
         return _find_module_in_folders(folders(), modname)
 
-    def find_relative_module(self, modname, folder, level):
+    def find_relative_module(
+        self,
+        modname: str,
+        folder: Folder,
+        level: int,
+    ) -> Optional[Resource]:
         for i in range(level - 1):
             folder = folder.parent
         if modname == "":
@@ -227,9 +248,6 @@ class _Project:
     def is_ignored(self, resource):
         return False
 
-    def _get_resource_path(self, name):
-        pass
-
     @property
     @utils.saveit
     def history(self):
@@ -237,17 +255,35 @@ class _Project:
 
     @property
     @utils.saveit
-    def pycore(self):
+    def pycore(self) -> pycore.PyCore:
         return pycore.PyCore(self)
 
+    @abstractmethod
     def close(self):
-        warnings.warn("Cannot close a NoProject", DeprecationWarning, stacklevel=2)
+        """Closes project open resources"""
 
-    ropefolder = None
+    @property
+    @abstractmethod
+    def ropefolder(self) -> Optional[Folder]:
+        # FIXME: use class-level ReadOnly attribute when they become available (PEP-767)
+        ...
+
+    @abstractmethod
+    def _get_resource_path(self, name: str) -> str: ...
+
+    @abstractmethod
+    def get_files(self) -> list[Resource]:
+        return []
+
+    @abstractmethod
+    def get_python_files(self) -> list[Resource]:
+        return []
 
 
 class Project(_Project):
     """A Project containing files and folders"""
+
+    file_list: _FileListCacher
 
     def __init__(
         self,
@@ -331,10 +367,10 @@ class Project(_Project):
             self.address,
         )
 
-    def get_files(self):
-        return self.file_list.get_files()
+    def get_files(self) -> list[Resource]:
+        return list(self.file_list.get_files())
 
-    def get_python_files(self):
+    def get_python_files(self) -> list[Resource]:
         """Returns all python files available in the project"""
         return [
             resource
@@ -342,7 +378,7 @@ class Project(_Project):
             if self.pycore.is_python_file(resource)
         ]
 
-    def _get_resource_path(self, name):
+    def _get_resource_path(self, name: str) -> str:
         return os.path.normpath(os.path.join(self._address, *name.split("/")))
 
     def _init_ropefolder(self):
@@ -390,9 +426,10 @@ class Project(_Project):
         self.prefs.set(key, value)
 
     @property
-    def ropefolder(self):
+    def ropefolder(self) -> Optional[Folder]:
         if self._ropefolder_name is not None:
             return self.get_folder(self._ropefolder_name)
+        return None
 
     def validate(self, folder=None):
         if folder is None:
@@ -404,40 +441,46 @@ class Project(_Project):
 
 
 class NoProject(_Project):
-    """A null object for holding out of project files.
+    """A null object for holding out-of-project files.
 
-    This class is singleton use `get_no_project` global function
+    This class is a singleton, use `get_no_project` global function.
     """
+
+    _no_project: Optional[NoProject] = None
+    ropefolder: Optional[Folder] = None
 
     def __init__(self, fscommands=None):
         if fscommands is None:
             fscommands = rope.base.fscommands.FileSystemCommands()
         super().__init__(fscommands)
 
-    def _get_resource_path(self, name):
+    def _get_resource_path(self, name: str) -> str:
         real_name = name.replace("/", os.path.sep)
         return self.fscommands.realpath(real_name)
 
-    def get_resource(self, name):
+    def get_resource(self, name: str) -> Resource:
         universal_name = self.fscommands.realpath(name).replace(os.path.sep, "/")
         return super().get_resource(universal_name)
 
-    def get_files(self):
+    def get_files(self) -> list[Resource]:
         return []
 
-    def get_python_files(self):
+    def get_python_files(self) -> list[Resource]:
         return []
 
-    _no_project = None
+    def close(self):
+        warnings.warn("Cannot close a NoProject", DeprecationWarning, stacklevel=2)
 
 
-def get_no_project():
+def get_no_project() -> NoProject:
     if NoProject._no_project is None:
         NoProject._no_project = NoProject()
     return NoProject._no_project
 
 
 class _FileListCacher:
+    files: set[Resource]
+
     def __init__(self, project):
         self.project = project
         self.files = None
@@ -446,7 +489,7 @@ class _FileListCacher:
         )
         self.project.add_observer(rawobserver)
 
-    def get_files(self):
+    def get_files(self) -> set[Resource]:
         if self.files is None:
             self.files = set()
             self._add_files(self.project.root)
@@ -510,7 +553,7 @@ class _DataFiles:
         return self.project.get_file(path)
 
 
-def _realpath(path):
+def _realpath(path: str) -> str:
     """Return the real path of `path`
 
     Is equivalent to ``realpath(abspath(expanduser(path)))``.

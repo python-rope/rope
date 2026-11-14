@@ -349,17 +349,19 @@ class RemovePyNameVisitor(ImportInfoVisitor):
         self.removed_names = []
 
     def visitFromImport(self, import_stmt, import_info):
+        if import_info.is_star_import():
+            # a star import may provide other names; leave it unchanged
+            return None
         new_pairs = []
-        if not import_info.is_star_import():
-            for name, alias in import_info.names_and_aliases:
-                try:
-                    pyname = self.pymodule[alias or name]
-                    if occurrences.same_pyname(self.pyname, pyname):
-                        self.removed_names.append(alias or name)
-                        continue
-                except exceptions.AttributeNotFoundError:
-                    pass
-                new_pairs.append((name, alias))
+        for name, alias in import_info.names_and_aliases:
+            try:
+                pyname = self.pymodule[alias or name]
+                if occurrences.same_pyname(self.pyname, pyname):
+                    self.removed_names.append(alias or name)
+                    continue
+            except exceptions.AttributeNotFoundError:
+                pass
+            new_pairs.append((name, alias))
         return importinfo.FromImport(
             import_info.module_name, import_info.level, new_pairs
         )
