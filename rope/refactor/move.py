@@ -1576,10 +1576,14 @@ class MoveMethod:
                     "Transfer cannot prove destination namespace bindings."
                 )
             if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.ctx, (ast.Store, ast.Del))
+                isinstance(node, (ast.Attribute, ast.Subscript))
                 and isinstance(node.value, ast.Name)
                 and node.value.id in cls._BUILTIN_MODULE_NAMES
+                and (
+                    isinstance(node.ctx, (ast.Store, ast.Del))
+                    or isinstance(node, ast.Attribute)
+                    and node.attr == "__dict__"
+                )
             ):
                 raise exceptions.RefactoringError(
                     "Transfer cannot prove destination namespace bindings."
@@ -2425,10 +2429,13 @@ class MoveGlobal:
         ):
             context = importinfo.ImportContext(self.project, folder)
             imported = stmt.import_info.get_imported_resource(context)
-            if imported == self.source:
+            source = self.source
+            if source.name == "__init__.py":
+                source = source.parent
+            if imported == source:
                 return True
             basename = module_name.rsplit(".", 1)[-1]
-            return imported == self.source.parent and any(
+            return imported == source.parent and any(
                 basename == name for name, alias in stmt.import_info.names_and_aliases
             )
         if isinstance(stmt.import_info, importutils.NormalImport):
@@ -2544,10 +2551,39 @@ class MoveGlobal:
                     )
                     source = source.replace(placeholder, imported)
                 source = self.tools.new_source(pymodule, source)
+                source = self._retarget_aliased_imports(file_, source, dest)
                 if source != file_.read():
                     changes.add_change(ChangeContents(file_, source))
             job_set.finished_job()
         return changes
+
+    def _retarget_aliased_imports(self, resource, source, dest):
+        pymodule = libutils.get_string_module(self.project, source, resource)
+        imports = self.import_tools.module_imports(pymodule)
+        context = importinfo.ImportContext(self.project, resource.parent)
+        origin = (
+            self.source.parent if self.source.name == "__init__.py" else self.source
+        )
+        for stmt in tuple(imports.imports):
+            info = stmt.import_info
+            if not isinstance(info, importutils.FromImport):
+                continue
+            aliases = [
+                (name, alias)
+                for name, alias in info.names_and_aliases
+                if name == self.old_name and alias is not None
+            ]
+            if not aliases or info.get_imported_resource(context) != origin:
+                continue
+            stmt.import_info = importutils.FromImport(
+                info.module_name,
+                info.level,
+                [pair for pair in info.names_and_aliases if pair not in aliases],
+            )
+            imports.add_import(
+                importutils.FromImport(self._new_modname(dest), 0, aliases)
+            )
+        return imports.get_changed_source()
 
     def _source_module_changes(self, dest):
         placeholder = f"__rope_moving_{self.old_name}_"

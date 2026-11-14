@@ -6,9 +6,14 @@
   published base. Preserve typed project APIs, UTF-8 function signatures, star
   imports during inlining, and native try-statement regions.
 - Bind a PEP 613 TypeAlias assignment to its value.
+- Reject class method transfers when the destination exposes a mutable
+  builtins namespace during class construction.
+- Resolve references in string-sequence declarations before later rebindings
+  or extensions of the referenced name.
 - Moving a global rewrites a consumer's relative import of the moved name
   (`from .origin import Name`, `from . import origin`) like the absolute form;
-  the stale relative import no longer survives the move.
+  the stale relative import no longer survives the move. Imports through a
+  package initializer and aliased from-imports follow the move as well.
 - `Project(..., config_files=False)` takes preferences only from the supplied
   `prefs` over the defaults, without reading `pyproject.toml`, the ropefolder
   `config.py` or the global configuration.

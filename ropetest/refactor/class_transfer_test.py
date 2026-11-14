@@ -130,3 +130,34 @@ def test_branch_value_overlay_does_not_admit_global_assignment(tmp_path):
         assert (source.read(), destination.read()) == before
     finally:
         project.close()
+
+
+def test_cross_module_transfer_rejects_mutation_through_builtins_namespace(tmp_path):
+    project = Project(str(tmp_path), ropefolder=None)
+    try:
+        origin = project.root.create_file("origin.py")
+        target = project.root.create_file("target.py")
+        source = (
+            "class Origin:\n    @staticmethod\n    def compute():\n"
+            "        return 9\n"
+        )
+        destination = (
+            "import builtins\noriginal = builtins.staticmethod\n"
+            "builtins.__dict__['staticmethod'] = lambda f: 42\n"
+            "class Target:\n    pass\n"
+            "builtins.__dict__['staticmethod'] = original\n"
+        )
+        origin.write(source)
+        target.write(destination)
+        with pytest.raises(RefactoringError, match="destination namespace bindings"):
+            MoveMethod.get_class_changes(
+                project,
+                [(origin, source.index("compute"), "compute")],
+                target,
+                destination.index("Target"),
+                resources=[origin, target],
+            )
+        assert origin.read() == source
+        assert target.read() == destination
+    finally:
+        project.close()
