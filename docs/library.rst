@@ -36,10 +36,12 @@ Occurrence import roles use the same native import-declaration spans. A
 ``yield from`` before a later import must not classify an intervening function
 declaration as imported and silently omit its signature change.
 
-``assignment_string_sequence(name, scope=None, *, class_metadata=False)`` reads the first direct
-assignment in the indexed module or an explicitly supplied class scope.  It
+``assignment_string_sequence(name, scope=None, *, class_metadata=False)`` reads the last direct
+assignment and subsequent literal ``+=`` extensions in the indexed module or
+an explicitly supplied class scope.  It
 returns a tuple for a literal string list, tuple or set, and follows module
-name references and single-name ``tuple``/``list``/``set``/``frozenset`` wrappers.
+name references and single-name ``tuple``/``list``/``set``/``frozenset`` wrappers
+at the position of the referring assignment.
 Missing declarations return ``None``; present empty or unsupported values return
 an empty tuple.  Cyclic references raise ``ValueError``.  It uses the module's
 existing parse without evaluating authored code or resolving class ancestry.

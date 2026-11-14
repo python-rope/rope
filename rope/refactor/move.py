@@ -1572,10 +1572,14 @@ class MoveMethod:
                     "Transfer cannot prove destination namespace bindings."
                 )
             if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.ctx, (ast.Store, ast.Del))
+                isinstance(node, (ast.Attribute, ast.Subscript))
                 and isinstance(node.value, ast.Name)
                 and node.value.id in cls._BUILTIN_MODULE_NAMES
+                and (
+                    isinstance(node.ctx, (ast.Store, ast.Del))
+                    or isinstance(node, ast.Attribute)
+                    and node.attr == "__dict__"
+                )
             ):
                 raise exceptions.RefactoringError(
                     "Transfer cannot prove destination namespace bindings."
