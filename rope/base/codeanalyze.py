@@ -1,7 +1,12 @@
+import ast
 import bisect
+import io
 import re
 import token
 import tokenize
+from typing import Iterator
+
+from rope.base import utils
 
 
 class ChangeCollector:
@@ -566,3 +571,54 @@ def get_any_string_pattern():
 
 def get_comment_pattern():
     return r"#[^\n]*"
+
+
+def name_offsets(source: str, name: str) -> tuple[int, ...]:
+    """Return native Python NAME token offsets without exposing the cache."""
+    return _name_offsets(source).get(name, ())
+
+
+@utils.cached(16)
+def _name_offsets(source: str) -> dict:
+    """Map every NAME token of `source` to the offsets where it occurs
+
+    The source is tokenized once however many names are searched in it.
+    Complete string tokens expose replacement expressions through Python's
+    native AST; expression tokens retain their source coordinates.  The
+    result is keyed by the source text, so a changed source is indexed again.
+    """
+    result = {}
+    for name, offset in _token_names(source):
+        result.setdefault(name, []).append(offset)
+    return {name: tuple(offsets) for name, offsets in result.items()}
+
+
+def _token_names(source: str) -> Iterator:
+    line_starts = [0]
+    for line in source.splitlines(keepends=True):
+        line_starts.append(line_starts[-1] + len(line))
+    for item in tokenize.generate_tokens(io.StringIO(source).readline):
+        row, column = item.start
+        if item.type == tokenize.NAME:
+            yield item.string, line_starts[row - 1] + column
+        elif item.type == tokenize.STRING and item.string.lower().startswith(
+            ("f", "rf", "fr")
+        ):
+            module = ast.parse(item.string)
+            positions = ASTLinesAdapter(item.string)
+            for name, offset in _formatted_names(
+                item.string, module.body[0].value, positions
+            ):
+                yield name, line_starts[row - 1] + column + offset
+
+
+def _formatted_names(source, node, positions) -> Iterator:
+    for value in node.values:
+        if not isinstance(value, ast.FormattedValue):
+            continue
+        start, end = positions[value.value]
+        # AST spans omit the grouping that permits continuation indentation.
+        for name, offset in _token_names("(" + source[start:end] + ")"):
+            yield name, start + offset - 1
+        if value.format_spec is not None:
+            yield from _formatted_names(source, value.format_spec, positions)

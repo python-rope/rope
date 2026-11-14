@@ -6,6 +6,7 @@ partially published index.  Source identities never contain call-time values.
 """
 
 import sys
+import typing
 from dataclasses import dataclass
 from operator import attrgetter
 
@@ -1679,6 +1680,167 @@ class SourceBindingIndex:
                     )
                     known.add(id(node))
         return tuple(self._opaque_references)
+
+    def quoted_annotation_references(self, name):
+        """Index native type operands in quoted annotations, never literal values."""
+        self._complete()
+        cache = getattr(self, "_quoted_reference_cache", None)
+        if cache is None:
+            cache = self._quoted_reference_cache = {}
+        if name in cache:
+            return cache[name]
+        roots = []
+        for node in ast.walk(self.pymodule.get_ast()):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                arguments = (
+                    node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+                )
+                arguments += [
+                    arg
+                    for arg in (node.args.vararg, node.args.kwarg)
+                    if arg is not None
+                ]
+                roots.extend(
+                    arg.annotation for arg in arguments if arg.annotation is not None
+                )
+                if node.returns is not None:
+                    roots.append(node.returns)
+            elif isinstance(node, ast.AnnAssign):
+                roots.append(node.annotation)
+            elif isinstance(node, _TYPE_ALIAS_TYPES):
+                roots.append(node.value)
+        references = []
+        for node in roots:
+            if not any(
+                isinstance(part, ast.Constant)
+                and isinstance(part.value, str)
+                and name in part.value
+                for part in ast.walk(node)
+            ):
+                continue
+            context = self.context_for_node(node)
+            references.extend(
+                self._quoted_type_operands(node, self.source, None, context, name)
+            )
+        cache[name] = tuple(references)
+        return cache[name]
+
+    def _quoted_type_operands(self, node, source, coordinates, context, name):
+        from rope.base import builtins, evaluate
+
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if name not in node.value:
+                return
+            try:
+                expression = ast.parse(node.value, mode="eval").body
+            except SyntaxError:
+                return
+            positions = (
+                self.lines
+                if coordinates is None
+                else codeanalyze.ASTLinesAdapter(source)
+            )
+            start, end = positions[node]
+            token = source[start:end]
+            opening = next(index for index, char in enumerate(token) if char in "\"'")
+            quote = token[opening : opening + 3]
+            if quote not in ("'''", '"""'):
+                quote = token[opening]
+            prefix = token[: opening + len(quote)]
+            body = token[len(prefix) : -len(quote)]
+            mapped = []
+            previous = ""
+            first = 0
+            for cut in range(1, len(body) + 1):
+                try:
+                    decoded = ast.literal_eval(prefix + body[:cut] + quote)
+                except SyntaxError:
+                    continue
+                if not node.value.startswith(decoded) or len(decoded) <= len(previous):
+                    continue
+                left, right = start + len(prefix) + first, start + len(prefix) + cut
+                physical = (
+                    (left, right)
+                    if coordinates is None
+                    else (coordinates[left][0], coordinates[right - 1][1])
+                )
+                mapped.extend([physical] * (len(decoded) - len(previous)))
+                previous, first = decoded, cut
+            if previous != node.value or len(mapped) != len(node.value):
+                raise exceptions.RefactoringError(
+                    "Quoted type has no exact native literal source mapping."
+                )
+            yield from self._quoted_type_operands(
+                expression, node.value, mapped, context, name
+            )
+            return
+        if isinstance(node, (ast.Name, ast.Attribute)):
+            if (
+                coordinates is not None
+                and (node.id if isinstance(node, ast.Name) else node.attr) == name
+            ):
+                positions = codeanalyze.ASTLinesAdapter(source)
+                first, last = positions[node]
+                word = last - len(name)
+                yield (
+                    coordinates[word][0],
+                    coordinates[last - 1][1],
+                    coordinates[first][0],
+                    coordinates[last - 1][1],
+                    context,
+                    ast.unparse(node),
+                )
+            if isinstance(node, ast.Attribute):
+                yield from self._quoted_type_operands(
+                    node.value, source, coordinates, context, name
+                )
+            return
+        if isinstance(node, ast.Subscript):
+            yield from self._quoted_type_operands(
+                node.value, source, coordinates, context, name
+            )
+            binding = evaluate.eval_node(context.environment, node.value)
+            origin = None if binding is None else binding.get_object()
+            arguments = (
+                node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+            )
+            if builtins._is_runtime_form(origin, typing.Literal):
+                return
+            if builtins._is_runtime_class(
+                origin, typing.Annotated
+            ) or builtins._is_runtime_form(origin, typing.Annotated):
+                arguments = arguments[:1]
+            for argument in arguments:
+                yield from self._quoted_type_operands(
+                    argument, source, coordinates, context, name
+                )
+        elif isinstance(node, ast.Call):
+            forward_ref = typing.ForwardRef
+            binding = evaluate.eval_node(context.environment, node.func)
+            origin = None if binding is None else binding.get_object()
+            attribute = None
+            if binding is None and isinstance(node.func, ast.Attribute):
+                binding = evaluate.eval_node(context.environment, node.func.value)
+                attribute = node.func.attr
+            if (
+                builtins._is_runtime_class(
+                    origin, forward_ref, binding=binding, attribute=attribute
+                )
+                and node.args
+            ):
+                yield from self._quoted_type_operands(
+                    node.args[0], source, coordinates, context, name
+                )
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+            for operand in (node.left, node.right):
+                yield from self._quoted_type_operands(
+                    operand, source, coordinates, context, name
+                )
+        elif isinstance(node, (ast.Tuple, ast.List)):
+            for operand in node.elts:
+                yield from self._quoted_type_operands(
+                    operand, source, coordinates, context, name
+                )
 
     def children_of(self, environment):
         self._complete()

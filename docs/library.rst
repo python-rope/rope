@@ -942,6 +942,25 @@ representing this operation (which will be an instance of e.g.
 
   mover = create_move(project, resource, offset)
 
+For a nested class, ``create_move`` returns ``MoveClass``. Its
+``get_changes(destination_resource, destination_offset=None, resources=None)``
+transfers the declaration to a module or, when an offset is supplied, an existing
+class. Native references and required imports move with the declaration; the
+returned ``ChangeSet`` does not change resources until applied. Unresolved
+references, occupied destinations and dependencies on an enclosing class are
+rejected before publication.
+An optional ``match_filter(occurrence)`` predicate can retain references whose
+public access path is maintained by the caller's composed destination; direct
+source references otherwise follow the native declaration identity.
+Quoted type annotations use the native source-binding index, including nested
+forward references. Literal values, annotation metadata, executable strings and
+docstrings remain outside this semantic type-reference surface.
+Package reexports, alias chains and inherited nested classes retain their native
+binding identities; C3 chooses overrides rather than matching names. Explicit
+namespace roots and class paths have no policy depth limit. Transfers into an
+existing holder normalize self-imports through ImportUtils and preserve evaluated
+sibling bases in the destination class's lexical scope.
+
 Where ``resource`` and ``offset`` is the location to perform the
 refactoring.
 

@@ -36,13 +36,10 @@ calling the `create_finder()` function.
 """
 
 import contextlib
-import io
 import re
-import tokenize
 from typing import Iterator
 
 from rope.base import (
-    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -82,8 +79,21 @@ class Finder:
         tools = _OccurrenceToolsCreator(
             self.project, resource=resource, pymodule=pymodule, docs=self.docs
         )
-        for offset in self._textual_finder.find_offsets(tools.source_code):
-            occurrence = Occurrence(tools, offset)
+        quoted = (
+            {
+                reference[0]: reference
+                for reference in tools.pymodule.get_source_binding_index().quoted_annotation_references(
+                    self.name
+                )
+            }
+            if self.name in tools.source_code or "\\" in tools.source_code
+            else {}
+        )
+        offsets = (
+            set(self._textual_finder.find_offsets(tools.source_code)) | quoted.keys()
+        )
+        for offset in sorted(offsets):
+            occurrence = Occurrence(tools, offset, quoted.get(offset))
             for filter in self.filters:
                 result = filter(occurrence)
                 if result is None:
@@ -140,26 +150,41 @@ def create_finder(
 
 
 class Occurrence:
-    def __init__(self, tools, offset):
+    def __init__(self, tools, offset, quoted=None):
         self.tools = tools
         self.offset = offset
         self.resource = tools.resource
+        self.quoted = quoted
 
     @utils.saveit
     def get_word_range(self):
+        if self.quoted is not None:
+            return self.quoted[:2]
         return self.tools.word_finder.get_word_range(self.offset)
 
     @utils.saveit
     def get_primary_range(self):
+        if self.quoted is not None:
+            return self.quoted[2:4]
         return self.tools.word_finder.get_primary_range(self.offset)
+
+    def get_primary_text(self):
+        if self.quoted is not None:
+            return self.quoted[5]
+        start, end = self.get_primary_range()
+        return self.tools.source_code[start:end]
 
     @utils.saveit
     def get_pyname(self):
+        if self.quoted is not None:
+            return self.get_primary_and_pyname()[1]
         with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_pyname_at(self.offset)
 
     @utils.saveit
     def get_primary_and_pyname(self):
+        if self.quoted is not None:
+            return evaluate.eval_str2(self.quoted[4].environment, self.quoted[5])
         with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
 
@@ -172,23 +197,33 @@ class Occurrence:
         )
 
     def is_called(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_function_being_called(self.offset)
 
     def is_defined(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
 
     def is_a_fixed_primary(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_class_or_function_name_in_header(
             self.offset
         ) or self.tools.word_finder.is_a_name_after_from_import(self.offset)
 
     def is_written(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_assigned_here(self.offset)
 
     def is_unsure(self):
         return unsure_pyname(self.get_pyname())
 
     def is_function_keyword_parameter(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_function_keyword_parameter(self.offset)
 
     @property
@@ -347,52 +382,6 @@ class NoKeywordsFilter:
             return False
 
 
-@utils.cached(16)
-def _name_offsets(source: str) -> dict:
-    """Map every NAME token of `source` to the offsets where it occurs
-
-    The source is tokenized once however many names are searched in it.
-    Complete string tokens expose replacement expressions through Python's
-    native AST; expression tokens retain their source coordinates.  The
-    result is keyed by the source text, so a changed source is indexed again.
-    """
-    result = {}
-    for name, offset in _token_names(source):
-        result.setdefault(name, []).append(offset)
-    return {name: tuple(offsets) for name, offsets in result.items()}
-
-
-def _token_names(source: str) -> Iterator:
-    line_starts = [0]
-    for line in source.splitlines(keepends=True):
-        line_starts.append(line_starts[-1] + len(line))
-    for item in tokenize.generate_tokens(io.StringIO(source).readline):
-        row, column = item.start
-        if item.type == tokenize.NAME:
-            yield item.string, line_starts[row - 1] + column
-        elif item.type == tokenize.STRING and item.string.lower().startswith(
-            ("f", "rf")
-        ):
-            module = ast.parse(item.string)
-            positions = codeanalyze.ASTLinesAdapter(item.string)
-            for name, offset in _formatted_names(
-                item.string, module.body[0].value, positions
-            ):
-                yield name, line_starts[row - 1] + column + offset
-
-
-def _formatted_names(source, node, positions) -> Iterator:
-    for value in node.values:
-        if not isinstance(value, ast.FormattedValue):
-            continue
-        start, end = positions[value.value]
-        # AST spans omit the grouping that permits continuation indentation.
-        for name, offset in _token_names("(" + source[start:end] + ")"):
-            yield name, start + offset - 1
-        if value.format_spec is not None:
-            yield from _formatted_names(source, value.format_spec, positions)
-
-
 class _TextualFinder:
     def __init__(self, name, docs=False):
         self.name = name
@@ -409,7 +398,7 @@ class _TextualFinder:
 
     def _token_search(self, source: str) -> Iterator[int]:
         """Yield the offsets of every NAME token equal to the searched name."""
-        yield from _name_offsets(source).get(self.name, ())
+        yield from codeanalyze.name_offsets(source, self.name)
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0

@@ -164,10 +164,30 @@ def _runtime_class(cls):
     return _runtime_classes[cls]
 
 
-def _is_runtime_class(value, runtime_class):
+def _is_runtime_class(value, runtime_class, *, binding=None, attribute=None):
     """Authenticate a native class against its runtime library declaration."""
     if isinstance(value, BuiltinClass):
         return value.builtin is runtime_class
+    if isinstance(binding, pynames.ImportedName):
+        module = binding.imported_module.get_object()
+        attribute = binding.imported_name
+    elif isinstance(binding, pynames.ImportedModule):
+        module = binding.get_object()
+    else:
+        module = None
+    if isinstance(module, pyobjects.PyModule) and attribute is not None:
+        resource = module.get_resource()
+        name = module.get_name()
+        observed = sys.modules.get(name)
+        if (
+            name.partition(".")[0] in sys.stdlib_module_names
+            and isinstance(observed, types.ModuleType)
+            and resource is not None
+            and isinstance(vars(observed).get("__file__"), str)
+            and utils.same_file_path(resource.real_path, vars(observed)["__file__"])
+            and vars(observed).get(attribute) is runtime_class
+        ):
+            return True
     if not isinstance(value, pyobjects.PyClass):
         return False
     module = value.get_module()

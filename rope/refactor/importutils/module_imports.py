@@ -128,6 +128,22 @@ class ModuleImports:
     def get_used_names(self, defined_pyobject):
         """Return lexical references and a module's declared export names."""
         names = self._get_unbound_names(defined_pyobject)
+        from rope.base import evaluate
+        from rope.refactor import occurrences
+
+        module = defined_pyobject.get_module()
+        index = module.get_source_binding_index()
+        scope = defined_pyobject.get_scope()
+        for name, binding in module._get_structural_attributes().items():
+            if not isinstance(binding, (pynames.ImportedName, pynames.ImportedModule)):
+                continue
+            for reference in index.quoted_annotation_references(name):
+                line = module.lines.get_line_number(reference[0])
+                if scope.get_start() <= line <= scope.get_end():
+                    actual = evaluate.eval_str(reference[4].environment, name)
+                    if occurrences.same_pyname(binding, actual):
+                        names.add(name)
+                        break
         if isinstance(defined_pyobject, pyobjects.AbstractModule):
             # A package exports through its ``__init__`` module.
             names |= self._get_all_star_list(defined_pyobject.get_module())

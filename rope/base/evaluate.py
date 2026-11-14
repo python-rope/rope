@@ -358,7 +358,10 @@ class ScopeNameFinder:
         if parameter is not None:
             return (None, parameter)
         # function keyword parameter
-        if self.worder.is_function_keyword_parameter(offset):
+        if self.worder.is_function_keyword_parameter(offset) and not (
+            isinstance(context.source_node, ast.Name)
+            and isinstance(context.source_node.ctx, ast.Store)
+        ):
             keyword_name = self.worder.get_word_at(offset)
             pyobject = self.get_enclosing_function(offset)
             from rope.base.sourcebindings import SourceLambdaFunction

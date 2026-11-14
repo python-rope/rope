@@ -39,7 +39,7 @@ def create_move(project, resource, offset=None):
     """A factory for creating Move objects
 
     Based on `resource` and `offset`, return one of `MoveModule`,
-    `MoveGlobal` or `MoveMethod` for performing move refactoring.
+    `MoveGlobal`, `MoveClass` or `MoveMethod` for performing move refactoring.
 
     """
     if offset is None:
@@ -54,6 +54,10 @@ def create_move(project, resource, offset=None):
             pyobject.parent, pyobjects.PyClass
         ):
             return MoveMethod(project, resource, offset)
+        if isinstance(pyobject, pyobjects.PyClass) and isinstance(
+            pyobject.parent, pyobjects.PyClass
+        ):
+            return MoveClass(project, resource, offset)
         if (
             isinstance(pyobject, pyobjects.PyDefinedObject)
             and isinstance(pyobject.parent, pyobjects.PyModule)
@@ -2091,6 +2095,294 @@ class MoveMethod:
 
     def _is_host_used(self):
         return self._get_body("__old_self") != self._get_unchanged_body()
+
+
+class MoveClass:
+    """Transfer a nested class and its native references without a forwarding alias."""
+
+    def __init__(self, project, resource, offset):
+        self.project = project
+        self.source = resource
+        module = project.get_pymodule(resource)
+        self.pyname = evaluate.eval_location(module, offset)
+        self.pyclass = None if self.pyname is None else self.pyname.get_object()
+        if (
+            not isinstance(self.pyclass, pyobjects.PyClass)
+            or self.pyclass.get_module() is not module
+        ):
+            raise exceptions.RefactoringError("Move source must identify a class.")
+        self._path(self.pyclass)
+
+    @staticmethod
+    def _path(pyclass):
+        result = []
+        scope = pyclass.get_scope()
+        while scope.get_kind() != "Module":
+            if scope.get_kind() != "Class":
+                raise exceptions.RefactoringError("Class has a function-local closure.")
+            result.insert(0, scope.pyobject.get_name())
+            scope = scope.parent
+        return result
+
+    def get_changes(
+        self,
+        dest,
+        resources=None,
+        task_handle=taskhandle.DEFAULT_TASK_HANDLE,
+        *,
+        destination_offset=None,
+        match_filter=None,
+    ):
+        """Plan a transfer to a module or the source class at destination_offset."""
+        if isinstance(dest, str):
+            dest = self.project.find_module(dest)
+        if dest is None or not dest.exists() or dest.is_folder():
+            raise exceptions.RefactoringError("Move destination must be a module.")
+        destination_module = self.project.get_pymodule(dest)
+        destination = destination_module
+        path = []
+        if destination_offset is not None:
+            binding = evaluate.eval_location(destination_module, destination_offset)
+            destination = None if binding is None else binding.get_object()
+            if (
+                not isinstance(destination, pyobjects.PyClass)
+                or destination.get_module() is not destination_module
+            ):
+                raise exceptions.RefactoringError(
+                    "Move destination must identify a class."
+                )
+            path = self._path(destination)
+        name = self.pyclass.get_name()
+        if (
+            not name.isidentifier()
+            or keyword.iskeyword(name)
+            or name in destination.get_attributes()
+            or MoveMethod._class_move_effective_name(name, self.pyclass.parent) != name
+        ):
+            raise exceptions.RefactoringError("Occupied or invalid class destination.")
+        first, last = MoveMethod._class_method_region(self.pyclass)
+        if (
+            dest == self.source
+            and destination_offset is not None
+            and first <= destination_offset < last
+        ):
+            raise exceptions.RefactoringError("Cannot move a class inside itself.")
+        self._check_enclosing_bindings(first, last)
+        selected = list(
+            dict.fromkeys(
+                self.project.get_python_files() if resources is None else resources
+            )
+        )
+        if self.source not in selected or dest not in selected:
+            raise exceptions.RefactoringError(
+                "Move resources exclude source or destination."
+            )
+        placeholder = "__rope_class_move_destination__"
+        sources = {resource: resource.read() for resource in selected}
+        if any(placeholder in source for source in sources.values()):
+            raise exceptions.RefactoringError("Move placeholder conflicts with source.")
+        occurrences.check_opaque_references(
+            self.project, self.pyname, selected, name=self.pyclass.get_name()
+        )
+        finder = occurrences.create_finder(
+            self.project,
+            self.pyclass.get_name(),
+            self.pyname,
+            imports=False,
+            unsure=lambda occurrence: True,
+        )
+        edits = {resource: {} for resource in selected}
+        for resource in selected:
+            module = self.project.get_pymodule(resource)
+            for occurrence in finder.find_occurrences(pymodule=module):
+                if (
+                    not occurrence.is_defined()
+                    and match_filter is not None
+                    and not match_filter(occurrence)
+                ):
+                    continue
+                actual = occurrence.get_pyname()
+                if occurrences.unsure_pyname(
+                    actual, unbound=False
+                ) or not occurrences.same_pyname(self.pyname, actual):
+                    raise exceptions.RefactoringError("Unproven class reference.")
+                if occurrence.is_defined():
+                    continue
+                if occurrence.is_written() or occurrence.is_in_import_statement():
+                    raise exceptions.RefactoringError(
+                        "Cannot move a written class reference."
+                    )
+                start, end = occurrence.get_primary_range()
+                if not all(
+                    part.isidentifier()
+                    for part in occurrence.get_primary_text().split(".")
+                ):
+                    raise exceptions.RefactoringError(
+                        "Class reference has an effectful receiver."
+                    )
+                edits[resource][start, end] = placeholder + "." + name
+        collector = codeanalyze.ChangeCollector(sources[self.source][first:last])
+        if path:
+            index = self.pyclass.get_module().get_source_binding_index()
+            for base in self.pyclass.get_ast().bases:
+                for node in ast.walk(base):
+                    if not isinstance(node, (ast.Name, ast.Attribute)):
+                        continue
+                    binding = evaluate.eval_node(
+                        index.context_for_node(node).environment, node
+                    )
+                    if occurrences.unsure_pyname(binding, unbound=False):
+                        continue
+                    for member, target_binding in destination.get_attributes().items():
+                        if (
+                            binding.get_object() is target_binding.get_object()
+                            and isinstance(
+                                binding.get_object(), pyobjects.AbstractClass
+                            )
+                        ):
+                            start, end = codeanalyze.ASTLinesAdapter(
+                                sources[self.source]
+                            )[node]
+                            collector.add_change(start - first, end - first, member)
+                            break
+        for (start, end), replacement in edits[self.source].items():
+            if first <= start and end <= last:
+                collector.add_change(start - first, end - first, replacement)
+        moving = sourceutils.fix_indentation(
+            collector.get_changed() or sources[self.source][first:last], 0
+        )
+        imports = []
+        if self.source != dest:
+            moving, imports = moving_code_with_imports(
+                self.project, self.source, moving
+            )
+            snippet = (
+                "\n".join(info.get_import_statement() for info in imports)
+                + "\n"
+                + moving
+            )
+            tools = importutils.ImportTools(self.project)
+            normalized = tools._remove_self_imports(
+                libutils.get_string_module(self.project, snippet, dest)
+            )
+            module_imports = tools.module_imports(normalized)
+            imports = [
+                statement.import_info
+                for statement in module_imports.imports
+                if not statement.import_info.is_empty()
+            ]
+            for statement in module_imports.imports:
+                statement.empty_import()
+            moving = module_imports.get_changed_source().lstrip("\n")
+        planned = {}
+        for resource, source in sources.items():
+            collector = codeanalyze.ChangeCollector(source)
+            if resource == self.source:
+                parent = self.pyclass.parent
+                empty = isinstance(
+                    parent, pyobjects.PyClass
+                ) and parent.get_ast().body == [self.pyclass.get_ast()]
+                replacement = (
+                    sourceutils.fix_indentation(
+                        "pass\n", self.pyclass.get_ast().col_offset
+                    )
+                    if empty
+                    else ""
+                )
+                collector.add_change(first, last, replacement)
+            for (start, end), replacement in edits[resource].items():
+                if resource != self.source or not first <= start < last:
+                    collector.add_change(start, end, replacement)
+            planned[resource] = collector.get_changed() or source
+        module = libutils.get_string_module(self.project, planned[dest], dest)
+        if path:
+            scope = module.get_scope()
+            for part in path:
+                scope = next(
+                    child
+                    for child in scope.get_scopes()
+                    if child.pyobject.get_name() == part
+                )
+            result = sourceutils.add_methods(
+                module, scope, [moving.rstrip()], at_end=True
+            )
+        else:
+            result = planned[dest].rstrip() + "\n\n" + moving
+        module = libutils.get_string_module(self.project, result, dest)
+        MoveMethod._check_class_move_imports(self.project, module, imports)
+        planned[dest] = _add_imports_to_module(
+            importutils.ImportTools(self.project), module, imports
+        )
+        for resource, source in list(planned.items()):
+            if placeholder + "." not in source:
+                continue
+            module = libutils.get_string_module(self.project, source, resource)
+            if resource == dest:
+                imported = ".".join(path)
+            elif path:
+                source, imported = importutils.add_import(
+                    self.project, module, libutils.modname(dest), path[0]
+                )
+                imported = ".".join((imported, *path[1:]))
+            else:
+                source, imported = importutils.add_import(
+                    self.project, module, libutils.modname(dest), name
+                )
+                planned[resource] = source.replace(placeholder + "." + name, imported)
+                continue
+            checked = libutils.get_string_module(self.project, source, resource)
+            expected = destination
+            if resource == dest:
+                expected = checked
+                for part in path:
+                    expected = expected[part].get_object()
+            index = checked.get_source_binding_index()
+            for occurrence in occurrences.Finder(
+                self.project, placeholder
+            ).find_occurrences(pymodule=checked):
+                environment = index.context_at(occurrence.offset).environment
+                binding = evaluate.eval_str(environment, imported) if imported else None
+                if imported and (
+                    occurrences.unsure_pyname(binding, unbound=False)
+                    or binding.get_object() is not expected
+                ):
+                    raise exceptions.RefactoringError(
+                        "Destination import conflicts with a consumer binding."
+                    )
+            planned[resource] = source.replace(
+                placeholder + ".", imported + "." if imported else ""
+            )
+        changes = ChangeSet(f"Moving class <{self.pyclass.get_name()}>")
+        for resource, source in planned.items():
+            if source != sources[resource]:
+                if resource in (self.source, dest):
+                    module = libutils.get_string_module(self.project, source, resource)
+                    source = importutils.ImportTools(self.project).organize_imports(
+                        module, sort=False
+                    )
+                changes.add_change(ChangeContents(resource, source))
+        return changes
+
+    def _check_enclosing_bindings(self, first, last):
+        module = self.pyclass.get_module()
+        index = module.get_source_binding_index()
+        for node in ast.walk(self.pyclass.get_ast()):
+            if not isinstance(node, ast.Name) or not isinstance(node.ctx, ast.Load):
+                continue
+            context = index.context_for_node(node)
+            binding = evaluate.eval_node(context.environment, node)
+            if occurrences.unsure_pyname(binding, unbound=False):
+                continue
+            owner, line = binding.get_definition_location()
+            if owner is module and line is not None:
+                offset = module.lines.get_line_start(line)
+                if not first <= offset < last and (
+                    node.id not in module.get_attributes()
+                    or not occurrences.same_pyname(module[node.id], binding)
+                ):
+                    raise exceptions.RefactoringError(
+                        "Class depends on an enclosing class binding."
+                    )
 
 
 class MoveGlobal:

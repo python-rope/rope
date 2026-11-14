@@ -386,7 +386,7 @@ class _ResourceOperations:
 
 def _get_destination_for_move(resource, destination):
     dest_path = resource.project._get_resource_path(destination)
-    if os.path.isdir(dest_path):
+    if resource.project.fscommands.isdir(dest_path):
         if destination != "":
             return destination + "/" + resource.name
         else:
