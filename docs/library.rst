@@ -456,6 +456,23 @@ Also ``Pycore.analyze_module()`` collects object information for a
 module.  The collected information can be used to enhance rope's
 static object inference.
 
+Recorded return observations are associated with the function body that
+produced them. After editing a function body, refresh the project as usual;
+observations from the previous body are no longer used for exact or fallback
+return inference. This also applies when reopening saved object information.
+Parameter observations and per-name information are retained.
+
+Dynamic analysis records a return version only when the running code matches
+the source being analyzed. If a function rewrites its source while an older
+frame is still running, that return is not attributed to the new body. Run
+dynamic analysis again to collect observations from the new code.
+
+This version describes the function's own body. Changes to the function
+header, including its parameter order, defaults or decorators, are outside
+this invalidation rule and can leave an older return observation in use.
+Changes to arbitrary global values, closure values or called functions are
+also outside this rule.
+
 
 `rope.base.taskhandle.TaskHandle`
 =================================

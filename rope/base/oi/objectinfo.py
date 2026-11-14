@@ -1,6 +1,7 @@
+import hashlib
 import warnings
 
-from rope.base import exceptions, resourceobserver
+from rope.base import ast, exceptions, pyobjects, resourceobserver
 from rope.base.oi import memorydb, objectdb, transform
 
 
@@ -74,7 +75,10 @@ class ObjectInfoManager:
         path, key = self._get_scope(pyobject)
         if path is None:
             return None
-        for call_info in self.objectdb.get_callinfos(path, key):
+        version = self._return_version(pyobject)
+        if version is None:
+            return None
+        for call_info in self.objectdb.get_callinfos(path, key, return_version=version):
             returned = call_info.get_returned()
             if returned and returned[0] not in ("unknown", "none"):
                 result = returned
@@ -86,9 +90,10 @@ class ObjectInfoManager:
 
     def get_exact_returned(self, pyobject, args):
         path, key = self._get_scope(pyobject)
-        if path is not None:
+        version = self._return_version(pyobject)
+        if path is not None and version is not None:
             returned = self.objectdb.get_returned(
-                path, key, self._args_to_textual(pyobject, args)
+                path, key, self._args_to_textual(pyobject, args), return_version=version
             )
             if returned is not None:
                 return self.to_pyobject(returned)
@@ -137,11 +142,46 @@ class ObjectInfoManager:
             pyobject = self.doi_to_pyobject(textual)
             return self.to_textual(pyobject)
 
-        function = doi_to_normal(data[0])
+        pyfunction = self.doi_to_pyobject(data[0])
+        function = self.to_textual(pyfunction)
         args = tuple(doi_to_normal(textual) for textual in data[1])
         returned = doi_to_normal(data[2])
         if function[0] == "defined" and len(function) == 3:
-            self._save_data(function, args, returned)
+            metadata = data[3] if len(data) > 3 else None
+            version = self._doa_return_version(pyfunction, metadata)
+            if version is None:
+                current_version = self._return_version(pyfunction)
+                if (
+                    current_version is not None
+                    and self.objectdb.get_returned(
+                        function[1], function[2], args, return_version=current_version
+                    )
+                    is not None
+                ):
+                    # These same arguments are already recorded; an unproved
+                    # observation must not replace their current proved return.
+                    return
+            self._save_data(function, args, returned, return_version=version)
+
+    def _doa_return_version(self, pyfunction, metadata):
+        if not isinstance(metadata, tuple) or len(metadata) != 3:
+            return None
+        if metadata[0] != "function-body-v1":
+            return None
+        current_version = self._return_version(pyfunction)
+        if current_version is None or metadata[1] != current_version:
+            return None
+        try:
+            module_version = hashlib.sha256(
+                ast.dump(
+                    pyfunction.get_module().get_ast(), include_attributes=False
+                ).encode("utf-8")
+            ).hexdigest()
+        except RecursionError:
+            return None
+        if metadata[2] == module_version:
+            return current_version
+        return None
 
     def function_called(self, pyfunction, params, returned=None):
         function_text = self.to_textual(pyfunction)
@@ -149,7 +189,12 @@ class ObjectInfoManager:
         returned_text = ("unknown",)
         if returned is not None:
             returned_text = self.to_textual(returned)
-        self._save_data(function_text, params_text, returned_text)
+        self._save_data(
+            function_text,
+            params_text,
+            returned_text,
+            return_version=self._return_version(pyfunction),
+        )
 
     def save_per_name(self, scope, name, data):
         path, key = self._get_scope(scope.pyobject)
@@ -163,8 +208,22 @@ class ObjectInfoManager:
             if result is not None:
                 return self.to_pyobject(result)
 
-    def _save_data(self, function, args, returned=("unknown",)):
-        self.objectdb.add_callinfo(function[1], function[2], args, returned)
+    def _save_data(self, function, args, returned=("unknown",), return_version=None):
+        self.objectdb.add_callinfo(
+            function[1], function[2], args, returned, return_version=return_version
+        )
+
+    def _return_version(self, pyfunction):
+        if not isinstance(pyfunction, pyobjects.PyFunction):
+            return None
+        body = ast.Module(body=pyfunction.get_ast().body, type_ignores=[])
+        try:
+            normalized = ast.dump(body, include_attributes=False)
+        except RecursionError:
+            return None
+        return (
+            "function-body-v1:" + hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        )
 
     def _get_scope(self, pyobject):
         resource = pyobject.get_module().get_resource()
