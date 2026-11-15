@@ -1,9 +1,17 @@
 # __Upcoming release__
 
 - Branch-sensitive assignment inference takes the body of
-  `if typing.TYPE_CHECKING:` (PEP 484), followed through import aliases and
-  re-exports. Names assigned only there, such as class-body `TypeAlias`
-  re-exports, resolve, and class bases read through them enter the MRO.
+  `if typing.TYPE_CHECKING:` (PEP 484). Names assigned only there, such as
+  class-body `TypeAlias` re-exports, resolve, and class bases read through
+  them enter the MRO. The test is followed through imports, attributes of
+  imported modules and a name's single plain assignment (typing_extensions'
+  `TYPE_CHECKING = typing.TYPE_CHECKING`), without inferring any object; other
+  tests, including `not TYPE_CHECKING`, stay undecided, and so does a name
+  written more than once (rebound, augmented, deleted, or assigned under
+  `global`/`nonlocal`). The constant is recognized as the `TYPE_CHECKING`
+  attribute of the module named `typing`, whatever its value, so a project
+  `typing` module binding `TYPE_CHECKING = False` still reads as true. The
+  decision is kept in the module's concluded data.
 
 # Release 1.15.2+dc.7
 
