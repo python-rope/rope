@@ -329,6 +329,59 @@ class PyCoreTest(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual([root], mod[name].get_object().get_superclasses())
 
+    def test_type_checking_branch_is_taken_by_static_inference(self):
+        # PEP 484: static analysis assumes typing.TYPE_CHECKING is true.
+        guards = (
+            ("from typing import TYPE_CHECKING", "TYPE_CHECKING"),
+            ("from typing import TYPE_CHECKING as TC", "TC"),
+            ("import typing", "typing.TYPE_CHECKING"),
+            ("import typing as t", "t.TYPE_CHECKING"),
+        )
+        for guard_import, guard in guards:
+            with self.subTest(guard=guard):
+                code = dedent(f"""\
+                    {guard_import}
+                    from typing import TypeAlias
+                    class Parts:
+                        class Root[T]:
+                            pass
+                    class Facade(Parts):
+                        if {guard}:
+                            Root: TypeAlias = Parts.Root
+                            Plain = Parts.Root
+                    if {guard}:
+                        Alias: TypeAlias = Parts.Root
+                    else:
+                        Alias = None
+                    class ViaFacade(Facade.Root):
+                        pass
+                    class ViaGeneric(Facade.Root[int]):
+                        pass
+                    class ViaModule(Alias):
+                        pass
+                """)
+                mod = libutils.get_string_module(self.project, code)
+                root = mod["Parts"].get_object()["Root"].get_object()
+                facade = mod["Facade"].get_object()
+                self.assertIs(root, facade["Root"].get_object())
+                self.assertIs(root, facade["Plain"].get_object())
+                self.assertIs(root, mod["Alias"].get_object())
+                for name in ("ViaFacade", "ViaGeneric", "ViaModule"):
+                    derived = mod[name].get_object()
+                    self.assertEqual([root], derived.get_superclasses())
+                    self.assertEqual([derived, *root.get_mro()], derived.get_mro())
+
+    def test_name_spelled_type_checking_outside_typing_keeps_both_arms(self):
+        code = dedent("""\
+            TYPE_CHECKING = False
+            class Root:
+                pass
+            if TYPE_CHECKING:
+                Alias = Root
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(get_unknown(), mod["Alias"].get_object())
+
     def test_annotation_named_like_type_alias_still_types_an_instance(self):
         code = dedent("""\
             class TypeAlias:

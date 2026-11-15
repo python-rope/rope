@@ -1,5 +1,10 @@
 # __Upcoming release__
 
+- Branch-sensitive assignment inference takes the body of
+  `if typing.TYPE_CHECKING:` (PEP 484), followed through import aliases and
+  re-exports. Names assigned only there, such as class-body `TypeAlias`
+  re-exports, resolve, and class bases read through them enter the MRO.
+
 # Release 1.15.2+dc.7
 
 - Integrate the latest upstream master while retaining upstream 1.15.2 as the

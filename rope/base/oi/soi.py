@@ -168,6 +168,8 @@ def _infer_assignment_path(pyname, index, context, recursive, read_point=None):
                 selected = bool(branch.test.value)
             else:
                 selected = context.get(branch)
+                if selected is None and _is_type_checking(branch.test, pyname.module):
+                    selected = True
             if selected is not None and selected != arm:
                 break
             if selected is None:
@@ -219,6 +221,23 @@ def _infer_assignment_path(pyname, index, context, recursive, read_point=None):
     if pyname.initial_binding is not None:
         return pyname.initial_binding.get_object(), False
     return None, False
+
+
+def _is_type_checking(test, pymodule):
+    """Tell whether a branch test reads `typing.TYPE_CHECKING`
+
+    PEP 484 has static analysis assume `typing.TYPE_CHECKING` is true. The
+    test is resolved through the module's own bindings, so import aliases and
+    re-exports are followed and an unrelated name spelled alike is not.
+
+    """
+    if not isinstance(test, (ast.Name, ast.Attribute)):
+        return False
+    pyname = evaluate.eval_node(pymodule.get_scope(), test)
+    if pyname is None:
+        return False
+    typing_pyname = pymodule.pycore.project.get_module("typing")["TYPE_CHECKING"]
+    return pyname.get_definition_location() == typing_pyname.get_definition_location()
 
 
 def _assignment_branch_context(assignment, pymodule):
