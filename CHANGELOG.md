@@ -1,5 +1,7 @@
 # __Upcoming release__
 
+# Release 1.15.2+dc.8
+
 - Branch-sensitive assignment inference takes the body of
   `if typing.TYPE_CHECKING:` (PEP 484). Names assigned only there, such as
   class-body `TypeAlias` re-exports, resolve, and class bases read through
