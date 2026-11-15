@@ -382,6 +382,66 @@ class PyCoreTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         self.assertIs(get_unknown(), mod["Alias"].get_object())
 
+    def test_type_checking_body_wins_over_the_else_arm(self):
+        code = dedent("""\
+            from typing import TYPE_CHECKING
+            class Checked:
+                pass
+            class Runtime:
+                pass
+            if TYPE_CHECKING:
+                Alias = Checked
+            else:
+                Alias = Runtime
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(mod["Checked"].get_object(), mod["Alias"].get_object())
+
+    def test_branch_test_reading_the_inferred_name_keeps_agreeing_arms(self):
+        code = dedent("""\
+            class A:
+                flag = True
+            a = A
+            if a.flag:
+                a = A
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(mod["A"].get_object(), mod["a"].get_object())
+
+    def test_project_typing_module_without_type_checking(self):
+        testutils.create_module(self.project, "typing").write("x = 1\n")
+        code = dedent("""\
+            import os
+            from typing import TYPE_CHECKING
+            flag = os.environ.get("FLAG")
+            class A:
+                pass
+            if flag:
+                X = A
+            if TYPE_CHECKING:
+                Y = A
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(get_unknown(), mod["X"].get_object())
+        self.assertIs(get_unknown(), mod["Y"].get_object())
+
+    def test_type_checking_rebound_by_typing_extensions_is_taken(self):
+        testutils.create_module(self.project, "typing_extensions").write(
+            dedent("""\
+                import typing
+                TYPE_CHECKING = typing.TYPE_CHECKING
+            """)
+        )
+        code = dedent("""\
+            from typing_extensions import TYPE_CHECKING
+            class Root:
+                pass
+            if TYPE_CHECKING:
+                Alias = Root
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(mod["Root"].get_object(), mod["Alias"].get_object())
+
     def test_annotation_named_like_type_alias_still_types_an_instance(self):
         code = dedent("""\
             class TypeAlias:

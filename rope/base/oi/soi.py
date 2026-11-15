@@ -227,17 +227,65 @@ def _is_type_checking(test, pymodule):
     """Tell whether a branch test reads `typing.TYPE_CHECKING`
 
     PEP 484 has static analysis assume `typing.TYPE_CHECKING` is true. The
-    test is resolved through the module's own bindings, so import aliases and
-    re-exports are followed and an unrelated name spelled alike is not.
+    decision is kept with the module's concluded data, so it is made once
+    until a module of the project changes.
 
     """
-    if not isinstance(test, (ast.Name, ast.Attribute)):
-        return False
-    pyname = evaluate.eval_node(pymodule.get_scope(), test)
-    if pyname is None:
-        return False
-    typing_pyname = pymodule.pycore.project.get_module("typing")["TYPE_CHECKING"]
-    return pyname.get_definition_location() == typing_pyname.get_definition_location()
+    decided = pymodule._type_checking_tests()
+    if decided.get() is None:
+        decided.set({})
+    if test not in decided.get():
+        decided.get()[test] = _reads_type_checking(test, pymodule)
+    return decided.get()[test]
+
+
+def _reads_type_checking(test, pymodule):
+    """Follow the bindings a branch test reads to `typing.TYPE_CHECKING`
+
+    Imports, attributes of imported modules and a name's single plain
+    assignment (typing_extensions binds ``TYPE_CHECKING =
+    typing.TYPE_CHECKING``) are followed, each binding at most once. No
+    object is inferred: a test that needs inference to resolve, a name
+    spelled alike elsewhere and a `typing` module without the constant all
+    read as not `TYPE_CHECKING`.
+
+    """
+    pyname = _read_binding(test, pymodule)
+    followed = set()
+    while pyname is not None and pyname not in followed:
+        followed.add(pyname)
+        if isinstance(pyname, pynames.ImportedName):
+            pyname = pyname._get_imported_pyname()
+            continue
+        if not isinstance(pyname, pynames.AssignedName):
+            return False
+        module, _ = pyname.get_definition_location()
+        if module is None:
+            return False
+        if (
+            module.get_attributes().get("TYPE_CHECKING") is pyname
+            and module.get_name() == "typing"
+        ):
+            return True
+        if len(pyname.assignments) != 1:
+            return False
+        (assignment,) = pyname.assignments
+        if assignment.levels or assignment.evaluation:
+            return False
+        pyname = _read_binding(assignment.ast_node, module)
+    return False
+
+
+def _read_binding(node, pymodule):
+    """Return the binding a name or an imported module's attribute reads"""
+    if isinstance(node, ast.Name):
+        context = pymodule._get_source_binding_index().context_for_node(node)
+        return None if context is None else context.environment.lookup(node.id)
+    if isinstance(node, ast.Attribute):
+        owner = _read_binding(node.value, pymodule)
+        if isinstance(owner, pynames.ImportedModule):
+            return owner.get_object().get_attributes().get(node.attr)
+    return None
 
 
 def _assignment_branch_context(assignment, pymodule):
