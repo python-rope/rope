@@ -1055,6 +1055,7 @@ class SourceBindingIndex:
         self._defer_bodies = _defer_bodies
         self._pending_bodies = {}
         self._attribute_write_index = None
+        self._name_write_index = None
         self.source = pymodule.source_code
         self.fragments = []
         self._fragment_positions = {}
@@ -1115,6 +1116,26 @@ class SourceBindingIndex:
                 key: tuple(nodes) for key, nodes in index.items()
             }
         return self._attribute_write_index.get(name, ())
+
+    def name_writes(self, pyname, name):
+        """Return the stores/deletions of `name` that write the `pyname` binding
+
+        A write in another scope counts when it resolves to the same binding,
+        as under a ``global`` or ``nonlocal`` declaration.
+        """
+        if self._name_write_index is None:
+            index = {}
+            for node in ast.walk(self.global_reference.node):
+                if isinstance(node, ast.Name) and isinstance(
+                    node.ctx, (ast.Store, ast.Del)
+                ):
+                    index.setdefault(node.id, []).append(node)
+            self._name_write_index = index
+        return tuple(
+            node
+            for node in self._name_write_index.get(name, ())
+            if self.context_for_node(node).environment.lookup(name) is pyname
+        )
 
     def _sort_fragments(self):
         self.fragments.sort(key=attrgetter("start", "end", "depth"))

@@ -246,15 +246,22 @@ def _reads_type_checking(test, pymodule):
     assignment (typing_extensions binds ``TYPE_CHECKING =
     typing.TYPE_CHECKING``) are followed, each binding at most once. No
     object is inferred: a test that needs inference to resolve, a name
-    spelled alike elsewhere and a `typing` module without the constant all
-    read as not `TYPE_CHECKING`.
+    spelled alike elsewhere, a name written more than once (rebound,
+    augmented, deleted, or assigned under ``global``/``nonlocal``) and a
+    `typing` module without the constant all read as not `TYPE_CHECKING`.
+
+    The constant is recognized by its place, the ``TYPE_CHECKING`` attribute
+    of the module named `typing`, not by its value: a project ``typing.py``
+    or ``typing/__init__.py`` that shadows the standard module and binds
+    ``TYPE_CHECKING = False`` is still read as true.
 
     """
-    pyname = _read_binding(test, pymodule)
+    pyname, name = _read_binding(test, pymodule)
     followed = set()
     while pyname is not None and pyname not in followed:
         followed.add(pyname)
         if isinstance(pyname, pynames.ImportedName):
+            name = pyname.imported_name
             pyname = pyname._get_imported_pyname()
             continue
         if not isinstance(pyname, pynames.AssignedName):
@@ -269,23 +276,29 @@ def _reads_type_checking(test, pymodule):
             return True
         if len(pyname.assignments) != 1:
             return False
+        if len(module._get_source_binding_index().name_writes(pyname, name)) != 1:
+            return False
         (assignment,) = pyname.assignments
         if assignment.levels or assignment.evaluation:
             return False
-        pyname = _read_binding(assignment.ast_node, module)
+        pyname, name = _read_binding(assignment.ast_node, module)
     return False
 
 
 def _read_binding(node, pymodule):
-    """Return the binding a name or an imported module's attribute reads"""
+    """Return the binding a name or an imported module's attribute reads
+
+    The binding comes with the name it is bound to in its own namespace.
+    """
     if isinstance(node, ast.Name):
         context = pymodule._get_source_binding_index().context_for_node(node)
-        return None if context is None else context.environment.lookup(node.id)
+        if context is not None:
+            return context.environment.lookup(node.id), node.id
     if isinstance(node, ast.Attribute):
-        owner = _read_binding(node.value, pymodule)
+        owner, _ = _read_binding(node.value, pymodule)
         if isinstance(owner, pynames.ImportedModule):
-            return owner.get_object().get_attributes().get(node.attr)
-    return None
+            return owner.get_object().get_attributes().get(node.attr), node.attr
+    return None, None
 
 
 def _assignment_branch_context(assignment, pymodule):

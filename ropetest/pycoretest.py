@@ -442,6 +442,94 @@ class PyCoreTest(unittest.TestCase):
         mod = libutils.get_string_module(self.project, code)
         self.assertIs(mod["Root"].get_object(), mod["Alias"].get_object())
 
+    def test_type_checking_name_bound_more_than_once_stays_undecided(self):
+        rebinds = (
+            "TC &= False",
+            "def rebind():\n    global TC\n    TC = False",
+            "del TC",
+        )
+        for rebind in rebinds:
+            with self.subTest(rebind=rebind):
+                code = "\n".join((
+                    "import typing",
+                    "TC = typing.TYPE_CHECKING",
+                    rebind,
+                    "class Checked:",
+                    "    pass",
+                    "class Runtime:",
+                    "    pass",
+                    "if TC:",
+                    "    Alias = Checked",
+                    "else:",
+                    "    Alias = Runtime",
+                    "",
+                ))
+                mod = libutils.get_string_module(self.project, code)
+                self.assertIs(get_unknown(), mod["Alias"].get_object())
+
+    def test_type_checking_name_shadowed_in_another_scope_is_taken(self):
+        code = dedent("""\
+            import typing
+            TC = typing.TYPE_CHECKING
+            def shadow():
+                TC = False
+            class Root:
+                TC = False
+            if TC:
+                Alias = Root
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        self.assertIs(mod["Root"].get_object(), mod["Alias"].get_object())
+
+    def test_type_checking_decision_follows_the_module_that_binds_it(self):
+        guard = testutils.create_module(self.project, "guard")
+        guard.write("import typing\nTYPE_CHECKING = typing.TYPE_CHECKING\n")
+        user = testutils.create_module(self.project, "user")
+        user.write(
+            dedent("""\
+                from guard import TYPE_CHECKING
+                class Checked:
+                    pass
+                class Runtime:
+                    pass
+                if TYPE_CHECKING:
+                    Alias = Checked
+                else:
+                    Alias = Runtime
+            """)
+        )
+        mod = self.project.get_pymodule(user)
+        self.assertIs(mod["Checked"].get_object(), mod["Alias"].get_object())
+        guard.write("TYPE_CHECKING = False\n")
+        mod = self.project.get_pymodule(user)
+        self.assertIs(get_unknown(), mod["Alias"].get_object())
+        guard.write("import typing\nTYPE_CHECKING = typing.TYPE_CHECKING\n")
+        mod = self.project.get_pymodule(user)
+        self.assertIs(mod["Checked"].get_object(), mod["Alias"].get_object())
+
+    def test_type_checking_decision_follows_a_project_typing_module(self):
+        shadow = testutils.create_module(self.project, "typing")
+        shadow.write("x = 1\n")
+        user = testutils.create_module(self.project, "user")
+        user.write(
+            dedent("""\
+                from typing import TYPE_CHECKING
+                class Checked:
+                    pass
+                class Runtime:
+                    pass
+                if TYPE_CHECKING:
+                    Alias = Checked
+                else:
+                    Alias = Runtime
+            """)
+        )
+        mod = self.project.get_pymodule(user)
+        self.assertIs(get_unknown(), mod["Alias"].get_object())
+        shadow.remove()
+        mod = self.project.get_pymodule(user)
+        self.assertIs(mod["Checked"].get_object(), mod["Alias"].get_object())
+
     def test_annotation_named_like_type_alias_still_types_an_instance(self):
         code = dedent("""\
             class TypeAlias:

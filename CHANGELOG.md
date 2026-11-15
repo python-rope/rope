@@ -6,8 +6,12 @@
   them enter the MRO. The test is followed through imports, attributes of
   imported modules and a name's single plain assignment (typing_extensions'
   `TYPE_CHECKING = typing.TYPE_CHECKING`), without inferring any object; other
-  tests, including `not TYPE_CHECKING`, stay undecided. The decision is kept
-  in the module's concluded data.
+  tests, including `not TYPE_CHECKING`, stay undecided, and so does a name
+  written more than once (rebound, augmented, deleted, or assigned under
+  `global`/`nonlocal`). The constant is recognized as the `TYPE_CHECKING`
+  attribute of the module named `typing`, whatever its value, so a project
+  `typing` module binding `TYPE_CHECKING = False` still reads as true. The
+  decision is kept in the module's concluded data.
 
 # Release 1.15.2+dc.7
 
