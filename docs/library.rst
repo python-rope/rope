@@ -853,7 +853,22 @@ by passing memory=False to AutoImport constructor. This default will change in
 the future, if you want to always store the autoimport cache in-memory, then
 you need to explicitly pass memory=True.
 
-It must be closed when done with the ``AutoImport.close()`` method.
+It must be closed when done with the ``AutoImport.close()`` method. Each
+thread uses its own SQLite connection; do not pass connections between threads.
+When sharing an instance, stop and join worker threads before calling
+``close()``. It raises ``RopeError`` rather than closing a connection owned by
+another live thread. Alternatively, workers can release their connections with
+``close_thread_connection()`` before shutdown. Connections left by finished
+workers are closed when another thread creates a connection or when ``close()``
+runs.
+If committing or closing a connection fails, ``close()`` attempts to close
+all remaining connections before raising the first SQLite error.
+
+Assigning to ``AutoImport.connection`` replaces the current thread's
+connection without closing the old one. The caller must close the old
+connection; ``AutoImport`` only tracks and closes the replacement. If the
+assignment is rejected, the supplied connection remains the caller's
+responsibility.
 
 AutoImport can search for a name from both modules and statements you can import from them.
 

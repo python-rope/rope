@@ -15,9 +15,10 @@ from datetime import datetime
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
-from threading import Lock, local
+from threading import Lock, Thread, current_thread, local
 from typing import (
     TYPE_CHECKING,
+    Dict,
     Generator,
     Iterable,
     Iterator,
@@ -93,6 +94,9 @@ class AutoImport:
     This class maintains a cache of global names in python modules.
     Note that this cache is not accurate and might be out of date.
 
+    Each thread uses its own SQLite connection. Stop and join worker threads,
+    or have them call ``close_thread_connection()``, before calling ``close()``.
+
     """
 
     memory: bool
@@ -143,7 +147,7 @@ class AutoImport:
                 DeprecationWarning,
             )
         self._closed = False
-        self._connections: Set[sqlite3.Connection] = set()
+        self._connections: Dict[Thread, sqlite3.Connection] = {}
         self._connections_lock = Lock()
         self._observer: Optional[resourceobserver.ResourceObserver] = None
         self.thread_local = local()
@@ -192,6 +196,7 @@ class AutoImport:
             return sqlite3.connect(
                 f"file:rope-{project_hash}:?mode=memory&cache=shared",
                 uri=True,
+                # Allow cleanup from another thread after the owner has exited.
                 check_same_thread=False,
             )
         else:
@@ -200,22 +205,60 @@ class AutoImport:
                 check_same_thread=False,
             )
 
+    @staticmethod
+    def _commit_and_close(conn: sqlite3.Connection) -> None:
+        try:
+            conn.commit()
+        except sqlite3.Error:
+            with contextlib.suppress(sqlite3.Error):
+                conn.close()
+            raise
+        else:
+            conn.close()
+
+    @classmethod
+    def _close_connections(cls, connections: Iterable[sqlite3.Connection]) -> None:
+        first_error: Optional[sqlite3.Error] = None
+        for conn in connections:
+            try:
+                cls._commit_and_close(conn)
+            except sqlite3.Error as error:
+                if first_error is None:
+                    first_error = error
+        if first_error is not None:
+            raise first_error
+
+    def _close_finished_thread_connections(self) -> None:
+        """Close finished threads' connections while holding the registry lock."""
+        connections = []
+        for thread, conn in list(self._connections.items()):
+            if not thread.is_alive():
+                del self._connections[thread]
+                connections.append(conn)
+        self._close_connections(connections)
+
     def _register_connection(self, conn: sqlite3.Connection) -> None:
+        thread = current_thread()
         with self._connections_lock:
             if self._closed:
-                with contextlib.suppress(
-                    sqlite3.ProgrammingError, sqlite3.OperationalError
-                ):
+                with contextlib.suppress(sqlite3.Error):
                     conn.close()
                 raise exceptions.RopeError("AutoImport instance has been closed")
-            self._connections.add(conn)
+            try:
+                self._close_finished_thread_connections()
+            except sqlite3.Error:
+                with contextlib.suppress(sqlite3.Error):
+                    conn.close()
+                raise
+            self._connections[thread] = conn
 
     @property
     def connection(self) -> sqlite3.Connection:
         """
         Creates a new connection if called from a new thread.
 
-        This makes sure AutoImport can be shared across threads.
+        This makes sure AutoImport can be shared across threads. Use the returned
+        connection only in the calling thread.
         """
         if self._closed:
             raise exceptions.RopeError("AutoImport instance has been closed")
@@ -230,14 +273,14 @@ class AutoImport:
 
     @connection.setter
     def connection(self, value: sqlite3.Connection):
-        if self._closed:
-            raise exceptions.RopeError("AutoImport instance has been closed")
-        old_conn = getattr(self.thread_local, "connection", None)
-        if old_conn is not None and old_conn is not value:
-            with self._connections_lock:
-                self._connections.discard(old_conn)
-        self._register_connection(value)
-        self.thread_local.connection = value
+        """Replace this thread's connection; the caller must close the old one."""
+        thread = current_thread()
+        with self._connections_lock:
+            if self._closed:
+                raise exceptions.RopeError("AutoImport instance has been closed")
+            self._close_finished_thread_connections()
+            self._connections[thread] = value
+            self.thread_local.connection = value
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
@@ -488,29 +531,39 @@ class AutoImport:
         self.generate_modules_cache([module])
 
     def close_thread_connection(self):
-        """Close the SQLite connection for the current thread."""
+        """Close the SQLite connection owned by the current thread."""
         conn = getattr(self.thread_local, "connection", None)
         if conn is not None:
+            thread = current_thread()
             with self._connections_lock:
-                self._connections.discard(conn)
+                if self._connections.get(thread) is conn:
+                    del self._connections[thread]
             with contextlib.suppress(AttributeError):
                 del self.thread_local.connection
-            with contextlib.suppress(
-                sqlite3.ProgrammingError, sqlite3.OperationalError
-            ):
-                conn.commit()
-            with contextlib.suppress(
-                sqlite3.ProgrammingError, sqlite3.OperationalError
-            ):
-                conn.close()
+            self._commit_and_close(conn)
 
     def close(self):
-        """Close the autoimport database."""
+        """Close the database after all worker threads have stopped.
+
+        Raises ``RopeError`` if another live thread still owns a connection.
+        SQLite errors are raised after attempting to close every connection.
+        """
+        thread = current_thread()
         with self._connections_lock:
             if self._closed:
                 return
+            active_threads = [
+                owner
+                for owner in self._connections
+                if owner is not thread and owner.is_alive()
+            ]
+            if active_threads:
+                raise exceptions.RopeError(
+                    "Cannot close AutoImport while other threads own connections; "
+                    "wait for them to finish first"
+                )
             self._closed = True
-            connections = list(self._connections)
+            connections = list(self._connections.values())
             self._connections.clear()
 
         if self._observer is not None:
@@ -518,25 +571,13 @@ class AutoImport:
                 self.project.remove_observer(self._observer)
             self._observer = None
 
-        for conn in connections:
-            with contextlib.suppress(
-                sqlite3.ProgrammingError, sqlite3.OperationalError
-            ):
-                conn.commit()
-            with contextlib.suppress(
-                sqlite3.ProgrammingError, sqlite3.OperationalError
-            ):
-                conn.close()
+        self._close_connections(connections)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-    def __del__(self):
-        with contextlib.suppress(Exception):
-            self.close()
 
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
