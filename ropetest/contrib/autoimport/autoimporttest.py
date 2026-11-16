@@ -2,10 +2,12 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from textwrap import dedent
+from threading import Barrier, Event
 from unittest.mock import ANY, patch
 
 import pytest
 
+from rope.base import exceptions
 from rope.base.project import Project
 from rope.base.resources import File, Folder
 from rope.contrib.autoimport import models
@@ -46,16 +48,16 @@ def test_autoimport_connection_parameter_with_in_memory(
     project: Project,
     autoimport: AutoImport,
 ):
-    connection = AutoImport.create_database_connection(memory=True)
-    assert is_in_memory_database(connection)
+    with closing(AutoImport.create_database_connection(memory=True)) as connection:
+        assert is_in_memory_database(connection)
 
 
 def test_autoimport_connection_parameter_with_project(
     project: Project,
     autoimport: AutoImport,
 ):
-    connection = AutoImport.create_database_connection(project=project)
-    assert not is_in_memory_database(connection)
+    with closing(AutoImport.create_database_connection(project=project)) as connection:
+        assert not is_in_memory_database(connection)
 
 
 def test_autoimport_create_database_connection_conflicting_parameter(
@@ -102,25 +104,351 @@ def test_init_py(
 
 
 def test_multithreading(
-    autoimport: AutoImport,
     project: Project,
     pkg1: Folder,
     mod1: File,
 ):
     mod1_init = pkg1.get_child("__init__.py")
-    mod1_init.write(dedent("""\
+    mod1_init.write(
+        dedent("""\
         def foo():
             pass
-    """))
-    mod1.write(dedent("""\
+    """)
+    )
+    mod1.write(
+        dedent("""\
         foo
-    """))
-    autoimport = AutoImport(project, memory=False)
-    autoimport.generate_cache([mod1_init])
+    """)
+    )
+    with closing(AutoImport(project, memory=False)) as autoimport:
+        autoimport.generate_cache([mod1_init])
 
-    tp = ThreadPoolExecutor(1)
-    results = tp.submit(autoimport.search, "foo", True).result()
-    assert [("from pkg1 import foo", "foo")] == results
+        with ThreadPoolExecutor(1) as tp:
+            results = tp.submit(autoimport.search, "foo", True).result()
+            assert [("from pkg1 import foo", "foo")] == results
+
+
+def test_multithread_connections_closed_on_close(project: Project):
+    with AutoImport(project, memory=True) as ai:
+        main_conn = ai.connection
+        worker_conns = []
+        ready = Barrier(4, timeout=5)
+
+        def worker():
+            conn = ai.connection
+            worker_conns.append(conn)
+            ready.wait()
+            return list(ai.search("foo"))
+
+        with ThreadPoolExecutor(3) as tp:
+            futures = [tp.submit(worker) for _ in range(3)]
+            ready.wait()
+            for f in futures:
+                f.result(timeout=5)
+
+        all_conns = {main_conn} | set(worker_conns)
+        assert len(all_conns) == 4
+        assert all_conns.issubset(ai._connections.values())
+
+    assert ai._closed
+    assert len(ai._connections) == 0
+    for conn in all_conns:
+        with pytest.raises(sqlite3.ProgrammingError, match="Cannot operate on a closed database"):
+            conn.execute("SELECT 1")
+
+    with pytest.raises(exceptions.RopeError, match="AutoImport instance has been closed"):
+        _ = ai.connection
+
+
+@pytest.mark.parametrize("memory", [True, False])
+def test_finished_thread_connections_are_reaped(project: Project, memory: bool):
+    ai = AutoImport(project, memory=memory)
+    worker_connections = []
+
+    for _ in range(3):
+        with ThreadPoolExecutor(1) as executor:
+            worker_connections.append(executor.submit(lambda: ai.connection).result())
+        assert len(ai._connections) <= 2
+
+    for conn in worker_connections[:-1]:
+        with pytest.raises(
+            sqlite3.ProgrammingError, match="Cannot operate on a closed database"
+        ):
+            conn.execute("SELECT 1")
+
+    ai.close()
+    for conn in worker_connections:
+        with pytest.raises(
+            sqlite3.ProgrammingError, match="Cannot operate on a closed database"
+        ):
+            conn.execute("SELECT 1")
+
+
+@pytest.mark.parametrize("memory", [True, False])
+def test_close_rejects_live_worker_connections(project: Project, memory: bool):
+    with AutoImport(project, memory=memory) as ai:
+        started = Event()
+        finish = Event()
+
+        def worker():
+            conn = ai.connection
+            started.set()
+            assert finish.wait(timeout=5)
+            return conn.execute("SELECT 1").fetchone()
+
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(worker)
+            try:
+                assert started.wait(timeout=5)
+                connections = dict(ai._connections)
+                observer = ai._observer
+                with pytest.raises(exceptions.RopeError, match="wait for them to finish"):
+                    ai.close()
+                assert not ai._closed
+                assert ai._connections == connections
+                assert ai._observer is observer
+                assert ai.connection.execute("SELECT 1").fetchone() == (1,)
+            finally:
+                finish.set()
+            assert future.result(timeout=5) == (1,)
+
+    assert ai._closed
+
+
+@pytest.mark.parametrize("memory", [True, False])
+def test_close_allows_live_worker_after_releasing_connection(
+    project: Project, memory: bool
+):
+    released = Event()
+    finish = Event()
+    with AutoImport(project, memory=memory) as ai:
+        def worker():
+            conn = ai.connection
+            ai.close_thread_connection()
+            with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+                conn.execute("SELECT 1")
+            released.set()
+            assert finish.wait(timeout=5)
+            with pytest.raises(exceptions.RopeError, match="instance has been closed"):
+                _ = ai.connection
+
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(worker)
+            try:
+                assert released.wait(timeout=5)
+                assert not future.done()
+                ai.close()
+                assert ai._closed
+                assert not ai._connections
+            finally:
+                finish.set()
+            future.result(timeout=5)
+
+
+def test_close_thread_connection(project: Project):
+    with AutoImport(project, memory=True) as ai:
+        worker_conn = None
+
+        def worker():
+            nonlocal worker_conn
+            worker_conn = ai.connection
+            assert worker_conn in ai._connections.values()
+            ai.close_thread_connection()
+            assert worker_conn not in ai._connections.values()
+            with pytest.raises(sqlite3.ProgrammingError, match="Cannot operate on a closed database"):
+                worker_conn.execute("SELECT 1")
+            new_conn = ai.connection
+            assert new_conn is not worker_conn
+            assert new_conn in ai._connections.values()
+
+        with ThreadPoolExecutor(1) as tp:
+            tp.submit(worker).result()
+
+
+def test_close_idempotent(project: Project):
+    ai = AutoImport(project, memory=True)
+    conn = ai.connection
+    ai.close()
+    assert ai._closed
+    ai.close()
+    with pytest.raises(sqlite3.ProgrammingError, match="Cannot operate on a closed database"):
+        conn.execute("SELECT 1")
+
+
+@pytest.mark.parametrize(
+    "fail_commit, fail_close", [(True, False), (False, True), (True, True)]
+)
+def test_close_reports_errors_after_closing_all_connections(
+    project: Project, fail_commit: bool, fail_close: bool
+):
+    commit_error = sqlite3.OperationalError("commit failed")
+    close_error = sqlite3.OperationalError("close failed")
+
+    class FailingConnection(sqlite3.Connection):
+        def commit(self):
+            if fail_commit:
+                raise commit_error
+            super().commit()
+
+        def close(self):
+            super().close()
+            if fail_close:
+                raise close_error
+
+    with AutoImport(project, memory=True) as ai:
+        with closing(ai.connection):
+            conn = sqlite3.connect(":memory:", factory=FailingConnection)
+            ai.connection = conn
+        with ThreadPoolExecutor(1) as executor:
+            worker_conn = executor.submit(lambda: ai.connection).result(timeout=5)
+
+        with pytest.raises(sqlite3.OperationalError) as raised:
+            ai.close()
+        assert raised.value is (commit_error if fail_commit else close_error)
+        assert ai._closed
+        assert not ai._connections
+        assert ai._observer is None
+        for connection in (conn, worker_conn):
+            with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+                connection.execute("SELECT 1")
+        ai.close()
+
+
+def test_registration_closes_new_connection_when_reaping_fails(project: Project):
+    error = sqlite3.OperationalError("commit failed")
+
+    class FailingConnection(sqlite3.Connection):
+        def commit(self):
+            raise error
+
+    with AutoImport(project, memory=True) as ai:
+        failing_conn = sqlite3.connect(
+            ":memory:", factory=FailingConnection, check_same_thread=False
+        )
+        ready = Barrier(3, timeout=5)
+
+        def worker(connection=None):
+            if connection is not None:
+                ai.connection = connection
+            conn = ai.connection
+            ready.wait()
+            return conn
+
+        with ThreadPoolExecutor(2) as executor:
+            failing_future = executor.submit(worker, failing_conn)
+            other_future = executor.submit(worker)
+            ready.wait()
+            assert failing_future.result(timeout=5) is failing_conn
+            other_conn = other_future.result(timeout=5)
+
+        created = []
+        create_connection = ai.create_database_connection
+
+        def create(**kwargs):
+            conn = create_connection(**kwargs)
+            created.append(conn)
+            return conn
+
+        with patch.object(ai, "create_database_connection", side_effect=create):
+            with ThreadPoolExecutor(1) as executor:
+                future = executor.submit(lambda: ai.connection)
+                with pytest.raises(sqlite3.OperationalError) as raised:
+                    future.result(timeout=5)
+        assert raised.value is error
+        assert len(created) == 1
+        for conn in [failing_conn, other_conn, *created]:
+            with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+                conn.execute("SELECT 1")
+        assert list(ai._connections.values()) == [ai.connection]
+        assert ai.connection.execute("SELECT 1").fetchone() == (1,)
+
+
+@pytest.mark.parametrize("registration_wins", [True, False])
+def test_connection_registration_races_with_close(
+    project: Project, registration_wins: bool
+):
+    paused = Event()
+    resume = Event()
+    created = []
+
+    with AutoImport(project, memory=True) as ai:
+        register_connection = ai._register_connection
+
+        def register(conn):
+            created.append(conn)
+            if registration_wins:
+                register_connection(conn)
+            paused.set()
+            assert resume.wait(timeout=5)
+            if not registration_wins:
+                register_connection(conn)
+
+        def worker():
+            return ai.connection.execute("SELECT 1").fetchone()
+
+        with patch.object(ai, "_register_connection", side_effect=register):
+            with ThreadPoolExecutor(1) as executor:
+                future = executor.submit(worker)
+                try:
+                    assert paused.wait(timeout=5)
+                    if registration_wins:
+                        with pytest.raises(
+                            exceptions.RopeError, match="wait for them to finish"
+                        ):
+                            ai.close()
+                        assert not ai._closed
+                        assert created[0] in ai._connections.values()
+                    else:
+                        ai.close()
+                        assert ai._closed
+                        assert not ai._connections
+                finally:
+                    resume.set()
+                if registration_wins:
+                    assert future.result(timeout=5) == (1,)
+                else:
+                    with pytest.raises(
+                        exceptions.RopeError, match="AutoImport instance has been closed"
+                    ):
+                        future.result(timeout=5)
+        assert len(created) == 1
+
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        created[0].execute("SELECT 1")
+
+
+def test_register_connection_after_close(project: Project):
+    ai = AutoImport(project, memory=True)
+    ai.close()
+    conn = AutoImport.create_database_connection(memory=True)
+    with pytest.raises(exceptions.RopeError, match="AutoImport instance has been closed"):
+        ai._register_connection(conn)
+    assert conn not in ai._connections.values()
+    with pytest.raises(sqlite3.ProgrammingError, match="Cannot operate on a closed database"):
+        conn.execute("SELECT 1")
+
+
+def test_connection_setter_after_close(project: Project):
+    ai = AutoImport(project, memory=True)
+    ai.close()
+    with closing(AutoImport.create_database_connection(memory=True)) as conn:
+        with pytest.raises(exceptions.RopeError, match="AutoImport instance has been closed"):
+            ai.connection = conn
+        assert conn.execute("SELECT 1").fetchone() == (1,)
+
+
+def test_connection_setter_replaces_existing(project: Project):
+    with AutoImport(project, memory=True) as ai:
+        with closing(ai.connection) as old_conn:
+            assert old_conn in ai._connections.values()
+            conn = AutoImport.create_database_connection(memory=True)
+            ai.connection = conn
+            assert ai.connection is conn
+            assert conn in ai._connections.values()
+            assert old_conn not in ai._connections.values()
+            assert old_conn.execute("SELECT 1").fetchone() == (1,)
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        conn.execute("SELECT 1")
 
 
 def test_connection(project: Project, project2: Project):

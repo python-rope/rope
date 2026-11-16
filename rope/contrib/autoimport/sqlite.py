@@ -15,9 +15,10 @@ from datetime import datetime
 from hashlib import sha256
 from itertools import chain
 from pathlib import Path
-from threading import local
+from threading import Lock, Thread, current_thread, local
 from typing import (
     TYPE_CHECKING,
+    Dict,
     Generator,
     Iterable,
     Iterator,
@@ -93,6 +94,9 @@ class AutoImport:
     This class maintains a cache of global names in python modules.
     Note that this cache is not accurate and might be out of date.
 
+    Each thread uses its own SQLite connection. Stop and join worker threads,
+    or have them call ``close_thread_connection()``, before calling ``close()``.
+
     """
 
     memory: bool
@@ -142,6 +146,10 @@ class AutoImport:
                 "`AutoImport(memory=True)` explicitly.",
                 DeprecationWarning,
             )
+        self._closed = False
+        self._connections: Dict[Thread, sqlite3.Connection] = {}
+        self._connections_lock = Lock()
+        self._observer: Optional[resourceobserver.ResourceObserver] = None
         self.thread_local = local()
         self.connection = self.create_database_connection(
             project=project,
@@ -149,10 +157,10 @@ class AutoImport:
         )
         self._setup_db()
         if observe:
-            observer = resourceobserver.ResourceObserver(
+            self._observer = resourceobserver.ResourceObserver(
                 changed=self._changed, moved=self._moved, removed=self._removed
             )
-            project.add_observer(observer)
+            project.add_observer(self._observer)
 
     @classmethod
     def create_database_connection(
@@ -186,28 +194,93 @@ class AutoImport:
             else:
                 project_hash = calculate_project_hash(project.ropefolder.real_path)
             return sqlite3.connect(
-                f"file:rope-{project_hash}:?mode=memory&cache=shared", uri=True
+                f"file:rope-{project_hash}:?mode=memory&cache=shared",
+                uri=True,
+                # Allow cleanup from another thread after the owner has exited.
+                check_same_thread=False,
             )
         else:
-            return sqlite3.connect(project.ropefolder.pathlib / "autoimport.db")
+            return sqlite3.connect(
+                project.ropefolder.pathlib / "autoimport.db",
+                check_same_thread=False,
+            )
+
+    @staticmethod
+    def _commit_and_close(conn: sqlite3.Connection) -> None:
+        try:
+            conn.commit()
+        except sqlite3.Error:
+            with contextlib.suppress(sqlite3.Error):
+                conn.close()
+            raise
+        else:
+            conn.close()
+
+    @classmethod
+    def _close_connections(cls, connections: Iterable[sqlite3.Connection]) -> None:
+        first_error: Optional[sqlite3.Error] = None
+        for conn in connections:
+            try:
+                cls._commit_and_close(conn)
+            except sqlite3.Error as error:
+                if first_error is None:
+                    first_error = error
+        if first_error is not None:
+            raise first_error
+
+    def _close_finished_thread_connections(self) -> None:
+        """Close finished threads' connections while holding the registry lock."""
+        connections = []
+        for thread, conn in list(self._connections.items()):
+            if not thread.is_alive():
+                del self._connections[thread]
+                connections.append(conn)
+        self._close_connections(connections)
+
+    def _register_connection(self, conn: sqlite3.Connection) -> None:
+        thread = current_thread()
+        with self._connections_lock:
+            if self._closed:
+                with contextlib.suppress(sqlite3.Error):
+                    conn.close()
+                raise exceptions.RopeError("AutoImport instance has been closed")
+            try:
+                self._close_finished_thread_connections()
+            except sqlite3.Error:
+                with contextlib.suppress(sqlite3.Error):
+                    conn.close()
+                raise
+            self._connections[thread] = conn
 
     @property
     def connection(self) -> sqlite3.Connection:
         """
         Creates a new connection if called from a new thread.
 
-        This makes sure AutoImport can be shared across threads.
+        This makes sure AutoImport can be shared across threads. Use the returned
+        connection only in the calling thread.
         """
+        if self._closed:
+            raise exceptions.RopeError("AutoImport instance has been closed")
         if not hasattr(self.thread_local, "connection"):
-            self.thread_local.connection = self.create_database_connection(
+            conn = self.create_database_connection(
                 project=self.project,
                 memory=self.memory,
             )
+            self._register_connection(conn)
+            self.thread_local.connection = conn
         return self.thread_local.connection
 
     @connection.setter
     def connection(self, value: sqlite3.Connection):
-        self.thread_local.connection = value
+        """Replace this thread's connection; the caller must close the old one."""
+        thread = current_thread()
+        with self._connections_lock:
+            if self._closed:
+                raise exceptions.RopeError("AutoImport instance has been closed")
+            self._close_finished_thread_connections()
+            self._connections[thread] = value
+            self.thread_local.connection = value
 
     def _setup_db(self):
         models.Metadata.create_table(self.connection)
@@ -457,10 +530,54 @@ class AutoImport:
         self._del_if_exist(module)
         self.generate_modules_cache([module])
 
+    def close_thread_connection(self):
+        """Close the SQLite connection owned by the current thread."""
+        conn = getattr(self.thread_local, "connection", None)
+        if conn is not None:
+            thread = current_thread()
+            with self._connections_lock:
+                if self._connections.get(thread) is conn:
+                    del self._connections[thread]
+            with contextlib.suppress(AttributeError):
+                del self.thread_local.connection
+            self._commit_and_close(conn)
+
     def close(self):
-        """Close the autoimport database."""
-        self.connection.commit()
-        self.connection.close()
+        """Close the database after all worker threads have stopped.
+
+        Raises ``RopeError`` if another live thread still owns a connection.
+        SQLite errors are raised after attempting to close every connection.
+        """
+        thread = current_thread()
+        with self._connections_lock:
+            if self._closed:
+                return
+            active_threads = [
+                owner
+                for owner in self._connections
+                if owner is not thread and owner.is_alive()
+            ]
+            if active_threads:
+                raise exceptions.RopeError(
+                    "Cannot close AutoImport while other threads own connections; "
+                    "wait for them to finish first"
+                )
+            self._closed = True
+            connections = list(self._connections.values())
+            self._connections.clear()
+
+        if self._observer is not None:
+            with contextlib.suppress(Exception):
+                self.project.remove_observer(self._observer)
+            self._observer = None
+
+        self._close_connections(connections)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples."""
