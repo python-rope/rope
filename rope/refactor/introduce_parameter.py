@@ -62,6 +62,12 @@ class IntroduceParameter:
         )
 
     def get_changes(self, new_parameter):
+        sourceutils.check_new_name(
+            self.pymodule,
+            self.pyfunction.get_scope(),
+            new_parameter,
+            replaced=self.pyname,
+        )
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter, self._get_primary()))
         collector = codeanalyze.ChangeCollector(self.resource.read())

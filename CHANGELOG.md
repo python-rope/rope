@@ -12,6 +12,7 @@
 - #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
 - #826, #940 Keep star imports in other modules when inlining a function or method (@chinghar)
 - #948, #949 Don't treat string prefixes such as the `f` in `f"..."` as occurrences when renaming a variable named `f`, `b`, `u`, `rf`, etc. (@aliassar)
+- #924, #930 Refuse new names already in use in extract method/variable, introduce parameter and method object (@aliassar)
 
 # Release 1.15.1
 
