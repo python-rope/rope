@@ -35,6 +35,16 @@ def create_fscommands(root):
 
 
 class FileSystemCommands:
+    exists = staticmethod(os.path.exists)
+    isfile = staticmethod(os.path.isfile)
+    isdir = staticmethod(os.path.isdir)
+    listdir = staticmethod(os.listdir)
+    stat = staticmethod(os.stat)
+
+    @staticmethod
+    def realpath(path):
+        return os.path.realpath(os.path.expanduser(path))
+
     def create_file(self, path):
         open(path, "w").close()
 
@@ -62,7 +72,7 @@ class FileSystemCommands:
             return handle.read()
 
 
-class SubversionCommands:
+class SubversionCommands(FileSystemCommands):
     def __init__(self, *args):
         self.normal_actions = FileSystemCommands()
         import pysvn  # type: ignore
@@ -90,7 +100,7 @@ class SubversionCommands:
         return self.normal_actions.read(path)
 
 
-class MercurialCommands:
+class MercurialCommands(FileSystemCommands):
     def __init__(self, root):
         self.hg = self._import_mercurial()
         self.normal_actions = FileSystemCommands()
@@ -141,7 +151,7 @@ class MercurialCommands:
         return self.normal_actions.read(path)
 
 
-class GITCommands:
+class GITCommands(FileSystemCommands):
     def __init__(self, root):
         self.root = root
         self._do(["version"])
@@ -176,7 +186,7 @@ class GITCommands:
         return self.root
 
 
-class DarcsCommands:
+class DarcsCommands(FileSystemCommands):
     def __init__(self, root):
         self.root = root
         self.normal_actions = FileSystemCommands()

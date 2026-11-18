@@ -9,7 +9,7 @@ from rope.base.exceptions import ResourceNotFoundError, RopeError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
 from rope.base.project import NoProject, Project, _realpath
-from rope.base.resourceobserver import FilteredResourceObserver
+from rope.base.resourceobserver import ChangeIndicator, FilteredResourceObserver
 from rope.base.resources import File, Folder
 from ropetest import testutils
 
@@ -962,7 +962,7 @@ class OutOfProjectTest(unittest.TestCase):
         )
 
 
-class _MockFSCommands:
+class _MockFSCommands(FileSystemCommands):
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
@@ -988,7 +988,7 @@ class _MockFSCommands:
         return self.fscommands.read(path)
 
 
-class _DeprecatedFSCommands:
+class _WriteTracingFSCommands(FileSystemCommands):
     def __init__(self):
         self.log = ""
         self.fscommands = FileSystemCommands()
@@ -1077,25 +1077,112 @@ class RopeFolderTest(unittest.TestCase):
     def test_normal_fscommands(self):
         fscommands = _MockFSCommands()
         self.project = testutils.sample_project(fscommands=fscommands)
+        setup_log = fscommands.log
+        self.assertIn("create_folder ", setup_log)
+        self.assertTrue(self.project.root.exists())
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertEqual("create_file ", fscommands.log)
+        self.assertEqual(setup_log + "create_file ", fscommands.log)
+        self.assertTrue(myfile.exists())
 
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
         self.project = testutils.sample_project(
             fscommands=fscommands, ignored_resources=["myfile.txt"], ropefolder=None
         )
+        setup_log = fscommands.log
+        self.assertIn("create_folder ", setup_log)
+        self.assertTrue(self.project.root.exists())
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertEqual("", fscommands.log)
+        self.assertEqual(setup_log, fscommands.log)
+        self.assertTrue(myfile.exists())
 
-    def test_deprecated_fscommands(self):
-        fscommands = _DeprecatedFSCommands()
+    def test_write_tracing_fscommands(self):
+        fscommands = _WriteTracingFSCommands()
         self.project = testutils.sample_project(fscommands=fscommands)
+        setup_log = fscommands.log
+        self.assertIn("create_folder ", setup_log)
+        self.assertTrue(self.project.root.exists())
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
-        self.assertEqual("create_file ", fscommands.log)
+        self.assertEqual(setup_log + "create_file ", fscommands.log)
+        self.assertTrue(myfile.exists())
+
+    def test_get_resource_queries_the_fscommands_owner(self):
+        class _RecordingFSCommands(FileSystemCommands):
+            def __init__(self):
+                self.queries = []
+
+            def exists(self, path):
+                self.queries.append(("exists", path))
+                return FileSystemCommands.exists(path)
+
+            def isfile(self, path):
+                self.queries.append(("isfile", path))
+                return FileSystemCommands.isfile(path)
+
+            def isdir(self, path):
+                self.queries.append(("isdir", path))
+                return FileSystemCommands.isdir(path)
+
+        fscommands = _RecordingFSCommands()
+        self.project = testutils.sample_project(fscommands=fscommands, ropefolder=None)
+        myfile = self.project.get_file("myfile.txt")
+        myfile.create()
+        self.project.root.create_folder("myfolder")
+
+        file_resource = self.project.get_resource("myfile.txt")
+        folder_resource = self.project.get_resource("myfolder")
+
+        file_path = self.project._get_resource_path("myfile.txt")
+        folder_path = self.project._get_resource_path("myfolder")
+        self.assertEqual(file_resource, myfile)
+        self.assertIn(("exists", file_path), fscommands.queries)
+        self.assertIn(("isfile", file_path), fscommands.queries)
+        self.assertIn(("exists", folder_path), fscommands.queries)
+        self.assertIn(("isdir", folder_path), fscommands.queries)
+        self.assertTrue(folder_resource.is_folder())
+
+    def test_folder_children_are_enumerated_by_the_fscommands_owner(self):
+        class _RecordingFSCommands(FileSystemCommands):
+            def __init__(self):
+                self.queries = []
+
+            def listdir(self, path):
+                self.queries.append(("listdir", path))
+                return FileSystemCommands.listdir(path)
+
+        fscommands = _RecordingFSCommands()
+        self.project = testutils.sample_project(fscommands=fscommands, ropefolder=None)
+        myfile = self.project.get_file("myfile.txt")
+        myfile.create()
+        myfolder = self.project.root.create_folder("myfolder")
+
+        children = {resource.path for resource in self.project.root.get_children()}
+
+        self.assertEqual({"myfile.txt", "myfolder"}, children)
+        self.assertIn(("listdir", self.project.root.real_path), fscommands.queries)
+
+    def test_change_indicator_reads_metadata_from_the_fscommands_owner(self):
+        class _RecordingFSCommands(FileSystemCommands):
+            def __init__(self):
+                self.stats = []
+
+            def stat(self, path):
+                self.stats.append(path)
+                return FileSystemCommands.stat(path)
+
+        fscommands = _RecordingFSCommands()
+        self.project = testutils.sample_project(fscommands=fscommands, ropefolder=None)
+        myfile = self.project.get_file("myfile.txt")
+        myfile.create()
+        myfile.write("contents\n")
+
+        indicator = ChangeIndicator()
+        indicator.get_indicator(myfile)
+
+        self.assertEqual([myfile.real_path], fscommands.stats)
 
     def test_ignored_resources_and_prefixes(self):
         self.project = testutils.sample_project(ignored_resources=[".hg"])

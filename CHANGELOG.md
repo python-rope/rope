@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Route resource existence, directory enumeration, and observer metadata through the filesystem commands owner: FileSystemCommands gained exists/isfile/isdir/listdir/stat/realpath and project, resource, and observer queries no longer bypass custom fscommands
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
