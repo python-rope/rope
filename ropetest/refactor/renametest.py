@@ -331,6 +331,30 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_occurrence_in_f_string_with_reused_quotes(self):
+        code = dedent('''\
+            a_var = {"key": 20}
+            a_string=f"{a_var['key']} and {a_var['key']:>2}"
+        ''')
+        expected = dedent('''\
+            new_var = {"key": 20}
+            a_string=f"{new_var['key']} and {new_var['key']:>2}"
+        ''')
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_occurrence_in_f_string_format_spec(self):
+        code = dedent("""\
+            a_var = 4
+            a_string=f"{a_var:>{a_var}}"
+        """)
+        expected = dedent("""\
+            new_var = 4
+            a_string=f"{new_var:>{new_var}}"
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_renaming_attribute_occurrences_in_f_string(self):
         code = dedent("""\
             class MyClass:
