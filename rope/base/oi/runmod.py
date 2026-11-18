@@ -213,13 +213,14 @@ def __rope_start_everything():
                 return path
 
         def close(self):
-            self.sender.close()
             sys.settrace(None)
+            threading.settrace(None)
+            self.sender.close()
 
     def _realpath(path):
         return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
 
-    send_info = sys.argv[1]
+    send_info = os.environ.pop("ROPE_DOA_SOCK", default=sys.argv[1])
     project_root = sys.argv[2]
     file_to_run = sys.argv[3]
     run_globals = globals()

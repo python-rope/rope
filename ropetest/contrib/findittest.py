@@ -123,17 +123,61 @@ class FindItTest(unittest.TestCase):
         with self.assertRaises(exceptions.BadIdentifierError):
             find_implementations(self.project, mod1, offset)
 
-    def test_trivial_find_definition(self):
+    def test_find_definition_global_function(self):
         code = dedent("""\
-            def a_func():
+            def target():
                 pass
-            a_func()""")
-        result = find_definition(self.project, code, code.rindex("a_func"))
-        start = code.index("a_func")
+            target()""")
+        result = find_definition(self.project, code, code.rindex("target"))
+        start = code.index("target")
         self.assertEqual(start, result.offset)
         self.assertEqual(None, result.resource)
         self.assertEqual(1, result.lineno)
-        self.assertEqual((start, start + len("a_func")), result.region)
+        self.assertEqual((start, start + len("target")), result.region)
+
+    def test_find_definition_global_async_function(self):
+        code = dedent("""\
+            async def target():
+                pass
+
+            async def run():
+                await target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_instance_method(self):
+        code = dedent("""\
+            class C(object):
+                def target(self):
+                    pass
+
+                def run(self):
+                    self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_async_instance_method(self):
+        code = dedent("""\
+            class C(object):
+                async def target(self):
+                    pass
+
+                async def run(self):
+                    await self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
 
     def test_find_definition_in_other_modules(self):
         mod1 = testutils.create_module(self.project, "mod1")
@@ -145,3 +189,37 @@ class FindItTest(unittest.TestCase):
         result = find_definition(self.project, code, code.index("var"))
         self.assertEqual(mod1, result.resource)
         self.assertEqual(0, result.offset)
+
+    def test_find_definition_of_async_method_extra_whitespace(self):
+        # `async  def` (two spaces) / `async\tdef` are valid Python and must
+        # be recognised too, not just canonical single-space `async def`.
+        code = dedent("""\
+            class C(object):
+                async  def target(self):
+                    pass
+
+                async  def run(self):
+                    await self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    def test_find_definition_of_async_method_tab_separated(self):
+        # `async\tdef` (tab-separated) is valid Python; the normalised
+        # predicate must recognise it too.
+        code = dedent("""\
+            class C(object):
+                async\tdef target(self):
+                    pass
+
+                async\tdef run(self):
+                    await self.target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
