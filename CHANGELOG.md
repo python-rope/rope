@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- Compute scope regions from AST positions without patching the whole module, preserving normalized Unicode identifiers, decorators, and LF, CRLF, and CR newlines
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
