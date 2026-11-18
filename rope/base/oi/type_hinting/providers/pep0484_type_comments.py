@@ -1,5 +1,7 @@
 import re
 
+import rope.base.pynamesdef
+
 from rope.base.oi.type_hinting import utils
 from rope.base.oi.type_hinting.providers import interfaces
 
@@ -20,6 +22,8 @@ class AssignmentProvider(interfaces.IAssignmentProvider):
         """
         from rope.base.oi.soi import _get_lineno_for_node
 
+        if not isinstance(pyname, rope.base.pynamesdef.AssignedName):
+            return None
         lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
         holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
         line = holding_scope._get_global_scope()._scope_finder.lines.get_line(lineno)
