@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import pathlib
 from subprocess import check_call
@@ -7,6 +8,11 @@ import pytest
 
 from rope.base import resources
 from ropetest import testutils
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart(session):
+    multiprocessing.set_start_method("spawn")
 
 
 @pytest.fixture(scope="session")
@@ -28,10 +34,10 @@ def session_venv_pyvenv_cfg(session_venv):
 
 @pytest.fixture(scope="session")
 def session_venv_site_packages(session_venv, session_venv_pyvenv_cfg):
-    if os.name == 'nt':
-        return session_venv / f"Lib/site-packages"
+    if os.name == "nt":
+        return session_venv / "Lib/site-packages"
     else:
-        major, minor, patch = session_venv_pyvenv_cfg["version"].split(".")
+        major, minor, _patch = session_venv_pyvenv_cfg["version"].split(".")
         return session_venv / f"lib/python{major}.{minor}/site-packages"
 
 
@@ -95,13 +101,15 @@ def mod2(project, pkg1) -> resources.Folder:
 
 @pytest.fixture(scope="session")
 def external_fixturepkg(session_venv, session_venv_python_executable):
-    check_call([
-        session_venv_python_executable,
-        "-m",
-        "pip",
-        "install",
-        "--force-reinstall",
-        "ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0-py3-none-any.whl",
-    ])
+    check_call(
+        [
+            session_venv_python_executable,
+            "-m",
+            "pip",
+            "install",
+            "--force-reinstall",
+            "ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0-py3-none-any.whl",
+        ]
+    )
     yield
     check_call([session_venv_python_executable, "-m", "pip", "uninstall", "--yes", "external-fixturepkg"])

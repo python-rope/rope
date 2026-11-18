@@ -1,7 +1,12 @@
+import ast
 import bisect
+import io
 import re
 import token
 import tokenize
+from typing import Iterator
+
+from rope.base import utils
 
 
 class ChangeCollector:
@@ -72,7 +77,7 @@ class SourceLinesAdapter:
 
 
 class ASTLinesAdapter:
-    """
+    r"""
     Convert between stdlib's ast `col_offset` and rope's `region` offsets.
 
     ast `col_offset` are given in byte offset of the utf-8 source code from
@@ -104,20 +109,37 @@ class ASTLinesAdapter:
 
     def __init__(self, source: str):
         self._code_str: str = source
-        self._code_bytes: bytes = source.encode("utf-8")
+        self._ascii: bool = source.isascii()
+        self._code_bytes: bytes | None
         self._starts_str: list[int] = self._initialize_line_starts(
             self.LINE_PATTERN_STR, self._code_str
         )
-        self._starts_bytes: list[int] = self._initialize_line_starts(
-            self.LINE_PATTERN_BYTES, self._code_bytes
-        )
+        if self._ascii:
+            # Byte offsets equal str offsets for ASCII sources, so both tables
+            # can share one list and the encoded source stays unneeded until a
+            # non-ASCII line is inspected (which cannot happen).
+            self._code_bytes = None
+            self._starts_bytes = self._starts_str
+        else:
+            self._code_bytes = source.encode("utf-8")
+            self._starts_bytes = self._initialize_line_starts(
+                self.LINE_PATTERN_BYTES, self._code_bytes
+            )
 
     @classmethod
     def _initialize_line_starts(cls, pattern, source) -> list[int]:
-        matches = list(pattern.finditer(source))
-        if len(matches) > 1 and matches[-1].start() == matches[-1].end():
-            matches.pop()
-        starts = [m.start() for m in matches]
+        starts: list[int] = []
+        append = starts.append
+        count = 0
+        last_start = last_end = 0
+        for match in pattern.finditer(source):
+            start = match.start()
+            append(start)
+            last_start = start
+            last_end = match.end()
+            count += 1
+        if count > 1 and last_start == last_end:
+            starts.pop()
         if source[-1:] in [b"\n", b"\r", "\n", "\r"]:
             starts.append(len(source))
         else:
@@ -142,7 +164,10 @@ class ASTLinesAdapter:
         end = self._starts_bytes[line_idx + 1]
         if col_offset is not None:
             end = min(end, start + col_offset)
-        return self._code_bytes[start:end].rstrip(b"\r\n")
+        code_bytes = self._code_bytes
+        if code_bytes is None:
+            code_bytes = self._code_bytes = self._code_str.encode("utf-8")
+        return code_bytes[start:end].rstrip(b"\r\n")
 
     def _is_line_ascii_only(self, line_idx: int):
         start_str = self._starts_str[line_idx]
@@ -162,7 +187,11 @@ class ASTLinesAdapter:
 
     def _absolute_region_offset(self, line_idx: int, col_offset: int) -> int:
         """str offset relative to the start of file"""
-        line_offset = self._line_region_offset(line_idx, col_offset)
+        if col_offset == 0 or self._ascii:
+            # ASCII sources (and column 0) need no per-line byte comparison.
+            line_offset = col_offset
+        else:
+            line_offset = self._line_region_offset(line_idx, col_offset)
         return self._starts_str[line_idx] + line_offset
 
     @classmethod
@@ -208,9 +237,18 @@ class ASTLinesAdapter:
         except AttributeError:
             return (None, None)
 
-        region_start = self._absolute_region_offset(line_idx, col_offset)
-        region_end = self._absolute_region_offset(end_line_idx, end_col_offset)
-        return (region_start, region_end)
+        starts_str = self._starts_str
+        if self._ascii:
+            # Every line is ASCII-only, so `_line_region_offset` is the
+            # column itself for both boundaries.
+            return (
+                starts_str[line_idx] + col_offset,
+                starts_str[end_line_idx] + end_col_offset,
+            )
+        return (
+            self._absolute_region_offset(line_idx, col_offset),
+            self._absolute_region_offset(end_line_idx, end_col_offset),
+        )
 
 
 class ArrayLinesAdapter:
@@ -318,7 +356,7 @@ class LogicalLineFinder:
             except IndentationError as e:
                 tries += 1
                 if tries == 5:
-                    raise e
+                    raise
                 lineno = e.lineno + block_start - 1
                 indents = count_line_indents(self.lines.get_line(lineno))
 
@@ -533,3 +571,54 @@ def get_any_string_pattern():
 
 def get_comment_pattern():
     return r"#[^\n]*"
+
+
+def name_offsets(source: str, name: str) -> tuple[int, ...]:
+    """Return native Python NAME token offsets without exposing the cache."""
+    return _name_offsets(source).get(name, ())
+
+
+@utils.cached(16)
+def _name_offsets(source: str) -> dict:
+    """Map every NAME token of `source` to the offsets where it occurs
+
+    The source is tokenized once however many names are searched in it.
+    Complete string tokens expose replacement expressions through Python's
+    native AST; expression tokens retain their source coordinates.  The
+    result is keyed by the source text, so a changed source is indexed again.
+    """
+    result = {}
+    for name, offset in _token_names(source):
+        result.setdefault(name, []).append(offset)
+    return {name: tuple(offsets) for name, offsets in result.items()}
+
+
+def _token_names(source: str) -> Iterator:
+    line_starts = [0]
+    for line in source.splitlines(keepends=True):
+        line_starts.append(line_starts[-1] + len(line))
+    for item in tokenize.generate_tokens(io.StringIO(source).readline):
+        row, column = item.start
+        if item.type == tokenize.NAME:
+            yield item.string, line_starts[row - 1] + column
+        elif item.type == tokenize.STRING and item.string.lower().startswith(
+            ("f", "rf", "fr")
+        ):
+            module = ast.parse(item.string)
+            positions = ASTLinesAdapter(item.string)
+            for name, offset in _formatted_names(
+                item.string, module.body[0].value, positions
+            ):
+                yield name, line_starts[row - 1] + column + offset
+
+
+def _formatted_names(source, node, positions) -> Iterator:
+    for value in node.values:
+        if not isinstance(value, ast.FormattedValue):
+            continue
+        start, end = positions[value.value]
+        # AST spans omit the grouping that permits continuation indentation.
+        for name, offset in _token_names("(" + source[start:end] + ")"):
+            yield name, start + offset - 1
+        if value.format_spec is not None:
+            yield from _formatted_names(source, value.format_spec, positions)

@@ -1,6 +1,7 @@
 from rope.base import utils
 from rope.base.oi.type_hinting import interfaces
 from rope.base.oi.type_hinting.providers import (
+    annotations,
     composite,
     docstrings,
     inheritance,
@@ -15,6 +16,7 @@ class TypeHintingFactory(interfaces.ITypeHintingFactory):
     @utils.saveit
     def make_param_provider(self):
         providers = [
+            annotations.ParamProvider(self.make_resolver()),
             docstrings.ParamProvider(
                 docstrings.DocstringParamParser(), self.make_resolver()
             ),
@@ -27,6 +29,7 @@ class TypeHintingFactory(interfaces.ITypeHintingFactory):
     @utils.saveit
     def make_return_provider(self):
         providers = [
+            annotations.ReturnProvider(self.make_resolver()),
             docstrings.ReturnProvider(
                 docstrings.DocstringReturnParser(), self.make_resolver()
             ),

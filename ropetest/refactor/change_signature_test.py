@@ -7,6 +7,75 @@ from ropetest import testutils
 
 
 class ChangeSignatureTest(unittest.TestCase):
+    def test_removing_argument_preserves_parameter_annotations(self):
+        code = dedent("""\
+            def keep(value: tuple[str, int], unused: object, *, flag: bool = False) -> tuple[str, int]:
+                return value
+            result = keep(("kept", 1), object(), flag=True)
+        """)
+        self.mod.write(code)
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, code.index("keep")
+        )
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            signature.get_changes([change_signature.ArgumentRemover(1)])
+        self.assertEqual(code, self.mod.read())
+
+    def test_removing_argument_retains_supported_parameter_annotations(self):
+        code = dedent("""\
+            def keep(value: tuple[str, int], unused: object, flag: bool = False) -> tuple[str, int]:
+                return value
+            result = keep(("kept", 1), object(), flag=True)
+        """)
+        self.mod.write(code)
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, code.index("keep")
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        namespace = {}
+        exec(self.mod.read(), namespace)
+        self.assertEqual(("kept", 1), namespace["result"])
+        self.assertEqual(
+            {"value": tuple[str, int], "flag": bool, "return": tuple[str, int]},
+            namespace["keep"].__annotations__,
+        )
+
+    def test_removing_argument_retains_unicode_source_spans(self):
+        code = dedent('''\
+            def keep(café: str, unused: object, next: tuple[str, int]) -> str:
+                return café
+            result = keep("ação", object(), ("próximo", 1))
+        ''')
+        self.mod.write(code)
+        signature = change_signature.ChangeSignature(self.project, self.mod, code.index("keep"))
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        namespace = {}
+        exec(self.mod.read(), namespace)
+        self.assertEqual("ação", namespace["result"])
+        self.assertEqual(
+            {"café": str, "next": tuple[str, int], "return": str},
+            namespace["keep"].__annotations__,
+        )
+
+    def test_removing_argument_retains_defaults_and_variadic_annotations(self):
+        code = dedent('''\
+            def keep(value: int = 1, unused: object = None, *rest: str, **options: int) -> tuple:
+                return value, rest, options
+            result = keep(7, None, "ação", count=2)
+            defaults = keep()
+        ''')
+        self.mod.write(code)
+        signature = change_signature.ChangeSignature(self.project, self.mod, code.index("keep"))
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        namespace = {}
+        exec(self.mod.read(), namespace)
+        self.assertEqual((7, ("ação",), {"count": 2}), namespace["result"])
+        self.assertEqual((1, (), {}), namespace["defaults"])
+        self.assertEqual(
+            {"value": int, "rest": str, "options": int, "return": tuple},
+            namespace["keep"].__annotations__,
+        )
+
     def setUp(self):
         super().setUp()
         self.project = testutils.sample_project()
@@ -807,6 +876,98 @@ class ChangeSignatureTest(unittest.TestCase):
                 class B(A):
                     def __init__(self, p):
                         super(B, self).__init__()
+            """),
+            self.mod.read(),
+        )
+
+    def test_changing_signature_for_function_local_constructor(self):
+        code = dedent("""\
+            def make():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                item = Local(1)
+                item.__init__(2)
+                return item
+        """)
+        expected = dedent("""\
+            def make():
+                class Local:
+                    def __init__(self):
+                        pass
+                item = Local()
+                item.__init__()
+                return item
+        """)
+        offsets = (
+            code.index("Local"),
+            code.index("__init__"),
+            code.rindex("Local"),
+            code.rindex("__init__"),
+        )
+        for offset in offsets:
+            with self.subTest(offset=offset):
+                self.mod.write(code)
+                signature = change_signature.ChangeSignature(
+                    self.project, self.mod, offset
+                )
+                self.project.do(
+                    signature.get_changes([change_signature.ArgumentRemover(1)])
+                )
+                self.assertEqual(expected, self.mod.read())
+
+    def test_function_local_constructors_with_the_same_name_are_distinct(self):
+        self.mod.write(dedent("""\
+            def first():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                return Local(1)
+            def second():
+                class Local:
+                    def __init__(self, value):
+                        pass
+                return Local(2)
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("__init__")
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        self.assertEqual(
+            dedent("""\
+                def first():
+                    class Local:
+                        def __init__(self):
+                            pass
+                    return Local()
+                def second():
+                    class Local:
+                        def __init__(self, value):
+                            pass
+                    return Local(2)
+            """),
+            self.mod.read(),
+        )
+
+    def test_changing_signature_for_class_nested_constructor(self):
+        self.mod.write(dedent("""\
+            class Outer:
+                class Inner:
+                    def __init__(self, value):
+                        pass
+            item = Outer.Inner(1)
+        """))
+        signature = change_signature.ChangeSignature(
+            self.project, self.mod, self.mod.read().index("__init__")
+        )
+        self.project.do(signature.get_changes([change_signature.ArgumentRemover(1)]))
+        self.assertEqual(
+            dedent("""\
+                class Outer:
+                    class Inner:
+                        def __init__(self):
+                            pass
+                item = Outer.Inner()
             """),
             self.mod.read(),
         )

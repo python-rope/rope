@@ -56,7 +56,14 @@ class AssignmentValue:
     """An assigned expression"""
 
     def __init__(
-        self, ast_node, levels=None, evaluation="", assign_type=False, type_hint=None
+        self,
+        ast_node,
+        levels=None,
+        evaluation="",
+        assign_type=False,
+        type_hint=None,
+        *,
+        branch_context=None,
     ):
         """The `level` is `None` for simple assignments and is
         a list of numbers for tuple assignments for example in::
@@ -75,6 +82,7 @@ class AssignmentValue:
         self.evaluation = evaluation
         self.assign_type = assign_type
         self.type_hint = type_hint
+        self.branch_context = branch_context
 
     def get_lineno(self):
         return self.ast_node.lineno

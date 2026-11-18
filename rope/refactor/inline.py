@@ -17,10 +17,12 @@
 #  but it should be 200.
 
 import re
+import sys
 from typing import List
 
 import rope.base.builtins  # Use fully qualified names for clarity.
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -38,6 +40,7 @@ from rope.refactor import (
     importutils,
     move,
     occurrences,
+    patchedast,
     rename,
     sourceutils,
 )
@@ -239,12 +242,23 @@ class InlineMethod(_Inliner):
 class InlineVariable(_Inliner):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
+        if not isinstance(self.pyname, pynames.AssignedName):
+            raise exceptions.RefactoringError(
+                "Inline variable should be performed on an assigned variable."
+            )
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
         self._check_exceptional_conditions()
         self._init_imports()
 
     def _check_exceptional_conditions(self):
+        if any(
+            isinstance(assignment.ast_node, ast.pattern)
+            for assignment in self.pyname.assignments
+        ):
+            raise exceptions.RefactoringError(
+                "Pattern matching captures cannot be inlined."
+            )
         if len(self.pyname.assignments) != 1:
             raise exceptions.RefactoringError(
                 "Local variable should be assigned once for inlining."
@@ -267,6 +281,16 @@ class InlineVariable(_Inliner):
             resources = [self.original]
             if remove and self.original != self.resource:
                 resources.append(self.resource)
+        resources = list(resources)
+        check_resources = resources
+        if remove and not rename._is_local(self.pyname):
+            check_resources = list(
+                dict.fromkeys(resources + list(self.project.get_python_files()))
+            )
+        for resource in check_resources:
+            self._check_deferred_annotation_references(resource, remove, only_current)
+        if remove and self.resource in resources:
+            self._check_initializer_removal(resources, only_current)
         changes = ChangeSet("Inline variable <%s>" % self.name)
         jobset = task_handle.create_jobset("Calculating changes", len(resources))
 
@@ -283,6 +307,303 @@ class InlineVariable(_Inliner):
             jobset.finished_job()
         return changes
 
+    def _check_deferred_annotation_references(self, resource, remove, only_current):
+        pymodule = self.project.get_pymodule(resource)
+        tree = pymodule.get_ast()
+        future_annotations = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "__future__"
+            and any(alias.name == "annotations" for alias in node.names)
+            for node in tree.body
+        )
+        if not future_annotations and sys.version_info < (3, 12):
+            return
+        annotations = []
+        type_parameters = []
+
+        def collect(node, scope=None):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                parameters = getattr(node, "type_params", [])
+                if parameters:
+                    namespace = (
+                        pymodule.get_scope()
+                        .get_inner_scope_for_line(node.lineno)
+                        .parent
+                    )
+                    names = {parameter.name for parameter in parameters}
+                    for parameter in parameters:
+                        for attr in ("bound", "default_value"):
+                            expression = getattr(parameter, attr, None)
+                            if expression is not None:
+                                type_parameters.append((expression, namespace, names))
+            if isinstance(node, ast.arg):
+                annotations.append(node.annotation)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                annotations.append(node.returns)
+                scope = "function"
+            elif isinstance(node, ast.Lambda):
+                scope = "function"
+            elif isinstance(node, ast.ClassDef):
+                scope = "class"
+            elif (
+                isinstance(node, ast.AnnAssign) and node.simple and scope != "function"
+            ):
+                annotations.append(node.annotation)
+            for child in ast.iter_child_nodes(node):
+                collect(child, scope)
+
+        collect(tree)
+        if not future_annotations and sys.version_info < (3, 14):
+            annotations = []
+        lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
+        regions = [lines[node] for node in annotations if node is not None]
+        parameter_regions = [lines[item[0]] for item in type_parameters]
+        if not regions and not parameter_regions:
+            return
+
+        def parameter_reference(node, namespace, names):
+            inner_namespace = namespace
+            inner_names = set(names)
+            while inner_namespace.get_kind() == "Class":
+                inner_names.update(
+                    parameter.name
+                    for parameter in getattr(
+                        inner_namespace.pyobject.get_ast(), "type_params", []
+                    )
+                )
+                inner_namespace = inner_namespace.parent
+            if isinstance(node, ast.Lambda):
+                arguments = node.args
+                defaults = arguments.defaults + [
+                    default for default in arguments.kw_defaults if default is not None
+                ]
+                bound_names = inner_names | {
+                    argument.arg
+                    for argument in (
+                        arguments.posonlyargs
+                        + arguments.args
+                        + arguments.kwonlyargs
+                        + [arguments.vararg, arguments.kwarg]
+                    )
+                    if argument is not None
+                }
+                return any(
+                    parameter_reference(default, namespace, names)
+                    for default in defaults
+                ) or parameter_reference(node.body, inner_namespace, bound_names)
+            if isinstance(
+                node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+            ):
+                bound_names = set(names)
+                for index, generator in enumerate(node.generators):
+                    iterable_namespace = namespace if index == 0 else inner_namespace
+                    if parameter_reference(
+                        generator.iter, iterable_namespace, bound_names
+                    ):
+                        return True
+                    bound_names.update(inner_names)
+                    bound_names.update(
+                        name.id
+                        for name in ast.walk(generator.target)
+                        if isinstance(name, ast.Name)
+                        and isinstance(name.ctx, ast.Store)
+                    )
+                    if parameter_reference(
+                        generator.target, inner_namespace, bound_names
+                    ):
+                        return True
+                    if any(
+                        parameter_reference(condition, inner_namespace, bound_names)
+                        for condition in generator.ifs
+                    ):
+                        return True
+                values = (
+                    [node.key, node.value]
+                    if isinstance(node, ast.DictComp)
+                    else [node.elt]
+                )
+                return any(
+                    parameter_reference(value, inner_namespace, bound_names)
+                    for value in values
+                )
+            if isinstance(node, (ast.Name, ast.Attribute)):
+                primary = node
+                while isinstance(primary, ast.Attribute):
+                    primary = primary.value
+                if not (isinstance(primary, ast.Name) and primary.id in names):
+                    if isinstance(primary, ast.Name):
+                        outer_scope = namespace
+                        while outer_scope is not None:
+                            if (
+                                outer_scope.get_kind() != "Class"
+                                or outer_scope is namespace
+                            ) and primary.id in outer_scope.get_names():
+                                break
+                            if any(
+                                parameter.name == primary.id
+                                for parameter in getattr(
+                                    outer_scope.pyobject.get_ast(), "type_params", []
+                                )
+                            ):
+                                return False
+                            outer_scope = outer_scope.parent
+                    if occurrences.same_pyname(
+                        self.pyname, evaluate.eval_node(namespace, node)
+                    ):
+                        return True
+            return any(
+                parameter_reference(child, namespace, names)
+                for child in ast.iter_child_nodes(node)
+            )
+
+        if remove and any(
+            parameter_reference(expression, namespace, names)
+            for expression, namespace, names in type_parameters
+        ):
+            # Type parameter expressions use the enclosing annotation scope,
+            # not the function's parameters/locals or the new class's body.
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable referenced in a deferred annotation."
+            )
+        module_names = pymodule.get_scope().get_names()
+
+        def runtime_annotation_eval(node):
+            """Resolve a deferred annotation expression the way Python does.
+
+            ``typing.get_type_hints`` evaluates class annotations with the
+            module globals ahead of class and function locals (it swaps the
+            two namespaces for classes), while the source binding index
+            resolves the annotation in its own annotation environment.  A
+            module-level binding therefore wins over shadowing names in the
+            class or function header, and only names without a module-level
+            binding fall back to the annotation environment.
+            """
+            if isinstance(node, ast.Attribute):
+                base = runtime_annotation_eval(node.value)
+                if base is None:
+                    return None
+                pyobject = base.get_object()
+                if pyobject == pyobjects.get_unknown():
+                    return None
+                try:
+                    return pyobject[node.attr]
+                except exceptions.AttributeNotFoundError:
+                    return None
+            if isinstance(node, ast.Name):
+                if node.id in module_names:
+                    return module_names[node.id]
+                return evaluate.eval_node(pymodule.get_scope(), node)
+            return None
+
+        if (
+            future_annotations
+            and remove
+            and any(
+                isinstance(node, (ast.Name, ast.Attribute))
+                and occurrences.same_pyname(self.pyname, runtime_annotation_eval(node))
+                for annotation in annotations
+                if annotation is not None
+                for node in ast.walk(annotation)
+            )
+        ):
+            # Stringified annotations may resolve module globals even when
+            # static name lookup finds a class member or function parameter.
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable referenced in a deferred annotation."
+            )
+        finder = occurrences.create_finder(
+            self.project, self.name, self.pyname, imports=False
+        )
+        for occurrence in finder.find_occurrences(pymodule=pymodule):
+            current = True
+            if only_current:
+                start, end = occurrence.get_primary_range()
+                current = resource == self.original and start <= self.offset <= end
+                if not remove and not current:
+                    continue
+            start, _ = occurrence.get_word_range()
+            if any(begin <= start < end for begin, end in regions) or (
+                current
+                and any(begin <= start < end for begin, end in parameter_regions)
+            ):
+                # Substituting the initializer can change when an annotation
+                # evaluates it and which bindings it observes.
+                raise exceptions.RefactoringError(
+                    "Cannot inline a variable referenced in a deferred annotation."
+                )
+
+    def _check_initializer_removal(self, resources, only_current):
+        initializer = self.pyname.assignments[0].ast_node
+        statement = next(
+            (
+                node
+                for node in ast.walk(self.pymodule.get_ast())
+                if isinstance(node, (ast.Assign, ast.AnnAssign))
+                and node.value is initializer
+            ),
+            None,
+        )
+        statement_region = (
+            codeanalyze.ASTLinesAdapter(self.pymodule.source_code)[statement]
+            if statement is not None
+            else None
+        )
+        local_annotation = isinstance(statement, ast.AnnAssign) and (
+            isinstance(statement.target, ast.Name)
+            and self.pymodule.get_scope()
+            .get_inner_scope_for_line(statement.lineno)
+            .get_kind()
+            == "Function"
+        )
+        if isinstance(statement, ast.AnnAssign) and not local_annotation:
+            raise exceptions.RefactoringError(
+                "Cannot discard a variable annotation while inlining."
+            )
+        bound_name = isinstance(initializer, ast.Name) and _is_bound_initializer_name(
+            self.pymodule, statement, initializer
+        )
+        if isinstance(initializer, ast.Name) and not bound_name:
+            raise exceptions.RefactoringError(
+                "Cannot discard an initializer name that may be unbound."
+            )
+        finder = occurrences.create_finder(
+            self.project, self.name, self.pyname, imports=False
+        )
+        has_reads = False
+        for resource in self.project.get_python_files():
+            for occurrence in finder.find_occurrences(resource=resource):
+                start, _ = occurrence.get_primary_range()
+                if (
+                    resource == self.resource
+                    and statement_region is not None
+                    and (statement_region[0] <= start < statement_region[1])
+                ):
+                    continue
+                if occurrence.is_written() or occurrence.is_a_fixed_primary():
+                    continue
+                has_reads = True
+                if resource not in resources or (
+                    only_current
+                    and resource == self.original
+                    and not self.region[0] <= start < self.region[1]
+                ):
+                    raise exceptions.RefactoringError(
+                        "Cannot remove a variable referenced outside the selected occurrences."
+                    )
+        if has_reads:
+            return
+        plain_assignment = (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+        )
+        if not (plain_assignment or local_annotation) or not (
+            bound_name or _is_pure_unused_initializer(initializer)
+        ):
+            raise exceptions.RefactoringError(
+                "Cannot discard an unused variable initializer while inlining."
+            )
+
     def _change_main_module(self, remove, only_current, docs):
         region = None
         if only_current and self.original == self.resource:
@@ -295,6 +616,7 @@ class InlineVariable(_Inliner):
             remove=remove,
             region=region,
             docs=docs,
+            check_lambda=True,
         )
 
     def _init_imports(self):
@@ -314,10 +636,13 @@ class InlineVariable(_Inliner):
 
             filters.insert(0, check_aim)
         finder = occurrences.Finder(self.project, self.name, filters=filters)
+        _check_lambda_occurrences(finder, self.project.get_pymodule(resource))
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True
         )
-        if changed and remove:
+        if remove:
+            # An importing module without value reads still needs its import
+            # cleaned up once the definition is discarded.
             changed = _remove_from(self.project, self.pyname, changed, resource)
         return changed
 
@@ -328,8 +653,28 @@ class InlineVariable(_Inliner):
 class InlineParameter(_Inliner):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
+        if not isinstance(self.pyname, pynames.ParameterName):
+            raise exceptions.RefactoringError(
+                "Inline parameter should be performed on a parameter."
+            )
+        pyfunction = self.pyname.pyfunction
+        functionutils._check_signature_parameters(pyfunction)
+        if self.name not in [
+            argument.arg for argument in pyfunction.get_ast().args.args
+        ]:
+            raise exceptions.RefactoringError(
+                "Cannot inline the default of a list or keyword argument."
+            )
+        definition_info = functionutils.DefinitionInfo.read(pyfunction)
+        indices = [
+            index
+            for index, (name, default) in enumerate(definition_info.args_with_defaults)
+            if name == self.name
+        ]
+        if len(indices) != 1:
+            raise exceptions.RefactoringError("Cannot resolve the parameter default.")
         resource, offset = self._function_location()
-        index = self.pyname.index
+        index = indices[0]
         self.changers = [change_signature.ArgumentDefaultInliner(index)]
         self.signature = change_signature.ChangeSignature(
             self.project, resource, offset
@@ -393,6 +738,11 @@ class _DefinitionGenerator:
             self.body = sourceutils.get_body(self.pyfunction)
 
     def _get_definition_info(self):
+        arguments = self.pyfunction.get_ast().args
+        if arguments.kwonlyargs or arguments.vararg or arguments.kwarg:
+            raise exceptions.RefactoringError(
+                "Cannot inline functions with list and keyword arguments."
+            )
         return functionutils.DefinitionInfo.read(self.pyfunction)
 
     def _get_definition_params(self):
@@ -426,6 +776,13 @@ class _DefinitionGenerator:
         call_info = functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call
         )
+        positional_only = {
+            argument.arg for argument in self.pyfunction.get_ast().args.posonlyargs
+        }
+        if any(name in positional_only for name, value in call_info.keywords):
+            raise exceptions.RefactoringError(
+                "Cannot inline a positional-only parameter passed as a keyword."
+            )
         paramdict = self.definition_params
         mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
         for param_name, value in mapping.param_dict.items():
@@ -619,12 +976,38 @@ class _InlineFunctionCallsForModuleHandle:
 
 
 def _inline_variable(
-    project, pymodule, pyname, name, remove=True, region=None, docs=False
+    project,
+    pymodule,
+    pyname,
+    name,
+    remove=True,
+    region=None,
+    docs=False,
+    check_lambda=False,
 ):
     definition = _getvardef(pymodule, pyname)
     start, end = _assigned_lineno(pymodule, pyname)
+    assignment_node = _find_assignment_node(pymodule, pyname.assignments[0].ast_node)
 
     occurrence_finder = occurrences.create_finder(project, name, pyname, docs=docs)
+    if check_lambda:
+        _check_lambda_occurrences(
+            occurrence_finder, pymodule, region=region, writes=False
+        )
+    if remove:
+        removal = _get_assignment_removal(
+            pymodule.source_code,
+            assignment_node,
+            name,
+            start,
+            end,
+            occurrence_finder,
+            pymodule,
+        )
+        return _rename_and_remove_assignment(
+            occurrence_finder, definition, pymodule, removal, region
+        )
+
     changed_source = rename.rename_in_module(
         occurrence_finder,
         definition,
@@ -633,32 +1016,274 @@ def _inline_variable(
         writes=False,
         region=region,
     )
-    if changed_source is None:
-        changed_source = pymodule.source_code
-    if remove:
-        lines = codeanalyze.SourceLinesAdapter(changed_source)
-        source = (
-            changed_source[: lines.get_line_start(start)]
-            + changed_source[lines.get_line_end(end) + 1 :]
+    return changed_source if changed_source is not None else pymodule.source_code
+
+
+def _is_bound_initializer_name(pymodule, statement, initializer):
+    if statement is None:
+        return False
+    scope = pymodule.get_scope().get_inner_scope_for_line(statement.lineno)
+    if scope.get_kind() == "Class":
+        # Class-body aliasing stays conservative, but a builtin initializer
+        # name is always bound wherever it is substituted.
+        return isinstance(
+            evaluate.eval_node(scope, initializer), rope.base.builtins.BuiltinName
         )
-    else:
-        source = changed_source
-    return source
+    pyname = evaluate.eval_node(scope, initializer)
+    if any(
+        isinstance(node, ast.Name)
+        and node.id == initializer.id
+        and isinstance(node.ctx, ast.Del)
+        and evaluate.eval_node(
+            pymodule.get_scope().get_inner_scope_for_line(node.lineno), node
+        )
+        is pyname
+        for node in ast.walk(pymodule.get_ast())
+    ):
+        return False
+    if isinstance(pyname, rope.base.builtins.BuiltinName):
+        return True
+    if isinstance(pyname, pynames.ParameterName):
+        return True
+    parents = {
+        child: node
+        for node in ast.walk(pymodule.get_ast())
+        for child in ast.iter_child_nodes(node)
+    }
+    anchor = statement
+    while anchor in parents:
+        owner = parents[anchor]
+        for _, block in ast.iter_fields(owner):
+            if not isinstance(block, list) or anchor not in block:
+                continue
+            for previous in reversed(block[: block.index(anchor)]):
+                binding_scope = pymodule.get_scope().get_inner_scope_for_line(
+                    previous.lineno
+                )
+                if (
+                    isinstance(previous, ast.Assign)
+                    and len(previous.targets) == 1
+                    and isinstance(previous.targets[0], ast.Name)
+                ):
+                    if previous.targets[0].id == initializer.id:
+                        if (
+                            evaluate.eval_node(binding_scope, previous.targets[0])
+                            is pyname
+                        ):
+                            return True
+                        break
+                    if _is_pure_unused_initializer(previous.value):
+                        continue
+                if isinstance(
+                    previous, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
+                    if (
+                        previous.name == initializer.id
+                        and pyname is not None
+                        and pyname.get_definition_location()
+                        == (pymodule, previous.lineno)
+                    ):
+                        return True
+                    if isinstance(previous, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        arguments = previous.args
+                        parameters = (
+                            arguments.posonlyargs
+                            + arguments.args
+                            + arguments.kwonlyargs
+                            + [arguments.vararg, arguments.kwarg]
+                        )
+                        if not (
+                            previous.decorator_list
+                            or arguments.defaults
+                            or any(arguments.kw_defaults)
+                            or previous.returns
+                            or any(
+                                parameter.annotation
+                                for parameter in parameters
+                                if parameter is not None
+                            )
+                            or getattr(previous, "type_params", ())
+                        ):
+                            continue
+                    break
+                if isinstance(previous, (ast.Import, ast.ImportFrom)):
+                    matching = any(
+                        (alias.asname or alias.name.split(".")[0]) == initializer.id
+                        for alias in previous.names
+                    )
+                    if (
+                        matching
+                        and evaluate.eval_node(binding_scope, initializer) is pyname
+                    ):
+                        return True
+                    break
+                if isinstance(previous, ast.Pass):
+                    continue
+                break
+        anchor = owner
+    return False
+
+
+def _is_pure_unused_initializer(node):
+    # literal_eval accepts set(); even that name may be rebound to user code.
+    if any(isinstance(child, ast.Call) for child in ast.walk(node)):
+        return False
+    try:
+        ast.literal_eval(node)
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 def _getvardef(pymodule, pyname):
     assignment = pyname.assignments[0]
+    if assignment.levels:
+        raise exceptions.RefactoringError("Cannot inline tuple assignments.")
+
+    assignment_node = _find_assignment_node(pymodule, assignment.ast_node)
+    if assignment_node is not None:
+        source = pymodule.source_code
+        node_start, node_end = patchedast.node_region(assignment_node)
+        value_start, _ = patchedast.node_region(assignment.ast_node)
+        separator = source.rfind("=", node_start, value_start)
+        if separator != -1:
+            return source[separator + 1 : node_end].strip()
+
     lines = pymodule.lines
     start, end = _assigned_lineno(pymodule, pyname)
     definition_with_assignment = _join_lines(
         [lines.get_line(n) for n in range(start, end + 1)],
     )
-    if assignment.levels:
-        raise exceptions.RefactoringError("Cannot inline tuple assignments.")
     definition = definition_with_assignment[
         definition_with_assignment.index("=") + 1 :
     ].strip()
     return definition
+
+
+def _find_assignment_node(pymodule, value_node):
+    if value_node is None:
+        return None
+    module_ast = pymodule.get_ast()
+    patchedast.patch_ast(module_ast, pymodule.source_code)
+    for node in ast.walk(module_ast):
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is value_node:
+            return node
+
+
+def _rename_and_remove_assignment(finder, definition, pymodule, removal, region):
+    source = pymodule.source_code
+    remove_start, remove_end, replacement = removal
+    change_collector = codeanalyze.ChangeCollector(source)
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        if occurrence.is_a_fixed_primary() or occurrence.is_written():
+            continue
+        occurrence_start, occurrence_end = occurrence.get_primary_range()
+        if occurrence_start < remove_end and occurrence_end > remove_start:
+            continue
+        if region is None or region[0] <= occurrence_start < region[1]:
+            change_collector.add_change(occurrence_start, occurrence_end, definition)
+    change_collector.add_change(remove_start, remove_end, replacement)
+    changed_source = change_collector.get_changed()
+    return changed_source if changed_source is not None else source
+
+
+def _get_assignment_removal(
+    source, assignment_node, name, start, end, finder, pymodule
+):
+    if assignment_node is None:
+        return _get_logical_line_removal(source, start, end)
+
+    targets = (
+        assignment_node.targets
+        if isinstance(assignment_node, ast.Assign)
+        else [assignment_node.target]
+    )
+    target_index = _find_assignment_target_index(targets, name, finder, pymodule)
+    if target_index is None:
+        return _get_logical_line_removal(source, start, end)
+
+    if len(targets) > 1:
+        following_nodes = [*targets[1:], assignment_node.value]
+        segment_ends = []
+        for target, following in zip(targets, following_nodes):
+            _, target_end = patchedast.node_region(target)
+            following_start, _ = patchedast.node_region(following)
+            separator = source.find("=", target_end, following_start)
+            if separator == -1:
+                return _get_logical_line_removal(source, start, end)
+            segment_ends.append(
+                _skip_assignment_gap(source, separator + 1, following_start)
+            )
+
+        node_start, _ = patchedast.node_region(assignment_node)
+        segment_starts = [node_start, *segment_ends[:-1]]
+        return segment_starts[target_index], segment_ends[target_index], ""
+
+    node_start, node_end = patchedast.node_region(assignment_node)
+    lines = codeanalyze.SourceLinesAdapter(source)
+    line_start = lines.get_line_start(assignment_node.lineno)
+    line_end = lines.get_line_end(assignment_node.end_lineno)
+
+    remove_end = node_end
+    while remove_end < line_end and source[remove_end] in " \t":
+        remove_end += 1
+    if remove_end < line_end and source[remove_end] == ";":
+        remove_end += 1
+        while remove_end < line_end and source[remove_end] in " \t":
+            remove_end += 1
+        return node_start, remove_end, ""
+
+    remove_start = node_start
+    while remove_start > line_start and source[remove_start - 1] in " \t":
+        remove_start -= 1
+    if remove_start > line_start and source[remove_start - 1] == ";":
+        remove_start -= 1
+        while remove_start > line_start and source[remove_start - 1] in " \t":
+            remove_start -= 1
+        return remove_start, node_end, ""
+
+    return _get_logical_line_removal(source, start, end)
+
+
+def _target_matches_name(target, name):
+    return (isinstance(target, ast.Name) and target.id == name) or (
+        isinstance(target, ast.Attribute) and target.attr == name
+    )
+
+
+def _find_assignment_target_index(targets, name, finder, pymodule):
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        occurrence_start, occurrence_end = occurrence.get_word_range()
+        for index, target in enumerate(targets):
+            target_start, target_end = patchedast.node_region(target)
+            if target_start <= occurrence_start and occurrence_end <= target_end:
+                return index
+
+    matching_indexes = [
+        index
+        for index, target in enumerate(targets)
+        if _target_matches_name(target, name)
+    ]
+    if len(matching_indexes) == 1:
+        return matching_indexes[0]
+
+
+def _skip_assignment_gap(source, offset, limit):
+    while offset < limit:
+        if source[offset] in " \t\r\n":
+            offset += 1
+        elif source.startswith("\\\r\n", offset):
+            offset += 3
+        elif source.startswith("\\\n", offset):
+            offset += 2
+        else:
+            break
+    return offset
+
+
+def _get_logical_line_removal(source, start, end):
+    lines = codeanalyze.SourceLinesAdapter(source)
+    return lines.get_line_start(start), lines.get_line_end(end) + 1, ""
 
 
 def _assigned_lineno(pymodule, pyname):
@@ -681,14 +1306,136 @@ def _add_imports(project, source, resource, imports):
 
 def _get_pyname(project, resource, offset):
     pymodule = project.get_pymodule(resource)
+    word_range = worder.Worder(pymodule.source_code, True).get_word_range(offset)
+    if word_range in _lambda_owned_name_ranges(pymodule):
+        raise exceptions.RefactoringError(
+            "Inlining lambda-local bindings is not supported."
+        )
     pyname = evaluate.eval_location(pymodule, offset)
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()
     return pyname
 
 
+def _check_lambda_occurrences(finder, pymodule, region=None, writes=True):
+    owned = _lambda_owned_name_ranges(pymodule)
+    if not owned:
+        return
+    for occurrence in finder.find_occurrences(pymodule=pymodule):
+        if occurrence.is_a_fixed_primary():
+            continue
+        if not writes and occurrence.is_written():
+            continue
+        start, _ = occurrence.get_primary_range()
+        if region is not None and not region[0] <= start < region[1]:
+            continue
+        if occurrence.get_word_range() in owned:
+            raise exceptions.RefactoringError(
+                "Cannot inline a variable into lambda-local bindings."
+            )
+
+
+def _lambda_owned_name_ranges(pymodule):
+    """Find lambda-local tokens and attribute lookups that depend on them."""
+    ranges = set()
+    lines = pymodule.lines
+    words = worder.Worder(pymodule.source_code, True)
+
+    def offset(lineno, column):
+        # AST columns count UTF-8 bytes; Rope offsets count source characters.
+        prefix = lines.get_line(lineno).encode("utf-8")[:column]
+        return lines.get_line_start(lineno) + len(prefix.decode("utf-8"))
+
+    def node_range(node):
+        return (
+            offset(node.lineno, node.col_offset),
+            offset(node.end_lineno, node.end_col_offset),
+        )
+
+    def record(node):
+        ranges.add(node_range(node))
+
+    def defaults(node):
+        return [*node.args.defaults, *filter(None, node.args.kw_defaults)]
+
+    def uses_local_name(node):
+        if isinstance(node, ast.Name):
+            return node_range(node) in ranges
+        # Creating a lambda does not evaluate its body or bind its parameters.
+        children = (
+            defaults(node)
+            if isinstance(node, ast.Lambda)
+            else list(ast.iter_child_nodes(node))
+        )
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Lambda):
+            children.append(node.func.body)
+        return any(uses_local_name(child) for child in children)
+
+    def assigned_names(node):
+        names = set()
+        if isinstance(node, ast.NamedExpr):
+            names.add(node.target.id)
+        children = (
+            defaults(node)
+            if isinstance(node, ast.Lambda)
+            else ast.iter_child_nodes(node)
+        )
+        for child in children:
+            names.update(assigned_names(child))
+        return names
+
+    def visit(node, bound):
+        if isinstance(node, ast.Lambda):
+            arguments = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
+            arguments.extend(arg for arg in (node.args.vararg, node.args.kwarg) if arg)
+            for arg in arguments:
+                record(arg)
+            for default in defaults(node):
+                visit(default, bound)
+            local = bound | {arg.arg for arg in arguments} | assigned_names(node.body)
+            visit(node.body, local)
+        elif isinstance(
+            node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+        ):
+            # The first iterable is outside the comprehension's local bindings.
+            visit(node.generators[0].iter, bound)
+            names = {
+                child.id
+                for generator in node.generators
+                for child in ast.walk(generator.target)
+                if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
+            }
+            local = bound - names
+            for index, generator in enumerate(node.generators):
+                visit(generator.target, local)
+                if index:
+                    visit(generator.iter, local)
+                for condition in generator.ifs:
+                    visit(condition, local)
+            values = (
+                [node.key, node.value] if isinstance(node, ast.DictComp) else [node.elt]
+            )
+            for value in values:
+                visit(value, local)
+        else:
+            if isinstance(node, ast.Name) and node.id in bound:
+                record(node)
+            for child in ast.iter_child_nodes(node):
+                visit(child, bound)
+            if isinstance(node, ast.Attribute) and uses_local_name(node.value):
+                # The attr token resolves through the receiver, not its spelling.
+                end = offset(node.end_lineno, node.end_col_offset)
+                ranges.add(words.get_word_range(end - 1))
+
+    visit(pymodule.get_ast(), set())
+    return ranges
+
+
 def _remove_from(project, pyname, source, resource):
-    pymodule = libutils.get_string_module(project, source, resource)
+    pymodule = libutils.get_string_module(
+        project, source if source is not None else resource.read(), resource
+    )
     module_import = importutils.get_module_imports(project, pymodule)
-    module_import.remove_pyname(pyname)
-    return module_import.get_changed_source()
+    if module_import.remove_pyname(pyname):
+        source = module_import.get_changed_source()
+    return source

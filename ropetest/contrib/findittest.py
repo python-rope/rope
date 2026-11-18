@@ -3,6 +3,7 @@ from textwrap import dedent
 
 from rope.base import exceptions
 from rope.contrib.findit import find_definition, find_implementations, find_occurrences
+from rope.refactor.rename import Rename
 from ropetest import testutils
 
 
@@ -48,6 +49,15 @@ class FindItTest(unittest.TestCase):
             self.project, mod1, mod1.read().index("a_func"), unsure=True
         )
         self.assertEqual(2, len(result))
+
+    def test_find_occurrences_after_the_module_changes(self):
+        mod = testutils.create_module(self.project, "mod")
+        mod.write("a_var = 1\nprint(a_var)\n")
+        result = find_occurrences(self.project, mod, 1)
+        self.assertEqual([0, 16], [occurrence.offset for occurrence in result])
+        mod.write("\na_var = 1\nb_var = a_var\nprint(a_var)\n")
+        result = find_occurrences(self.project, mod, 2)
+        self.assertEqual([1, 19, 31], [occurrence.offset for occurrence in result])
 
     def test_find_occurrences_resources_parameter(self):
         mod1 = testutils.create_module(self.project, "mod1")
@@ -149,6 +159,63 @@ class FindItTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(def_offset, result.offset)
 
+    # A class-method def following an f-string with an unmatched literal
+    # bracket: the unmatched bracket used to fold every following newline,
+    # desyncing offsets so worder mis-read the method def header --
+    # find_definition returned None (or the call site) and Rename silently
+    # corrupted the file (renamed the call, orphaned the def).  Module-level
+    # defs after the same f-string stayed immune.
+
+    _FSTRING_METHOD_CODE = dedent("""\
+        class C(object):
+            def run(self):
+                label = f"[{self}"
+                self.target()
+
+            def target(self):
+                pass
+    """)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_find_definition_of_method_after_fstring_bracket(self):
+        code = self._FSTRING_METHOD_CODE
+        call_offset = code.index("self.target()") + len("self.")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("def target") + len("def ")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_rename_heals_method_after_fstring_bracket(self):
+        mod = testutils.create_module(self.project, "mod")
+        code = self._FSTRING_METHOD_CODE
+        mod.write(code)
+        call_offset = code.index("self.target()") + len("self.")
+        changes = Rename(self.project, mod, call_offset).get_changes("renamed")
+        self.project.do(changes)
+        result = mod.read()
+        # both the call and the def must be renamed -- not silently orphaned
+        self.assertEqual(0, result.count("target"))
+        self.assertEqual(2, result.count("renamed"))
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_module_function_after_fstring_still_resolves(self):
+        # module-level defs after the same f-string are immune and must stay working
+        code = dedent("""\
+            def run():
+                label = f"[{run}"
+
+            def target():
+                pass
+
+            target()
+        """)
+        call_offset = code.rindex("target")
+        result = find_definition(self.project, code, call_offset)
+        def_offset = code.index("def target") + len("def ")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
+
     def test_find_definition_instance_method(self):
         code = dedent("""\
             class C(object):
@@ -221,5 +288,7 @@ class FindItTest(unittest.TestCase):
         call_offset = code.rindex("target")
         result = find_definition(self.project, code, call_offset)
         def_offset = code.index("target")
+        self.assertIsNotNone(result)
+        self.assertEqual(def_offset, result.offset)
         self.assertIsNotNone(result)
         self.assertEqual(def_offset, result.offset)

@@ -22,11 +22,9 @@ def assert_collects_doa_data(project):
 @pytest.fixture
 def captured_run_module(project, tmp_path):
     def _run_module(file):
-        runner = project.pycore.run_module(
-            file,
-            stdout=stdout.open("w"),
-        )
-        runner.wait_process()
+        with stdout.open("w") as output:
+            runner = project.pycore.run_module(file, stdout=output)
+            runner.wait_process()
         return stdout.read_text()
 
     stdout = tmp_path / "stdout"

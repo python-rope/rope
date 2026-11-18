@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from rope.base import ast, exceptions, pynames, pynamesdef, utils
+from rope.base import ast, exceptions, pynames, pynamesdef, pyobjects, utils
 from rope.refactor.importutils import actions, importinfo
 
 
@@ -25,8 +25,9 @@ class ModuleImports:
         return result
 
     def _get_unbound_names(self, defined_pyobject):
-        visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        visitor.visit(self.pymodule.get_ast())
+        source_module = defined_pyobject.get_module()
+        visitor = _GlobalUnboundNameFinder(source_module, defined_pyobject)
+        visitor.visit(source_module.get_ast())
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
@@ -114,7 +115,7 @@ class ModuleImports:
 
     def get_used_imports(self, defined_pyobject):
         result = []
-        can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
+        can_select = _OneTimeSelector(self.get_used_names(defined_pyobject))
         visitor = actions.FilteringVisitor(
             self.project, self._current_folder(), can_select
         )
@@ -123,6 +124,30 @@ class ModuleImports:
             if new_import is not None and not new_import.is_empty():
                 result.append(new_import)
         return result
+
+    def get_used_names(self, defined_pyobject):
+        """Return lexical references and a module's declared export names."""
+        names = self._get_unbound_names(defined_pyobject)
+        from rope.base import evaluate
+        from rope.refactor import occurrences
+
+        module = defined_pyobject.get_module()
+        index = module.get_source_binding_index()
+        scope = defined_pyobject.get_scope()
+        for name, binding in module._get_structural_attributes().items():
+            if not isinstance(binding, (pynames.ImportedName, pynames.ImportedModule)):
+                continue
+            for reference in index.quoted_annotation_references(name):
+                line = module.lines.get_line_number(reference[0])
+                if scope.get_start() <= line <= scope.get_end():
+                    actual = evaluate.eval_str(reference[4].environment, name)
+                    if occurrences.same_pyname(binding, actual):
+                        names.add(name)
+                        break
+        if isinstance(defined_pyobject, pyobjects.AbstractModule):
+            # A package exports through its ``__init__`` module.
+            names |= self._get_all_star_list(defined_pyobject.get_module())
+        return names
 
     def get_changed_source(self):
         if not self.project.prefs.get("pull_imports_to_top") and not self.sorted:
@@ -223,6 +248,9 @@ class ModuleImports:
     def _get_new_import_lineno(self):
         if self.imports:
             return self.imports[-1].end_line
+        for node in self.pymodule.get_ast().body:
+            if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+                return node.lineno + 1
         return 1
 
     def filter_names(self, can_select):
@@ -247,8 +275,7 @@ class ModuleImports:
             for added_import in added_imports:
                 if added_import.accept(visitor):
                     import_stmt.empty_import()
-            else:
-                added_imports.append(import_stmt)
+            added_imports.append(import_stmt)
 
     def force_single_imports(self):
         """force a single import per statement"""
@@ -373,12 +400,16 @@ class ModuleImports:
         return visitor.to_be_renamed
 
     def remove_pyname(self, pyname):
-        """Removes pyname when imported in ``from mod import x``"""
+        """Remove pyname when imported in ``from mod import x``.
+
+        Returns the names that were actually removed.
+        """
         visitor = actions.RemovePyNameVisitor(
             self.project, self.pymodule, pyname, self._current_folder()
         )
         for import_stmt in self.imports:
             import_stmt.accept(visitor)
+        return visitor.removed_names
 
 
 def get_first_decorator_or_function_start_line(node):

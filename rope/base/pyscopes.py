@@ -1,6 +1,4 @@
-import rope.base.builtins  # Use full qualification for clarity.
 from rope.base import ast, codeanalyze, exceptions, pynames, utils
-from rope.refactor import patchedast
 
 
 class Scope:
@@ -31,13 +29,22 @@ class Scope:
         """The same as ``key in self.get_names()``"""
         return key in self.get_names()
 
-    @utils.saveit
     def get_scopes(self):
         """Return the subscopes of this scope
 
         The returned scopes should be sorted by the order they appear.
         """
-        return self._create_scopes()
+        scopes = getattr(self, "_scopes", None)
+        if scopes is None:
+            scopes = self._create_scopes()
+            # While the owner is being created, the recursion guard in
+            # _get_structural_attributes returns a temporary empty set; caching
+            # that answer (saveit) would leave a permanent empty list for
+            # structural references. The cache is only stored once the owner's
+            # defined objects exist.
+            if getattr(self.pyobject, "defineds", None) is not None:
+                self._scopes = scopes
+        return scopes
 
     def lookup(self, name):
         if name in self.get_names():
@@ -45,6 +52,10 @@ class Scope:
         if self.parent is not None:
             return self.parent._propagated_lookup(name)
         return None
+
+    def get_binding_scopes(self):
+        module = self._get_global_scope().pyobject
+        return module.get_source_binding_index().children_of(self)
 
     def get_propagated_names(self):
         """Return the visible names of this scope
@@ -83,6 +94,7 @@ class Scope:
             return body[0].lineno
         return self.get_start()
 
+    @utils.saveit
     def get_end(self):
         pymodule = self._get_global_scope().pyobject
         return pymodule.logical_lines.logical_line_in(self.logical_end)[1]
@@ -99,14 +111,24 @@ class Scope:
     def get_kind(self):
         pass
 
+    @utils.saveit
     def get_region(self):
-        self._calculate_scope_regions_for_module()
+        global_scope = self._get_global_scope()
         node = self.pyobject.get_ast()
-        region = patchedast.node_region(node)
-        return region
-
-    def _calculate_scope_regions_for_module(self):
-        self._get_global_scope()._calculate_scope_regions()
+        if isinstance(node, ast.Module):
+            return (0, len(global_scope._get_source()))
+        start, end = global_scope._ast_lines[node]
+        if start is None or end is None:
+            raise exceptions.RopeError("Scope AST has no complete source positions")
+        decorators = getattr(node, "decorator_list", ())
+        if decorators:
+            decorator_start, _ = global_scope._ast_lines[decorators[0]]
+            if decorator_start is None:
+                raise exceptions.RopeError("Decorator AST has no source positions")
+            start = global_scope._region_source.rfind_token("@", 0, decorator_start)
+            if start is None:
+                raise exceptions.RopeError("Scope decorator has no source marker")
+        return (start, end)
 
     def in_region(self, offset):
         """Checks if offset is in scope region"""
@@ -119,6 +141,7 @@ class GlobalScope(Scope):
     def __init__(self, pycore, module):
         super().__init__(pycore, module, None)
         self.names = module._get_concluded_data()
+        self._inner_scopes_for_lines = {}
 
     def get_start(self):
         return 1
@@ -134,10 +157,21 @@ class GlobalScope(Scope):
                 return self.builtin_names[name]
             raise exceptions.NameNotFoundError("name %s not found" % name)
 
+    @property
     @utils.saveit
-    def _calculate_scope_regions(self):
-        source = self._get_source()
-        patchedast.patch_ast(self.pyobject.get_ast(), source)
+    def _ast_lines(self):
+        return codeanalyze.ASTLinesAdapter(self._get_source())
+
+    @property
+    @utils.saveit
+    def _region_source(self):
+        # Deferred import: rope.refactor's package init pulls the analysis
+        # stack, which reaches evaluate; evaluate subclasses this module's
+        # TemporaryScope at import time, so a module-level import here is
+        # circular when pyscopes loads first.
+        from rope.refactor import patchedast
+
+        return patchedast._Source(self._get_source())
 
     def _get_source(self):
         return self.pyobject.source_code
@@ -150,9 +184,21 @@ class GlobalScope(Scope):
         return self.names.get()
 
     def get_inner_scope_for_line(self, lineno, indents=None):
-        return self._scope_finder.get_holding_scope(self, lineno, indents)
+        # The holding scope for a (line, indents) pair is a structural
+        # property of the module: inference follows thousands of name paths
+        # through the same lines, so the tree walk runs once per pair for the
+        # lifetime of this module scope (rebuilt with its pymodule).
+        key = (lineno, indents)
+        cached = self._inner_scopes_for_lines.get(key)
+        if cached is None:
+            cached = self._scope_finder.get_holding_scope(self, lineno, indents)
+            self._inner_scopes_for_lines[key] = cached
+        return cached
 
     def get_inner_scope_for_offset(self, offset):
+        return self._scope_finder.get_holding_scope_for_offset(self, offset)
+
+    def get_structural_scope_for_offset(self, offset):
         return self._scope_finder.get_holding_scope_for_offset(self, offset)
 
     @property
@@ -162,7 +208,30 @@ class GlobalScope(Scope):
 
     @property
     def builtin_names(self):
+        # Deferred import: builtins imports evaluate, whose SourceValueScope
+        # subclasses this module's TemporaryScope at import time; a module-level
+        # import here re-enters a half-initialized pyscopes (circular).
+        import rope.base.builtins  # Use full qualification for clarity.
+
         return rope.base.builtins.builtins.get_attributes()
+
+
+class BuiltinModuleScope(Scope):
+    """Module scope over a C/builtin module.
+
+    Builtin modules carry no source, concluded data, or child scopes; their
+    names are the live attribute mapping of the native module.
+    """
+
+    def __init__(self, pyobject):
+        super().__init__(getattr(pyobject, "pycore", None), pyobject, None)
+        self.names = pyobject.attributes
+
+    def get_start(self):
+        return 1
+
+    def get_kind(self):
+        return "Module"
 
 
 class ComprehensionScope(Scope):
@@ -211,15 +280,24 @@ class FunctionScope(Scope):
     def _get_names(self):
         if self.names is None:
             self._visit_function()
+        module = self.pyobject.get_module()
+        if module.requires_header_bindings():
+            module._get_source_binding_index().prepare_header_bindings(self)
         return self.names
 
     def _visit_function(self):
         if self.names is None:
             new_visitor = self.visitor(self.pycore, self.pyobject)
-            for n in ast.iter_child_nodes(self.pyobject.get_ast()):
+            for n in self.pyobject.get_ast().body:
                 new_visitor.visit(n)
             self.names = new_visitor.names
-            self.names.update(self.pyobject.get_parameters())
+            parameters = self.pyobject.get_parameters()
+            for name, parameter in parameters.items():
+                assigned = self.names.get(name)
+                if isinstance(assigned, pynames.AssignedName):
+                    assigned.initial_binding = parameter
+                    parameter.assigned_value = assigned
+            self.names.update(parameters)
             self.returned_asts = new_visitor.returned_asts
             self.is_generator = new_visitor.generator
             self.defineds = new_visitor.defineds

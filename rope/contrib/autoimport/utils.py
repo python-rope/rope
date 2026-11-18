@@ -5,6 +5,7 @@ import sys
 from collections import OrderedDict
 from typing import Generator, List, Optional, Tuple
 
+from rope.base import libutils
 from rope.base.project import Project
 
 from .defs import ModuleCompiled, ModuleFile, ModuleInfo, Package, PackageType, Source
@@ -49,10 +50,10 @@ def get_package_source(
     """Detect the source of a given package. Rudimentary implementation."""
     if name in sys.builtin_module_names:
         return Source.BUILTIN
-    if project is not None and package.resolve().is_relative_to(
-        project.root.pathlib.resolve()
-    ):
-        return Source.PROJECT
+    if project is not None:
+        relative = libutils.path_relative_to_project_root(project, str(package))
+        if relative is not None and not project.is_ignored(project.get_file(relative)):
+            return Source.PROJECT
     if "site-packages" in package.parts:
         return Source.SITE_PACKAGE
     if sys.version_info < (3, 10, 0):
@@ -71,6 +72,14 @@ def get_modname_from_path(
     package_name: str = package_path.stem
     rel_path_parts = modpath.relative_to(package_path).parts
     modname = ""
+    try:
+        site_packages_index = rel_path_parts.index("site-packages")
+        raise RuntimeError("No site-packages allowed here.", modpath)
+    except ValueError:
+        pass
+    else:
+        # If path includes "site-packages", we're interested in part after this.
+        rel_path_parts = rel_path_parts[site_packages_index + 1 :]
     if len(rel_path_parts) > 0:
         for part in rel_path_parts[:-1]:
             modname += part
@@ -122,6 +131,9 @@ def get_files(
     else:
         assert package.path
         for file in package.path.glob("**/*.py"):
+            # Nested installation roots are discovered as separate packages.
+            if "site-packages" in file.relative_to(package.path).parts:
+                continue
             if file.name == "__init__.py":
                 yield ModuleFile(
                     file,

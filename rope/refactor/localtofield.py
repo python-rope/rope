@@ -35,7 +35,16 @@ class LocalToField:
             raise exceptions.RefactoringError("The field %s already exists" % name)
 
     def _get_field_name(self, pyfunction, name):
-        self_name = pyfunction.get_param_names()[0]
+        if pyfunction.get_kind() == "staticmethod":
+            raise exceptions.RefactoringError(
+                "Cannot convert a local variable to a field without a method receiver."
+            )
+        positional = pyfunction.get_positional_param_names()
+        if not positional:
+            raise exceptions.RefactoringError(
+                "Cannot convert a local variable to a field without a method receiver."
+            )
+        self_name = positional[0]
         new_name = self_name + "." + name
         return new_name
 

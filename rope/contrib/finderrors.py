@@ -47,7 +47,9 @@ class _BadAccessFinder(ast.RopeNodeVisitor):
     def _Name(self, node):
         if isinstance(node.ctx, (ast.Store, ast.Param)):
             return
-        scope = self.scope.get_inner_scope_for_line(node.lineno)
+        scope = (
+            self.pymodule.get_source_binding_index().context_for_node(node).environment
+        )
         pyname = scope.lookup(node.id)
         if pyname is None:
             self._add_error(node, "Unresolved variable")
@@ -56,7 +58,11 @@ class _BadAccessFinder(ast.RopeNodeVisitor):
 
     def _Attribute(self, node):
         if not isinstance(node.ctx, ast.Store):
-            scope = self.scope.get_inner_scope_for_line(node.lineno)
+            scope = (
+                self.pymodule.get_source_binding_index()
+                .context_for_node(node)
+                .environment
+            )
             pyname = evaluate.eval_node(scope, node.value)
             if pyname is not None and pyname.get_object() != pyobjects.get_unknown():
                 if node.attr not in pyname.get_object():
@@ -73,6 +79,15 @@ class _BadAccessFinder(ast.RopeNodeVisitor):
             self.errors.append(error)
 
     def _is_defined_after(self, scope, pyname, lineno):
+        binding_scope = getattr(pyname, "binding_scope", None)
+        if not getattr(pyname, "is_refactoring_identity_safe", True):
+            return False
+        if binding_scope is not None and binding_scope.get_kind() in {
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        }:
+            return False
         location = pyname.get_definition_location()
         if location is not None and location[1] is not None:
             if (

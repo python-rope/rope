@@ -108,6 +108,28 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
+    def test_extract_function_with_fstring(self):
+        code = dedent("""\
+            def main():
+                h = 1
+                g = f"#{h}"
+                print(g)
+        """)
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, "extracted")
+
+        expected = dedent("""\
+            def main():
+                h = 1
+                g = extracted(h)
+                print(g)
+
+            def extracted(h):
+                g = f"#{h}"
+                return g
+        """)
+        self.assertEqual(expected, refactored)
+
     def test_extract_function_containing_dict_generalized_unpacking(self):
         code = dedent("""\
             def a_func(dict1):
@@ -1314,7 +1336,6 @@ class ExtractMethodTest(unittest.TestCase):
         """)
         self.assertEqual(expected, refactored)
 
-    @unittest.expectedFailure
     @testutils.only_for_versions_higher("3.6")
     def test_extract_method_f_string_false_format_value_in_regular_string(self):
         code = dedent("""\
@@ -1785,6 +1806,153 @@ class ExtractMethodTest(unittest.TestCase):
 
             def new_func():
                 print(1)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_class_body(self):
+        code = dedent("""\
+            class TSV:
+                delimiter = "\\t"
+
+            print(TSV.delimiter)
+        """)
+        start = code.index('"\\t"')
+        end = start + len('"\\t"')
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return "\\t"
+
+            class TSV:
+                delimiter = extracted()
+
+            print(TSV.delimiter)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_class_body_reading_class_variables(self):
+        code = dedent("""\
+            class A:
+                a = 1
+                b = a + 2
+        """)
+        start = code.index("a + 2")
+        end = start + len("a + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted(a):
+                return a + 2
+
+            class A:
+                a = 1
+                b = extracted(a)
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_decorated_class_body(self):
+        code = dedent("""\
+            @decorator
+            class A:
+                a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            @decorator
+            class A:
+                a = extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_class_body_inside_function(self):
+        code = dedent("""\
+            def f():
+                class A:
+                    a = 1 + 2
+                return A
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+            def f():
+
+                def extracted():
+                    return 1 + 2
+
+                class A:
+                    a = extracted()
+                return A
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_extract_method_in_nested_class_body(self):
+        code = dedent("""\
+            class A:
+                class B:
+                    a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(code, start, end, "extracted")
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            class A:
+                class B:
+                    a = extracted()
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_global_extract_method_in_class_body(self):
+        code = dedent("""\
+            def f():
+                class A:
+                    a = 1 + 2
+                return A
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(
+            code, start, end, "extracted", global_=True
+        )
+        expected = dedent("""\
+            def f():
+                class A:
+                    a = extracted()
+                return A
+
+            def extracted():
+                return 1 + 2
+        """)
+        self.assertEqual(expected, refactored)
+
+    def test_global_extract_method_in_module_level_class_body(self):
+        code = dedent("""\
+            class A:
+                a = 1 + 2
+        """)
+        start = code.index("1 + 2")
+        end = start + len("1 + 2")
+        refactored = self.do_extract_method(
+            code, start, end, "extracted", global_=True
+        )
+        expected = dedent("""\
+
+            def extracted():
+                return 1 + 2
+
+            class A:
+                a = extracted()
         """)
         self.assertEqual(expected, refactored)
 
@@ -2403,18 +2571,11 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = code.index(extract_target), code.index(extract_target) + len(
             extract_target
         )
-        refactored = self.do_extract_method(code, start, end, "new_func")
-        expected = dedent("""\
-            def foo(a):
-                if i, c := new_func(a):
-                    i += 1
-                    c += 1
-                print(i)
-
-            def new_func(a):
-                return (i := a == (c := 5))
-        """)
-        self.assertEqual(expected, refactored)
+        with self.assertRaisesRegex(
+            rope.base.exceptions.RefactoringError,
+            "Extracted piece cannot contain named expression \\(:= operator\\).",
+        ):
+            self.do_extract_method(code, start, end, "new_func")
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_function_expression_with_inline_assignment_in_inner_expression(
@@ -2541,27 +2702,6 @@ class ExtractMethodTest(unittest.TestCase):
                 return var
         """)
         self.assertEqual(expected, refactored)
-
-    @testutils.only_for_versions_higher("3.5")
-    @testutils.only_for_versions_lower("3.8")
-    def test_extract_refactor_containing_async_for_loop_should_error_before_py38(self):
-        """
-        Refactoring async/await syntaxes is only supported in Python 3.8 and
-        higher because support for ast.PyCF_ALLOW_TOP_LEVEL_AWAIT was only
-        added to the standard library in Python 3.8.
-        """
-        code = dedent("""\
-            async def my_func(my_list):
-                async for x in my_list:
-                    var = x + 1
-                return var
-        """)
-        start, end = self._convert_line_range_to_offset(code, 2, 3)
-        with self.assertRaisesRegex(
-            rope.base.exceptions.RefactoringError,
-            "Extracted piece can only have async/await statements if Rope is running on Python 3.8 or higher",
-        ):
-            self.do_extract_method(code, start, end, "new_func")
 
     @testutils.only_for_versions_higher("3.8")
     def test_extract_refactor_containing_async_for_loop_is_supported_after_py38(self):

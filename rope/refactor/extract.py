@@ -206,7 +206,27 @@ class _ExtractInfo:
 
     @property
     def method(self):
-        return self.scope.parent is not None and self.scope.parent.get_kind() == "Class"
+        return (
+            self.scope.get_kind() == "Function"
+            and self.scope.parent is not None
+            and self.scope.parent.get_kind() == "Class"
+        )
+
+    @property
+    def class_to_define_before(self):
+        """The class the extracted function must be defined before, if any
+
+        Class bodies run when the class is defined, so a function extracted
+        from a class body has to be defined before the (outermost) class.
+        """
+        if self.scope.get_kind() != "Class":
+            return None
+        scope = self.scope
+        while scope.parent.get_kind() == "Class":
+            scope = scope.parent
+        if self.make_global and scope.parent.get_kind() != "Module":
+            return None
+        return scope
 
     @property
     def indents(self):
@@ -400,6 +420,8 @@ class _DefinitionLocationFinder:
     def find_lineno(self):
         if self.info.variable and not self.info.make_global:
             return self._get_before_line()
+        if self.info.class_to_define_before is not None:
+            return self._get_before_class()
         if self.info.global_:
             toplevel = self._find_toplevel(self.info.scope)
             ast = self.info.pymodule.get_ast()
@@ -420,6 +442,10 @@ class _DefinitionLocationFinder:
     def find_indents(self):
         if self.info.variable and not self.info.make_global:
             return sourceutils.get_indents(self.info.lines, self._get_before_line())
+        if self.info.class_to_define_before is not None:
+            return sourceutils.get_indents(
+                self.info.lines, self.info.class_to_define_before.get_start()
+            )
         else:
             if self.info.global_ or self.info.make_global:
                 return 0
@@ -431,6 +457,10 @@ class _DefinitionLocationFinder:
 
     def _get_after_scope(self):
         return self.info.scope.get_end() + 1
+
+    def _get_before_class(self):
+        node = self.info.class_to_define_before.pyobject.get_ast()
+        return min([node.lineno] + [d.lineno for d in node.decorator_list])
 
 
 class _ExceptionalConditionChecker:
@@ -489,14 +519,6 @@ class _ExceptionalConditionChecker:
             )
         if usefunction._yield_count(node):
             raise RefactoringError("Extracted piece cannot have yield statements.")
-        if not hasattr(
-            ast, "PyCF_ALLOW_TOP_LEVEL_AWAIT"
-        ) and _AsyncStatementFinder.has_errors(extracted):
-            raise RefactoringError(
-                "Extracted piece can only have async/await "
-                "statements if Rope is running on Python "
-                "3.8 or higher"
-            )
         if count == 1 and not usefunction._returns_last(node):
             raise RefactoringError("Return should be the last statement.")
         if info.region != info.lines_region:
@@ -558,7 +580,7 @@ class _ExtractMethodParts(ast.RopeNodeVisitor):
         return self.info.method and _get_function_kind(self.info.scope) == "classmethod"
 
     def get_definition(self):
-        if self.info.global_:
+        if self.info.global_ or self.info.class_to_define_before is not None:
             return "\n%s\n" % self._get_function_definition()
         else:
             return "\n%s" % self._get_function_definition()
@@ -904,7 +926,12 @@ class _FunctionInformationCollector(ast.RopeNodeVisitor):
             self.visit(node.target)
 
     def _ClassDef(self, node):
-        self._written_variable(node.name, node.lineno)
+        if not self.is_global and self.host_function:
+            self.host_function = False
+            for child in node.body:
+                self.visit(child)
+        else:
+            self._written_variable(node.name, node.lineno)
 
     def _ListComp(self, node):
         self._comp_exp(node)
@@ -1082,23 +1109,6 @@ class _UnmatchedBreakOrContinueFinder(_BaseErrorFinder):
     def check_loop(self):
         if self.loop_count < 1:
             self.error = True
-
-    def _FunctionDef(self, node):
-        pass
-
-    def _ClassDef(self, node):
-        pass
-
-
-class _AsyncStatementFinder(_BaseErrorFinder):
-    def __init__(self):
-        self.error = False
-
-    def _AsyncFor(self, node):
-        self.error = True
-
-    def _AsyncWith(self, node):
-        self.error = True
 
     def _FunctionDef(self, node):
         pass

@@ -242,6 +242,131 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_as_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *_] as old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.rindex("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *_] as new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_star_capture(self):
+        code = dedent("""\
+            match value:
+                case [1, *old_name] if old_name:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case [1, *new_name] if new_name:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_renaming_match_mapping_rest_capture(self):
+        code = dedent("""\
+            match value:
+                case {"key": item, **old_name}:
+                    print(old_name)
+        """)
+        refactored = self._local_rename(
+            code, code.index("old_name") + 1, "new_name"
+        )
+        self.assertEqual(
+            dedent("""\
+                match value:
+                    case {"key": item, **new_name}:
+                        print(new_name)
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias(self):
+        code = dedent("""\
+            type old_name = int
+            x: old_name = 1
+        """)
+        refactored = self._local_rename(code, code.index("old_name") + 1, "new_name")
+        self.assertEqual(
+            dedent("""\
+                type new_name = int
+                x: new_name = 1
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias_from_its_usage(self):
+        code = dedent("""\
+            type old_name = int
+            def a_func(param: old_name) -> old_name:
+                pass
+        """)
+        offset = code.rindex("old_name") + 1
+        refactored = self._local_rename(code, offset, "new_name")
+        self.assertEqual(
+            dedent("""\
+                type new_name = int
+                def a_func(param: new_name) -> new_name:
+                    pass
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_type_alias_in_function_scope(self):
+        code = dedent("""\
+            old_name = 1
+            def a_func():
+                type old_name = int
+                x: old_name = 1
+        """)
+        offset = code.index("old_name", code.index("type")) + 1
+        refactored = self._local_rename(code, offset, "new_name")
+        self.assertEqual(
+            dedent("""\
+                old_name = 1
+                def a_func():
+                    type new_name = int
+                    x: new_name = 1
+            """),
+            refactored,
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_renaming_generic_type_alias(self):
+        code = dedent("""\
+            type OldAlias[T] = list[T]
+            x: OldAlias[int] = []
+        """)
+        refactored = self._local_rename(code, code.index("OldAlias") + 1, "NewAlias")
+        self.assertEqual(
+            dedent("""\
+                type NewAlias[T] = list[T]
+                x: NewAlias[int] = []
+            """),
+            refactored,
+        )
+
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = dedent("""\
             def a_func(p1=None, p2=None):
@@ -319,6 +444,46 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_preserves_normalized_fstring_identifiers(self):
+        code = dedent("""\
+            target = 1
+            K = 2
+            unrelated = f'{\u212a}'
+            message = f'{target + \u212a}'
+        """)
+        expected = dedent("""\
+            renamed = 1
+            K = 2
+            unrelated = f'{\u212a}'
+            message = f'{renamed + \u212a}'
+        """)
+        self.assertEqual(
+            expected,
+            self._local_rename(code, code.index("target"), "renamed"),
+        )
+
+    def test_renaming_multiline_fstring_preserves_continuation_indentation(self):
+        code = dedent('''\
+            target = 1
+            message = f"""{(
+                target
+                + target
+              + target
+            )}"""
+        ''')
+        expected = dedent('''\
+            renamed = 1
+            message = f"""{(
+                renamed
+                + renamed
+              + renamed
+            )}"""
+        ''')
+        self.assertEqual(
+            expected,
+            self._local_rename(code, code.index("target"), "renamed"),
+        )
+
     def test_renaming_occurrence_in_nested_f_string(self):
         code = dedent("""\
             a_var = 20
@@ -329,6 +494,42 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             a_string=f'{f"{new_var}"}'
         """)
         refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_occurrence_in_f_string_with_reused_quotes(self):
+        code = dedent('''\
+            a_var = {"key": 20}
+            a_string=f"{a_var['key']} and {a_var['key']:>2}"
+        ''')
+        expected = dedent('''\
+            new_var = {"key": 20}
+            a_string=f"{new_var['key']} and {new_var['key']:>2}"
+        ''')
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_occurrence_in_f_string_format_spec(self):
+        code = dedent("""\
+            a_var = 4
+            a_string=f"{a_var:>{a_var}}"
+        """)
+        expected = dedent("""\
+            new_var = 4
+            a_string=f"{new_var:>{new_var}}"
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_comprehension_binding_in_f_string_format_spec(self):
+        code = dedent("""\
+            values = [1, 2]
+            result = [f"{item:>{item}}" for item in values]
+        """)
+        expected = dedent("""\
+            values = [1, 2]
+            result = [f"{value:>{value}}" for value in values]
+        """)
+        refactored = self._local_rename(code, code.index("item in"), "value")
         self.assertEqual(expected, refactored)
 
     def test_renaming_attribute_occurrences_in_f_string(self):
@@ -638,6 +839,111 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
                 mod1.new_func()
             """),
             mod2.read(),
+        )
+
+    def test_renaming_external_import_preserves_imported_name(self):
+        self.project.prefs.add("extension_modules", "builtins")
+        code = "from builtins import zip\nresult = list(zip([1], [2]))\n"
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from builtins import zip as pairs\nresult = list(pairs([1], [2]))\n",
+            refactored,
+        )
+        namespace = {}
+        exec(refactored, namespace)
+        self.assertEqual([(1, 2)], namespace["result"])
+
+    def test_renaming_external_import_with_same_alias(self):
+        code = "from builtins import zip as zip\nresult = zip([], [])\n"
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from builtins import zip as pairs\nresult = pairs([], [])\n",
+            refactored,
+        )
+
+    def test_renaming_external_import_with_different_alias(self):
+        code = "from builtins import zip as pairs\nresult = pairs([], [])\n"
+        refactored = self._local_rename(code, code.rindex("pairs"), "new_pairs")
+        self.assertEqual(
+            "from builtins import zip as new_pairs\nresult = new_pairs([], [])\n",
+            refactored,
+        )
+
+    def test_renaming_multiline_external_import_after_unicode(self):
+        code = dedent("""\
+            café = 1; from builtins import (
+                zip as  # Keep the imported name.
+                zip,
+            )
+            result = zip([], [])
+        """)
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            dedent("""\
+                café = 1; from builtins import (
+                    zip as  # Keep the imported name.
+                    pairs,
+                )
+                result = pairs([], [])
+            """),
+            refactored,
+        )
+
+    def test_renaming_conditional_external_import_from_another_module(self):
+        compat = testutils.create_module(self.project, "compat")
+        compat.write(dedent("""\
+            import sys
+            if sys.version_info[0] >= 3:
+                from builtins import map, zip
+            else:
+                zip = lambda *args: None
+        """))
+        mod = testutils.create_module(self.project, "mod")
+        mod.write("from compat import zip\nresult = list(zip([1], [2]))\n")
+        self._rename(mod, mod.read().rindex("zip"), "pairs")
+        self.assertEqual(
+            dedent("""\
+                import sys
+                if sys.version_info[0] >= 3:
+                    from builtins import map, zip as pairs
+                else:
+                    pairs = lambda *args: None
+            """),
+            compat.read(),
+        )
+        self.assertEqual(
+            "from compat import pairs\nresult = list(pairs([1], [2]))\n",
+            mod.read(),
+        )
+
+    def test_renaming_import_from_external_python_module(self):
+        external_project = testutils.sample_project()
+        self.addCleanup(testutils.remove_project, external_project)
+        external = testutils.create_module(external_project, "external")
+        external.write("value = 42\n")
+        self.project.prefs.add("python_path", external_project.address)
+        code = "from external import value\nresult = value\n"
+        refactored = self._local_rename(code, code.rindex("value"), "new_value")
+        self.assertEqual(
+            "from external import value as new_value\nresult = new_value\n",
+            refactored,
+        )
+        self.assertEqual("value = 42\n", external.read())
+
+    def test_renaming_external_import_does_not_resolve_unrelated_import(self):
+        invalid = testutils.create_module(self.project, "invalid")
+        invalid.write("def broken(:\n")
+        code = (
+            "from invalid import other\n"
+            "from builtins import zip\n"
+            "result = zip([], [])\n"
+        )
+        refactored = self._local_rename(code, code.rindex("zip"), "pairs")
+        self.assertEqual(
+            "from invalid import other\n"
+            "from builtins import zip as pairs\n"
+            "result = pairs([], [])\n",
+            refactored,
         )
 
     def test_applying_all_changes_together(self):

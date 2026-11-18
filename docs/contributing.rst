@@ -92,16 +92,36 @@ more specific to Traad.
 Source Repository
 =================
 
-Rope uses GitHub_. The repository exists at
-`python-rope/rope`_.
+Rope uses GitHub_. The upstream repository is `python-rope/rope`_.
+This guide's fork automation is maintained in `marlon-costa-dc/rope`_.
+
+.. _`marlon-costa-dc/rope`: https://github.com/marlon-costa-dc/rope
 
 Setting up for local development
 ================================
 
-#. Clone repository: ``git clone https://github.com/python-rope/rope.git``
-#. Create a virtualenv: ``python -m venv rope-venv``
-#. Activate the virtualenv
-#. Install the project into the venv: ``pip install -e '.[doc,dev]'``
+Clone the fork's ``dc-use`` integration branch, which contains this Makefile::
+
+    git clone --branch dc-use https://github.com/marlon-costa-dc/rope.git
+    cd rope
+
+On a POSIX system:
+
+#. Install Make and ``uv``.
+#. Run ``make setup`` from the checkout root.
+
+The fork's Makefile owns the physical development environment outside the
+checkout. ``BOOTSTRAP_PYTHON`` selects its interpreter; its default is declared
+in that Makefile. Use the same root Makefile for the checks described below.
+Setup installs the project's ``doc`` and ``dev`` extras. An existing environment
+with another interpreter is rejected before installation.
+
+On native Windows, use Python's ``venv`` module to create a separate environment
+outside the checkout, select that environment's interpreter, then run
+``python -m pip install -e ".[doc,dev]"`` from the checkout root. The native
+``python -m pytest`` workflow in ``.github/workflows/main.yml`` runs on Windows;
+the POSIX Makefile is not its launcher. Both platforms consume the same project
+extras and test suite.
 
 Submitting pull requests
 ========================
@@ -128,9 +148,47 @@ Programming Style
 Testing
 -------
 
-Rope uses `pytest`_. To run the test::
+Rope uses `pytest`_. On POSIX, the fork's root Makefile prepares its own physical
+development environment and runs the complete suite with coverage::
 
-    pytest -v
+    make setup
+    make test
+
+The test recipe distributes the complete inventory across the bounded worker
+count declared by ``TEST_WORKERS`` in the Makefile. ``loadscope`` keeps each
+class or module's tests together. Workers own their temporary projects and
+fixture environments; the controller publishes the combined coverage and
+persistent test cache. Automatic worker restarts are disabled, so a crashed
+worker fails the invocation without rerunning its tests.
+
+Before collection, the pytest session selects the public multiprocessing
+``spawn`` context. This keeps process-based tests safe inside multithreaded
+xdist workers on the supported Python versions. It does not change the SDK's
+process policy or claim coverage of production's fork context. The native
+recipe starts a fresh interpreter; a process that fixed its context earlier
+is rejected before collection rather than having that context forcibly replaced.
+Timeout limits
+use the installed pytest-timeout marker directly, so worker startup cannot
+replace a test body with a compatibility decorator.
+
+The environment and test cache live outside the checkout. For a diagnostic
+profile of that same invocation, pass an explicit output path whose parent
+directory already exists::
+
+    make test TEST_PROFILE=/absolute/path/to/existing-directory/test.pstats
+
+The invocation writes the raw profile and a complete cumulative-time report at
+the same path with ``.txt`` appended. The text report reads the saved raw profile.
+
+Profiling is disabled by default and does not change test selection, coverage,
+or cache configuration. The profile covers the controller's pytest module,
+including worker coordination and pytest teardown; it does not cover worker
+execution, other subprocess internals, or interpreter shutdown after the module
+exits. Original exceptions and nonzero exits propagate unchanged. A profile
+publication failure fails an otherwise successful invocation. When execution
+already failed, its secondary publication traceback is printed without replacing
+the original failure or changing its exception chain. An interrupted or incomplete run
+remains a failed diagnostic, even when a profile was saved.
 
 Many of rope's tests are still written using
 ``unittest.TestCase`` style, but running the test suite using
@@ -139,10 +197,6 @@ vanilla ``unittest`` is no longer supported.
 Make sure to have complete test suite passing and
 add new tests for the changes you are providing with each new
 submission.
-
-All required packages for development could be installed with::
-
-    pip install -e ".[dev]"
 
 .. _GitHub: http://github.com/
 .. _`python-rope/rope`: https://github.com/python-rope/rope

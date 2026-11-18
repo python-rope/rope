@@ -2,11 +2,65 @@ import unittest
 from textwrap import dedent
 
 import rope.base.builtins  # Use fully-qualified names for clarity.
-from rope.base import libutils
+from rope.base import libutils, pyobjects
+from rope.refactor import occurrences
 from ropetest import testutils
 
 
 class ObjectInferTest(unittest.TestCase):
+    def test_formatted_string_type_preserves_nested_call_references(self):
+        code = "def render():\n    return 7\n\nresult = f'{render()!r:>4}'\n"
+        namespace = {}
+        exec(code, namespace)
+        scope = libutils.get_string_scope(self.project, code)
+        self.assertIs(type(namespace["result"]), str)
+        self.assertIs(
+            scope["result"].get_object().get_type(), rope.base.builtins.get_str_type()
+        )
+        references = occurrences.create_finder(
+            self.project, "render", scope["render"]
+        ).find_occurrences(pymodule=scope.pyobject)
+        self.assertEqual(2, len(tuple(references)))
+
+    def test_conditional_callable_does_not_select_last_branch_identity(self):
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                code = f"enabled = {enabled}\nexecute = eval if enabled else str\nresult = execute('7')\n"
+                namespace = {}
+                exec(code, namespace)
+                self.assertEqual(7 if enabled else '7', namespace["result"])
+                scope = libutils.get_string_scope(self.project, code)
+                self.assertIs(pyobjects.get_unknown(), scope["execute"].get_object())
+
+    def test_conditional_callable_preserves_identical_binding(self):
+        code = "enabled = True\nexecute = str if enabled else str\nresult = execute(7)\n"
+        namespace = {}
+        exec(code, namespace)
+        self.assertEqual('7', namespace["result"])
+        scope = libutils.get_string_scope(self.project, code)
+        self.assertIs(scope["str"].get_object(), scope["execute"].get_object())
+
+    def test_conditional_method_keeps_receiver_identity_in_the_proof(self):
+        code = (
+            "class Owner:\n    def run(self):\n        return self\n\n"
+            "left = Owner()\nright = Owner()\nenabled = True\n"
+            "execute = left.run if enabled else right.run\nresult = execute()\n"
+        )
+        namespace = {}
+        exec(code, namespace)
+        self.assertIs(namespace['left'], namespace['result'])
+        scope = libutils.get_string_scope(self.project, code)
+        self.assertIs(pyobjects.get_unknown(), scope['execute'].get_object())
+
+    def test_literal_condition_selects_only_the_proven_branch(self):
+        for condition in (True, False):
+            with self.subTest(condition=condition):
+                code = f"execute = eval if {condition} else str\nresult = execute('7')\n"
+                namespace = {}
+                exec(code, namespace)
+                scope = libutils.get_string_scope(self.project, code)
+                self.assertIs(scope['eval' if condition else 'str'].get_object(), scope['execute'].get_object())
+
     def setUp(self):
         super().setUp()
         self.project = testutils.sample_project()
@@ -209,6 +263,28 @@ class ObjectInferTest(unittest.TestCase):
         a_var = pymod["a_var"].get_object()
         self.assertEqual(a_class, a_var.get_type())
 
+    def test_getting_property_decorator_attributes_on_file_modules(self):
+        # Recording the getter call information must not resolve the getter
+        # back from its own textual form: for a decorated property the class
+        # attribute is the evaluated property itself, and resolving it while
+        # the property is still being inferred discards the inference result.
+        mod = testutils.create_module(self.project, "mod")
+        mod.write(
+            dedent("""\
+                class A(object):
+                    pass
+                class B(object):
+                    @property
+                    def p(self):
+                        return A()
+                a_var = B().p
+            """)
+        )
+        pymod = self.project.get_pymodule(mod)
+        a_class = pymod["A"].get_object()
+        a_var = pymod["a_var"].get_object()
+        self.assertEqual(a_class, a_var.get_type())
+
     def test_lambda_functions(self):
         code = dedent("""\
             class C(object):
@@ -323,6 +399,17 @@ class ObjectInferTest(unittest.TestCase):
         c_class = mod["C"].get_object()
         a_var = mod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_capture_is_unknown(self):
+        code = dedent("""\
+            captured = 1
+            match value:
+                case [1, *_] as captured:
+                    pass
+        """)
+        scope = libutils.get_string_scope(self.project, code)
+        self.assertEqual(pyobjects.get_unknown(), scope["captured"].get_object())
 
     def test_basic_list_comprehensions(self):
         code = dedent("""\

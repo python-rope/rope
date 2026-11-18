@@ -1,4 +1,6 @@
 include README.rst COPYING setup.py MANIFEST.in CHANGELOG.md ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0-py3-none-any.whl ropetest-package-fixtures/external_fixturepkg/dist/external_fixturepkg-1.0.0.tar.gz
 recursive-include rope *.py
+include rope/py.typed
+include Makefile
 recursive-include docs *.rst
 recursive-include ropetest *.py

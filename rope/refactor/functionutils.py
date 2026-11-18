@@ -1,34 +1,64 @@
 from typing import List, Tuple
 
-from rope.base import ast, pyobjects, worder
-from rope.base.builtins import Lambda
+from rope.base import ast, exceptions, pyobjects, worder
+from rope.base.builtins import Lambda, bound_receiver
 from rope.base.codeanalyze import ASTLinesAdapter
+
+
+def _get_function_signature(pyfunction):
+    """Read the original signature without using the legacy editable model."""
+    pymodule = pyfunction.get_module()
+    word_finder = worder.Worder(pymodule.source_code)
+    start = pymodule.lines.get_line_start(pyfunction.get_ast().lineno)
+    if isinstance(pyfunction, Lambda):
+        return word_finder.get_lambda_and_args(start)
+    return word_finder.get_function_and_args_in_header(start)
+
+
+def _check_signature_parameters(pyfunction):
+    """Refuse parameter kinds the legacy signature writer cannot preserve."""
+    arguments = pyfunction.get_ast().args
+    if arguments.posonlyargs or arguments.kwonlyargs:
+        raise exceptions.RefactoringError(
+            "This refactoring does not support positional-only or keyword-only parameters."
+        )
 
 
 class DefinitionInfo:
     def __init__(
-        self, function_name, is_method, args_with_defaults, args_arg, keywords_arg
+        self,
+        function_name,
+        is_method,
+        args_with_defaults,
+        args_arg,
+        keywords_arg,
+        annotations=None,
     ):
         self.function_name = function_name
         self.is_method = is_method
         self.args_with_defaults = args_with_defaults
         self.args_arg = args_arg
         self.keywords_arg = keywords_arg
+        self.annotations = annotations or {}
 
-    def to_string(self):
-        return f"{self.function_name}({self.arguments_to_string()})"
+    def to_string(self, *, annotated=False):
+        return f"{self.function_name}({self.arguments_to_string(annotated=annotated)})"
 
-    def arguments_to_string(self, from_index=0):
+    def arguments_to_string(self, from_index=0, *, annotated=False):
+        def parameter(name):
+            annotation = self.annotations.get(name) if annotated else None
+            return f"{name}: {annotation}" if annotation is not None else name
+
         params = []
         for arg, default in self.args_with_defaults:
             if default is not None:
-                params.append(f"{arg}={default}")
+                params.append(f"{parameter(arg)}={default}")
             else:
-                params.append(arg)
+                params.append(parameter(arg))
         if self.args_arg is not None:
-            params.append("*" + self.args_arg)
+            params.append("*" + parameter(self.args_arg))
         if self.keywords_arg:
-            params.append("**" + self.keywords_arg)
+            params.append("**" + parameter(self.keywords_arg))
         return ", ".join(params[from_index:])
 
     @staticmethod
@@ -54,19 +84,16 @@ class DefinitionInfo:
             args_with_defaults,
             args_arg,
             keywords_arg,
+            {
+                argument.arg: info._get_source_range(argument.annotation)
+                for argument in ast.walk(info.ast.args)
+                if isinstance(argument, ast.arg) and argument.annotation is not None
+            },
         )
 
     @staticmethod
     def read(pyfunction):
-        pymodule = pyfunction.get_module()
-        word_finder = worder.Worder(pymodule.source_code)
-        lineno = pyfunction.get_ast().lineno
-        start = pymodule.lines.get_line_start(lineno)
-        if isinstance(pyfunction, Lambda):
-            call = word_finder.get_lambda_and_args(start)
-        else:
-            call = word_finder.get_function_and_args_in_header(start)
-        return DefinitionInfo._read(pyfunction, call)
+        return DefinitionInfo._read(pyfunction, _get_function_signature(pyfunction))
 
 
 class CallInfo:
@@ -137,7 +164,10 @@ class CallInfo:
     def _is_method_call(primary, pyname):
         return (
             primary is not None
-            and isinstance(primary.get_object().get_type(), pyobjects.PyClass)
+            and isinstance(
+                bound_receiver(primary.get_object()).get_type(),
+                pyobjects.PyClass,
+            )
             and CallInfo._is_method(pyname)
         )
 
@@ -231,7 +261,8 @@ class _BaseFunctionParser:
 
     def _get_source_range(self, tree: ast.AST) -> str:
         source = self._lines.get_source_segment(tree)
-        assert source is not None
+        if source is None:
+            raise exceptions.RefactoringError("Missing native function source range")
         return source
 
 
@@ -250,17 +281,16 @@ class _FunctionDefParser(_BaseFunctionParser):
         # properly to handle them properly at some point
         args = []
         kwargs = []
-        args += [arg.arg for arg in self.ast.args.posonlyargs]
-        args += [arg.arg for arg in self.ast.args.args]
+        positional = self.ast.args.posonlyargs + self.ast.args.args
+        defaults = self.ast.args.defaults
+        required = len(positional) - len(defaults)
+        args += [arg.arg for arg in positional[:required]]
+        kwargs += [
+            (argument.arg, self._get_source_range(value))
+            for argument, value in zip(positional[required:], defaults)
+        ]
         if self.ast.args.vararg is not None:
             args += ["*" + self.ast.args.vararg.arg]
-        if len(self.ast.args.defaults) > 0:
-            defaults = self.ast.args.defaults
-            kwargs += [
-                (name, self._get_source_range(value))
-                for name, value in zip(args[-len(defaults) :], defaults)
-            ]
-            del args[-len(self.ast.args.defaults) :]
         if self.ast.args.kwarg is not None:
             args += ["**" + self.ast.args.kwarg.arg]
         if self.ast.args.kwonlyargs:

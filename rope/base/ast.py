@@ -8,18 +8,31 @@ try:
     # Suppress the mypy complaint: Module "ast" has no attribute "_const_node_type_names"
     from ast import _const_node_type_names  # type: ignore
 except ImportError:
-    # backported from stdlib `ast`
-    assert sys.version_info < (3, 8) or sys.version_info >= (3, 14)
-    _const_node_type_names = {
-        bool: "NameConstant",  # should be before int
-        type(None): "NameConstant",
-        int: "Num",
-        float: "Num",
-        complex: "Num",
-        str: "Str",
-        bytes: "Bytes",
-        type(...): "Ellipsis",
-    }
+    if sys.version_info >= (3, 8):
+        # Python 3.14+ removed _const_node_type_names; all constant literals
+        # are represented as ast.Constant nodes.
+        _const_node_type_names = {
+            bool: "Constant",  # should be before int
+            type(None): "Constant",
+            int: "Constant",
+            float: "Constant",
+            complex: "Constant",
+            str: "Constant",
+            bytes: "Constant",
+            type(...): "Constant",
+        }
+    else:
+        # Python < 3.8 used separate node types (Num, Str, Bytes, etc.)
+        _const_node_type_names = {
+            bool: "NameConstant",  # should be before int
+            type(None): "NameConstant",
+            int: "Num",
+            float: "Num",
+            complex: "Num",
+            str: "Str",
+            bytes: "Bytes",
+            type(...): "Ellipsis",
+        }
 
 
 def parse(source, filename="<string>", *args, **kwargs):  # type: ignore

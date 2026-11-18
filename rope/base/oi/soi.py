@@ -5,9 +5,12 @@ package.
 
 """
 
+import typing
+
 import rope.base.builtins  # Use full qualification for clarity.
-from rope.base import arguments, evaluate, pynames, pyobjects, utils
+from rope.base import arguments, ast, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
+from rope.base.oi.type_hinting.utils import hint_instance
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
 
@@ -33,7 +36,7 @@ def infer_returned_object(pyfunction, args):
     ).make_return_provider()
     type_ = hint_return(pyfunction)
     if type_ is not None:
-        return pyobjects.PyObject(type_)
+        return hint_instance(type_)
 
 
 @_ignore_inferred
@@ -49,39 +52,266 @@ def infer_parameter_objects(pyfunction):
 
 def _handle_first_parameter(pyobject, parameters):
     kind = pyobject.get_kind()
+    if not pyobject.get_positional_param_names():
+        return
     if not parameters:
-        if not pyobject.get_param_names(special_args=False):
-            return
         parameters.append(pyobjects.get_unknown())
+    if parameters[0] is not None and parameters[0] != pyobjects.get_unknown():
+        return
     if kind == "method":
         parameters[0] = pyobjects.PyObject(pyobject.parent)
     if kind == "classmethod":
         parameters[0] = pyobject.parent
 
 
+def relevant_branch_context(pyname, branch_context):
+    """Return the part of `branch_context` that selects `pyname` assignments
+
+    Branches that contain none of the assignments of `pyname` cannot change
+    its value and are dropped.
+
+    """
+    relevant = set()
+    for assignment in pyname.assignments:
+        assignment_context = _assignment_branch_context(assignment, pyname.module)
+        if assignment_context is not None:
+            relevant.update(branch for branch, _ in assignment_context)
+    return tuple((branch, arm) for branch, arm in branch_context if branch in relevant)
+
+
 @_ignore_inferred
-def infer_assigned_object(pyname):
-    if not pyname.assignments:
-        return
-    for assignment in reversed(pyname.assignments):
-        result = _infer_assignment(assignment, pyname.module)
+def infer_assigned_object(pyname, *, branch_context=(), read_node=None):
+    read_point = None
+    if pyname.initial_binding is not None:
+        source_index = pyname.module._get_source_binding_index()
+        read_context = source_index.context_for_node(read_node)
         if (
+            read_context is None
+            or read_context.structural_scope.pyobject
+            is not pyname.initial_binding.pyfunction
+        ):
+            return pyobjects.get_unknown()
+        read_point = source_index._span(read_node)[0]
+    elif read_node is not None and read_node is pyname.module.get_ast():
+        # A read after the whole module executed (PEP 649 lazy annotations):
+        # every assignment is visible and each value keeps its own epoch.
+        read_point = pyname.module._get_source_binding_index()._span(read_node)[1]
+    elif read_node is not None:
+        source_index = pyname.module._get_source_binding_index()
+        read_context = source_index.context_for_node(read_node)
+        if read_context is not None:
+            read_point = source_index._span(read_node)[0]
+    context = dict(relevant_branch_context(pyname, branch_context))
+    context.update(pyname._inference_assignment_context)
+    limit = pyname._inference_assignment_limit
+    if limit is None:
+        limit = len(pyname.assignments)
+    if not limit:
+        if any(arm is None for arm in context.values()):
+            pyname._inference_assignment_ambiguous = True
+            return pyobjects.get_unknown()
+        if pyname.initial_binding is not None:
+            return pyname.initial_binding.get_object()
+        return
+    result, ambiguous = _infer_assignment_path(
+        pyname,
+        limit - 1,
+        context,
+        pyname._inference_assignment_limit is not None or read_point is not None,
+        read_point,
+    )
+    if ambiguous:
+        if pyname._inference_assignment_limit is not None:
+            pyname._inference_assignment_ambiguous = True
+        return pyobjects.get_unknown()
+    if (
+        result is not None
+        and result is not pyobjects.get_unknown()
+        and not (
             isinstance(result, rope.base.builtins.BuiltinUnknown)
             and result.get_name() == "NotImplementedType"
-        ):
-            break
-        elif result == pyobjects.get_unknown():
-            break
-        elif result is not None:
-            return result
+        )
+    ):
+        return result
 
     hint_assignment = get_type_hinting_factory(
         pyname.module.pycore.project
     ).make_assignment_provider()
     hinting_result = hint_assignment(pyname)
     if hinting_result is not None:
-        return pyobjects.PyObject(hinting_result)
+        return hint_instance(hinting_result)
     return result
+
+
+def _infer_assignment_path(pyname, index, context, recursive, read_point=None):
+    if recursive and any(arm is None for arm in context.values()):
+        return pyobjects.get_unknown(), True
+    while index >= 0:
+        assignment = pyname.assignments[index]
+        if read_point is not None and assignment.ast_node is None:
+            index -= 1
+            continue
+        branch_context = _assignment_branch_context(assignment, pyname.module)
+        if branch_context is None:
+            return pyobjects.get_unknown(), True
+        if read_point is not None:
+            source_index = pyname.module._get_source_binding_index()
+            if source_index.context_for_node(assignment.ast_node) is None:
+                return pyobjects.get_unknown(), True
+            if source_index._span(assignment.ast_node)[1] > read_point:
+                index -= 1
+                continue
+        for branch, arm in branch_context:
+            if arm is None:
+                continue
+            if isinstance(branch.test, ast.Constant):
+                selected = bool(branch.test.value)
+            else:
+                selected = context.get(branch)
+                if selected is None and _is_type_checking(branch.test, pyname.module):
+                    selected = True
+            if selected is not None and selected != arm:
+                break
+            if selected is None:
+                matching = dict(context)
+                matching[branch] = arm
+                other = dict(context)
+                other[branch] = not arm
+                first, first_ambiguous = _infer_assignment_path(
+                    pyname, index, matching, recursive, read_point
+                )
+                second, second_ambiguous = _infer_assignment_path(
+                    pyname, index - 1, other, recursive, read_point
+                )
+                if not first_ambiguous and not second_ambiguous and first is second:
+                    return first, False
+                return pyobjects.get_unknown(), True
+        else:
+            unsupported = {branch: arm for branch, arm in branch_context if arm is None}
+            if recursive and unsupported:
+                return pyobjects.get_unknown(), True
+            previous_limit = pyname._inference_assignment_limit
+            previous_context = pyname._inference_assignment_context
+            previous_ambiguous = pyname._inference_assignment_ambiguous
+            pyname._inference_assignment_limit = index
+            pyname._inference_assignment_context = tuple(context.items()) + tuple(
+                unsupported.items()
+            )
+            pyname._inference_assignment_ambiguous = False
+            try:
+                result = _infer_assignment(
+                    assignment,
+                    pyname.module,
+                    branch_context=tuple(context.items()) + branch_context,
+                    source_epoch=read_point is not None
+                    and pyname.initial_binding is None,
+                )
+                ambiguous = pyname._inference_assignment_ambiguous
+            finally:
+                pyname._inference_assignment_limit = previous_limit
+                pyname._inference_assignment_context = previous_context
+                pyname._inference_assignment_ambiguous = previous_ambiguous
+            if ambiguous:
+                return pyobjects.get_unknown(), True
+            if result is not None:
+                return result, False
+            if read_point is not None:
+                return pyobjects.get_unknown(), True
+        index -= 1
+    if pyname.initial_binding is not None:
+        return pyname.initial_binding.get_object(), False
+    return None, False
+
+
+def _is_type_checking(test, pymodule):
+    """Tell whether a branch test reads `typing.TYPE_CHECKING`
+
+    PEP 484 has static analysis assume `typing.TYPE_CHECKING` is true. The
+    decision is kept with the module's concluded data, so it is made once
+    until a module of the project changes.
+
+    """
+    decided = pymodule._type_checking_tests()
+    if decided.get() is None:
+        decided.set({})
+    if test not in decided.get():
+        decided.get()[test] = _reads_type_checking(test, pymodule)
+    return decided.get()[test]
+
+
+def _reads_type_checking(test, pymodule):
+    """Follow the bindings a branch test reads to `typing.TYPE_CHECKING`
+
+    Imports, attributes of imported modules and a name's single plain
+    assignment (typing_extensions binds ``TYPE_CHECKING =
+    typing.TYPE_CHECKING``) are followed, each binding at most once. No
+    object is inferred: a test that needs inference to resolve, a name
+    spelled alike elsewhere, a name written more than once (rebound,
+    augmented, deleted, or assigned under ``global``/``nonlocal``) and a
+    `typing` module without the constant all read as not `TYPE_CHECKING`.
+
+    The constant is recognized by its place, the ``TYPE_CHECKING`` attribute
+    of the module named `typing`, not by its value: a project ``typing.py``
+    or ``typing/__init__.py`` that shadows the standard module and binds
+    ``TYPE_CHECKING = False`` is still read as true.
+
+    """
+    pyname, name = _read_binding(test, pymodule)
+    followed = set()
+    while pyname is not None and pyname not in followed:
+        followed.add(pyname)
+        if isinstance(pyname, pynames.ImportedName):
+            name = pyname.imported_name
+            pyname = pyname._get_imported_pyname()
+            continue
+        if not isinstance(pyname, pynames.AssignedName):
+            return False
+        module, _ = pyname.get_definition_location()
+        if module is None:
+            return False
+        if (
+            module.get_attributes().get("TYPE_CHECKING") is pyname
+            and module.get_name() == "typing"
+        ):
+            return True
+        if len(pyname.assignments) != 1:
+            return False
+        if len(module._get_source_binding_index().name_writes(pyname, name)) != 1:
+            return False
+        (assignment,) = pyname.assignments
+        if assignment.levels or assignment.evaluation:
+            return False
+        pyname, name = _read_binding(assignment.ast_node, module)
+    return False
+
+
+def _read_binding(node, pymodule):
+    """Return the binding a name or an imported module's attribute reads
+
+    The binding comes with the name it is bound to in its own namespace.
+    """
+    if isinstance(node, ast.Name):
+        context = pymodule._get_source_binding_index().context_for_node(node)
+        if context is not None:
+            return context.environment.lookup(node.id), node.id
+    if isinstance(node, ast.Attribute):
+        owner, _ = _read_binding(node.value, pymodule)
+        if isinstance(owner, pynames.ImportedModule):
+            return owner.get_object().get_attributes().get(node.attr), node.attr
+    return None, None
+
+
+def _assignment_branch_context(assignment, pymodule):
+    node = assignment.type_hint or assignment.ast_node
+    context = pymodule._get_source_binding_index().context_for_node(node)
+    if context is not None:
+        return context.branch_context
+    if assignment.branch_context is not None:
+        return assignment.branch_context
+    # Assignments outside the source binding index (for instance those of an
+    # independently parsed expression) carry no branch information; like
+    # upstream, they are inferred as unconditional assignments.
+    return ()
 
 
 def get_passed_objects(pyfunction, parameter_index):
@@ -130,7 +360,7 @@ def _parameter_objects(pyobject):
     for name in params:
         type_ = hint_param(pyobject, name)
         if type_ is not None:
-            result.append(pyobjects.PyObject(type_))
+            result.append(hint_instance(type_))
         else:
             result.append(pyobjects.get_unknown())
     return result
@@ -139,9 +369,39 @@ def _parameter_objects(pyobject):
 # handling `rope.base.pynames.AssignmentValue`
 
 
+def _declared_alias_value(assignment, pymodule):
+    """Bind a PEP 613 ``X: TypeAlias = Y`` to ``Y`` itself, as ``X = Y`` does.
+
+    The annotation declares an alias, not the type of an instance, so the
+    assignment is inferred from its value once the annotation resolves to the
+    runtime ``typing.TypeAlias`` form (``typing_extensions`` re-exports it).
+    """
+    hint = assignment.type_hint
+    if hint is None or assignment.ast_node is None:
+        return assignment
+    scope = pymodule.get_scope().get_inner_scope_for_line(_get_lineno_for_node(hint))
+    form = evaluate.eval_node(scope, hint)
+    if form is None or not rope.base.builtins._is_runtime_form(
+        form.get_object(), typing.TypeAlias
+    ):
+        return assignment
+    return pynames.AssignmentValue(
+        assignment.ast_node,
+        assignment.levels,
+        assignment.evaluation,
+        branch_context=assignment.branch_context,
+    )
+
+
 @_ignore_inferred
-def _infer_assignment(assignment, pymodule):
-    result = _follow_pyname(assignment, pymodule)
+def _infer_assignment(assignment, pymodule, *, branch_context=(), source_epoch=False):
+    assignment = _declared_alias_value(assignment, pymodule)
+    assign_node = assignment.type_hint or assignment.ast_node
+    if isinstance(assign_node, ast.pattern):
+        return pyobjects.get_unknown()
+    result = _follow_pyname(
+        assignment, pymodule, branch_context=branch_context, source_epoch=source_epoch
+    )
     if result is None:
         return None
     pyname, pyobject = result
@@ -169,17 +429,31 @@ def _follow_levels(assignment, pyobject):
 
 
 @_ignore_inferred
-def _follow_pyname(assignment, pymodule, lineno=None):
+def _follow_pyname(
+    assignment, pymodule, lineno=None, *, branch_context=(), source_epoch=False
+):
     assign_node = assignment.type_hint or assignment.ast_node
     if lineno is None:
         lineno = _get_lineno_for_node(assign_node)
     holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+    holding_kind = holding_scope.get_kind()
+    if branch_context or source_epoch:
+        context = pymodule._get_source_binding_index().context_for_node(assign_node)
+        if context is not None:
+            holding_scope = context.environment
+        holding_scope = evaluate.SourceValueScope(
+            holding_scope,
+            holding_scope,
+            {},
+            branch_context=branch_context,
+            source_epoch=assign_node if source_epoch else None,
+        )
     pyname = evaluate.eval_node(holding_scope, assign_node)
     if pyname is not None:
         result = pyname.get_object()
         if (
             isinstance(result.get_type(), rope.base.builtins.Property)
-            and holding_scope.get_kind() == "Class"
+            and holding_kind == "Class"
         ):
             arg = pynames.UnboundName(pyobjects.PyObject(holding_scope.pyobject))
             return pyname, result.get_type().get_property_object(

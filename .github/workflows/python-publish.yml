@@ -3,19 +3,66 @@ name: Upload Python Package
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing GitHub Release tag to validate without republishing
+        required: true
+        type: string
+      release_commit:
+        description: Published release's recorded full tag-target commit SHA
+        required: true
+        type: string
 
 jobs:
+  verify-fork-release:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.release.tag_name, '+')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || github.sha }}
+    - name: Verify published tag still identifies the pinned source
+      env:
+        RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+        RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || github.sha }}
+      run: |
+        test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+        git fetch --no-tags origin "refs/tags/$RELEASE_TAG"
+        test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$(git rev-parse HEAD)"
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      with:
+        python-version: '3.13'
+    - name: Set up native artifact validation
+      run: |
+        python -m pip install uv
+        make setup
+    - name: Download published fork artifacts
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+      run: >-
+        gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+        --pattern '*.whl' --pattern '*.tar.gz' --dir dist
+    - name: Validate published wheel and source distribution
+      run: |
+        sha256sum dist/*.whl dist/*.tar.gz
+        make artifact-check
+
   deploy:
+    if: ${{ github.event_name == 'release' && !contains(github.event.release.tag_name, '+') }}
     runs-on: ubuntu-latest
     environment: publishing
     permissions:
       id-token: write
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.14'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

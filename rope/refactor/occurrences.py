@@ -40,7 +40,6 @@ import re
 from typing import Iterator
 
 from rope.base import (
-    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -80,8 +79,21 @@ class Finder:
         tools = _OccurrenceToolsCreator(
             self.project, resource=resource, pymodule=pymodule, docs=self.docs
         )
-        for offset in self._textual_finder.find_offsets(tools.source_code):
-            occurrence = Occurrence(tools, offset)
+        quoted = (
+            {
+                reference[0]: reference
+                for reference in tools.pymodule.get_source_binding_index().quoted_annotation_references(
+                    self.name
+                )
+            }
+            if self.name in tools.source_code or "\\" in tools.source_code
+            else {}
+        )
+        offsets = (
+            set(self._textual_finder.find_offsets(tools.source_code)) | quoted.keys()
+        )
+        for offset in sorted(offsets):
+            occurrence = Occurrence(tools, offset, quoted.get(offset))
             for filter in self.filters:
                 result = filter(occurrence)
                 if result is None:
@@ -118,6 +130,10 @@ def create_finder(
         filters.append(NoImportsFilter())
     if not keywords:
         filters.append(NoKeywordsFilter())
+    from rope.base.sourcebindings import SourceValueName
+
+    while isinstance(instance, SourceValueName):
+        instance = instance.source_pyname
     if isinstance(instance, pynames.ParameterName):
         for pyobject in instance.get_objects():
             try:
@@ -134,53 +150,80 @@ def create_finder(
 
 
 class Occurrence:
-    def __init__(self, tools, offset):
+    def __init__(self, tools, offset, quoted=None):
         self.tools = tools
         self.offset = offset
         self.resource = tools.resource
+        self.quoted = quoted
 
     @utils.saveit
     def get_word_range(self):
+        if self.quoted is not None:
+            return self.quoted[:2]
         return self.tools.word_finder.get_word_range(self.offset)
 
     @utils.saveit
     def get_primary_range(self):
+        if self.quoted is not None:
+            return self.quoted[2:4]
         return self.tools.word_finder.get_primary_range(self.offset)
+
+    def get_primary_text(self):
+        if self.quoted is not None:
+            return self.quoted[5]
+        start, end = self.get_primary_range()
+        return self.tools.source_code[start:end]
 
     @utils.saveit
     def get_pyname(self):
+        if self.quoted is not None:
+            return self.get_primary_and_pyname()[1]
         with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_pyname_at(self.offset)
 
     @utils.saveit
     def get_primary_and_pyname(self):
+        if self.quoted is not None:
+            return evaluate.eval_str2(self.quoted[4].environment, self.quoted[5])
         with contextlib.suppress(exceptions.BadIdentifierError):
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
 
     @utils.saveit
     def is_in_import_statement(self):
-        return self.tools.word_finder.is_from_statement(
-            self.offset
-        ) or self.tools.word_finder.is_import_statement(self.offset)
+        return any(
+            start <= self.offset < end
+            for layout in self.tools.pymodule.get_source_binding_index().import_layouts()
+            for start, end in (layout.region,)
+        )
 
     def is_called(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_function_being_called(self.offset)
 
     def is_defined(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
 
     def is_a_fixed_primary(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_a_class_or_function_name_in_header(
             self.offset
         ) or self.tools.word_finder.is_a_name_after_from_import(self.offset)
 
     def is_written(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_assigned_here(self.offset)
 
     def is_unsure(self):
         return unsure_pyname(self.get_pyname())
 
     def is_function_keyword_parameter(self):
+        if self.quoted is not None:
+            return False
         return self.tools.word_finder.is_function_keyword_parameter(self.offset)
 
     @property
@@ -194,6 +237,8 @@ def same_pyname(expected, pyname):
     """Check whether `expected` and `pyname` are the same"""
     if expected is None or pyname is None:
         return False
+    expected = getattr(expected, "source_pyname", expected)
+    pyname = getattr(pyname, "source_pyname", pyname)
     if expected == pyname:
         return True
     if not isinstance(
@@ -214,10 +259,40 @@ def unsure_pyname(pyname, unbound=True):
     """Return `True` if we don't know what this name references"""
     if pyname is None:
         return True
+    if not getattr(pyname, "is_refactoring_identity_safe", True):
+        return True
     if unbound and not isinstance(pyname, pynames.UnboundName):
         return False
     if pyname.get_object() == pyobjects.get_unknown():
         return True
+
+
+def check_opaque_references(project, pyname, resources, region=None, name=None):
+    if not getattr(pyname, "is_refactoring_identity_safe", True):
+        raise exceptions.RefactoringError(
+            "Cannot refactor a name with an unresolved source binding."
+        )
+    for resource in resources:
+        # Opaque references are Name nodes in annotation contexts; a module
+        # whose source never spells the name cannot hold one, and building
+        # its full source-binding index just to prove that is wasted work.
+        if name is not None:
+            source = resource.read()
+            if not re.search(rf"\b{re.escape(name)}\b", source):
+                continue
+        module = project.get_pymodule(resource)
+        index = module.get_source_binding_index()
+        for reference in index.opaque_references():
+            if region is not None:
+                start, _ = codeanalyze.ASTLinesAdapter(module.source_code)[
+                    reference.node
+                ]
+                if not region[0] <= start < region[1]:
+                    continue
+            if reference.may_reference(pyname):
+                raise exceptions.RefactoringError(
+                    "Cannot refactor a name possibly referenced in an unresolved annotation binding."
+                )
 
 
 class PyNameFilter:
@@ -311,14 +386,6 @@ class _TextualFinder:
     def __init__(self, name, docs=False):
         self.name = name
         self.docs = docs
-        self.comment_pattern = _TextualFinder.any("comment", [r"#[^\n]*"])
-        self.string_pattern = _TextualFinder.any(
-            "string", [codeanalyze.get_string_pattern()]
-        )
-        self.f_string_pattern = _TextualFinder.any(
-            "fstring", [codeanalyze.get_formatted_string_pattern()]
-        )
-        self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source: str) -> Iterator[int]:
         if not self._fast_file_query(source):
@@ -326,26 +393,12 @@ class _TextualFinder:
         if self.docs:
             searcher = self._normal_search
         else:
-            searcher = self._re_search
+            searcher = self._token_search
         yield from searcher(source)
 
-    def _re_search(self, source: str) -> Iterator[int]:
-        for match in self.pattern.finditer(source):
-            if match.groupdict()["occurrence"]:
-                yield match.start("occurrence")
-            elif match.groupdict()["fstring"]:
-                f_string = match.groupdict()["fstring"]
-                for offset in self._search_in_f_string(f_string):
-                    yield match.start("fstring") + offset
-
-    def _search_in_f_string(self, f_string: str) -> Iterator[int]:
-        tree = ast.parse(f_string)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and node.id == self.name:
-                yield node.col_offset
-            elif isinstance(node, ast.Attribute) and node.attr == self.name:
-                assert node.end_col_offset is not None
-                yield node.end_col_offset - len(self.name)
+    def _token_search(self, source: str) -> Iterator[int]:
+        """Yield the offsets of every NAME token equal to the searched name."""
+        yield from codeanalyze.name_offsets(source, self.name)
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0
@@ -371,27 +424,6 @@ class _TextualFinder:
             return resource.read()
         else:
             return pymodule.source_code
-
-    def _get_occurrence_pattern(self, name):
-        # A name directly followed by a quote is a string prefix, e.g. the
-        # ``f`` in ``f"..."``, never a reference to the name.
-        occurrence_pattern = _TextualFinder.any(
-            "occurrence", ["\\b" + name + "\\b(?![\"'])"]
-        )
-        pattern = re.compile(
-            occurrence_pattern
-            + "|"
-            + self.comment_pattern
-            + "|"
-            + self.string_pattern
-            + "|"
-            + self.f_string_pattern
-        )
-        return pattern
-
-    @staticmethod
-    def any(name, list_):
-        return "(?P<%s>" % name + "|".join(list_) + ")"
 
 
 class _OccurrenceToolsCreator:

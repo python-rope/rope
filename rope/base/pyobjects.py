@@ -19,6 +19,9 @@ class PyObject:
             raise exceptions.AttributeNotFoundError("Attribute %s not found" % name)
         return self.get_attributes()[name]
 
+    def get_holding_objects(self):
+        return (self.type,) if self.type is not self else ()
+
     def get_module(self):
         return None
 
@@ -120,6 +123,34 @@ def get_unknown():
     return PyObject._unknown
 
 
+class SampledValue(PyObject):
+    """A representative value whose container position or cursor is unproved."""
+
+    def __init__(self, representative, origin):
+        super().__init__(representative.get_type())
+        self.representative = representative
+        self.origin = origin
+
+    def get_attributes(self):
+        return self.representative.get_attributes()
+
+    def get_module(self):
+        return self.representative.get_module()
+
+
+def sampled_value(value, origin):
+    if value is None or value is get_unknown() or isinstance(value, SampledValue):
+        return value
+    return SampledValue(value, origin)
+
+
+def unsampled(value):
+    """Return the representative behind a sampled read, else ``value``."""
+    while isinstance(value, SampledValue):
+        value = value.representative
+    return value
+
+
 class AbstractClass(PyObject):
     def __init__(self):
         super().__init__(get_base_type("Type"))
@@ -133,17 +164,39 @@ class AbstractClass(PyObject):
     def get_superclasses(self):
         return []
 
+    def get_metaclass(self):
+        """Return the governing class, or the unresolved metaclass witness."""
+        from rope.base import builtins
+
+        return builtins.builtins["type"].get_object()
+
+    def get_bases(self):
+        """Return the resolved bases in declaration order
+
+        Each item is either a class or an `UnresolvedBase` standing
+        for a base expression rope could not evaluate to a class.
+        Non-class bases with `__mro_entries__` expand into their returned
+        classes. PEP 695 classes also retain their implicit Generic base.
+        `get_superclasses()` returns only the classes.
+
+        """
+        return self.get_superclasses()
+
     def get_mro(self):
         """Return the method resolution order of this class
 
         The order is the C3 linearization Python uses for ``__mro__``,
-        starting with this class.
+        starting with this class.  An `UnresolvedBase` keeps its place
+        in the order and contributes no ancestors.  Builtin classes
+        contribute their runtime ``__mro__``; a class whose hierarchy
+        names neither ``object`` nor a builtin class does not end with
+        ``object``.
 
         Raises `rope.base.exceptions.InconsistentHierarchyError` when
         Python would refuse to create the class.
 
         """
-        return linearize(self, self.get_superclasses())
+        return linearize(self, self.get_bases())
 
     def get_consistent_mro(self):
         """Return `get_mro()`, or `None` when Python would refuse the class
@@ -152,7 +205,7 @@ class AbstractClass(PyObject):
         `rope.base.exceptions.InconsistentHierarchyError`.
 
         """
-        return linearize(self, self.get_superclasses(), strict=False)
+        return linearize(self, self.get_bases(), strict=False)
 
     def _get_own_attributes(self):
         """Return the attributes this class defines itself
@@ -162,6 +215,82 @@ class AbstractClass(PyObject):
 
         """
         return self.get_attributes()
+
+
+class ConstructedClass(AbstractClass):
+    """A class produced by native class construction, without a source declaration."""
+
+    def __init__(self, name, bases, metaclass, attributes):
+        super().__init__()
+        self.name = name
+        self.bases = list(bases)
+        self.metaclass = metaclass
+        self.attributes = dict(attributes)
+
+    def get_name(self):
+        return self.name
+
+    def get_superclasses(self):
+        return self.bases
+
+    def get_metaclass(self):
+        return self.metaclass
+
+    def _get_own_attributes(self):
+        return self.attributes
+
+    def get_attributes(self):
+        result = {}
+        mro = self.get_consistent_mro()
+        if mro is None:
+            for base in reversed(self.get_superclasses()):
+                result.update(base.get_attributes())
+            result.update(self._get_own_attributes())
+            return result
+        for ancestor in reversed(mro):
+            result.update(ancestor._get_own_attributes())
+        return result
+
+
+class UnresolvedBase(PyObject):
+    """A class base that rope could not evaluate to a class
+
+    `node` is the base expression in the class statement.  `pyobject`
+    is what that expression evaluated to, or `None` when it did not
+    evaluate at all.
+
+    """
+
+    def __init__(self, node, pyobject=None):
+        super().__init__(get_base_type("Unknown"))
+        self.node = node
+        self.pyobject = pyobject
+
+    def __eq__(self, obj):
+        # Transient by design (never cached in `_bases`/`_mro`), so each
+        # re-evaluation builds a fresh instance: unresolved bases identify
+        # by their source expression and evaluation, not by identity.
+        if isinstance(obj, UnresolvedBase):
+            return self.node is obj.node and self.pyobject == obj.pyobject
+        return NotImplemented
+
+    def __ne__(self, obj):
+        result = self.__eq__(obj)
+        if result is NotImplemented:
+            return result
+        return not result
+
+    def __hash__(self):
+        return hash((UnresolvedBase, id(self.node)))
+
+    def get_mro(self):
+        return [self]
+
+    def get_consistent_mro(self):
+        return self.get_mro()
+
+    def _get_own_attributes(self):
+        return {}
 
 
 def linearize(cls, bases, strict=True):
@@ -178,7 +307,7 @@ def linearize(cls, bases, strict=True):
             if not strict:
                 return None
             raise exceptions.InconsistentHierarchyError(
-                "Duplicate base class in %s: %s" % (cls.get_name(), base.get_name())
+                f"Duplicate base class in {_class_name(cls)}: {_class_name(base)}"
             )
     if strict:
         sequences = [list(base.get_mro()) for base in bases]
@@ -200,14 +329,38 @@ def linearize(cls, bases, strict=True):
         else:
             if not strict:
                 return None
+            # Reporting the current heads identifies the pair of conflicting
+            # hierarchies; a bare message would hide which ones dispute the
+            # position. The sequence holding the unresolved head points to the
+            # transient base, and the modules tell where each sequence came from.
+            heads = []
+            for sequence in sequences:
+                head = _class_name(sequence[0])
+                if isinstance(sequence[0], UnresolvedBase):
+                    head = f"{head} (node={type(sequence[0].node).__name__}:{getattr(sequence[0].node, 'lineno', '?')})"
+                origins = []
+                for item in sequence[:3]:
+                    try:
+                        origins.append(
+                            f"{_class_name(item)}@{item.get_module().get_name()}"
+                        )
+                    except Exception:
+                        origins.append(_class_name(item))
+                heads.append(f"{head} | first3={origins}")
             raise exceptions.InconsistentHierarchyError(
-                "Cannot create a consistent method resolution order for %s"
-                % cls.get_name()
+                "Cannot create a consistent method resolution order "
+                f"for {_class_name(cls)} (blocked heads: {heads})"
             )
         result.append(head)
         for sequence in sequences:
             if sequence[0] is head:
                 del sequence[0]
+
+
+def _class_name(pyobject):
+    if isinstance(pyobject, UnresolvedBase):
+        return "<unresolved base>"
+    return pyobject.get_name()
 
 
 class AbstractFunction(PyObject):
@@ -222,6 +375,12 @@ class AbstractFunction(PyObject):
 
     def get_param_names(self, special_args=True):
         return []
+
+    def get_positional_param_names(self):
+        return self.get_param_names(special_args=False)
+
+    def get_keyword_param_names(self):
+        return self.get_param_names(special_args=False)
 
     def get_returned_object(self, args):
         return get_unknown()
@@ -270,6 +429,21 @@ class PyDefinedObject:
     def _get_structural_attributes(self):
         if self.structural_attributes is None:
             self.structural_attributes = self._create_structural_attributes()
+            # A cache published before structural creation completes can only
+            # have been computed under the recursion guard (an empty temporary
+            # set or a hierarchy evaluated against a partial world), so it is
+            # stale. Invalidating it on completion gives later callers the real
+            # set, as the function attribute visitor already does.
+            if self.attributes.get() is not None:
+                self.attributes.set(None)
+            if self.concluded_attributes.get() is not None:
+                self.concluded_attributes.set(None)
+            bases = getattr(self, "_bases", None)
+            mro = getattr(self, "_mro", None)
+            if bases is not None and bases.get() is not None:
+                bases.set(None)
+            if mro is not None and mro.get() is not None:
+                mro.set(None)
         return self.structural_attributes
 
     @utils.prevent_recursion(lambda: {})
@@ -321,10 +495,18 @@ class PyDefinedObject:
     def _get_defined_objects(self):
         if self.defineds is None:
             self._get_structural_attributes()
-        return self.defineds
+        # The recursion guard in _get_structural_attributes returns {} without
+        # completing creation, and objects without a visitor (for instance
+        # PyComprehension) also leave defineds as None. Callers iterate the
+        # result, so an empty mapping is the correct value on these paths.
+        return self.defineds if self.defineds is not None else {}
 
     def _create_structural_attributes(self):
         if self.visitor_class is None:
+            # Objects without a visitor (for instance PyComprehension) define
+            # nothing; otherwise defineds stays None and _get_defined_objects
+            # returns None, which breaks scope iteration.
+            self.defineds = {}
             return {}
         new_visitor = self.visitor_class(self.pycore, self)
         for child in ast.iter_child_nodes(self.ast_node):
@@ -395,6 +577,14 @@ class _PyModule(PyDefinedObject, AbstractModule):
     def _forget_concluded_data(self):
         for data in self.concluded_data:
             data._invalidate()
+
+    @utils.saveit
+    def _type_checking_tests(self):
+        """Branch tests of this module decided against `typing.TYPE_CHECKING`
+
+        A decision reads other modules, so it is concluded data.
+        """
+        return self._get_concluded_data()
 
     def get_resource(self):
         return self.resource

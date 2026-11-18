@@ -37,10 +37,131 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index("a_var") + 1)
         self.assertEqual("another_var = 10\n", refactored)
 
+    def test_inline_assignment_before_another_statement(self):
+        code = dedent("""\
+            value = "text"; other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual('other = 10\nprint(other, "text")\n', refactored)
+
+    def test_inline_first_target_of_chained_assignment(self):
+        code = dedent("""\
+            value = other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual("other = 10\nprint(other, 10)\n", refactored)
+
+    def test_inline_parenthesized_first_target_of_chained_assignment(self):
+        code = dedent("""\
+            (value) = other = 10
+            print(other, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual("other = 10\nprint(other, 10)\n", refactored)
+
+    def test_inline_parenthesized_last_target_of_chained_assignment(self):
+        code = dedent("""\
+            value = (other) = 10
+            print(value, other)
+        """)
+        refactored = self._inline(code, code.index("other") + 1)
+        self.assertEqual("value = 10\nprint(value, 10)\n", refactored)
+
+    def test_inline_annotated_assignment(self):
+        # A module-level ``AnnAssign`` publishes its annotation in the
+        # module ``__annotations__`` mapping, so discarding the statement
+        # while inlining would change runtime-observable state (#903).
+        code = dedent("""\
+            value: int = 10
+            print(value)
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("value") + 1)
+
+    def test_inline_annotated_assignment_without_removal_keeps_statement(self):
+        code = dedent("""\
+            value: int = 10
+            print(value)
+        """)
+        refactored = self._inline(
+            code, code.rindex("value") + 1, remove=False, only_current=True
+        )
+        self.assertEqual("value: int = 10\nprint(10)\n", refactored)
+
+    def test_inline_attribute_before_same_named_local_assignment(self):
+        code = dedent("""\
+            class Example:
+                def method(self):
+                    self.value = 10; value = 20
+                    print(self.value, value)
+        """)
+        refactored = self._inline(code, code.index("value") + 1)
+        self.assertEqual(
+            dedent("""\
+                class Example:
+                    def method(self):
+                        value = 20
+                        print(10, value)
+            """),
+            refactored,
+        )
+
+    def test_inline_local_after_same_named_attribute_in_chained_assignment(self):
+        code = dedent("""\
+            class Example:
+                def method(self):
+                    self.value = value = 10
+                    return self.value, value
+        """)
+        local_value = code.index("value", code.index("="))
+        refactored = self._inline(code, local_value + 1)
+        self.assertEqual(
+            dedent("""\
+                class Example:
+                    def method(self):
+                        self.value = 10
+                        return self.value, 10
+            """),
+            refactored,
+        )
+
     def test_empty_case(self):
         code = "a_var = 10\n"
         refactored = self._inline(code, code.index("a_var") + 1)
         self.assertEqual("", refactored)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_type_alias_is_refused(self):
+        code = dedent("""\
+            type an_alias = int
+            value = an_alias.__value__
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_lazily_evaluated_type_alias_is_refused(self):
+        code = dedent("""\
+            type an_alias = Later
+            def a_func(param: an_alias):
+                pass
+            class Later:
+                pass
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_inlining_generic_type_alias(self):
+        code = dedent("""\
+            type an_alias[T] = list[T]
+            def a_func(param: an_alias[int]):
+                pass
+        """)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline(code, code.index("an_alias") + 1)
 
     def test_long_definition(self):
         code = dedent("""\
@@ -112,6 +233,22 @@ class InlineTest(unittest.TestCase):
         code = "a_var = another_var\n"
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self._inline(code, code.index("another_var") + 1)
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_pattern_capture_cannot_be_inlined(self):
+        code = dedent("""\
+            old_name = 0
+            match value:
+                case old_name:
+                    print(old_name)
+            print(old_name)
+        """)
+        capture_offset = code.index("old_name", code.index("case")) + 1
+        with self.assertRaisesRegex(
+            rope.base.exceptions.RefactoringError,
+            "Pattern matching captures cannot be inlined",
+        ):
+            self._inline(code, capture_offset)
 
     def test_attribute_inlining(self):
         code = dedent("""\
@@ -353,6 +490,26 @@ class InlineTest(unittest.TestCase):
         """))
         self._inline2(self.mod, self.mod.read().index("a_func") + 1)
         self.assertEqual("print(1)\n", self.mod.read())
+
+    def test_parameters_used_as_subscript_assignment_indices(self):
+        code = dedent("""\
+            registry = {}
+            def get_registry():
+                return registry
+            def register(name, value):
+                get_registry()[name] = value
+            register("cache", 42)
+        """)
+        refactored = self._inline(code, code.index("register") + 1)
+        self.assertEqual(
+            dedent("""\
+                registry = {}
+                def get_registry():
+                    return registry
+                get_registry()["cache"] = 42
+            """),
+            refactored,
+        )
 
     def test_parameters_renaming_for_passed_statements(self):
         self.mod.write(dedent("""\

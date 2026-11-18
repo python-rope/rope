@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import runpy
+import sys
 import unittest
 from textwrap import dedent
 from typing import TYPE_CHECKING, Union
 
-from rope.base import exceptions
-from rope.refactor import move
+from rope.base import exceptions, libutils
+from rope.refactor import move, occurrences
 from ropetest import testutils
 
 if TYPE_CHECKING:
@@ -67,11 +69,665 @@ class MoveRefactoringTest(unittest.TestCase):
         changes = mover.get_changes(dest_attr, new_name=new_name)
         self.project.do(changes)
 
+    def test_move_nested_class_to_existing_class(self):
+        self.mod1.write(dedent("""\
+            from collections.abc import Mapping
+
+            class Owner:
+                class Inner:
+                    def size(self, value: Mapping[str, int]) -> int:
+                        return len(value)
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from mod1 import Owner
+            value = Owner.Inner()
+        """))
+        mover = move.create_move(
+            self.project, self.mod1, self.mod1.read().index("Inner")
+        )
+        changes = mover.get_changes(
+            self.mod2, destination_offset=self.mod2.read().index("Target")
+        )
+        self.project.do(changes)
+        self.assertNotIn("class Inner", self.mod1.read())
+        self.assertIn("class Inner", self.mod2.read())
+        self.assertIn("Mapping", self.mod2.read())
+        self.assertIn("mod2.Target.Inner()", self.mod3.read())
+        namespace = runpy.run_path(self.mod2.real_path)
+        self.assertEqual(1, namespace["Target"].Inner().size({"a": 1}))
+
+    def test_move_nested_class_preserves_explicit_namespace_import_root(self):
+        project = testutils.sample_project(source_folders=[""])
+        try:
+            namespace = project.root.create_folder("infra")
+            package = testutils.create_package(project, "contracts", namespace)
+            origin = testutils.create_module(project, "origin", package)
+            target = testutils.create_module(project, "current", package)
+            consumer = testutils.create_module(project, "consumer")
+            origin.write(dedent("""\
+                class Owner:
+                    class Inner:
+                        pass
+            """))
+            target.write(dedent("""\
+                class Target:
+                    pass
+            """))
+            consumer.write(dedent("""\
+                from infra.contracts.origin import Owner
+                value = Owner.Inner()
+            """))
+            self.assertIs(project.get_module("infra.contracts.current"), project.get_pymodule(target))
+            self.assertEqual("infra.contracts.current", libutils.modname(target))
+            mover = move.create_move(project, origin, origin.read().index("Inner"))
+            project.do(mover.get_changes(target, destination_offset=target.read().index("Target")))
+            self.assertIn("infra.contracts.current", consumer.read())
+            namespace = runpy.run_path(target.real_path)
+            self.assertIsInstance(namespace["Target"].Inner(), namespace["Target"].Inner)
+        finally:
+            testutils.remove_project(project)
+
+    def test_move_nested_class_with_recursive_nested_references(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    class Child:
+                        pass
+                    def clone(self):
+                        return Owner.Inner()
+                    def child(self):
+                        return Owner.Inner.Child()
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        self.project.do(mover.get_changes(self.mod2, destination_offset=self.mod2.read().index("Target")))
+        namespace = runpy.run_path(self.mod2.real_path)
+        inner = namespace["Target"].Inner
+        self.assertIsInstance(inner().clone(), inner)
+        self.assertIsInstance(inner().child(), inner.Child)
+
+    def test_move_nested_class_to_module(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+        """))
+        self.mod3.write(dedent("""\
+            from mod1 import Owner
+            value = Owner.Inner()
+        """))
+        self._move(self.mod1, self.mod1.read().index("Inner"), self.mod2)
+        self.assertIn("mod2.Inner()", self.mod3.read())
+        self.assertIn("class Inner:", self.mod2.read())
+        compile(self.mod1.read(), self.mod1.path, "exec")
+
+    def test_move_nested_class_in_same_module(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+            class Target:
+                pass
+            value = Owner.Inner()
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        self.project.do(mover.get_changes(self.mod1, destination_offset=self.mod1.read().index("Target")))
+        namespace = runpy.run_path(self.mod1.real_path)
+        self.assertIsInstance(namespace["value"], namespace["Target"].Inner)
+
+    def test_move_nested_class_rejects_enclosing_class_dependency(self):
+        source = dedent("""\
+            class Owner:
+                class Base:
+                    pass
+                class Inner(Base):
+                    pass
+        """)
+        self.mod1.write(source)
+        mover = move.create_move(self.project, self.mod1, source.index("Inner"))
+        with self.assertRaisesRegex(exceptions.RefactoringError, "enclosing"):
+            mover.get_changes(self.mod2)
+        self.assertEqual(source, self.mod1.read())
+
+    def test_move_nested_class_rejects_shadowed_enclosing_dependency(self):
+        source = dedent("""\
+            Base = object
+            class Owner:
+                class Base:
+                    pass
+                class Inner(Base):
+                    pass
+        """)
+        self.mod1.write(source)
+        mover = move.create_move(self.project, self.mod1, source.index("Inner"))
+        with self.assertRaisesRegex(exceptions.RefactoringError, "enclosing"):
+            mover.get_changes(self.mod2)
+        self.assertEqual(source, self.mod1.read())
+
+    def test_move_decorated_nested_class_copies_imports(self):
+        self.mod1.write(dedent("""\
+            from dataclasses import dataclass
+            class Owner:
+                @dataclass
+                class Inner:
+                    value: int
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        self.project.do(mover.get_changes(self.mod2, destination_offset=self.mod2.read().index("Target")))
+        namespace = runpy.run_path(self.mod2.real_path)
+        self.assertEqual(3, namespace["Target"].Inner(3).value)
+
+    def test_move_nested_class_rejects_destination_collision(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+        """))
+        destination = dedent("""\
+            class Target:
+                class Inner:
+                    pass
+        """)
+        self.mod2.write(destination)
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        with self.assertRaisesRegex(exceptions.RefactoringError, "Occupied"):
+            mover.get_changes(self.mod2, destination_offset=destination.index("Target"))
+        self.assertEqual(destination, self.mod2.read())
+
+    def test_move_nested_class_reference_filter_keeps_composed_access(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+            class Public(Owner):
+                pass
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from mod1 import Owner, Public
+            direct = Owner.Inner
+            composed = Public.Inner
+            direct_annotation: 'Owner.Inner'
+            composed_annotation: 'Public.Inner'
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        public = self.project.get_pymodule(self.mod1)["Public"].get_object()
+        changes = mover.get_changes(
+            self.mod2,
+            destination_offset=self.mod2.read().index("Target"),
+            match_filter=lambda occurrence: occurrence.get_primary_and_pyname()[0].get_object() is not public,
+        )
+        self.project.do(changes)
+        self.assertIn("direct = mod2.Target.Inner", self.mod3.read())
+        self.assertIn("composed = Public.Inner", self.mod3.read())
+        self.assertIn("direct_annotation: 'mod2.Target.Inner'", self.mod3.read())
+        self.assertIn("composed_annotation: 'Public.Inner'", self.mod3.read())
+
+    def test_move_nested_class_filter_preserves_exact_proven_destination_sites(self):
+        for unknown in (False, True):
+            with self.subTest(unknown=unknown):
+                self.mod1.write(dedent("""\
+                    class Owner:
+                        class Inner:
+                            pass
+                """))
+                self.mod2.write(dedent("""\
+                    class Target:
+                        class Inner:
+                            pass
+                """))
+                self.mod3.write(dedent("""\
+                    import mod1
+                    import mod2
+                    direct = mod1.Owner.Inner()
+                    current = mod2.Target.Inner()
+                """) + (dedent("""\
+                    def unresolved(value):
+                        return value.Inner
+                """) if unknown else ""))
+                current = self.project.get_pymodule(self.mod2)["Target"].get_object()["Inner"]
+                finder = occurrences.create_finder(self.project, "Inner", current)
+                proven = {
+                    (site.resource.path, site.get_primary_range())
+                    for site in finder.find_occurrences(self.mod3)
+                }
+                self.assertEqual(1, len(proven))
+                self.mod2.write(dedent("""\
+                    class Target:
+                        pass
+                """))
+                mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+                destination_offset = self.mod2.read().index("Target")
+                with self.assertRaisesRegex(exceptions.RefactoringError, "Unproven"):
+                    mover.get_changes(self.mod2, destination_offset=destination_offset)
+                def selected(site):
+                    return (site.resource.path, site.get_primary_range()) not in proven
+                if unknown:
+                    with self.assertRaisesRegex(exceptions.RefactoringError, "Unproven"):
+                        mover.get_changes(self.mod2, destination_offset=destination_offset, match_filter=selected)
+                else:
+                    self.project.do(mover.get_changes(self.mod2, destination_offset=destination_offset, match_filter=selected))
+                    self.assertNotIn("mod1.Owner.Inner", self.mod3.read())
+                    self.assertIn("current = mod2.Target.Inner()", self.mod3.read())
+                    namespace = runpy.run_path(self.mod2.real_path)
+                    self.assertIsInstance(namespace["Target"].Inner(), namespace["Target"].Inner)
+
+    def test_move_nested_class_rejects_import_collision(self):
+        self.mod1.write(dedent("""\
+            from collections.abc import Mapping
+            class Owner:
+                class Inner:
+                    value: Mapping
+        """))
+        self.mod2.write(dedent("""\
+            Mapping = str
+            class Target:
+                pass
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        with self.assertRaisesRegex(exceptions.RefactoringError, "import conflicts"):
+            mover.get_changes(self.mod2, destination_offset=self.mod2.read().index("Target"))
+
+    def test_move_nested_class_rewrites_quoted_type_operands_only(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        self.mod4.write("class ForwardRef: pass\n")
+        self.mod3.write(dedent('''\
+            from typing import Annotated as Meta, Literal as Value, ForwardRef as Ref
+            import typing as ty
+            from pkg.mod4 import ForwardRef as Fake
+            from mod1 import Owner as Legacy
+            text = "Legacy.Inner"
+            def consume(value: 'Legacy.Inner') -> "list['Legacy.Inner']":
+                """Legacy.Inner is explanatory text."""
+                return [value]
+            variable: 'Legacy.Inner'
+            literal: Value['Legacy.Inner']
+            metadata: Meta['Legacy.Inner', 'Legacy.Inner']
+            explicit: Ref('Legacy.Inner')
+            qualified: ty.ForwardRef('Legacy.Inner')
+            unrelated: Fake('Legacy.Inner')
+            escaped: "list[\\\"Legacy.Inner\\\"]"
+        '''))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        self.project.do(mover.get_changes(self.mod2, destination_offset=self.mod2.read().index("Target")))
+        self.assertIn("value: 'mod2.Target.Inner'", self.mod3.read())
+        self.assertIn('"list[\'mod2.Target.Inner\']"', self.mod3.read())
+        self.assertIn("variable: 'mod2.Target.Inner'", self.mod3.read())
+        self.assertIn("Value['Legacy.Inner']", self.mod3.read())
+        self.assertIn("Meta['mod2.Target.Inner', 'Legacy.Inner']", self.mod3.read())
+        self.assertIn("Ref('mod2.Target.Inner')", self.mod3.read())
+        self.assertIn("ty.ForwardRef('mod2.Target.Inner')", self.mod3.read())
+        self.assertIn("Fake('Legacy.Inner')", self.mod3.read())
+        self.assertIn('escaped: "list[\\\"mod2.Target.Inner\\\"]"', self.mod3.read())
+        self.assertIn('text = "Legacy.Inner"', self.mod3.read())
+        self.assertIn('"""Legacy.Inner is explanatory text."""', self.mod3.read())
+
+    def test_move_nested_class_rejects_consumer_import_shadow(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Inner:
+                    pass
+        """))
+        self.mod2.write(dedent("""\
+            class Target:
+                pass
+        """))
+        self.mod3.write(dedent("""\
+            from mod1 import Owner
+            def use(mod2):
+                return Owner.Inner()
+        """))
+        mover = move.create_move(self.project, self.mod1, self.mod1.read().index("Inner"))
+        with self.assertRaisesRegex(exceptions.RefactoringError, "consumer binding"):
+            mover.get_changes(self.mod2, destination_offset=self.mod2.read().index("Target"))
+
+    def test_transfer_methods_to_enclosing_class_in_same_module(self):
+        self.mod1.write(dedent("""\
+            value = 7
+
+            class Owner:
+                class Helpers:
+                    @staticmethod
+                    def make(number=2):
+                        return value + number
+
+                    @classmethod
+                    def name(cls):
+                        return "name"
+
+            result = Owner.Helpers.make()
+        """))
+        self.mod2.write("from mod1 import Owner\nresult = Owner.Helpers.make(5)\n")
+        source = self.mod1.read()
+        changes = move.MoveMethod.get_class_changes(
+            self.project,
+            [
+                (self.mod1, source.index("def make") + 4, "make"),
+                (self.mod1, source.index("def name") + 4, "name"),
+            ],
+            self.mod1,
+            source.index("class Owner") + 6,
+            resources=[self.mod1, self.mod2],
+        )
+        self.project.do(changes)
+        changed = self.mod1.read()
+        self.assertNotIn("from mod1 import", changed)
+        namespace = {}
+        exec(changed, namespace)
+        owner = namespace["Owner"]
+        self.assertIsInstance(owner.__dict__["make"], staticmethod)
+        self.assertIsInstance(owner.__dict__["name"], classmethod)
+        self.assertEqual(9, namespace["result"])
+        self.assertEqual(12, owner.make(5))
+        self.assertEqual("name", owner.name())
+        self.assertIn("Owner.make(5)", self.mod2.read())
+
+    def test_transfer_rejects_changed_class_scope_default(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                value = 1
+                class Helpers:
+                    value = 2
+                    @staticmethod
+                    def make(number=value):
+                        return number
+        """))
+        source = self.mod1.read()
+        with self.assertRaises(exceptions.RefactoringError):
+            move.MoveMethod.get_class_changes(
+                self.project,
+                [(self.mod1, source.index("def make") + 4, "make")],
+                self.mod1,
+                source.index("class Owner") + 6,
+                resources=[self.mod1],
+            )
+        self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_changed_module_binding(self):
+        self.mod1.write(dedent("""\
+            class Owner:
+                class Helpers:
+                    @staticmethod
+                    def make():
+                        return value
+
+            value = Owner.Helpers.make
+        """))
+        source = self.mod1.read()
+        with self.assertRaises(exceptions.RefactoringError):
+            move.MoveMethod.get_class_changes(
+                self.project,
+                [(self.mod1, source.index("def make") + 4, "make")],
+                self.mod1,
+                source.index("class Owner") + 6,
+                resources=[self.mod1],
+            )
+        self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_ambiguous_module_reassignment(self):
+        self.mod1.write(dedent("""\
+            value = 1
+            class Owner:
+                class Helpers:
+                    @staticmethod
+                    def make():
+                        return value
+
+            value = Owner.Helpers.make
+        """))
+        source = self.mod1.read()
+        with self.assertRaises(exceptions.RefactoringError):
+            move.MoveMethod.get_class_changes(
+                self.project,
+                [(self.mod1, source.index("def make") + 4, "make")],
+                self.mod1,
+                source.index("class Owner") + 6,
+                resources=[self.mod1],
+            )
+        self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_cross_module_redirected_globals(self):
+        for statement in ("return value", "value = 3\n        return value"):
+            with self.subTest(statement=statement):
+                source = (
+                    "value = 1\nclass A:\n    @staticmethod\n    def f():\n"
+                    "        global value\n        " + statement + "\n"
+                )
+                destination = "value = 2\nclass B:\n    pass\n"
+                self.mod1.write(source)
+                self.mod2.write(destination)
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod2,
+                        destination.index("class B") + 6,
+                        resources=[self.mod1, self.mod2],
+                    )
+                self.assertEqual(source, self.mod1.read())
+                self.assertEqual(destination, self.mod2.read())
+
+    def test_transfer_rejects_definition_time_changes(self):
+        declarations = [
+            "@staticmethod\n    def f(x=values[0]):",
+            "@staticmethod if values[0] else classmethod\n    def f(x):",
+        ]
+        if sys.version_info < (3, 14):
+            # Python 3.14+ evaluates annotations lazily on access, in the same
+            # module globals before and after the move, so only eager
+            # annotations change with the definition time.
+            declarations.append("@staticmethod\n    def f(x: values[0]):")
+        for declaration in declarations:
+            with self.subTest(declaration=declaration):
+                source = (
+                    "values = [1]\nclass A:\n    " + declaration
+                    + "\n        return x\nvalues[0] = 2\nclass B:\n    pass\n"
+                )
+                self.mod1.write(source)
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod1,
+                        source.index("class B") + 6,
+                        resources=[self.mod1],
+                    )
+                self.assertEqual(source, self.mod1.read())
+
+    @unittest.skipIf(
+        sys.version_info < (3, 14), "lazy function annotations require Python 3.14"
+    )
+    def test_transfer_keeps_lazy_annotations(self):
+        source = (
+            "values = [1]\nclass A:\n    @staticmethod\n    def f(x: values[0]):\n"
+            "        return x\nvalues[0] = 2\nclass B:\n    pass\n"
+        )
+        self.mod1.write(source)
+        original = {}
+        exec(source, original)
+        self.project.do(
+            move.MoveMethod.get_class_changes(
+                self.project,
+                [(self.mod1, source.index("def f") + 4, "f")],
+                self.mod1,
+                source.index("class B") + 6,
+                resources=[self.mod1],
+            )
+        )
+        moved = {}
+        exec(self.mod1.read(), moved)
+        self.assertEqual(
+            original["A"].f.__annotations__, moved["B"].f.__annotations__
+        )
+
+    def test_transfer_rejects_early_same_module_references(self):
+        for early in ("result = A.f()", "class C:\n    result = A.f()"):
+            with self.subTest(early=early):
+                source = (
+                    "class A:\n    @staticmethod\n    def f():\n        return 1\n"
+                    + early + "\nclass B:\n    pass\n"
+                )
+                self.mod1.write(source)
+                original = {}
+                exec(source, original)
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod1,
+                        source.index("class B") + 6,
+                        resources=[self.mod1],
+                    )
+                self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_descriptor_mutation_during_class_execution(self):
+        for statement in (
+            "globals()['staticmethod'] = lambda f: 42",
+            "globals()['classmethod'] = lambda f: 42",
+        ):
+            with self.subTest(statement=statement):
+                descriptor = "classmethod" if "classmethod" in statement else "staticmethod"
+                source = (
+                    "class Owner:\n    class Helpers:\n        @" + descriptor
+                    + "\n        def f(x=None):\n            return x\n    "
+                    + statement + "\n"
+                )
+                self.mod1.write(source)
+                original = {}
+                exec(source, original)
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod1,
+                        source.index("class Owner") + 6,
+                        resources=[self.mod1],
+                    )
+                self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_destination_metaclass_effects(self):
+        for meta in (
+            "    @classmethod\n    def __prepare__(cls, name, bases):\n"
+            "        return {'staticmethod': lambda f: 42}\n",
+            "    def __new__(cls, name, bases, namespace):\n"
+            "        namespace['observed'] = 'f' in namespace\n"
+            "        return super().__new__(cls, name, bases, namespace)\n",
+        ):
+            with self.subTest(meta=meta):
+                source = (
+                    "class Meta(type):\n" + meta
+                    + "class Owner(metaclass=Meta):\n    class Helpers:\n"
+                    "        @staticmethod\n        def f():\n            return 1\n"
+                )
+                self.mod1.write(source)
+                original = {}
+                exec(source, original)
+                self.assertEqual(1, original["Owner"].Helpers.f())
+                if "__new__" in meta:
+                    self.assertFalse(original["Owner"].observed)
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod1,
+                        source.index("class Owner") + 6,
+                        resources=[self.mod1],
+                    )
+                self.assertEqual(source, self.mod1.read())
+
+    def test_transfer_rejects_cross_module_descriptor_mutation(self):
+        for descriptor in ("staticmethod", "classmethod"):
+            with self.subTest(descriptor=descriptor):
+                source = (
+                    "class A:\n    @" + descriptor
+                    + "\n    def f(x=None):\n        return 1\n"
+                )
+                destination = (
+                    "globals()['" + descriptor + "'] = lambda f: 42\n"
+                    "class B:\n    pass\n"
+                )
+                self.mod1.write(source)
+                self.mod2.write(destination)
+                original = {}
+                exec(source, original)
+                self.assertEqual(1, original["A"].f())
+                with self.assertRaises(exceptions.RefactoringError):
+                    move.MoveMethod.get_class_changes(
+                        self.project,
+                        [(self.mod1, source.index("def f") + 4, "f")],
+                        self.mod2,
+                        destination.index("class B") + 6,
+                        resources=[self.mod1, self.mod2],
+                    )
+                self.assertEqual(source, self.mod1.read())
+                self.assertEqual(destination, self.mod2.read())
+
     def test_move_constant(self) -> None:
         self.origin_module.write("foo = 123\n")
         self._move(self.origin_module, self.origin_module.read().index("foo") + 1, self.destination_module)
         self.assertEqual("", self.origin_module.read())
         self.assertEqual("foo = 123\n", self.destination_module.read())
+
+    def test_move_constant_preserves_used_module_alias(self) -> None:
+        self.project.prefs["prefer_module_from_imports"] = True
+        self.mod4.write(dedent("""\
+            def keep():
+                return 1
+
+            value = 2
+        """))
+        self.mod5.write(dedent("""\
+            def existing():
+                return 3
+        """))
+        self.mod3.write(dedent("""\
+            from pkg import mod5
+            from pkg import mod4 as utils_module
+
+            def run():
+                return mod5.existing(), utils_module.keep(), utils_module.value
+        """))
+        self._move(self.mod4, self.mod4.read().index("value"), self.mod5)
+        self.assertEqual(
+            dedent("""\
+                from pkg import mod5
+                from pkg import mod4 as utils_module
+
+                def run():
+                    return mod5.existing(), utils_module.keep(), mod5.value
+            """),
+            self.mod3.read(),
+        )
+        self.assertEqual(dedent("""\
+            def keep():
+                return 1
+
+        """), self.mod4.read())
+        self.assertIn(dedent("""\
+            value = 2
+        """), self.mod5.read())
 
     def test_move_constant_2(self) -> None:
         self.origin_module.write("bar = 321\nfoo = 123\n")
@@ -459,7 +1115,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.origin_module.write(code)
         with self.assertRaisesRegex(
             exceptions.RefactoringError,
-            "Move refactoring should be performed on a global class, function or variable\.",
+            r"Move refactoring should be performed on a global class, function or variable\.",
         ):
             mover = move.create_move(
                 self.project, self.origin_module, code.index("CONSTANT") + 1
@@ -472,7 +1128,7 @@ class MoveRefactoringTest(unittest.TestCase):
         """))
         with self.assertRaisesRegex(
             exceptions.RefactoringError,
-            "Moving global elements to the same module\.",
+            r"Moving global elements to the same module\.",
         ):
             self._move(self.origin_module, self.origin_module.read().index("a_func"), self.origin_module)
 
@@ -562,6 +1218,55 @@ class MoveRefactoringTest(unittest.TestCase):
         """)
         self.assertEqual(expected, self.destination_module.read())
         self.assertEqual("", self.origin_module_in_pkg.read())
+
+    def test_moving_global_replaces_relative_from_imports_in_consumers(self) -> None:
+        """A relative from-import of the moved name is rewritten like an absolute one"""
+        self.origin_module_in_pkg.write("class AClass:\n    pass\n")
+        self.mod4.write("from .origin_module_in_pkg import AClass\na_var = AClass()\n")
+        self._move(self.origin_module_in_pkg, 6, self.destination_module_in_pkg)
+        self.assertEqual(
+            "import pkg.destination_module_in_pkg\n"
+            "a_var = pkg.destination_module_in_pkg.AClass()\n",
+            self.mod4.read(),
+        )
+
+    def test_moving_global_replaces_relative_package_imports_in_consumers(self) -> None:
+        """A relative import of the source module is rewritten to the destination"""
+        self.origin_module_in_pkg.write("class AClass:\n    pass\n")
+        self.mod4.write(
+            "from . import origin_module_in_pkg\n"
+            "a_var = origin_module_in_pkg.AClass()\n"
+        )
+        self._move(self.origin_module_in_pkg, 6, self.destination_module_in_pkg)
+        self.assertEqual(
+            "import pkg.destination_module_in_pkg\n"
+            "a_var = pkg.destination_module_in_pkg.AClass()\n",
+            self.mod4.read(),
+        )
+
+    def test_moving_global_retargets_package_init_import_and_alias(self) -> None:
+        package = testutils.create_package(self.project, "origin", self.mod4.parent)
+        origin = package.get_child("__init__.py")
+        origin.write("class Thing: pass\nother = 1\n")
+        self.mod4.write(
+            "from . import origin\n"
+            "from .origin import Thing as Alias, other\n"
+            "values = origin.Thing(), Alias(), other\n"
+        )
+        self._move(origin, 6, self.destination_module_in_pkg)
+        self.assertNotIn("from . import origin", self.mod4.read())
+        self.assertIn("from .origin import other", self.mod4.read())
+        self.assertIn("from pkg.destination_module_in_pkg import Thing as Alias", self.mod4.read())
+        self.assertIn("values = pkg.destination_module_in_pkg.Thing(), Alias(), other", self.mod4.read())
+
+    def test_moving_global_retargets_a_consumer_with_only_an_alias(self):
+        self.origin_module_in_pkg.write("value = 1\n")
+        self.mod4.write("from .origin_module_in_pkg import value as old\nresult = old\n")
+        self._move(self.origin_module_in_pkg, 0, self.destination_module_in_pkg)
+        self.assertEqual(
+            "from pkg.destination_module_in_pkg import value as old\nresult = old\n",
+            self.mod4.read(),
+        )
 
     def test_moving_modules_into_package(self) -> None:
         """Move global function where the destination module is in a package"""
@@ -1262,6 +1967,86 @@ class MoveRefactoringTest(unittest.TestCase):
                     return sys.version
         """)
         self.assertEqual(code, self.mod2.read())
+
+    def _transfer_static_method(self, body: str) -> None:
+        self.origin_module.write(
+            dedent(
+                """\
+                __all__ = ["Legacy"]
+                TOKEN = "source value"
+
+                class Legacy:
+                    @staticmethod
+                    def execute():
+                """
+            )
+            + "        "
+            + body
+            + "\n"
+        )
+        self.destination_module.write("class Target:\n    pass\n")
+        changes = move.MoveMethod.get_class_changes(
+            self.project,
+            [
+                (
+                    self.origin_module,
+                    self.origin_module.read().index("execute"),
+                    "execute",
+                )
+            ],
+            self.destination_module,
+            self.destination_module.read().index("Target"),
+        )
+        self.project.do(changes)
+
+    def test_transfer_does_not_import_unused_export_metadata(self) -> None:
+        self._transfer_static_method("return TOKEN")
+
+        self.assertIn("from origin_module import TOKEN", self.destination_module.read())
+        self.assertNotIn("from origin_module import __all__", self.destination_module.read())
+        self.assertIn('__all__ = ["Legacy"]', self.origin_module.read())
+
+    def test_transfer_imports_export_metadata_when_method_uses_it(self) -> None:
+        self._transfer_static_method("return __all__")
+
+        self.assertIn("from origin_module import __all__", self.destination_module.read())
+
+    def test_transfer_preserves_future_annotations_without_origin_exports(self) -> None:
+        self.origin_module.write(
+            "from __future__ import annotations\n"
+            "__all__ = ['Legacy']\n"
+            "class Legacy:\n"
+            "    @staticmethod\n"
+            "    def execute(value: float) -> int:\n"
+            "        return int(value)\n"
+        )
+        self.destination_module.write("__all__ = ['Target']\nclass Target:\n    pass\n")
+        changes = move.MoveMethod.get_class_changes(
+            self.project,
+            [(self.origin_module, self.origin_module.read().index("execute"), "execute")],
+            self.destination_module,
+            self.destination_module.read().index("Target", self.destination_module.read().index("class ")),
+        )
+        self.project.do(changes)
+        target = runpy.run_path(self.destination_module.real_path)["Target"]
+        self.assertEqual(3, target.execute(3.7))
+        self.assertEqual({"value": "float", "return": "int"}, target.execute.__annotations__)
+        self.assertNotIn("from origin_module import __all__", self.destination_module.read())
+
+    def test_moving_export_metadata_preserves_its_named_declarations(self) -> None:
+        self.origin_module.write("class Exported:\n    pass\n__all__ = ['Exported']\n")
+        self._move(
+            self.origin_module,
+            self.origin_module.read().index("__all__"),
+            self.destination_module,
+        )
+        source = self.project.get_pymodule(self.origin_module)
+        destination = self.project.get_pymodule(self.destination_module)
+        self.assertIs(
+            source.get_attribute("Exported").get_object(),
+            destination.get_attribute("Exported").get_object(),
+        )
+        self.assertIn("__all__ = ['Exported']", self.destination_module.read())
 
     def test_moving_methods_getting_getting_changes_for_goal_class3(self) -> None:
         self.mod2.write(dedent("""\

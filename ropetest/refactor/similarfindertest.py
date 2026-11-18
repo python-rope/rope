@@ -54,6 +54,141 @@ class SimilarFinderTest(unittest.TestCase):
         finder = self._create_finder("")
         self.assertEqual([], list(finder.get_match_regions("10")))
 
+    def _assert_try_else_with_finally_regions(self, handler):
+        source = (
+            "before = module.Model\n"
+            "try:\n    value = 1\n"
+            + handler
+            + " ValueError:\n    value = 2\n"
+            "else:\n    value = module.Model\n"
+            "finally:\n    value = 3\n"
+        )
+        first = source.index("module.Model")
+        last = source.rindex("module.Model")
+        size = len("module.Model")
+        for warm_ast in (False, True):
+            with self.subTest(warm_ast=warm_ast):
+                finder = self._create_finder(source)
+                if warm_ast:
+                    finder = similarfinder.SimilarFinder(
+                        self.project.get_pymodule(self.mod)
+                    )
+                self.assertEqual(
+                    [(first, first + size), (last, last + size)],
+                    sorted(finder.get_match_regions("module.Model")),
+                )
+                self.assertEqual(
+                    [(first, first + size)],
+                    list(finder.get_match_regions("module.Model", end=first + size)),
+                )
+
+    def test_matching_try_else_with_finally(self):
+        self._assert_try_else_with_finally_regions("except")
+
+    @testutils.only_for("3.11")
+    def test_matching_try_star_else_with_finally(self):
+        self._assert_try_else_with_finally_regions("except*")
+
+    def test_matching_argument_annotation(self):
+        source = "def foo(l: list):\n    pass\n"
+        finder = similarfinder.RawSimilarFinder(source)
+        regions = [match.get_region() for match in finder.get_matches("${a}")]
+        start = source.index("list")
+        self.assertEqual([(start, start + len("list"))], regions)
+
+    def test_matching_nested_argument_annotation(self):
+        source = "def foo(items: list[list[int]] = None):\n    pass\n"
+        finder = self._create_finder(source)
+        regions = list(finder.get_match_regions("list"))
+        first = source.index("list")
+        second = source.index("list", first + 1)
+        self.assertEqual([(first, first + 4), (second, second + 4)], regions)
+    def test_return_annotation_names_have_match_regions(self):
+        source = "def f() -> target:\n    return target\n"
+        finder = self._create_finder(source)
+        self.assertEqual(
+            [
+                (source.rindex("target"), source.rindex("target") + len("target")),
+                (source.index("target"), source.index("target") + len("target")),
+            ],
+            list(finder.get_match_regions("target")),
+        )
+
+    def test_async_return_annotation_expression_has_match_region(self):
+        source = "async def f() -> list[target]:\n    return []\n"
+        finder = self._create_finder(source)
+        start = source.index("list[target]")
+        self.assertEqual(
+            [(start, start + len("list[target]"))],
+            list(finder.get_match_regions("list[target]")),
+        )
+
+    def test_region_filter_can_pass_names_in_return_annotations(self):
+        source = "def f() -> target:\n    return target\n"
+        finder = self._create_finder(source)
+        start = source.rindex("target")
+        end = start + len("target")
+        self.assertEqual(
+            [(start, end)],
+            list(finder.get_match_regions("target", start=start, end=end)),
+        )
+
+    def test_metaclass_only_header_names_have_match_regions(self):
+        source = "class C(metaclass=target):\n    pass\n"
+        finder = self._create_finder(source)
+        start = source.index("target")
+        self.assertEqual(
+            [(start, start + len("target"))],
+            list(finder.get_match_regions("target")),
+        )
+
+    @testutils.only_for_versions_higher("3.12")
+    def test_type_parameter_bounds_have_match_regions(self):
+        source = "class Box[T: int]:\n    pass\ntype Alias[U: int] = list[U]\n"
+        finder = self._create_finder(source)
+        first = source.index("int")
+        second = source.index("int", first + 1)
+        self.assertEqual(
+            [(first, first + len("int")), (second, second + len("int"))],
+            list(finder.get_match_regions("int")),
+        )
+
+    def test_fstring_literal_pieces_are_not_matched(self):
+        source = 'def f(x):\n    return f"a{x}b"\n'
+        finder = self._create_finder(source)
+        self.assertEqual([], list(finder.get_match_regions('"a"')))
+        self.assertEqual([], list(finder.get_match_regions('"b"')))
+
+    def test_fstring_format_specs_are_not_matched(self):
+        source = 'def f(x):\n    return f"{x:%Y%m%d}"\n'
+        finder = self._create_finder(source)
+        self.assertEqual([], list(finder.get_match_regions('"%Y%m%d"')))
+
+    def test_fstring_replacement_fields_have_match_regions(self):
+        source = 'def f(p, w):\n    return f"a{p.attr}b{p.when:{w}}"\n'
+        finder = self._create_finder(source)
+        start = source.index("p.attr")
+        self.assertEqual(
+            [(start, start + len("p.attr"))],
+            list(finder.get_match_regions("p.attr")),
+        )
+        start = source.index("{w}") + 1
+        self.assertEqual(
+            [(start, start + 1)],
+            list(finder.get_match_regions("w", start=start)),
+        )
+
+    def test_interleaved_class_header_names_have_match_regions(self):
+        source = "class C(Base, metaclass=Meta, *bases, **options):\n    pass\n"
+        finder = self._create_finder(source)
+        for name in ("Base", "Meta", "bases", "options"):
+            with self.subTest(name=name):
+                start = source.index(name)
+                self.assertEqual(
+                    [(start, start + len(name))],
+                    list(finder.get_match_regions(name)),
+                )
+
     def test_constant_integer(self):
         source = "a = 10\n"
         finder = self._create_finder(source)
@@ -143,6 +278,29 @@ class SimilarFinderTest(unittest.TestCase):
         finder = self._create_finder(source)
         result = list(finder.get_matches("b = ${a}"))
         self.assertEqual("a", result[0].get_ast("a").id)
+
+    def test_expression_capture_region(self):
+        source = 'value = "é" + module.member\n'
+        finder = self._create_finder(source)
+        match = next(finder.get_matches('"é" + ${value}'))
+        start = source.index("module.member")
+        self.assertEqual(
+            (start, start + len("module.member")), match.get_capture_region("value")
+        )
+
+    def test_statement_capture_region(self):
+        source = "before = 0\nvalue = (first,\n         second)\n"
+        finder = self._create_finder(source)
+        match = next(finder.get_matches("value = ${value}"))
+        start = source.index("(first")
+        end = source.index(")") + 1
+        self.assertEqual((start, end), match.get_capture_region("value"))
+
+    def test_missing_capture_region(self):
+        finder = self._create_finder("value = 1\n")
+        match = next(finder.get_matches("value = ${value}"))
+        with self.assertRaisesRegex(ValueError, "missing"):
+            match.get_capture_region("missing")
 
     def test_matching_multiple_patterns(self):
         source = "c = a + b\n"

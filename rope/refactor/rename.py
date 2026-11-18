@@ -2,6 +2,7 @@ import warnings
 from keyword import iskeyword
 
 from rope.base import (
+    ast,
     codeanalyze,
     evaluate,
     exceptions,
@@ -104,9 +105,28 @@ class Rename:
                 resources = [self.resource]
         if _is_local(self.old_pyname):
             resources = [self.resource]
+        all_project_resources = resources is None
         if resources is None:
             resources = self.project.get_python_files()
+        resources = list(resources)
         self.validate_changes(new_name)
+        occurrences.check_opaque_references(
+            self.project, self.old_pyname, resources, name=self.old_name
+        )
+        from rope.base import externaldata
+
+        defining, _ = self.old_pyname.get_definition_location()
+        if defining is not None:
+            externaldata.check_rename(
+                defining, self.old_name, self.old_pyname, self.old_instance
+            )
+        for file_ in resources:
+            externaldata.check_rename(
+                self.project.get_pymodule(file_),
+                self.old_name,
+                self.old_pyname,
+                self.old_instance,
+            )
         changes = ChangeSet(f"Renaming <{self.old_name}> to <{new_name}>")
         finder = occurrences.create_finder(
             self.project,
@@ -120,15 +140,47 @@ class Rename:
         job_set = task_handle.create_jobset("Collecting Changes", len(resources))
         for file_ in resources:
             job_set.started_job(file_.path)
-            new_content = rename_in_module(finder, new_name, resource=file_)
+            new_content = rename_in_module(
+                finder,
+                new_name,
+                resource=file_,
+                preserve_imports=self._get_preserved_imports(file_),
+            )
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
         if self._is_renaming_a_module():
             resource = self.old_pyname.get_object().get_resource()
-            if self._is_allowed_to_move(resources, resource):
+            if self._is_allowed_to_move(resources, resource, all_project_resources):
                 self._rename_module(resource, new_name, changes)
         return changes
+
+    def _get_preserved_imports(self, resource):
+        """Find imported names whose definitions are outside the project."""
+        pymodule = self.project.get_pymodule(resource)
+        lines = codeanalyze.ASTLinesAdapter(pymodule.source_code)
+        for node in ast.walk(pymodule.get_ast()):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            names = [alias for alias in node.names if alias.name == self.old_name]
+            if not names:
+                continue
+            imported_module = pynames.ImportedModule(
+                pymodule, node.module or "", level=node.level
+            ).get_object()
+            imported_resource = (
+                imported_module.get_resource()
+                if isinstance(imported_module, pyobjects.AbstractModule)
+                else None
+            )
+            if imported_resource is not None and (
+                imported_resource.project == self.project
+                and not self.project.is_ignored(imported_resource)
+            ):
+                continue
+            for alias in names:
+                start, _ = lines[alias]
+                yield start, alias.asname is None
 
     def validate_changes(
         self,
@@ -140,12 +192,21 @@ class Rename:
                 f"Invalid refactoring target name. '{new_name}' is a Python keyword."
             )
 
-    def _is_allowed_to_move(self, resources, resource):
+    def _is_allowed_to_move(self, resources, resource, all_project_resources=False):
         if resource.is_folder():
             try:
                 return resource.get_child("__init__.py") in resources
             except exceptions.ResourceNotFoundError:
-                return False
+                if all_project_resources:
+                    return True
+                package_files = [
+                    file
+                    for file in self.project.get_python_files()
+                    if resource.contains(file)
+                ]
+                return bool(package_files) and all(
+                    file in resources for file in package_files
+                )
         else:
             return resource in resources
 
@@ -197,12 +258,27 @@ class ChangeOccurrences:
         return word_finder.get_primary_at(self.offset)
 
     def _get_scope_offset(self):
-        scope = self.pymodule.get_scope().get_inner_scope_for_offset(self.offset)
+        scope = getattr(self.old_pyname, "binding_scope", None)
+        if scope is None or scope.get_kind() not in {
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        }:
+            scope = self.pymodule.get_scope().get_structural_scope_for_offset(
+                self.offset
+            )
         return scope.get_region()
 
     def get_changes(self, new_name, only_calls=False, reads=True, writes=True):
         changes = ChangeSet(f"Changing <{self.old_name}> occurrences to <{new_name}>")
         scope_start, scope_end = self._get_scope_offset()
+        occurrences.check_opaque_references(
+            self.project,
+            self.old_pyname,
+            [self.resource],
+            (scope_start, scope_end),
+            name=self.old_name,
+        )
         finder = occurrences.create_finder(
             self.project,
             self.old_name,
@@ -233,6 +309,7 @@ def rename_in_module(
     region=None,
     reads=True,
     writes=True,
+    preserve_imports=None,
 ):
     """Returns the changed source or `None` if there is no changes"""
     if resource is not None:
@@ -240,6 +317,7 @@ def rename_in_module(
     else:
         source_code = pymodule.source_code
     change_collector = codeanalyze.ChangeCollector(source_code)
+    preserved_imports = None
     for occurrence in occurrences_finder.find_occurrences(resource, pymodule):
         if replace_primary and occurrence.is_a_fixed_primary():
             continue
@@ -252,22 +330,34 @@ def rename_in_module(
         ):
             continue
         if region is None or region[0] <= start < region[1]:
-            change_collector.add_change(start, end, new_name)
+            replacement = new_name
+            if preserve_imports is not None and occurrence.is_in_import_statement():
+                if preserved_imports is None:
+                    preserved_imports = dict(preserve_imports)
+                if start in preserved_imports:
+                    if not preserved_imports[start]:
+                        continue
+                    if source_code[start:end] != new_name:
+                        replacement = source_code[start:end] + " as " + new_name
+            change_collector.add_change(start, end, replacement)
     return change_collector.get_changed()
 
 
 def _is_local(pyname):
+    binding_scope = getattr(pyname, "binding_scope", None)
+    if binding_scope is not None:
+        return not isinstance(
+            pyname, pynames.ParameterName
+        ) and binding_scope.get_kind() in (
+            "Function",
+            "Lambda",
+            "Comprehension",
+            "TypeParameters",
+        )
+    if not isinstance(pyname, pynames.AssignedName):
+        return False
     module, lineno = pyname.get_definition_location()
     if lineno is None:
         return False
     scope = module.get_scope().get_inner_scope_for_line(lineno)
-    if isinstance(pyname, pynames.DefinedName) and scope.get_kind() in (
-        "Function",
-        "Class",
-    ):
-        scope = scope.parent
-    return (
-        scope.get_kind() == "Function"
-        and pyname in scope.get_names().values()
-        and isinstance(pyname, pynames.AssignedName)
-    )
+    return scope.get_kind() == "Function" and pyname in scope.get_names().values()

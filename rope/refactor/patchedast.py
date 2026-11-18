@@ -1,6 +1,9 @@
+import bisect
 import collections
+import io
 import numbers
 import re
+import tokenize
 import warnings
 from itertools import chain
 
@@ -317,9 +320,13 @@ class _PatchingASTWalker:
             children.extend(("@", decorator))
         children.extend(["class", node.name])
         self._add_type_params(node, children)
-        if node.bases:
+        if node.bases or node.keywords:
             children.append("(")
-            children.extend(self._child_nodes(node.bases, ","))
+            arguments = sorted(
+                [*node.bases, *node.keywords],
+                key=lambda argument: (argument.lineno, argument.col_offset),
+            )
+            children.extend(self._child_nodes(arguments, ","))
             children.append(")")
         children.append(":")
         children.extend(node.body)
@@ -350,14 +357,16 @@ class _PatchingASTWalker:
             return self.source[start : quote_pos + len(quote_char)]
 
         def end_quote_char():
-            possible_quotes = [
-                (self.source.source.rfind(q, start, end), q)
-                for q in reversed(QUOTE_CHARS)
-            ]
-            _, quote_pos, quote_char = max(
-                (len(q), pos, q) for pos, q in possible_quotes if pos != -1
+            # The delimiter is whatever quote sequence terminates the
+            # literal, not the longest quote found anywhere in the body
+            # (a double-quoted f-string may contain a ''' sequence).
+            for quote_char in QUOTE_CHARS:
+                if self.source.source[end - len(quote_char) : end] == quote_char:
+                    return quote_char
+            raise MismatchedTokenError(
+                f"f-string at line {self.lines.get_line_number(start)} does not"
+                " end with a quote delimiter"
             )
-            return self.source[end - len(quote_char) : end]
 
         QUOTE_CHARS = ['"""', "'''", '"', "'"]
         offset = self.source.offset
@@ -370,8 +379,39 @@ class _PatchingASTWalker:
                 children.append(part)
         children.append(end_quote_char())
         self._handle(node, children)
+        self._extend_joined_string_to(node, end)
+
+    def _extend_joined_string_to(self, node, string_end):
+        """Cover concatenation parts that follow the last interpolation.
+
+        `_handle` stops at the first closing quote it finds after the last
+        `FormattedValue`, so in an implicit concatenation whose trailing parts
+        are pure literal text -- ``f"{a} one " f"#52 two"`` -- it stops at the
+        end of the part holding the interpolation.  That both understates the
+        node's region and parks the scanner inside the literal, where an
+        unescaped ``#`` reads as the start of a comment and swallows the rest
+        of the line.  `consume_string` already measured the whole
+        concatenation, so close the gap from its end offset.
+        """
+        if self.source.offset >= string_end:
+            return
+        trailing_parts = self.source[self.source.offset : string_end]
+        if self.children:
+            node.sorted_children.append(trailing_parts)
+        self.source.offset = string_end
+        node.region = (node.region[0], string_end)
 
     def _FormattedValue(self, node):
+        # Expression positions distinguish real fields from escaped literal braces.
+        value_start, _ = self.ast_adapter[node.value]
+        if value_start is None:
+            raise MismatchedTokenError("F-string expression AST has no source position")
+        field_start = self.source.rfind_token("{", self.source.offset, value_start)
+        if field_start is None:
+            raise MismatchedTokenError(
+                "F-string expression has no matching opening brace"
+            )
+        self.source.offset = field_start
         children = []
         children.append("{")
         children.append(node.value)
@@ -454,6 +494,8 @@ class _PatchingASTWalker:
         children.append(node.name)
         self._add_type_params(node, children)
         children.extend(["(", node.args, ")"])
+        if node.returns is not None:
+            children.extend(["->", node.returns])
         children.append(":")
         children.extend(node.body)
         self._handle(node, children)
@@ -466,21 +508,33 @@ class _PatchingASTWalker:
 
     def _arguments(self, node):
         children = []
-        args = list(node.args)
-        defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
-        for index, (arg, default) in enumerate(zip(args, defaults)):
+        positional = list(node.posonlyargs) + list(node.args)
+        defaults = [None] * (len(positional) - len(node.defaults)) + list(node.defaults)
+        for index, (arg, default) in enumerate(zip(positional, defaults)):
             if index > 0:
                 children.append(",")
             self._add_args_to_children(children, arg, default)
-        if node.vararg is not None:
-            if args:
+            if node.posonlyargs and index + 1 == len(node.posonlyargs):
+                children.extend([",", "/"])
+        if node.vararg is not None or node.kwonlyargs:
+            if positional:
                 children.append(",")
-            children.extend(["*", node.vararg.arg])
+            children.append("*")
+            if node.vararg is not None:
+                children.append(self._star_parameter(node.vararg))
+        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+            children.append(",")
+            self._add_args_to_children(children, arg, default)
         if node.kwarg is not None:
-            if args or node.vararg is not None:
+            if positional or node.vararg is not None or node.kwonlyargs:
                 children.append(",")
-            children.extend(["**", node.kwarg.arg])
+            children.extend(["**", self._star_parameter(node.kwarg)])
         self._handle(node, children)
+
+    @staticmethod
+    def _star_parameter(arg):
+        """An annotated ``*args``/``**kwargs`` is walked as a node, else by name."""
+        return arg if arg.annotation is not None else arg.arg
 
     def _add_args_to_children(self, children, arg, default):
         if isinstance(arg, (list, tuple)):
@@ -590,7 +644,10 @@ class _PatchingASTWalker:
         self._handle(node, [str(node.value)])
 
     def _arg(self, node):
-        self._handle(node, [node.arg])
+        children = [node.arg]
+        if node.annotation is not None:
+            children.extend([":", node.annotation])
+        self._handle(node, children)
 
     def _Pass(self, node):
         self._handle(node, ["pass"])
@@ -751,24 +808,32 @@ class _PatchingASTWalker:
         self._handle(node, children)
 
     def _get_surrounding_parens(self, node: ast.MatchSequence):
+        """The sequence's own ``[...]``/``(...)`` delimiters, if it has them.
+
+        The text between the node's start and its first pattern can also
+        hold grouping parentheses of that pattern -- ``case (("a" | b), c)``
+        -- which the AST does not represent.  The sequence is delimited only
+        when the bracket at its first character is the one closed at its
+        last character; ``case (1), (2)`` starts and ends with parentheses
+        that belong to its elements.
+        """
         node_start, node_end = self.ast_adapter[node]
-        first_pattern_start, _ = self.ast_adapter[node.patterns[0]]
-        _, last_pattern_end = self.ast_adapter[node.patterns[-1]]
-        opening_paren = self.source[node_start:first_pattern_start].strip()
-        closing_paren = self.source[last_pattern_end:node_end].strip()
-
-        if opening_paren not in ["[", "(", ""]:
-            warnings.warn(
-                f"Unexpected character in MatchSequence's opening_paren <{opening_paren}>; please report!",
-                RuntimeWarning,
-            )
-
-        if closing_paren not in ["]", ")", ""]:
-            warnings.warn(
-                f"Unexpected character in MatchSequence's closing_paren <{closing_paren}>; please report!",
-                RuntimeWarning,
-            )
-        return opening_paren, closing_paren
+        segment = self.source[node_start:node_end]
+        pairs = {"[": "]", "(": ")"}
+        if segment[:1] not in pairs or segment[-1:] != pairs[segment[0]]:
+            return "", ""
+        depth = 0
+        for token in tokenize.generate_tokens(io.StringIO(segment).readline):
+            if token.type != tokenize.OP or token.string not in "()[]{}":
+                continue
+            depth += 1 if token.string in "([{" else -1
+            if depth == 0:
+                end_row = segment.count("\n") + 1
+                end_col = len(segment) - (segment.rfind("\n") + 1)
+                if token.end != (end_row, end_col):
+                    return "", ""
+                return segment[0], segment[-1]
+        return "", ""
 
     def _MatchStar(self, node):
         self._handle(node, ["*", node.name or "_"])
@@ -845,15 +910,21 @@ class _Source:
         self.source = source
         self.offset = 0
         self.ast_adapter = codeanalyze.ASTLinesAdapter(source)
+        self._ranges = None
 
     def consume(self, token, skip_comment=True):
         try:
             while True:
                 new_offset = self.source.index(token, self.offset)
-                if self._good_token(token, new_offset) or not skip_comment:
+                if not skip_comment:
                     break
-                else:
-                    self._skip_comment()
+                here = self._enclosing_literal(self.offset)
+                there = self._enclosing_literal(new_offset)
+                if there is None or there == here:
+                    break
+                # The match is buried in a literal the walker is not
+                # itself working inside.  Resume past that literal.
+                self.offset = there[1]
         except (ValueError, TypeError):
             raise MismatchedTokenError(
                 f"Token <{token}> at {self._get_location()} cannot be matched"
@@ -868,23 +939,86 @@ class _Source:
 
     def consume_node(self, node):
         start, end = self.ast_adapter[node]
-        if self.offset < end:
-            self.offset = end
+        self.offset = max(self.offset, end)
         return start, end
 
-    def _good_token(self, token, offset, start=None):
+    def _good_token(self, token, offset):
         """Checks whether consumed token is in comments"""
-        if start is None:
-            start = self.offset
+        literal = self._enclosing_literal(offset)
+        return literal is None or not literal[2]
+
+    def _enclosing_literal(self, offset):
+        """The string literal or comment containing ``offset``, if any.
+
+        A ``(start, end, is_comment)`` triple, or ``None`` when
+        ``offset`` sits in ordinary code.
+
+        The walker searches the source as plain text, which cannot tell
+        a token from the same characters inside a literal.  Asked for
+        ``)`` it would match the one in ``f"see (#123)"``, or the one in
+        a triple-quoted ``CREATE TABLE t (id)`` blob, then carry on
+        from a position the tree knows nothing about -- surfacing much
+        later as an error naming an unrelated node.
+        """
+        ranges, starts = self._get_ranges()
+        index = bisect.bisect_right(starts, offset) - 1
+        if index >= 0 and ranges[index][1] > offset:
+            return ranges[index]
+        return None
+
+    def _get_ranges(self):
+        """Every string literal and comment, as sorted offset ranges.
+
+        Paired with the list of their start offsets, to bisect on.
+
+        Tokenized once per source.  The tokenizer is what makes this
+        exact rather than another guess at where a literal starts: a
+        scan for quotes cannot know whether it began inside one.
+
+        On an unparseable source it yields nothing, leaving the plain
+        textual search of before.
+        """
+        if self._ranges is None:
+            ranges = self._tokenize_ranges()
+            self._ranges = (ranges, [start for start, _, _ in ranges])
+        return self._ranges
+
+    def _tokenize_ranges(self):
+        line_starts = [0]
+        for line in self.source.splitlines(keepends=True):
+            line_starts.append(line_starts[-1] + len(line))
+
+        def offset_of(position):
+            row, column = position
+            if row >= len(line_starts):
+                return len(self.source)
+            return line_starts[row - 1] + column
+
+        # FSTRING_* exists from Python 3.12 on, where an f-string is
+        # tokenized in pieces.  Taking only MIDDLE keeps the replacement
+        # fields out: they are code, and the walker consumes them.
+        # Before 3.12 an f-string is one STRING token, fields included --
+        # which is why `consume` compares the walker's own literal to the
+        # match's rather than skipping every literal it meets.
+        wanted = {tokenize.STRING, tokenize.COMMENT}
+        for name in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):
+            if hasattr(tokenize, name):
+                wanted.add(getattr(tokenize, name))
+        ranges = []
         try:
-            comment_index = self.source.rindex("#", start, offset)
-        except ValueError:
-            return True
-        try:
-            new_line_index = self.source.rindex("\n", start, offset)
-        except ValueError:
-            return False
-        return comment_index < new_line_index
+            tokens = tokenize.generate_tokens(io.StringIO(self.source).readline)
+            for token in tokens:
+                if token.type in wanted:
+                    ranges.append(
+                        (
+                            offset_of(token.start),
+                            offset_of(token.end),
+                            token.type == tokenize.COMMENT,
+                        )
+                    )
+        except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
+            return []
+        return ranges
 
     def _skip_comment(self):
         self.offset = self.source.index("\n", self.offset + 1)
@@ -898,7 +1032,7 @@ class _Source:
         while True:
             try:
                 index = self.source.rindex(token, start, end)
-                if self._good_token(token, index, start=start):
+                if self._good_token(token, index):
                     return index
                 else:
                     end = index

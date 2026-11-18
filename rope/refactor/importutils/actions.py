@@ -175,6 +175,11 @@ class AddingVisitor(ImportInfoVisitor):
         ):
             if import_info.is_star_import():
                 return True
+            if import_stmt.readonly:
+                return not self.import_info.is_star_import() and all(
+                    pair in import_info.names_and_aliases
+                    for pair in self.import_info.names_and_aliases
+                )
             if self.import_info.is_star_import():
                 import_stmt.import_info = self.import_info
                 return True
@@ -341,6 +346,7 @@ class RemovePyNameVisitor(ImportInfoVisitor):
         self.pymodule = pymodule
         self.pyname = pyname
         self.context = importinfo.ImportContext(project, folder)
+        self.removed_names = []
 
     def visitFromImport(self, import_stmt, import_info):
         if import_info.is_star_import():
@@ -351,6 +357,7 @@ class RemovePyNameVisitor(ImportInfoVisitor):
             try:
                 pyname = self.pymodule[alias or name]
                 if occurrences.same_pyname(self.pyname, pyname):
+                    self.removed_names.append(alias or name)
                     continue
             except exceptions.AttributeNotFoundError:
                 pass

@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 import warnings
+from typing import Callable, List, Optional, Sequence
 
 from rope.base import ast, builtins, change, codeanalyze, libutils, taskhandle
+from rope.base.pyobjectsdef import PyModule
+from rope.base.resources import File
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
+
+MatchFilter = Callable[[PyModule, similarfinder.Match], bool]
+ImportFilter = Callable[[File, List[str]], Sequence[str]]
 
 
 class Restructure:
@@ -71,10 +79,28 @@ class Restructure:
 
     """
 
-    def __init__(self, project, pattern, goal, args=None, imports=None, wildcards=None):
+    def __init__(
+        self,
+        project,
+        pattern,
+        goal,
+        args=None,
+        imports=None,
+        wildcards=None,
+        match_filter: Optional[MatchFilter] = None,
+        import_filter: Optional[ImportFilter] = None,
+    ):
         """Construct a restructuring
 
         See class pydoc for more info about the arguments.
+
+        `match_filter`, when given, is called as ``match_filter(pymodule,
+        match)`` for every match found in a module; only the matches it
+        returns a true value for are restructured.
+
+        `import_filter`, when given, is called as ``import_filter(resource,
+        imports)`` before `imports` are added to a changed module; only the
+        imports it returns are added.
 
         """
         self.project = project
@@ -87,6 +113,8 @@ class Restructure:
         if self.imports is None:
             self.imports = []
         self.wildcards = wildcards
+        self.match_filter = match_filter
+        self.import_filter = import_filter
         self.template = similarfinder.CodeTemplate(self.goal)
 
     def get_changes(
@@ -150,6 +178,10 @@ class Restructure:
             pymodule = self.project.get_pymodule(resource)
             finder = similarfinder.SimilarFinder(pymodule, wildcards=self.wildcards)
             matches = list(finder.get_matches(self.pattern, self.args))
+            if self.match_filter is not None:
+                matches = [
+                    match for match in matches if self.match_filter(pymodule, match)
+                ]
             computer = self._compute_changes(matches, pymodule)
             result = computer.get_changed()
             if result is not None:
@@ -168,6 +200,8 @@ class Restructure:
         )
 
     def _add_imports(self, resource, source, imports):
+        if self.import_filter is not None:
+            imports = list(self.import_filter(resource, list(imports)))
         if not imports:
             return source
         import_infos = self._get_import_infos(resource, imports)

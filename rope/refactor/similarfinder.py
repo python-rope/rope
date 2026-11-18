@@ -154,8 +154,8 @@ class _ASTMatcher:
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            # _check_nodes always returns None, so
-            # call_for_nodes traverses self.body's entire tree.
+            # call_for_nodes traverses self.body's entire tree, except the
+            # inside of f-strings, which _check_node walks itself.
             ast.call_for_nodes(self.body, self._check_node)
         return self.matches
 
@@ -164,6 +164,20 @@ class _ASTMatcher:
             self._check_statements(node)
         else:
             self._check_expression(node)
+        if isinstance(node, ast.JoinedStr):
+            self._check_replacement_fields(node)
+            return True
+        return False
+
+    def _check_replacement_fields(self, node):
+        # The literal pieces and format specs of an f-string are fragments of
+        # its source, not expressions: patchedast gives them no region.  Only
+        # the expressions in the replacement fields can match.
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                ast.call_for_nodes(value.value, self._check_node)
+                if value.format_spec is not None:
+                    self._check_replacement_fields(value.format_spec)
 
     def _check_expression(self, node):
         mapping = {}
@@ -249,6 +263,12 @@ class Match:
         """Return the ast node that has matched rope variables"""
         return self.mapping.get(name, None)
 
+    def get_capture_region(self, name):
+        """Return the captured variable's half-open source character range."""
+        if name not in self.mapping:
+            raise ValueError("Match has no captured variable: %s" % name)
+        return patchedast.node_region(self.mapping[name])
+
 
 class ExpressionMatch(Match):
     def __init__(self, ast, mapping):
@@ -269,9 +289,25 @@ class StatementMatch(Match):
 
 
 class CodeTemplate:
+    _dollar_name_pattern = r"(?P<name>\$\{[^\s\$\}]*\})"
+
     def __init__(self, template):
         self.template = template
         self._find_names()
+
+    @classmethod
+    def _get_pattern(cls):
+        if cls._match_pattern is None:
+            pattern = "|".join(
+                (
+                    codeanalyze.get_comment_pattern(),
+                    codeanalyze.get_string_pattern(),
+                    f"(?P<fstring>{codeanalyze.get_formatted_string_pattern()})",
+                    cls._dollar_name_pattern,
+                )
+            )
+            cls._match_pattern = re.compile(pattern)
+        return cls._match_pattern
 
     def _find_names(self):
         self.names = {}
@@ -282,6 +318,29 @@ class CodeTemplate:
                 if name not in self.names:
                     self.names[name] = []
                 self.names[name].append((start, end))
+
+            elif "fstring" in match.groupdict() and match.group("fstring") is not None:
+                self._fstring_case(match)
+
+    def _fstring_case(self, fstring_match: re.Match):
+        """Needed because CodeTemplate._match_pattern short circuits
+        as soon as it sees a '#', even if that '#' is inside a f-string
+        that has a ${variable}."""
+
+        string_start, string_end = fstring_match.span("fstring")
+
+        for match in re.finditer(self._dollar_name_pattern, self.template):
+            if match.start("name") < string_start:
+                continue
+
+            if match.end("name") > string_end:
+                break
+
+            start, end = match.span("name")
+            name = self.template[start + 2 : end - 1]
+            if name not in self.names:
+                self.names[name] = []
+            self.names[name].append((start, end))
 
     def get_names(self):
         return self.names.keys()
@@ -297,19 +356,6 @@ class CodeTemplate:
         return result
 
     _match_pattern = None
-
-    @classmethod
-    def _get_pattern(cls):
-        if cls._match_pattern is None:
-            pattern = (
-                codeanalyze.get_comment_pattern()
-                + "|"
-                + codeanalyze.get_string_pattern()
-                + "|"
-                + r"(?P<name>\$\{[^\s\$\}]*\})"
-            )
-            cls._match_pattern = re.compile(pattern)
-        return cls._match_pattern
 
 
 class _RopeVariable:

@@ -7,6 +7,147 @@ from ropetest import testutils
 
 
 class BuiltinTypesTest(unittest.TestCase):
+    def test_generic_alias_inequality_preserves_not_implemented(self):
+        code = "Alias = list[str]\nSame = list[str]\n"
+        namespace = {}
+        exec(code, namespace)
+        self.assertEqual(namespace['Alias'], namespace['Same'])
+        self.assertNotEqual(namespace['Alias'], object())
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        alias = module['Alias'].get_object()
+        same = module['Same'].get_object()
+        self.assertIsInstance(alias, builtins.GenericAlias)
+        self.assertEqual(alias, same)
+        self.assertFalse(alias != same)
+        self.assertIs(NotImplemented, alias.__ne__(pyobjects.get_unknown()))
+        self.assertNotEqual(alias, pyobjects.get_unknown())
+
+    def test_native_getattribute_preserves_callable_descriptor_binding(self):
+        cases = [
+            ("object.__getattribute__(Owner(), 'read')()", "Value"),
+            ("type.__getattribute__(Owner, 'read')(Owner())", "Value"),
+            ("object.__getattribute__(Owner(), 'static')()", "Value"),
+            ("type.__getattribute__(Owner, 'static')()", "Value"),
+            ("object.__getattribute__(Owner(), 'build')()", "Owner"),
+            ("type.__getattribute__(Owner, 'build')()", "Owner"),
+            ("getattr(Owner(), 'read')()", "Value"),
+            ("getattr(Owner, 'read')(Owner())", "Value"),
+            ("getattr(Owner(), 'static')()", "Value"),
+            ("getattr(Owner, 'build')()", "Owner"),
+        ]
+        for expression, expected in cases:
+            with self.subTest(expression=expression):
+                code = (
+                    "class Value:\n    pass\n\n"
+                    "class Owner:\n    def read(self):\n        return Value()\n"
+                    "    @staticmethod\n    def static():\n        return Value()\n"
+                    "    @classmethod\n    def build(cls):\n        return cls()\n\n"
+                    + "result = " + expression + "\n"
+                )
+                namespace = {}
+                exec(code, namespace)
+                self.assertIsInstance(namespace['result'], namespace[expected])
+                self.mod.write(code)
+                module = self.project.get_pymodule(self.mod)
+                self.assertIs(module[expected].get_object(), module['result'].get_object().get_type())
+
+    def test_native_getattribute_unknown_member_has_no_invented_result(self):
+        code = "class Owner:\n    pass\n\nresult = object.__getattribute__(Owner(), 'missing')\n"
+        with self.assertRaises(AttributeError):
+            exec(code, {})
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        self.assertIs(pyobjects.get_unknown(), module['result'].get_object())
+
+    def test_getattr_default_for_absent_member(self):
+        cases = [
+            ("getattr(Owner(), 'missing', Value())", "Value"),
+            ("getattr(Owner, 'missing', Value())", "Value"),
+            ("getattr(Owner(), 'read', Other())()", "Value"),
+        ]
+        for expression, expected in cases:
+            with self.subTest(expression=expression):
+                code = (
+                    "class Value:\n    pass\n\nclass Other:\n    pass\n\n"
+                    "class Owner:\n    def read(self):\n        return Value()\n\n"
+                    + "result = " + expression + "\n"
+                )
+                namespace = {}
+                exec(code, namespace)
+                self.assertIsInstance(namespace['result'], namespace[expected])
+                self.mod.write(code)
+                module = self.project.get_pymodule(self.mod)
+                self.assertIs(module[expected].get_object(), module['result'].get_object().get_type())
+
+    def test_getattr_dynamic_hook_has_no_invented_callable_identity(self):
+        code = (
+            "class Owner:\n"
+            "    def __getattribute__(self, name):\n        return lambda: 7\n"
+            "result = getattr(Owner(), 'read')()\n"
+        )
+        namespace = {}
+        exec(code, namespace)
+        self.assertEqual(7, namespace['result'])
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        self.assertIs(pyobjects.get_unknown(), module['result'].get_object())
+
+    def test_inspect_members_preserves_selected_callable_in_heterogeneous_namespace(self):
+        for receiver, call in (("Owner()", "()"), ("Owner", "(Owner())")):
+            with self.subTest(receiver=receiver):
+                code = (
+                    "import inspect\nclass Value:\n    pass\n\n"
+                    "class Owner:\n    label = 'other member'\n"
+                    "    def run(self):\n        return Value()\n\n"
+                    + "result = dict(inspect.getmembers(" + receiver + "))['run']" + call + "\n"
+                )
+                namespace = {}
+                exec(code, namespace)
+                self.assertIsInstance(namespace['result'], namespace['Value'])
+                self.mod.write(code)
+                module = self.project.get_pymodule(self.mod)
+                self.assertIs(module['Value'].get_object(), module['result'].get_object().get_type())
+
+    def test_inspect_members_dynamic_hooks_remain_unresolved(self):
+        code = (
+            "import inspect\nclass Owner:\n"
+            "    def __dir__(self):\n        return ['run']\n"
+            "    def run(self):\n        return 7\n\n"
+            "result = dict(inspect.getmembers(Owner()))['run']()\n"
+        )
+        namespace = {}
+        exec(code, namespace)
+        self.assertEqual(7, namespace['result'])
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        self.assertIs(pyobjects.get_unknown(), module['result'].get_object())
+
+    def test_inspect_member_model_does_not_adopt_homonymous_source(self):
+        code = (
+            "class inspect:\n    @staticmethod\n    def getmembers(value):\n        return 'custom'\n\n"
+            "result = inspect.getmembers(7)\n"
+        )
+        namespace = {}
+        exec(code, namespace)
+        self.assertEqual('custom', namespace['result'])
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        self.assertIsInstance(module['result'].get_object(), builtins.LiteralString)
+        self.assertEqual('custom', module['result'].get_object().value)
+
+    def test_map_next_preserves_callable_element_flow(self):
+        code = (
+            "class Value:\n    pass\n\n"
+            "result = next(map(lambda value: value, [Value()]))\n"
+        )
+        namespace = {}
+        exec(code, namespace)
+        self.assertIsInstance(namespace['result'], namespace['Value'])
+        self.mod.write(code)
+        module = self.project.get_pymodule(self.mod)
+        self.assertIs(module['Value'].get_object(), module['result'].get_object().get_type())
+
     def setUp(self):
         super().setUp()
         self.project = testutils.sample_project()
@@ -16,6 +157,12 @@ class BuiltinTypesTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_project(self.project)
         super().tearDown()
+
+    def test_builtin_module_exposes_scope(self):
+        module = builtins.BuiltinModule("builtins")
+        scope = module.get_scope()
+        self.assertEqual("Module", scope.get_kind())
+        self.assertIn("len", scope.get_names())
 
     def test_simple_case(self):
         self.mod.write("l = []\n")
@@ -58,6 +205,25 @@ class BuiltinTypesTest(unittest.TestCase):
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
+
+    def test_get_items_passes_the_subscript_argument(self):
+        code = dedent("""\
+            class Value:
+                pass
+            class Container:
+                def __getitem__(self, item):
+                    return item
+            value = Value()
+            selected = Container()[value]
+        """)
+        namespace = {}
+        exec(code, namespace)
+        self.assertIs(namespace["value"], namespace["selected"])
+        self.mod.write(code)
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertIs(
+            pymod["value"].get_object(), pymod["selected"].get_object()
+        )
 
     def test_get_items_from_slices(self):
         self.mod.write(dedent("""\
@@ -400,6 +566,83 @@ class BuiltinTypesTest(unittest.TestCase):
         c_class = pymod["C"].get_object()
         a_var = pymod["a_var"].get_object()
         self.assertEqual(c_class, a_var.get_type())
+
+    def test_super_follows_the_method_resolution_order(self):
+        self.mod.write(dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            class Base(object):
+                def a_f(self):
+                    return C1()
+            class Left(Base):
+                pass
+            class Right(Base):
+                def a_f(self):
+                    return C2()
+            class Derived(Left, Right):
+                def b_f(self):
+                    return super(Derived, self).a_f()
+            a_var = Derived().b_f()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        c2_class = pymod["C2"].get_object()
+        a_var = pymod["a_var"].get_object()
+        self.assertEqual(c2_class, a_var.get_type())
+
+    def test_super_binds_the_receiver(self):
+        self.mod.write(dedent("""\
+            class Base(object):
+                def get_self(self):
+                    return self
+            class Derived(Base):
+                def get(self):
+                    return super(Derived, self).get_self()
+            a_var = Derived().get()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        derived = pymod["Derived"].get_object()
+        a_var = pymod["a_var"].get_object()
+        self.assertEqual(derived, a_var.get_type())
+
+    def test_super_classmethod_binds_the_receiver_class(self):
+        self.mod.write(dedent("""\
+            class Base(object):
+                @classmethod
+                def make(cls):
+                    return cls()
+            class Derived(Base):
+                @classmethod
+                def build(cls):
+                    return super(Derived, cls).make()
+            a_var = Derived.build()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        derived = pymod["Derived"].get_object()
+        a_var = pymod["a_var"].get_object()
+        self.assertEqual(derived, a_var.get_type())
+
+    def test_super_skips_the_class_itself(self):
+        self.mod.write(dedent("""\
+            class C1(object):
+                pass
+            class C2(object):
+                pass
+            class Base(object):
+                def a_f(self):
+                    return C1()
+            class Derived(Base):
+                def a_f(self):
+                    return C2()
+                def b_f(self):
+                    return super(Derived, self).a_f()
+            a_var = Derived().b_f()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        c1_class = pymod["C1"].get_object()
+        a_var = pymod["a_var"].get_object()
+        self.assertEqual(c1_class, a_var.get_type())
 
     def test_file_builtin_type(self):
         self.mod.write(dedent("""\

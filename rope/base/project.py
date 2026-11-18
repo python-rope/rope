@@ -4,10 +4,12 @@ import contextlib
 import json
 import os
 import sys
+import sysconfig
+import types
 import warnings
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Optional
 
 import rope.base.fscommands  # Use full qualification for clarity.
 import rope.base.resourceobserver as resourceobserver
@@ -26,7 +28,7 @@ except ImportError:
 
 
 if TYPE_CHECKING:
-    from rope.base import pyobjectsdef
+    from rope.base import pyobjects, pyobjectsdef
 
 
 class _Project(ABC):
@@ -34,9 +36,10 @@ class _Project(ABC):
     data_files: _DataFiles
     _custom_source_folders: list[Folder]
 
-    def __init__(self, fscommands):
+    def __init__(self, fscommands, external_project=None):
         self.observers = []
         self.fscommands = fscommands
+        self.external_project = external_project
         self.prefs = Prefs()
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
@@ -53,28 +56,106 @@ class _Project(ABC):
 
         """
         path = self._get_resource_path(resource_name)
-        if not os.path.exists(path):
+        if not self.fscommands.exists(path):
             raise exceptions.ResourceNotFoundError(
                 "Resource <%s> does not exist" % resource_name
             )
-        elif os.path.isfile(path):
+        elif self.fscommands.isfile(path):
             return File(self, resource_name)
-        elif os.path.isdir(path):
+        elif self.fscommands.isdir(path):
             return Folder(self, resource_name)
         else:
             raise exceptions.ResourceNotFoundError("Unknown resource " + resource_name)
 
-    def get_python_path_folders(self) -> list[Folder]:
+    def get_module(
+        self, name: str, folder: Optional[Folder] = None
+    ) -> pyobjects.AbstractModule:
+        """Returns a `PyObject` if the module was found."""
+        # check if this is a builtin module
+        pymod = self.pycore.builtin_module(name)
+        if pymod is not None:
+            return pymod
+        module = self.find_module(name, folder)
+        if module is None:
+            observed = self._stdlib_module_alias(name, folder)
+            if observed is not None:
+                return observed
+            raise ModuleNotFoundError("Module %s not found" % name)
+        return self.pycore.resource_to_pyobject(module)
+
+    def _stdlib_module_alias(self, name, folder):
+        """Read an existing stdlib module election without importing target code."""
+        observed = sys.modules.get(name)
+        if not isinstance(observed, types.ModuleType) or observed.__spec__ is None:
+            return None
+        origin = observed.__spec__.name
+        if origin == name or sys.modules.get(origin) is not observed:
+            return None
+        if not hasattr(sys, "stdlib_module_names") or (
+            origin.partition(".")[0] not in sys.stdlib_module_names
+            or name.partition(".")[0] not in sys.stdlib_module_names
+        ):
+            return None
+        parent_name, separator, _ = name.rpartition(".")
+        parent = sys.modules.get(parent_name)
+        filename = getattr(observed, "__file__", None)
+        parent_filename = getattr(parent, "__file__", None)
+        if (
+            not separator
+            or not isinstance(filename, str)
+            or not isinstance(parent_filename, str)
+        ):
+            return None
+        stdlib = os.path.realpath(sysconfig.get_path("stdlib"))
+        filename = os.path.realpath(filename)
+        try:
+            contained = os.path.normcase(
+                os.path.commonpath((stdlib, filename))
+            ) == os.path.normcase(stdlib)
+        except ValueError:
+            return None
+        if not contained:
+            return None
+        declared_parent = self.find_module(parent_name, folder)
+        declared_origin = self.find_module(origin, folder)
+        if (
+            declared_parent is None
+            or declared_origin is None
+            or declared_origin.is_folder()
+        ):
+            return None
+        if declared_parent.is_folder():
+            if not declared_parent.has_child("__init__.py"):
+                return None
+            declared_parent = declared_parent.get_child("__init__.py")
+        if not utils.same_file_path(
+            declared_parent.real_path, parent_filename
+        ) or not utils.same_file_path(declared_origin.real_path, filename):
+            return None
+        return self.pycore.resource_to_pyobject(declared_origin)
+
+    def get_python_path_folders(self) -> list[Resource]:
         result = []
+        external = (
+            get_no_project() if self.external_project is None else self.external_project
+        )
         for src in self.prefs.get("python_path", []) + sys.path:
             with contextlib.suppress(exceptions.ResourceNotFoundError):
-                src_folder = get_no_project().get_resource(src)
+                result.append(external.get_resource(src))
 
-                # FIXME: it shouldn't be supported, but what if someone
-                #        provided a .py file in python_path?
-                src_folder = cast(Folder, src_folder)
+        return result
 
-                result.append(src_folder)
+    # INFO: It was decided not to cache source folders, since:
+    #  - Does not take much time when the root folder contains
+    #    packages, that is most of the time
+    #  - We need a separate resource observer; `self.observer`
+    #    does not get notified about module and folder creations
+    def get_source_folders(self) -> list[Folder]:
+        """Returns project source folders"""
+        if self.root is None:
+            return []
+        result = list(self._custom_source_folders)
+        result.extend(self.pycore._find_source_folders(self.root))
         return result
 
     def validate(self, folder):
@@ -135,6 +216,22 @@ class _Project(ABC):
             raise ModuleNotFoundError("Module %s not found" % name)
         return self.pycore.resource_to_pyobject(module)
 
+    def find_module(
+        self, modname: str, folder: Optional[Folder] = None
+    ) -> Optional[Resource]:
+        """Returns a resource corresponding to the given module
+
+        returns None if it can not be found
+        """
+
+        def folders():
+            yield from self.get_source_folders()
+            yield from self.get_python_path_folders()
+            if folder is not None:
+                yield folder
+
+        return _find_module_in_folders(folders(), modname)
+
     def find_relative_module(
         self,
         modname: str,
@@ -146,7 +243,7 @@ class _Project(ABC):
         if modname == "":
             return folder
         else:
-            return _find_module_in_folder(folder, modname)
+            return _find_module_in_folders([folder], modname)
 
     def is_ignored(self, resource):
         return False
@@ -189,7 +286,14 @@ class Project(_Project):
     file_list: _FileListCacher
 
     def __init__(
-        self, projectroot, fscommands=None, ropefolder=".ropeproject", **prefs
+        self,
+        projectroot,
+        fscommands=None,
+        ropefolder=".ropeproject",
+        external_project=None,
+        *,
+        config_files=True,
+        **prefs,
     ):
         """A rope project
 
@@ -200,28 +304,61 @@ class Project(_Project):
             - `ropefolder`: The name of the folder in which rope stores
               project configurations and data.  Pass `None` for not using
               such a folder at all.
+            - `external_project`: Resource owner for Python-path modules.
+              Pass a separate ``NoProject`` with the same filesystem commands
+              to keep external and local reads in one captured filesystem.
+            - `config_files`: Pass ``False`` to take preferences only from
+              `prefs` over the defaults; no ``pyproject.toml``, ropefolder
+              ``config.py`` or global configuration is read.
             - `prefs`: Specify project preferences.  These values
               overwrite config file preferences.
 
         """
         if projectroot != "/":
-            projectroot = _realpath(projectroot).rstrip("/\\")
+            projectroot = (
+                _realpath(projectroot)
+                if fscommands is None
+                else fscommands.realpath(projectroot)
+            ).rstrip("/\\")
         assert isinstance(projectroot, str)
         self._address = projectroot
         self._ropefolder_name = ropefolder
-        if not os.path.exists(self._address):
-            os.mkdir(self._address)
-        elif not os.path.isdir(self._address):
+        self._config_files = config_files
+        filesystem = (
+            rope.base.fscommands.FileSystemCommands()
+            if fscommands is None
+            else fscommands
+        )
+        if not filesystem.exists(self._address):
+            filesystem.create_folder(self._address)
+        elif not filesystem.isdir(self._address):
             raise exceptions.RopeError("Project root exists and" " is not a directory")
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
-        super().__init__(fscommands)
+        super().__init__(fscommands, external_project=external_project)
         self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
+
+        extra_ignores = [
+            p.pathlib.relative_to(self.root.pathlib)
+            for p in self.get_python_path_folders()
+            if p.pathlib.is_relative_to(self.root.pathlib)
+            and "site-packages" in p.pathlib.parts
+        ]
+        if extra_ignores:
+            # I'm using this approach, because self.prefs.add after _init_prefs
+            # does not work for some reason.
+            prefs.setdefault("ignored_resources", []).extend(
+                str(p) for p in extra_ignores
+            )
+
         self._init_prefs(prefs)
         if ropefolder is not None:
             self.prefs.add("ignored_resources", ropefolder)
-        self._init_source_folders()
+
+        for path in self.prefs.get("source_folders", []):
+            folder = self.get_resource(path)
+            self._custom_source_folders.append(folder)
 
     def __repr__(self):
         return '<{}.{} "{}">'.format(
@@ -229,63 +366,6 @@ class Project(_Project):
             self.__class__.__name__,
             self.address,
         )
-
-    @utils.deprecated("Delete once deprecated functions are gone")
-    def _init_source_folders(self):
-        for path in self.prefs.get("source_folders", []):
-            folder = self.get_resource(path)
-            self._custom_source_folders.append(folder)
-
-    # INFO: It was decided not to cache source folders, since:
-    #  - Does not take much time when the root folder contains
-    #    packages, that is most of the time
-    #  - We need a separate resource observer; `self.observer`
-    #    does not get notified about module and folder creations
-    def get_source_folders(self) -> list[Folder]:
-        """Returns project source folders"""
-        if self.root is None:
-            return []
-        result = list(self._custom_source_folders)
-        result.extend(self.pycore._find_source_folders(self.root))
-        return result
-
-    def find_module(
-        self,
-        modname: str,
-        folder: Optional[Folder] = None,
-    ) -> Optional[Resource]:
-        """Returns a resource corresponding to the given module
-
-        returns None if it can not be found
-        """
-        for src in self.get_source_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        for src in self.get_python_path_folders():
-            module = _find_module_in_folder(src, modname)
-            if module is not None:
-                return module
-        if folder is not None:
-            module = _find_module_in_folder(folder, modname)
-            if module is not None:
-                return module
-        return None
-
-    def get_module(
-        self,
-        name: str,
-        folder: Optional[Folder] = None,
-    ) -> pyobjectsdef.PyPackage | pyobjectsdef.PyModule:
-        """Returns a `PyObject` if the module was found."""
-        # check if this is a builtin module
-        pymod = self.pycore.builtin_module(name)
-        if pymod is not None:
-            return pymod
-        module = self.find_module(name, folder)
-        if module is None:
-            raise ModuleNotFoundError("Module %s not found" % name)
-        return self.pycore.resource_to_pyobject(module)
 
     def get_files(self) -> list[Resource]:
         return list(self.file_list.get_files())
@@ -299,7 +379,7 @@ class Project(_Project):
         ]
 
     def _get_resource_path(self, name: str) -> str:
-        return os.path.join(self._address, *name.split("/"))
+        return os.path.normpath(os.path.join(self._address, *name.split("/")))
 
     def _init_ropefolder(self):
         if self.ropefolder is not None and not self.ropefolder.exists():
@@ -311,7 +391,11 @@ class Project(_Project):
         folder.create()
 
     def _init_prefs(self, prefs):
-        config = get_config(self.root, self.ropefolder).parse()
+        config = (
+            get_config(self.root, self.ropefolder).parse()
+            if self._config_files
+            else Prefs()
+        )
         self.prefs = config
         self.prefs.add_callback("ignored_resources", self.ignored.set_patterns)
         self.ignored.set_patterns(self.prefs.ignored_resources)
@@ -326,7 +410,7 @@ class Project(_Project):
         # Forcing the creation of `self.pycore` to register observers
         self.pycore  # pylint: disable=pointless-statement
 
-    def is_ignored(self, resource):
+    def is_ignored(self, resource: Resource):
         return self.ignored.does_match(resource)
 
     def sync(self):
@@ -365,16 +449,17 @@ class NoProject(_Project):
     _no_project: Optional[NoProject] = None
     ropefolder: Optional[Folder] = None
 
-    def __init__(self):
-        fscommands = rope.base.fscommands.FileSystemCommands()
+    def __init__(self, fscommands=None):
+        if fscommands is None:
+            fscommands = rope.base.fscommands.FileSystemCommands()
         super().__init__(fscommands)
 
     def _get_resource_path(self, name: str) -> str:
         real_name = name.replace("/", os.path.sep)
-        return _realpath(real_name)
+        return self.fscommands.realpath(real_name)
 
     def get_resource(self, name: str) -> Resource:
-        universal_name = _realpath(name).replace(os.path.sep, "/")
+        universal_name = self.fscommands.realpath(name).replace(os.path.sep, "/")
         return super().get_resource(universal_name)
 
     def get_files(self) -> list[Resource]:
@@ -489,23 +574,31 @@ def _realpath(path: str) -> str:
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
 
 
-def _find_module_in_folder(folder: Folder, modname: str) -> Optional[Resource]:
-    module = folder
-    packages = modname.split(".")
-    for pkg in packages[:-1]:
-        if module.is_folder() and module.has_child(pkg):
-            module = module.get_child(pkg)
+def _find_module_in_folders(folders, modname):
+    for name in modname.split("."):
+        namespaces = []
+        for folder in folders:
+            if not folder.is_folder():
+                continue
+            package = folder.get_child(name) if folder.has_child(name) else None
+            if package is not None and package.is_folder():
+                if (
+                    package.has_child("__init__.py")
+                    and not package.get_child("__init__.py").is_folder()
+                ):
+                    module = package
+                    folders = [package]
+                    break
+                namespaces.append(package)
+            if folder.has_child(name + ".py"):
+                source = folder.get_child(name + ".py")
+                if not source.is_folder():
+                    module = source
+                    folders = []
+                    break
         else:
-            return None
-    if module.is_folder():
-        if (
-            module.has_child(packages[-1])
-            and module.get_child(packages[-1]).is_folder()
-        ):
-            return module.get_child(packages[-1])
-        elif (
-            module.has_child(packages[-1] + ".py")
-            and not module.get_child(packages[-1] + ".py").is_folder()
-        ):
-            return module.get_child(packages[-1] + ".py")
-    return None
+            if not namespaces:
+                return None
+            module = namespaces[0]
+            folders = namespaces
+    return module

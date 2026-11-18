@@ -32,11 +32,15 @@ def path_to_resource(project, path, type=None):
 
 
 def path_relative_to_project_root(project, path):
-    return relative(project.address, path)
+    return _relative(project.address, path)
 
 
 @utils.deprecated()
 def relative(root, path):
+    return _relative(root, path)
+
+
+def _relative(root, path):
     root = rope.base.project._realpath(root).replace(os.path.sep, "/")
     path = rope.base.project._realpath(path).replace(os.path.sep, "/")
     if path == root:
@@ -119,5 +123,19 @@ def modname(resource):
     ):
         module_name = source_folder.name + "." + module_name
         source_folder = source_folder.parent
+
+    # An explicitly elected import root also owns intervening PEP 420 parts.
+    # Inferred folders retain the historical regular-package naming contract.
+    declared = {
+        resource.project.get_folder(path)
+        for path in resource.project.prefs.get("source_folders", [])
+    }
+    ancestor = source_folder
+    while ancestor not in declared and ancestor != ancestor.parent:
+        ancestor = ancestor.parent
+    if ancestor in declared:
+        while source_folder != ancestor:
+            module_name = source_folder.name + "." + module_name
+            source_folder = source_folder.parent
 
     return module_name

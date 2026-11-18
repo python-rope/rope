@@ -1,6 +1,8 @@
 import unittest
 from textwrap import dedent
 
+import pytest
+
 from rope.base.prefs import (
     DEFAULT_IMPORT_STYLE,
     ImportPrefs,
@@ -8,7 +10,12 @@ from rope.base.prefs import (
     Prefs,
     get_preferred_import_style,
 )
-from rope.refactor.importutils import ImportTools, add_import, importinfo
+from rope.refactor.importutils import (
+    ImportTools,
+    add_import,
+    get_module_imports,
+    importinfo,
+)
 from ropetest import testutils
 
 
@@ -1707,6 +1714,23 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
+    def test_package_used_imports_include_its_declared_exports(self):
+        self.pkg1.get_child("__init__.py").write(dedent("""\
+            from os import path
+
+
+            __all__ = ["path"]
+        """))
+        package = self.project.get_module("pkg1")
+        module_imports = get_module_imports(self.project, package)
+        self.assertEqual(
+            ["from os import path"],
+            [
+                statement.get_import_statement()
+                for statement in module_imports.get_used_imports(package)
+            ],
+        )
+
     def test_organizing_imports_all_star_with_variables(self):
         code = expected = dedent("""\
             from package import name_one, name_two
@@ -1812,7 +1836,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertEqual(expected, self.import_tools.organize_imports(pymod))
 
-    @testutils.time_limit(60)
+    @pytest.mark.timeout(60)
     def test_organizing_imports_all_star_no_infinite_loop(self):
         code = expected = dedent("""\
             from package import name_one, name_two
@@ -1947,6 +1971,37 @@ class ImportUtilsTest(unittest.TestCase):
             return import_stmt.start_line <= lineno < import_stmt.end_line
 
         return import_filter
+
+    def test_filtered_duplicate_removal_preserves_distinct_from_imports(self):
+        for imported in ("mod3", "mod3 as other", "*"):
+            with self.subTest(imported=imported):
+                source = dedent(f"""\
+                    from pkg2 import mod2
+                    from pkg2 import {imported}
+                """)
+                self.mod.write(source)
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(source, module_imports.get_changed_source())
+
+    def test_filtered_duplicate_removal_still_removes_covered_imports(self):
+        for imported in ("mod2", "mod2, mod3", "*"):
+            with self.subTest(imported=imported):
+                expected = dedent(f"""\
+                    from pkg2 import {imported}
+                """)
+                self.mod.write(expected + dedent("""\
+                    from pkg2 import mod2
+                """))
+                pymod = self.project.get_pymodule(self.mod)
+                module_imports = self.import_tools.module_imports(
+                    pymod, self._line_filter(2)
+                )
+                module_imports.remove_duplicates()
+                self.assertEqual(expected, module_imports.get_changed_source())
 
     def test_filtered_expand_stars(self):
         self.pkg1.get_child("__init__.py").write("var1 = 1\n")

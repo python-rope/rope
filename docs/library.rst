@@ -14,6 +14,325 @@ Quick Start
 
 This section will help you get started as soon as possible.
 
+Formatted string expressions infer the native ``str`` instance type without
+evaluating their formatted values. Their nested expressions remain visible to
+the existing reference, call and reflection analysis.
+
+Semantic match capture regions
+------------------------------
+
+Matches returned by ``rope.refactor.similarfinder.SimilarFinder.get_matches``
+provide ``get_capture_region(name)``.  It returns the captured variable's
+half-open character range in the original source, for both expression and
+statement patterns.  An unknown capture raises ``ValueError``.  Clients can
+therefore use source regions without depending on Rope's syntax nodes.
+
+The module's existing ``get_source_binding_index().absolute_import_roots()``
+returns a frozen set of absolute top-level import names from its indexed
+declarations, including guarded and nested imports.  Relative imports are
+excluded.  This query neither imports the declared packages nor resolves their
+classes, and it preserves declarations whose local bindings are overwritten.
+Occurrence import roles use the same native import-declaration spans. A
+``yield from`` before a later import must not classify an intervening function
+declaration as imported and silently omit its signature change.
+
+``assignment_string_sequence(name, scope=None, *, class_metadata=False)`` reads the last direct
+assignment and subsequent literal ``+=`` extensions in the indexed module or
+an explicitly supplied class scope.  It
+returns a tuple for a literal string list, tuple or set, and follows module
+name references and single-name ``tuple``/``list``/``set``/``frozenset`` wrappers
+at the position of the referring assignment.
+Missing declarations return ``None``; present empty or unsupported values return
+an empty tuple.  Cyclic references raise ``ValueError``.  It uses the module's
+existing parse without evaluating authored code or resolving class ancestry.
+A supplied scope must belong to that same indexed module; another module's
+scope raises ``ValueError`` instead of mixing its declarations with local names.
+With ``class_metadata=True``, an absent module declaration may be read from a
+single directly declared class.  Module declarations still take precedence,
+including empty or unsupported values.  This mode does not resolve class scopes
+or superclasses and cannot be combined with an explicit scope.
+
+Class headers use the binding that exists before the new class replaces its
+name. In particular, importing ``Foo`` and then declaring ``class Foo(Foo)``
+inherits the imported class; it does not declare a self-inheritance cycle.
+For a generic class, a same-named native type parameter takes precedence over
+that earlier binding, as it does for the other names in the generic header.
+This source-binding requirement does not waive rejection of an inconsistent
+hierarchy or introduce a second method-resolution-order implementation.
+
+``get_source_binding_index().class_layout(scope)`` exposes the source layout of
+a class in that same module. Its immutable result contains the declaration,
+header and body regions, the offset immediately after the declaration colon,
+the name region and base-list insertion offset, optional
+parenthesized argument-content region, direct keyword/base/decorator regions,
+original base bindings, named type-parameter regions,
+and direct annotated
+bindings. Each annotated binding retains its complete statement region, the
+native binding of its annotation qualifier and whether a value is present.
+Qualifier resolution uses the annotation's original source context, including
+aliases and generic header bindings. An unresolved qualifier remains ``None``;
+it is not replaced by a guessed name. Regions are half-open character offsets
+into the indexed module, not lines or a copy of its syntax tree. A scope from
+another module, or a non-class scope, is rejected. Consumers can use these facts
+and the existing ``context_at``/native class queries without inspecting syntax
+nodes, reconstructing a header or opening a second project.
+The argument region distinguishes ``class A:`` from ``class A():`` and preserves
+keyword-only headers such as ``class A(metaclass=M):``. Header tokens are read by
+Rope's existing lexical reader over the bounded header, so Unicode identifier
+spelling, comments, generic bounds and explicit line continuations keep their
+original character offsets. A leading decorated member belongs to the body,
+including its decorator lines.
+
+``assignment_layouts(scope=None, *, name=None)`` returns immutable metadata for
+direct assignments and type-alias declarations in the supplied scope (the module
+by default). Each record carries its native statement kind, complete statement
+region, named target regions, optional value/annotation regions and the native
+value binding resolved in its original source context. ``root_binding`` is the
+binding of a bare-name root below attribute access, or ``None`` for other
+expressions. ``string_sequence`` is the exact tuple of a direct literal string
+list, tuple or set, or ``None`` for another value. ``type_parameters`` retains
+named parameter regions of generic type aliases. Value inference is explicit:
+``resolve_values=True`` resolves ``value_binding`` and ``root_binding``; the
+default returns layout only. A name selection is applied before this inference,
+so a query for one binding does not infer unrelated declarations. Multiple writes remain separate ordered records;
+clients retain responsibility for admitting ambiguous or augmented writes.
+Like ``class_layout``, this query uses only the existing indexed source and
+rejects a scope from another module.
+
+The existing ``SourceContext.access`` query distinguishes expression reads,
+writes and deletions (``"read"``, ``"write"`` and ``"delete"``), returning
+``None`` for a context that is not a name/attribute/subscript access. Clients
+can combine this with the original context environment and semantic match
+regions without interpreting a syntax node.
+
+``decorator_bindings(scope)`` returns the ordered native callee bindings of a
+source declaration's decorators. A called decorator resolves its callable in
+the original header environment rather than evaluating its factory result.
+Declarations without decorators return an empty tuple. Unknown callees retain
+``None`` and native resolution errors propagate; no decorator is imported or
+executed by this query.
+
+``string_mapping_arguments(callee, position)`` locates a named call's positional
+mapping argument in the existing index.
+
+``import_layouts()`` exposes imports from that same index, including guarded and
+local imports. Each immutable record retains the statement region, optional
+from-provider region, module name, relative level and original imported names,
+aliases and their source regions. It never hoists imports or resolves unrelated
+providers. Native lexical offsets preserve the original importing boundary.
+Alias-separator regions identify the existing commas between indexed aliases;
+consumers can retain intervening comments when removing selected names.
+
+The string-mapping query follows a single native assignment
+for a referenced lexical name and retains native bindings of the selected callee
+and single-argument wrappers. Each result carries the mapping region and literal string keys with
+string-or-string-tuple values and the original value-token regions. Unsupported
+or ambiguous shapes have ``entries=None``; clients decide whether that is an
+expected refusal. The query neither evaluates a wrapper nor assigns it mapping
+semantics. It opens no project, parses no new source and keeps unrelated strings
+out of the selected mapping.
+
+Subscription analysis must distinguish instance ``__getitem__`` from class
+``__class_getitem__`` and retain the actual subscription argument. A metaclass's
+``__getitem__`` has precedence over the class hook. An unresolved subscription
+remains unresolved; substituting its origin class without proving the hook's
+result is not an ancestry contract. Native support for these cases is being
+qualified against source-derived regressions before consumers rely on it.
+
+The standard-library ``Generic`` and ``Protocol`` alias model applies to builtin
+and source implementations across supported Python versions. Source declarations retain
+their native class identity: admission authenticates the top-level declaration
+against the runtime library's name and physical module resource. A project-local
+``typing.py`` or a same-named class does not select this model. The shared alias
+factory retains every argument and recognizes only the type-variable capabilities
+available in that interpreter; unavailable APIs do not become substitutes or skips.
+When that authenticated owner is ``Generic`` or ``Protocol``, invalid parameters
+raise the original ``TypeError`` before an alias is constructed. Concrete aliases
+such as ``Mapping[str, str]`` have a different owner and do not justify admitting
+invalid ``Generic`` or ``Protocol`` arguments. This preserves the
+`typing specification's parameter contract
+<https://typing.python.org/en/latest/spec/generics.html#user-defined-generic-types>`_;
+an inference failure must be diagnosed at its actual source rather than bypassing
+this validation. The rejecting exception retains native object and type identities
+for the supplied arguments, including their declaring module resources when known.
+Unknown objects are reported by their native kind without assuming a class name;
+the diagnostic reads the values already supplied to the alias factory and does not
+resolve another namespace. Diagnostic failures remain secondary notes on the same
+``TypeError``. Restoring the validation alone does not qualify a consumer.
+Source ``Generic`` bases use the same native C3 machinery and runtime-library base
+identities as their builtin counterpart. This contract does not authorize importing
+application targets or replacing an unresolved custom hook with its origin.
+
+Variadic generic parameters use the authenticated standard-library ``Unpack``
+operation and retain their inner ``TypeVarTuple`` by reference. A raw
+``TypeVarTuple`` is not itself a valid ``Generic`` or ``Protocol`` parameter.
+Interpreters lacking these APIs retain their real missing-import and unresolved
+binding contracts; an alternate provider or a skipped positive case does not
+qualify this capability.
+
+The one-argument builtin ``type(value)`` operation is distinct from Rope's
+``PyObject.get_type()`` kind markers. Class operands select their actual native
+metaclass; instance operands select their known native class. Unresolved operands
+and metaclass witnesses remain unresolved. This does not change the existing
+three-argument class-construction analysis or make a metaclass instance into a
+source-defined class.
+
+Method-transfer declaration reads authenticate the native receiver getter and
+the member's descriptor behavior. Plain scalar members are recognized by their
+native builtin class identity; absent literal-value metadata is not a known
+``None`` value and cannot admit an arbitrary descriptor. Inherited class members,
+direct module declarations and their existing binding checks remain unchanged.
+The instance-transfer ``resolve_binding`` dependency defaults to native
+``evaluate.eval_node``. A caller may supply its existing source-view resolver;
+the same dependency resolves original and proposed expressions, while native
+getter, descriptor and binding-identity checks remain mandatory.
+
+Native class-construction analysis must retain the supplied class name, ordered
+bases, explicit metaclass and known namespace bindings in the existing
+``AbstractClass`` model. Empty bases select the native ``object`` class;
+ancestry and inherited attributes use native C3. Literal values must retain
+their payload through ordinary argument inference while preserving their
+builtin type identity. An unresolved name, base or namespace must not become an
+invented class. Construction uses source inference without importing the
+application or executing a runtime class factory. This contract includes
+``type.__new__``, three-argument ``type`` and source metaclass calls whose
+constructor resolves to native ``type.__new__``; qualification against real
+consumers is pending.
+
+Calling a class whose ``__new__`` is a source Python function with implicit or
+explicit staticmethod semantics supplies the requested class exactly once through
+the existing native argument binder. Simple names and qualified class calls use
+the same path. Its inferred return is retained, including an unresolved return;
+the source constructor does not manufacture an instance of its declaring proxy.
+The native ``type.__new__`` path remains unchanged. This cut does not alter the
+existing classmethod or lambda constructor paths and does not establish complete
+constructor qualification. The original public consumer remains the runtime
+acceptance boundary before SDK regression tests and integration.
+
+While an assignment's right-hand side is inferred, a recursive read of that same
+``AssignedName`` observes only its preceding assignments on a compatible control
+path. The existing source-binding index records nested ``if`` arms while visiting the
+condition and both suites in source order. Literal conditions select their
+reachable arm; opaque conditions retain both outcomes, including a path without
+a binding. Only outcomes referring to the same object join as that object;
+different or unresolved outcomes remain unknown. A join of distinct outcomes
+remains unknown before annotation inference; an ordinary unresolved right-hand
+side retains the existing annotation contract. Recursive prefix inference retains
+an ambiguous witness when its active right-hand side or a preceding candidate
+depends on loop, exception or pattern-selection control that has not been modeled.
+Nonrecursive inference retains the existing treatment of those controls.
+Ambiguity propagates through recursive reads of that same binding during the
+current inference, so a surrounding assignment cannot hide it with an annotation.
+Dependent names use the active expression's explicit ``SourceValueScope`` branch
+context, rather than a cached result that joins the entire scope. Contextual
+values retain a reference to the canonical source name and its definition.
+Branch facts belong to that expression and structural owner; another function
+call starts from its own native parameter epoch, without ambient transport.
+Decorators, headers and defaults retain their creator's branch context; function
+and lambda bodies begin a separate control context. Assignment metadata comes
+from that same source-index pass, including header, walrus and comprehension
+bindings. An assignment without source-index provenance, such as one in an
+independently parsed expression, carries no branch facts and keeps Rope's
+existing unconditional inference. A recorded loop, exception or
+pattern-selection context likewise keeps its existing nonrecursive inference
+semantics. This dependency-context
+capability is under qualification and does not yet establish consumer acceptance.
+
+Reassigning a formal parameter retains its original ``ParameterName`` in function
+scope, headers and keyword bindings. Source assignments are separate value facts
+holding that parameter by reference; raw parameter values, passed-object queries
+and definition locations keep their original contracts. ``SourceValueScope``
+looks up those facts at the exact source ``Name`` node and returns a
+``SourceValueName`` whose source identity is the original parameter. A read sees
+only writes whose real right-hand side ends before the read starts; its own
+right-hand side and future writes are excluded. An annotation without a value is
+not a parameter write. Header and walrus writes join the same ordered facts
+without replacing the formal binder. Only a proven path with no preceding write reads the
+current argument value; missing provenance, unresolved writes and ambiguous
+paths stay unknown. These contextual values are inferred without populating the
+full-binding cache, and another native call supplies its own argument epoch.
+For a generic function or a method of a generic class, the source context's
+structural scope authenticates the owning function. Its lexical environment is
+retained separately so type parameters remain visible during contextual reads.
+Occurrence discovery unwraps only native ``SourceValueName`` instance views,
+including nested views, before querying the original parameter's passed objects.
+The original parameter identity and ordinary instance inputs remain unchanged.
+The inference boundary, arm context and ambiguity state are restored on exit,
+including failures; a prefix value never replaces
+the full binding's cached object. This preserves native name and definition
+identity, the existing treatment of unknown values and cycles, and annotation
+inference. It does not select a convenient known branch or invalidate other module
+facts.
+
+Module-level assignments to source-function attributes belong to the existing
+native module event pass. Their receiver and value must use the bindings in
+effect at that event, retaining object identity through aliases, later shadowing
+and reassignment. An attributed function remains a function: protocols such as
+``__mro_entries__`` consume its assigned attribute rather than a substituted class.
+During module construction, unresolved lexical lookups reach the native builtin
+namespace without reopening the module's still-in-progress attribute inventory.
+Conditional or ambiguous writes retain an explicit unresolved witness; a missing
+attribute cannot be manufactured to hide an unproved write. This capability must
+reuse the native module and binding lifecycle, without a second source scan,
+attribute index or persistent cache. Qualification against real consumers is
+pending; the declaration of this contract does not attest implementation.
+The current event capture covers a single direct, unconditional assignment to an
+attribute of a directly declared module function. Alias receivers, conditional
+writes and chained targets still require the temporal binding capability and
+separate qualification; this initial cut does not establish their acceptance.
+If a known function's attribute is overwritten by an unsupported conditional or
+chained event, that event replaces the previous value with an existing native
+``EvaluatedName`` carrying its module and line. Consuming it raises ``RopeError``
+with that event's origin instead of publishing the old value as definitive.
+A later supported unconditional write can replace this unresolved event.
+
+When evaluating a declared base raises, Rope re-raises that same exception
+with its original traceback. Its ``__notes__`` metadata identifies the source
+module, declaring class, base line and base expression; nested failures retain
+each declaring context. The metadata is stored on Python 3.10 as well, without
+requiring ``BaseException.add_note``. Python 3.11 and later render these notes
+with the traceback. This diagnostic neither substitutes a base nor establishes
+that the ancestry or a consuming refactoring succeeded. If formatting the source
+context itself fails, that secondary failure is recorded as a note without
+replacing the original exception.
+
+To diagnose a real source graph without importing its application, run
+``make source-ancestry REQUEST=/absolute/request.json``. The request provides
+``root``, ``python_path`` (a list of source search directories), and ``targets``
+(a list of objects with ``module`` and ``attributes``). The native project reports
+its elected resources, bases and unresolved expression witnesses as JSON. For
+unresolved bases it identifies the inferred source binding and whether that
+object exposes the native ``__mro_entries__`` protocol. For source subscription
+hooks it also reports native parameters, local assignments,
+return expressions and directly assigned source-callable frames. These frames
+describe inferred values; they do not execute the analyzed package.
+Subscription-hook frames also compare recorded writes to formal parameters with
+the effective native binder and the inferred right-hand-side value, using the
+existing source index rather than another traversal.
+They report individual source-position reads separately from raw formal values,
+so retaining a parameter's identity cannot be mistaken for losing its writes.
+An optional ``frames`` list, with the same module/attributes addressing, reports
+selected source-function frames after ancestry inference in that same project,
+including each local assignment expression's inferred value.
+For a selected frame, ``preassignment_names`` optionally compares the original
+binding, its individually invalidated inference, and the last assignment under
+a native temporary scope containing only earlier assignments of that name.
+This controlled diagnostic supplies no expected object and changes no source;
+its result is separate from the unmodified ancestry witness.
+Search directories are analysis inputs, not additions to the diagnostic interpreter's
+``sys.path``. Native errors propagate instead of substituting another provider.
+An optional ``bindings`` list addresses native symbols in the same way, without
+requiring class ancestry. Assigned call expressions report their receiver,
+callable, arguments and inferred result, allowing an unresolved factory boundary
+to be inspected without swallowing the failing ancestry operation.
+
+``make source-fixture`` executes only the maintained diagnostic example
+``ropetest.source_ancestry_fixtures`` with this checkout's interpreter. It
+reports the CPython identities and ancestry of its assignment-flow examples.
+Analyze that same module separately with ``source-ancestry`` to compare native
+inference with the language runtime. This distinct command never imports an
+application supplied through an ancestry request.
+
 
 Making A Project
 ----------------
@@ -234,6 +553,68 @@ Note, however, that the use of ``automatic_soa`` is discouraged, because it may
 slow down saving considerably.
 
 
+Function Parameter Information
+------------------------------
+
+For ordinary functions and methods, ``PyFunction.get_parameters()`` includes
+positional-only and keyword-only bindings.  A ``ParameterName.index`` is an
+object slot, not a position in the source signature.  The regular slots are
+ordered as positional-only, positional-or-keyword, then keyword-only;
+``*args`` and ``**kwargs`` bindings follow them.  Signature separators do not
+occupy slots.
+
+``get_param_names(special_args=False)`` returns the regular names in this
+order.  ``get_parameter_layout()`` returns a tuple of ``(kind, name)`` pairs
+for all bindings, with kinds ``posonly``, ``positional``, ``kwonly``,
+``vararg``, and ``kwarg``.  Use ``get_positional_param_names()`` and
+``get_keyword_param_names()`` when matching positional and keyword
+arguments.  In particular, a keyword with the same name as a positional-only
+parameter can belong to ``**kwargs`` and is not a reference to that parameter.
+
+``get_parameter_defaults()`` maps names to their default-expression AST
+nodes.  Required parameters are absent from this mapping; an explicit
+``=None`` has an AST node.  Defaults belong to the definition's enclosing
+scope.  These APIs describe bindings and do not serialize a modified signature.
+They do not provide a general annotation-expression scope model; existing
+same-name annotation shadowing remains a separate limitation.
+
+Positional Change Signature operations, Introduce Parameter, Inline Parameter,
+and Move Method raise ``RefactoringError`` for signatures containing positional-only
+or keyword-only parameters before generating changes. Explicit keyword-only
+``ArgumentAdder`` operations preserve modern headers and analyze every resource
+the caller selected. Import-connected components classify internal provenance;
+they never exclude selected consumers from validation or rewriting.
+When a multiline header or call closes on its own line, additions retain that
+layout and the existing parameter indentation. A missing separator is inserted
+at the preceding argument's syntactic end, preserving its trailing comment;
+new keywords before ``**kwargs`` retain their own lines as well.
+
+For disconnected source scopes, an unresolved declared callback parameter has no
+target effect to prove; its arguments still require namespace-absence proof.
+Unresolved attribute, subscription, factory and dynamic-import consumers remain
+fail-closed across the full selected resource boundary.
+Import-connected public scopes remain part of that boundary even without a
+local invocation; an idle unresolved callback is not an effect contract. Native
+integer operators are distinguished by the SDK's actual builtin binding when
+analyzing numeric effects, while user-defined/external operators remain checked.
+Required additions build the import-connected effect boundary. Defaulted
+additions preserve existing call arity and omit unrequested keyword values, so
+they retain native occurrence/decorator validation and compilation without an
+inactive required-effect inference pass.
+The single standard-library ``contextlib.contextmanager`` decorator is
+authenticated by its native declaration and forwards the added keywords to
+the original generator, including bound methods. Imported aliases retain that
+identity; local homonyms and unproved decorator stacks remain refused.
+
+Use Function refuses keyword-only parameters. Existing positional-only Inline Method calls remain
+supported, while keyword-only Inline Method calls are refused.  Call inference
+keeps unknown ``*args`` and ``**kwargs`` expansions conservative.
+
+Local to Field requires a named positional receiver.  It refuses methods with
+no positional parameters and static methods, while retaining instance-method
+and class-method field conversions.
+
+
 Closing The Project
 -------------------
 
@@ -335,7 +716,7 @@ Retrieve the path relative to the project's root directory.
 .. code-block:: python
 
   # Get the path relative to the project's root directory.
-  relpath = libutils.relative(myproject.address, path)
+  relpath = libutils.path_relative_to_project_root(myproject, path)
 
 
 ``libutils.path_to_resource()``
@@ -427,6 +808,22 @@ class that provides this interface.  ``rope.base.project.Project``
 accepts an ``fscommands`` argument.  You can use this argument to force
 rope to use your new class.
 
+The same interface owns resource queries: ``exists``, ``isfile``,
+``isdir``, ``listdir``, ``stat``, and ``realpath``.  A captured filesystem can
+therefore keep both reads and directory elections independent of later
+disk changes.  Resource observers obtain the original modification and size
+indicator from this same ``stat`` port.  Directory enumeration and metadata
+errors propagate to the caller.
+
+Resources outside the project root are owned by ``NoProject``.
+For a closed analysis, construct ``NoProject(fscommands=captured)`` and
+pass it as ``external_project`` to ``Project`` together with the same
+``fscommands``.  This keeps the project's ordinary module lookup order
+and lexical scopes while binding external reads to the captured
+filesystem.  It does not modify the process-wide ``get_no_project()``
+instance.  Such read-only projects should use ``ropefolder=None``,
+``save_objectdb=False``, and ``save_history=False``.
+
 
 ``.ropeproject`` Folder
 =======================
@@ -455,6 +852,20 @@ run much slower.
 Also ``Pycore.analyze_module()`` collects object information for a
 module.  The collected information can be used to enhance rope's
 static object inference.
+
+For an undecorated module function stored by a single class-body name
+assignment, direct and saved instance accesses retain the receiver.  Inherited
+slots and imported functions keep the original function, class slot, and
+parameter definitions, so field and keyword renames use those definitions.
+Call analysis and saved object records also preserve the bound callable and
+receiver across closing and reopening a project.
+
+This inference uses the existing ordinary argument protocol and requires a
+positional parameter for the receiver, without positional-only or keyword-only
+parameters.  Recognized function writes to an instance, including aliases,
+remain unbound.  Override checks cover the storage, receiver, and access
+modules; arbitrary writes in other modules, decorated storage classes,
+metaclasses, and multiple storage assignments are outside this inference.
 
 
 `rope.base.taskhandle.TaskHandle`
@@ -533,6 +944,25 @@ representing this operation (which will be an instance of e.g.
 
   mover = create_move(project, resource, offset)
 
+For a nested class, ``create_move`` returns ``MoveClass``. Its
+``get_changes(destination_resource, destination_offset=None, resources=None)``
+transfers the declaration to a module or, when an offset is supplied, an existing
+class. Native references and required imports move with the declaration; the
+returned ``ChangeSet`` does not change resources until applied. Unresolved
+references, occupied destinations and dependencies on an enclosing class are
+rejected before publication.
+An optional ``match_filter(occurrence)`` predicate can retain references whose
+public access path is maintained by the caller's composed destination; direct
+source references otherwise follow the native declaration identity.
+Quoted type annotations use the native source-binding index, including nested
+forward references. Literal values, annotation metadata, executable strings and
+docstrings remain outside this semantic type-reference surface.
+Package reexports, alias chains and inherited nested classes retain their native
+binding identities; C3 chooses overrides rather than matching names. Explicit
+namespace roots and class paths have no policy depth limit. Transfers into an
+existing holder normalize self-imports through ImportUtils and preserve evaluated
+sibling bases in the destination class's lexical scope.
+
 Where ``resource`` and ``offset`` is the location to perform the
 refactoring.
 
@@ -545,6 +975,16 @@ method:
 
 Where the ``destination`` module/package is the destination resource for
 move refactoring.  Other refactorings classes have a similar interface.
+
+``MoveMethod.get_class_changes`` plans transfers of static and class methods
+to an existing source class. When the source and destination share a module,
+their existing module bindings remain in place; the planner must not create a
+self-import for those bindings. Function-local bindings are resolved through
+the function scope's names, including assignments, while native identity and
+collision checks still apply to dependencies outside that scope.
+Cross-module moves select imports used by the moved fragment. A fragment that
+declares export metadata retains that publication dependency set; unrelated
+export metadata from the source module is not imported into a moved method.
 
 
 List Of Refactorings
@@ -569,6 +1009,13 @@ folder.
 
 * ``rope.refactor.inline``:
   Inline occurrences of a method/variable/parameter.
+  Removing a variable definition can raise ``RefactoringError`` when it would
+  discard an unused initializer that is not known to be safe, remove a module
+  or class annotation, or leave reads outside the selected occurrences.
+  ``remove=False`` keeps the definition while replacing selected reads.
+  Selecting resources that exclude the defining module also keeps its
+  definition.  Function-local annotations, safe literals, and proven bound
+  names remain eligible for removal.
 
 * ``rope.refactor.usefunction``:
   Try to use a function wherever possible.
@@ -610,12 +1057,31 @@ them. If it is ``None`` all python modules in the project will be
 analyzed.  Using this parameter, IDEs can let the user limit the files
 on which a refactoring should be applied.
 
+When renaming a namespace package directory without an ``__init__.py``,
+the default project-wide operation also moves the directory. With an
+explicit resource list, the directory moves only when all of its Python
+files are selected and the package has at least one Python file. Selecting
+only importing modules updates those files while leaving the directory
+in place, as with an ordinary package whose initializer is not selected.
+
 
 Examples
 ========
 
 Rename
 ------
+
+Rope follows a single unconditional assignment such as ``Holder.value = Item()``
+when both classes are defined at module level in the same module and the value
+has ordinary data lookup behavior. Imported names in a class body retain their
+original source identity when the corresponding class attribute is replaced.
+
+Repeated or conditional writes, early or deferred reads, class rebinding,
+inheritance, and custom attribute lookup can leave the value uncertain. For
+these modeled writes, a potentially affected rename raises
+``rope.base.exceptions.RefactoringError`` before producing changes. This
+analysis is conservative and may refuse an otherwise safe rename; it does not
+infer arbitrary factories, descriptors, or dynamic cross-module assignments.
 
 Using rename refactoring:
 
@@ -817,6 +1283,13 @@ See pydocs and source code for more information (other functions in
 this module might be interesting, too; like ``get_doc``,
 ``get_definition_location``).
 
+For PEP 695 type aliases, ``PyName.get_definition_location()`` retains the
+declaring module and first binding line in module, function, and class scopes.
+Imported aliases preserve that declaration location. Reading this metadata does
+not evaluate the lazy alias value or substitute its right-hand side for the alias.
+Aliases declared inside constructors and methods remain local bindings, not
+instance attributes.
+
 
 `rope.contrib.findit`
 ---------------------
@@ -875,6 +1348,62 @@ It provides two new search methods:
  -  search() - simpler wrapper around search_full with a basic sorting algorithm
 
 
+Source binding environments
+---------------------------
+
+The structural scope of an expression and the environment in which its names
+are resolved can differ. Function annotations use their declaration or
+annotation environment; lambda parameters and comprehension targets have their
+own bindings. The existing ``GlobalScope.get_inner_scope_for_offset(offset)``
+continues to return the structural scope. Its explicit
+``get_structural_scope_for_offset(offset)`` alias has the same behavior.
+
+A module's ``get_source_binding_index()`` provides source identity queries:
+
+The public getter and direct ``SourceBindingIndex`` construction return a complete
+index. Internal definition and expression queries share that same module index,
+but may defer function bodies until their lexical source is queried. A full public
+index request or public binding-scope enumeration completes those bodies before
+returning, including nested annotations whose binding parent is the module.
+Body demands include decorators on the body's first declaration. Parsing and native C3
+resolution are unchanged. Modules containing assignment expressions remain eager:
+their nested headers can write bindings into enclosing or global scopes.
+
+.. code-block:: python
+
+  pymodule = project.get_pymodule(resource)
+  index = pymodule.get_source_binding_index()
+  context = index.context_at(offset)
+  environment = context.environment
+  structural_scope = context.structural_scope
+  binding = index.binding_for_token(offset)
+
+``context_for_node(node)`` resolves a node from that module's AST. Source
+queries in ``rope.base.evaluate`` use these environments while keeping source
+identities separate from call-time values. A lambda's private argument matcher
+handles its own positional, keyword and creation-time default values; it does
+not change the ordinary ``Arguments`` or ``PyFunction`` parameter protocols.
+Unknown argument expansion or conflicting values remain unknown.
+
+When a directly assigned class attribute and a directly assigned instance
+attribute in ``__init__`` hold different lambdas, attribute value views select
+the class or initialized instance value independently. This selection does not
+replace their source names or change the ordinary class attribute protocol.
+
+Ordinary positional-only and keyword-only parameters are represented by
+distinct readable source names, so their bodies do not fall back to same-named
+outer variables. Their call inference and signature rewriting are outside this
+model's supported range. Rename refuses edits to these parameter bindings, and
+introduce-parameter refuses to rewrite such a signature. Queries still return
+definition locations and an unknown value. An unresolved generic annotation
+binding likewise refuses a potentially affected edit before any source changes.
+
+The model does not provide arbitrary dynamic class namespace inference. For
+example, assigning a lambda to ``Owner.callback`` after the class definition
+can leave attribute inference unknown; source binding identity is not a promise
+of complete dynamic value inference. Inline safety for deferred annotations and
+initializer removal is outside the source model's new consumer scope.
+
 Cross-Project Refactorings
 --------------------------
 
@@ -931,3 +1460,20 @@ calling ``project.do(changes)`` for each tuple, or use
   project_and_changes = renamer.get_all_changes('newname')
 
   multiproject.perform(project_and_changes)
+
+
+Unchanged source value descriptors
+---------------------------------
+
+Native attribute inference preserves the identity of a value returned unchanged
+by a source descriptor. This applies when the source constructor stores its
+argument directly and ``__get__`` returns that stored attribute, for both class
+and instance access. Inherited exports and keyword constructor arguments retain
+the same identity. Descriptors whose constructor or getter transforms the value
+do not acquire this identity proof.
+
+The existing override guard consumes the source binding index's attribute-write
+inventory. That lazy inventory belongs to one immutable parsed module snapshot;
+recapturing a changed resource creates a new index rather than reusing previous
+write observations. Declaration identities and refactoring safety remain owned
+by the native binding and occurrence engines.
