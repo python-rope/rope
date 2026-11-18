@@ -826,6 +826,29 @@ class InlineTest(unittest.TestCase):
             self.mod2.read(),
         )
 
+    def test_inlining_method_keeps_star_imports_in_the_dest_module(self):
+        self.mod.write(dedent("""\
+            class A:
+                def f(self):
+                    return 1
+        """))
+        self.mod2.write(dedent("""\
+            from os import *
+            from mod import A
+
+            print(A().f(), getcwd())
+        """))
+        self._inline2(self.mod, self.mod.read().index("f(self)"))
+        self.assertEqual(
+            dedent("""\
+                from os import *
+                from mod import A
+
+                print(1, getcwd())
+            """),
+            self.mod2.read(),
+        )
+
     def test_adding_needed_imports_in_the_dest_module_removing_selfs(self):
         self.mod.write(dedent("""\
             import mod2
