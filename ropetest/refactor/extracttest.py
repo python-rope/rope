@@ -472,6 +472,36 @@ class ExtractMethodTest(unittest.TestCase):
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, "new_func")
 
+    def test_extract_method_empty_region(self):
+        code = dedent("""\
+            def a_func(arg):
+                var = arg + 1
+                return var
+        """)
+        start = code.index("arg + 1")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, start, "new_func")
+
+    def test_extract_method_whitespace_only_region(self):
+        code = dedent("""\
+            def a_func(arg):
+                var = arg + 1
+                return var
+        """)
+        start = code.index("    var")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, start + 4, "new_func")
+
+    def test_extract_variable_empty_region(self):
+        code = dedent("""\
+            def a_func(arg):
+                var = arg + 1
+                return var
+        """)
+        start = code.index("arg + 1")
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_variable(code, start, start, "new_var")
+
     def test_extract_method_containing_return(self):
         code = dedent("""\
             def a_func(arg):
