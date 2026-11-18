@@ -774,7 +774,7 @@ used in IDEs:
 
 .. code-block:: python
 
-  from rope.ide import codeassist
+  from rope.contrib import codeassist
 
 
   # Get the proposals; you might want to pass a Resource
