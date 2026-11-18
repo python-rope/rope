@@ -1,4 +1,5 @@
 # **Upcoming release**
+- Walk positional-only, keyword-only and annotated parameters in patchedast
 
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
