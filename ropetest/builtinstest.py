@@ -22,6 +22,55 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         self.assertTrue("append" in pymod["l"].get_object())
 
+    def test_builtin_subclass_constructors(self):
+        for builtin in ("list", "dict", "tuple", "set", "str", "int"):
+            with self.subTest(builtin=builtin):
+                self.mod.write(dedent(f"""\
+                    class Subclass({builtin}):
+                        pass
+                    instance = Subclass()
+                """))
+                pymod = self.project.get_pymodule(self.mod)
+                self.assertEqual(
+                    pymod["Subclass"].get_object(),
+                    pymod["instance"].get_object().get_type(),
+                )
+
+    def test_inherited_builtin_subclass_constructors(self):
+        self.mod.write(dedent("""\
+            class Parent(list):
+                pass
+            class Child(Parent):
+                pass
+            instance = Child([1, 2])
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertEqual(
+            pymod["Child"].get_object(), pymod["instance"].get_object().get_type()
+        )
+
+    def test_builtin_subclass_custom_new(self):
+        self.mod.write(dedent("""\
+            class Subclass(list):
+                def __new__(cls):
+                    return {}
+            instance = Subclass()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertIsInstance(pymod["instance"].get_object().get_type(), builtins.Dict)
+
+    def test_builtin_subclass_inherits_custom_new(self):
+        self.mod.write(dedent("""\
+            class Parent(list):
+                def __new__(cls):
+                    return {}
+            class Child(Parent):
+                pass
+            instance = Child()
+        """))
+        pymod = self.project.get_pymodule(self.mod)
+        self.assertIsInstance(pymod["instance"].get_object().get_type(), builtins.Dict)
+
     def test_holding_type_information(self):
         self.mod.write(dedent("""\
             class C(object):

@@ -757,6 +757,32 @@ class InlineTest(unittest.TestCase):
             self.mod.read(),
         )
 
+    def test_inlining_overridden_builtin_method(self):
+        code = dedent("""\
+            class Word(str):
+                pass
+            class WordList(list):
+                def append(self, obj):
+                    super().append(Word(obj))
+                def extend(self, iterable):
+                    for e in iterable:
+                        self.append(e)
+            words = WordList()
+            words.extend(["hello", "world"])
+            result = [(str(word), type(word).__name__) for word in words]
+        """)
+        for offset in (code.index("extend"), code.rindex("extend")):
+            with self.subTest(offset=offset):
+                refactored = self._inline(code, offset)
+                self.assertNotIn("def extend", refactored)
+                self.assertNotIn("words.extend", refactored)
+                self.assertIn("words.append(e)", refactored)
+                namespace = {}
+                exec(refactored, namespace)
+                self.assertEqual(
+                    [("hello", "Word"), ("world", "Word")], namespace["result"]
+                )
+
     def test_simple_returns_with_backslashes(self):
         self.mod.write(dedent("""\
             def a_func():

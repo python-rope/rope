@@ -190,7 +190,12 @@ class StatementEvaluator(ast.RopeNodeVisitor):
             result = None
             if "__new__" in pyobject:
                 new_function = pyobject["__new__"].get_object()
-                result = _get_returned(new_function)
+                # Builtin constructors model the builtin type, not its subclasses.
+                if not (
+                    isinstance(pyobject, pyobjects.PyClass)
+                    and isinstance(new_function, rope.base.builtins.BuiltinFunction)
+                ):
+                    result = _get_returned(new_function)
             if result is None or result == rope.base.pyobjects.get_unknown():
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.UnboundName(pyobject=result)

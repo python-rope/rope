@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #828 Preserve builtin subclass instances when resolving calls, so inlining an
+  overridden method updates its calls as well as removing its definition.
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
