@@ -4,6 +4,21 @@ from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
 
+def _resolve_assigned_names(
+    name: Union[pynamesdef.AssignedName, pynames.ImportedName],
+) -> List:
+    """Follow import aliases to the underlying assigned names."""
+    while isinstance(name, pynames.ImportedName):
+        try:
+            name = name.imported_module.get_object().get_attribute(
+                name.imported_name,
+            )
+        except exceptions.AttributeNotFoundError:
+            return []
+    assert isinstance(name, pynamesdef.AssignedName)
+    return name.assignments
+
+
 class ModuleImports:
     def __init__(self, project, pymodule, import_filter=None):
         self.project = project
@@ -30,19 +45,6 @@ class ModuleImports:
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
-        def _resolve_name(
-            name: Union[pynamesdef.AssignedName, pynames.ImportedName],
-        ) -> List:
-            while isinstance(name, pynames.ImportedName):
-                try:
-                    name = name.imported_module.get_object().get_attribute(
-                        name.imported_name,
-                    )
-                except exceptions.AttributeNotFoundError:
-                    return []
-            assert isinstance(name, pynamesdef.AssignedName)
-            return name.assignments
-
         result = set()
         try:
             all_star_list = pymodule.get_attribute("__all__")
@@ -50,7 +52,7 @@ class ModuleImports:
             return result
 
         assignments = [
-            assignment.ast_node for assignment in _resolve_name(all_star_list)
+            assignment.ast_node for assignment in _resolve_assigned_names(all_star_list)
         ]
 
         # FIXME: Need a better way to recursively infer possible values.
@@ -81,7 +83,7 @@ class ModuleImports:
                             except exceptions.AttributeNotFoundError:
                                 continue
                             else:
-                                for av in _resolve_name(name):
+                                for av in _resolve_assigned_names(name):
                                     is_str_assignment = isinstance(
                                         av.ast_node, ast.Constant
                                     ) and isinstance(av.ast_node.value, str)
@@ -94,7 +96,8 @@ class ModuleImports:
                     continue
                 else:
                     assignments.extend(
-                        assignment.ast_node for assignment in _resolve_name(name)
+                        assignment.ast_node
+                        for assignment in _resolve_assigned_names(name)
                     )
             elif isinstance(assignment, ast.BinOp):
                 assignments.append(assignment.left)
