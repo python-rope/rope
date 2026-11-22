@@ -73,21 +73,27 @@ def get_names_from_file(
                     get_type_ast(node),
                 )
         elif process_imports and isinstance(node, ast.ImportFrom):
-            # When we process imports, we want to include names in it's own package.
-            if node.level == 0:
-                continue
-            if not node.module or package_name is node.module.split(".")[0]:
-                continue
-            for name in node.names:
-                if isinstance(name, ast.alias):
-                    if name.asname:
-                        real_name = name.asname
-                    else:
-                        real_name = name.name
-                else:
-                    real_name = name
-                if underlined or not real_name.startswith("_"):
-                    yield PartialName(real_name, get_type_ast(node))
+            yield from _names_from_importfrom(node, package_name, underlined)
+
+
+def _names_from_importfrom(
+    node: ast.ImportFrom,
+    package_name: str,
+    underlined: bool,
+) -> Generator[PartialName, None, None]:
+    """Yield re-exported names from a relative from-import."""
+    # When we process imports, we want to include names in it's own package.
+    if node.level == 0:
+        return
+    if not node.module or package_name is node.module.split(".")[0]:
+        return
+    for name in node.names:
+        if isinstance(name, ast.alias):
+            real_name = name.asname if name.asname else name.name
+        else:
+            real_name = name
+        if underlined or not real_name.startswith("_"):
+            yield PartialName(real_name, get_type_ast(node))
 
 
 def get_type_object(imported_object) -> NameType:
