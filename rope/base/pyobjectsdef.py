@@ -202,6 +202,8 @@ class PyModule(pyobjects.PyModule):
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
         except UnicodeDecodeError as e:
             raise exceptions.ModuleSyntaxError(filename, 1, "%s" % (e.reason))
+        except LookupError as e:
+            raise exceptions.ModuleSyntaxError(filename, 1, str(e)) from e
         return source_code, ast_node
 
     @utils.prevent_recursion(lambda: {})

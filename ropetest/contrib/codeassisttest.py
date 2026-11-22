@@ -33,6 +33,10 @@ class CodeAssistTest(unittest.TestCase):
     def test_simple_assist(self):
         self._assist("", 0)
 
+    def test_unknown_source_encoding_reports_module_syntax_error(self):
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self._assist("# coding: utf-8X\n", 0, maxfixes=5)
+
     def assert_completion_in_result(self, name, scope, result, type=None):
         for proposal in result:
             if proposal.name == name:

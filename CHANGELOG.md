@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #83 Report unknown source encodings as ModuleSyntaxError instead of leaking LookupError (@Aschenbath)
+
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)
