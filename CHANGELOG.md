@@ -12,7 +12,7 @@
 - #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
 - #826, #940 Keep star imports in other modules when inlining a function or method (@chinghar)
 - #948, #949 Don't treat string prefixes such as the `f` in `f"..."` as occurrences when renaming a variable named `f`, `b`, `u`, `rf`, etc. (@aliassar)
-- #TBD Start autoimport cache workers with `forkserver` (or `spawn`) instead of forking a possibly threaded process (@marlon-costa-dc)
+- #964 Start autoimport cache workers with `forkserver` (or `spawn`) instead of forking a possibly threaded process (@marlon-costa-dc)
 
 # Release 1.15.1
 
