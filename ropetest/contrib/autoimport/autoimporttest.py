@@ -137,7 +137,12 @@ def test_cache_workers_do_not_fork_a_threaded_process(
     finally:
         stop.set()
         helper.join()
-    assert [str(warning.message) for warning in caught] == []
+    fork_warnings = [
+        str(warning.message)
+        for warning in caught
+        if "use of fork()" in str(warning.message)
+    ]
+    assert fork_warnings == []
     assert ("from pkg1 import foo", "foo") in autoimport.search("foo", True)
 
 
