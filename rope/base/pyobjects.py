@@ -133,6 +133,58 @@ class AbstractClass(PyObject):
     def get_superclasses(self):
         return []
 
+    def get_mro(self):
+        """Return the method resolution order of this class
+
+        The order is the C3 linearization Python uses for ``__mro__``,
+        starting with this class.  Raises
+        `rope.base.exceptions.InconsistentHierarchyError` for cyclic,
+        repeated or unmergeable bases, which Python refuses to create.
+
+        """
+        return _linearize(self, [])
+
+    def get_consistent_mro(self):
+        """Return `get_mro()`, or `None` when the hierarchy is inconsistent"""
+        try:
+            return self.get_mro()
+        except exceptions.InconsistentHierarchyError:
+            return None
+
+
+def _linearize(pyclass, subclasses):
+    if pyclass in subclasses:
+        raise exceptions.InconsistentHierarchyError(
+            "Cyclic inheritance in class %s" % pyclass.get_name()
+        )
+    bases = pyclass.get_superclasses()
+    for index, base in enumerate(bases):
+        if base in bases[:index]:
+            raise exceptions.InconsistentHierarchyError(
+                "Duplicate base class %s in class %s"
+                % (base.get_name(), pyclass.get_name())
+            )
+    sequences = [_linearize(base, subclasses + [pyclass]) for base in bases]
+    sequences.append(list(bases))
+    result = [pyclass]
+    while True:
+        sequences = [sequence for sequence in sequences if sequence]
+        if not sequences:
+            return result
+        for sequence in sequences:
+            head = sequence[0]
+            if not any(head in other[1:] for other in sequences):
+                break
+        else:
+            raise exceptions.InconsistentHierarchyError(
+                "Cannot create a consistent method resolution order for class %s"
+                % pyclass.get_name()
+            )
+        result.append(head)
+        for sequence in sequences:
+            if sequence[0] is head:
+                del sequence[0]
+
 
 class AbstractFunction(PyObject):
     def __init__(self):

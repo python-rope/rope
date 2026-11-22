@@ -255,6 +255,124 @@ class PyCoreTest(unittest.TestCase):
         derived = mod["Derived"].get_object()
         self.assertTrue("f" in derived)
 
+    def test_get_mro_matches_python(self):
+        hierarchy = [
+            ("O", []),
+            ("A", ["O"]),
+            ("B", ["O"]),
+            ("C", ["O"]),
+            ("D", ["O"]),
+            ("E", ["O"]),
+            ("K1", ["A", "B", "C"]),
+            ("K2", ["D", "B", "E"]),
+            ("K3", ["D", "A"]),
+            ("Z", ["K1", "K2", "K3"]),
+        ]
+        code = "".join(
+            "class %s(%s):\n    pass\n" % (name, ", ".join(bases))
+            for name, bases in hierarchy
+        )
+        mod = libutils.get_string_module(self.project, code)
+        classes = {}
+        for name, bases in hierarchy:
+            classes[name] = type(name, tuple(classes[base] for base in bases), {})
+        for name, _ in hierarchy:
+            expected = [
+                cls.__name__ for cls in classes[name].__mro__ if cls is not object
+            ]
+            mro = mod[name].get_object().get_mro()
+            self.assertEqual(expected, [cls.get_name() for cls in mro])
+
+    def test_inheriting_attributes_along_the_mro(self):
+        code = dedent("""\
+            class A(object):
+                def method(self):
+                    pass
+            class B(A):
+                pass
+            class C(A):
+                def method(self):
+                    pass
+            class D(B, C):
+                pass
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        c_class = mod["C"].get_object()
+        d_class = mod["D"].get_object()
+        self.assertEqual(
+            ["D", "B", "C", "A", "object"],
+            [cls.get_name() for cls in d_class.get_mro()],
+        )
+        self.assertEqual(c_class["method"].get_object(), d_class["method"].get_object())
+
+    def test_inconsistent_mro(self):
+        code = dedent("""\
+            class A(object):
+                def method(self):
+                    pass
+            class B(A):
+                def method(self):
+                    pass
+            class C(A, B):
+                pass
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        a_class = mod["A"].get_object()
+        c_class = mod["C"].get_object()
+        with self.assertRaises(exceptions.InconsistentHierarchyError):
+            c_class.get_mro()
+        self.assertIsNone(c_class.get_consistent_mro())
+        self.assertEqual(a_class["method"].get_object(), c_class["method"].get_object())
+
+    def test_inheriting_inconsistent_mro(self):
+        code = dedent("""\
+            class A(object):
+                def method(self):
+                    pass
+            class B(A):
+                pass
+            class C(A, B):
+                pass
+            class D(C):
+                pass
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        d_class = mod["D"].get_object()
+        with self.assertRaises(exceptions.InconsistentHierarchyError):
+            d_class.get_mro()
+        self.assertIsNone(d_class.get_consistent_mro())
+        self.assertTrue("method" in d_class)
+
+    def test_duplicate_base_class_mro(self):
+        code = dedent("""\
+            class A(object):
+                def method(self):
+                    pass
+            class B(A, A):
+                pass
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        b_class = mod["B"].get_object()
+        with self.assertRaises(exceptions.InconsistentHierarchyError):
+            b_class.get_mro()
+        self.assertIsNone(b_class.get_consistent_mro())
+        self.assertTrue("method" in b_class)
+
+    def test_cyclic_inheritance_mro(self):
+        code = dedent("""\
+            class A(B):
+                pass
+            class B(A):
+                def method(self):
+                    pass
+        """)
+        mod = libutils.get_string_module(self.project, code)
+        a_class = mod["A"].get_object()
+        with self.assertRaises(exceptions.InconsistentHierarchyError):
+            a_class.get_mro()
+        self.assertIsNone(a_class.get_consistent_mro())
+        self.assertTrue("method" in a_class)
+
     def test_module_creation(self):
         new_module = testutils.create_module(self.project, "module")
         self.assertFalse(new_module.is_folder())

@@ -14,12 +14,9 @@ def get_super_func(pyfunc):
     if not isinstance(pyfunc.parent, PyClass):
         return
 
-    for cls in get_mro(pyfunc.parent)[1:]:
-        try:
-            superfunc = cls.get_attribute(pyfunc.get_name()).get_object()
-        except AttributeNotFoundError:
-            pass
-        else:
+    for attributes in _get_super_attributes(pyfunc.parent):
+        if pyfunc.get_name() in attributes:
+            superfunc = attributes[pyfunc.get_name()].get_object()
             if isinstance(superfunc, PyFunction):
                 return superfunc
 
@@ -34,9 +31,9 @@ def get_super_assignment(pyname):
     except TypeError:
         return
     else:
-        for super_pyclass in get_mro(pyclass)[1:]:
-            if attr_name in super_pyclass:
-                return super_pyclass[attr_name]
+        for attributes in _get_super_attributes(pyclass):
+            if attr_name in attributes:
+                return attributes[attr_name]
 
 
 def get_class_with_attr_name(pyname):
@@ -63,6 +60,25 @@ def get_lineno_for_node(assign_node):
     if hasattr(assign_node, "lineno") and assign_node.lineno is not None:
         return assign_node.lineno
     return 1
+
+
+def _get_super_attributes(pyclass):
+    """Yield the attributes of the ancestors of `pyclass` in lookup order
+
+    Each ancestor contributes the attributes it defines itself, in
+    method resolution order.  When the hierarchy has no method
+    resolution order, each ancestor in `get_mro()` contributes all of
+    its attributes.
+
+    """
+    mro = pyclass.get_consistent_mro()
+    if mro is None:
+        for cls in get_mro(pyclass)[1:]:
+            yield cls.get_attributes()
+    else:
+        for cls in mro[1:]:
+            if isinstance(cls, PyClass):
+                yield cls._get_structural_attributes()
 
 
 def get_mro(pyclass):

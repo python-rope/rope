@@ -144,8 +144,16 @@ class PyClass(pyobjects.PyClass):
 
     def _create_concluded_attributes(self):
         result = {}
-        for base in reversed(self.get_superclasses()):
-            result.update(base.get_attributes())
+        mro = self.get_consistent_mro()
+        if mro is None:
+            for base in reversed(self.get_superclasses()):
+                result.update(base.get_attributes())
+            return result
+        for ancestor in reversed(mro[1:]):
+            if isinstance(ancestor, pyobjects.PyClass):
+                result.update(ancestor._get_structural_attributes())
+            else:
+                result.update(ancestor.get_attributes())
         return result
 
     def _get_bases(self):
