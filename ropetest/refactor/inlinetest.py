@@ -37,6 +37,40 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index("a_var") + 1)
         self.assertEqual("another_var = 10\n", refactored)
 
+    def test_refuses_abstract_method_inlining(self):
+        for import_line, decorator in [
+            ("from abc import abstractmethod", "abstractmethod"),
+            ("import abc", "abc.abstractmethod"),
+            ("from abc import abstractmethod as abstract", "abstract"),
+        ]:
+            with self.subTest(decorator=decorator):
+                code = (
+                    import_line + "\nclass Base:\n"
+                    "    @" + decorator + "\n"
+                    "    def method(self):\n        return 1\n"
+                    "Base().method()\n"
+                )
+                for offset in [code.index("def method") + 5, code.rindex("method")]:
+                    self.mod.write(code)
+                    with self.assertRaisesRegex(
+                        rope.base.exceptions.RefactoringError, "abstract method"
+                    ):
+                        inline.create_inline(self.project, self.mod, offset)
+                    self.assertEqual(self.mod.read(), code)
+
+    def test_same_named_custom_decorator_is_not_abstract(self):
+        code = dedent("""\
+            def abstractmethod(func):
+                return func
+            class Base:
+                @abstractmethod
+                def method(self):
+                    return 1
+            result = Base().method()
+        """)
+        refactored = self._inline(code, code.index("def method") + 5)
+        self.assertIn("result = 1", refactored)
+
     def test_empty_case(self):
         code = "a_var = 10\n"
         refactored = self._inline(code, code.index("a_var") + 1)
