@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #369 Keep imports referenced by string annotations when organizing imports.
+
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)

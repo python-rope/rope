@@ -291,6 +291,59 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports.remove_unused_imports()
         self.assertEqual("", module_with_imports.get_changed_source())
 
+    def test_imports_used_in_string_annotations(self):
+        annotations = [
+            'value: "mod1.Baz"\n',
+            'class C:\n    value: "mod1.Baz"\n',
+            'def f(value: "mod1.Baz"):\n    pass\n',
+            'def f() -> "mod1.Baz":\n    pass\n',
+            'async def f(value: "mod1.Baz") -> "mod1.Baz":\n    pass\n',
+            'def f(mod1: "mod1.Baz", /, *, other: "mod1.Baz"):\n    pass\n',
+            'value: list["mod1.Baz"]\n',
+            'value: "list[mod1.Baz]"\n',
+            'def f(*values: "mod1.Baz", **named: "mod1.Baz"):\n    pass\n',
+        ]
+        for annotation in annotations:
+            with self.subTest(annotation=annotation):
+                source = "from pkg1 import mod1\n\n" + annotation
+                self.mod.write(source)
+                pymod = self.project.get_module("mod")
+                imports = self.import_tools.module_imports(pymod)
+                imports.remove_unused_imports()
+                self.assertEqual(source, imports.get_changed_source())
+
+    def test_imported_class_used_in_string_annotation(self):
+        self.mod1.write("class Baz:\n    pass\n")
+        source = 'from pkg1.mod1 import Baz\n\nvalue: "Baz"\n'
+        self.mod.write(source)
+        imports = self.import_tools.module_imports(self.project.get_module("mod"))
+        imports.remove_unused_imports()
+        self.assertEqual(source, imports.get_changed_source())
+
+    def test_imports_not_used_by_ordinary_strings(self):
+        self.mod.write('from pkg1 import mod1\n\nvalue = "mod1.Baz"\n')
+        imports = self.import_tools.module_imports(self.project.get_module("mod"))
+        imports.remove_unused_imports()
+        self.assertNotIn("from pkg1", imports.get_changed_source())
+
+    def test_imports_not_used_by_literal_annotation_values(self):
+        self.mod.write(
+            'from typing import Literal, Annotated\n'
+            'from pkg1 import mod1\n\n'
+            'value: Literal["mod1"]\n'
+            'other: Annotated[int, "mod1"]\n'
+        )
+        imports = self.import_tools.module_imports(self.project.get_module("mod"))
+        imports.remove_unused_imports()
+        self.assertNotIn("from pkg1", imports.get_changed_source())
+        self.assertIn("from typing import", imports.get_changed_source())
+
+    def test_invalid_string_annotation_does_not_crash_import_cleanup(self):
+        self.mod.write('from pkg1 import mod1\n\nvalue: "invalid ["\n')
+        imports = self.import_tools.module_imports(self.project.get_module("mod"))
+        imports.remove_unused_imports()
+        self.assertNotIn("from pkg1", imports.get_changed_source())
+
     def test_simple_removing_unused_imports_for_froms(self):
         self.mod1.write(dedent("""\
             def a_func():

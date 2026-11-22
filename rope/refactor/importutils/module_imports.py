@@ -437,10 +437,57 @@ class _UnboundNameFinder(ast.RopeNodeVisitor):
             visitor.visit(child)
 
     def _FunctionDef(self, node):
+        # Signature annotations resolve outside the function's local scope.
+        arguments = node.args
+        for argument in (
+            arguments.posonlyargs
+            + arguments.args
+            + arguments.kwonlyargs
+            + [arguments.vararg, arguments.kwarg]
+        ):
+            if argument is not None:
+                self._visit_annotation(argument.annotation)
+        self._visit_annotation(node.returns)
         self._visit_child_scope(node)
+
+    _AsyncFunctionDef = _FunctionDef
 
     def _ClassDef(self, node):
         self._visit_child_scope(node)
+
+    def _AnnAssign(self, node):
+        self._visit_annotation(node.annotation)
+        self.generic_visit(node)
+
+    def _visit_annotation(self, node):
+        if node is None:
+            return
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            try:
+                parsed = ast.parse(node.value, mode="eval").body
+            except SyntaxError:
+                return
+            for child in ast.walk(parsed):
+                if hasattr(child, "lineno"):
+                    child.lineno = node.lineno
+            self._visit_annotation(parsed)
+        elif isinstance(node, (ast.Name, ast.Attribute)):
+            self.visit(node)
+        elif isinstance(node, ast.Subscript):
+            self.visit(node.value)
+            name = getattr(node.value, "id", getattr(node.value, "attr", None))
+            if name == "Literal":
+                # These strings are values, not forward references.
+                self.visit(node.slice)
+            elif name == "Annotated" and isinstance(node.slice, ast.Tuple):
+                self._visit_annotation(node.slice.elts[0])
+                for metadata in node.slice.elts[1:]:
+                    self.visit(metadata)
+            else:
+                self._visit_annotation(node.slice)
+        else:
+            for child in ast.iter_child_nodes(node):
+                self._visit_annotation(child)
 
     def _Name(self, node):
         if self._get_root()._is_node_interesting(node) and not self.is_bound(node.id):
