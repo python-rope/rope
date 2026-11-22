@@ -66,6 +66,9 @@ class AssignmentValue:
         The levels for for `a` is ``[0]``, for `b` is ``[1, 0]`` and for
         `c` is ``[1, 1]``.
 
+        `orelse_tests` holds the tests of the ``if`` statements whose
+        ``else`` branch contains this assignment.
+
         """
         self.ast_node = ast_node
         if levels is None:
@@ -75,6 +78,7 @@ class AssignmentValue:
         self.evaluation = evaluation
         self.assign_type = assign_type
         self.type_hint = type_hint
+        self.orelse_tests = ()
 
     def get_lineno(self):
         return self.ast_node.lineno

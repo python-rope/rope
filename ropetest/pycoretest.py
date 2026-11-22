@@ -255,6 +255,60 @@ class PyCoreTest(unittest.TestCase):
         derived = mod["Derived"].get_object()
         self.assertTrue("f" in derived)
 
+    def _type_checking_module(self, guard_import, guard):
+        code = guard_import + "\n" + dedent(f"""\
+            class Checked:
+                pass
+            class Runtime:
+                pass
+            if {guard}:
+                Alias = Checked
+            else:
+                Alias = Runtime
+            class Facade:
+                if {guard}:
+                    Only = Checked
+            class Derived(Alias):
+                pass
+        """)
+        return libutils.get_string_module(self.project, code)
+
+    def test_type_checking_body_is_taken_by_static_inference(self):
+        guards = (
+            ("from typing import TYPE_CHECKING", "TYPE_CHECKING"),
+            ("import typing", "typing.TYPE_CHECKING"),
+            ("import typing as t", "t.TYPE_CHECKING"),
+            ("import typing\nTC = typing.TYPE_CHECKING", "TC"),
+        )
+        for guard_import, guard in guards:
+            with self.subTest(guard=guard):
+                mod = self._type_checking_module(guard_import, guard)
+                checked = mod["Checked"].get_object()
+                self.assertEqual(checked, mod["Alias"].get_object())
+                facade = mod["Facade"].get_object()
+                self.assertEqual(checked, facade["Only"].get_object())
+                derived = mod["Derived"].get_object()
+                self.assertEqual([checked], derived.get_superclasses())
+
+    def test_other_branch_tests_stay_undecided(self):
+        guards = (
+            ("from typing import TYPE_CHECKING", "not TYPE_CHECKING"),
+            ("import typing\nTC = typing.TYPE_CHECKING\nTC = False", "TC"),
+            ("TYPE_CHECKING = False", "TYPE_CHECKING"),
+        )
+        for guard_import, guard in guards:
+            with self.subTest(guard=guard):
+                mod = self._type_checking_module(guard_import, guard)
+                runtime = mod["Runtime"].get_object()
+                self.assertEqual(runtime, mod["Alias"].get_object())
+
+    def test_type_checking_of_a_project_typing_module_is_taken(self):
+        testutils.create_module(self.project, "typing").write("TYPE_CHECKING = False\n")
+        mod = self._type_checking_module(
+            "from typing import TYPE_CHECKING", "TYPE_CHECKING"
+        )
+        self.assertEqual(mod["Checked"].get_object(), mod["Alias"].get_object())
+
     def test_module_creation(self):
         new_module = testutils.create_module(self.project, "module")
         self.assertFalse(new_module.is_folder())

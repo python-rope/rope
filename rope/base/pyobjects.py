@@ -320,6 +320,14 @@ class _PyModule(PyDefinedObject, AbstractModule):
         for data in self.concluded_data:
             data._invalidate()
 
+    @utils.saveit
+    def _type_checking_tests(self):
+        """Branch tests of this module decided against `typing.TYPE_CHECKING`
+
+        A decision reads other modules, so it is concluded data.
+        """
+        return self._get_concluded_data()
+
     def get_resource(self):
         return self.resource
 
