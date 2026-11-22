@@ -12,6 +12,7 @@
 - #937 Preserve non-ASCII argument expressions and default values when changing function signatures (@Jinyong-Li)
 - #826, #940 Keep star imports in other modules when inlining a function or method (@chinghar)
 - #948, #949 Don't treat string prefixes such as the `f` in `f"..."` as occurrences when renaming a variable named `f`, `b`, `u`, `rf`, etc. (@aliassar)
+- #962 Inherit class attributes and type hints along the C3 method resolution order, add `get_mro()` and `get_consistent_mro()` to classes (@marlon-costa-dc)
 
 # Release 1.15.1
 

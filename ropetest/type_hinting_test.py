@@ -82,6 +82,30 @@ class DocstringReturnHintingTest(AbstractHintingTest):
         result = self._assist(code)
         self.assert_completion_in_result("is_alive", "attribute", result)
 
+    def test_hierarchical_hint_rtype_follows_mro(self):
+        code = dedent('''\
+            class IBase(object):
+                def b_method(self):
+                    """:rtype: str"""
+
+
+            class ILeft(IBase):
+                pass
+
+
+            class IRight(IBase):
+                def b_method(self):
+                    """:rtype: threading.Thread"""
+
+
+            class Sample(ILeft, IRight):
+                def b_method(self):
+                    pass
+                def a_method(self):
+                    self.b_method().is_a''')
+        result = self._assist(code)
+        self.assert_completion_in_result("is_alive", "attribute", result)
+
 
 def fix_indents(hint):
     return indent(hint, " " * 12).strip()
@@ -110,6 +134,27 @@ class AbstractAssignmentHintingTest(AbstractHintingTest):
 
 
             class Sample(ISample):
+                a_attr = None
+                def a_method(self):
+                    self.a_attr.is_a""")
+        result = self._assist(code)
+        self.assert_completion_in_result("is_alive", "attribute", result)
+
+    def test_hierarchical_hint_attr_follows_mro(self):
+        code = dedent(f"""\
+            class IBase(object):
+                {fix_indents(self._make_class_hint("str"))}
+
+
+            class ILeft(IBase):
+                pass
+
+
+            class IRight(IBase):
+                {fix_indents(self._make_class_hint("threading.Thread"))}
+
+
+            class Sample(ILeft, IRight):
                 a_attr = None
                 def a_method(self):
                     self.a_attr.is_a""")

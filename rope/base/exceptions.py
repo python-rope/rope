@@ -34,6 +34,10 @@ class BadIdentifierError(RopeError):
     """The name cannot be resolved"""
 
 
+class InconsistentHierarchyError(RopeError):
+    """The class hierarchy has no method resolution order"""
+
+
 class ModuleSyntaxError(RopeError):
     """Module has syntax errors
 
