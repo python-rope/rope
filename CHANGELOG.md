@@ -1,5 +1,7 @@
 # **Upcoming release**
 
+- #122 Document Introduce Parameter with an executable API example and default-value caveats.
+
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)

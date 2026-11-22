@@ -584,7 +584,7 @@ folder.
   it.
 
 * ``rope.refactor.introduce_parameter``:
-  Introduce a parameter in a function.
+  Introduce a parameter in a function.  See `Introduce Parameter`_ below.
 
 * ``rope.refactor.encapsulate_field``:
   Generate a getter/setter for a field and changes its occurrences to
@@ -660,6 +660,65 @@ Using rename refactoring:
   >>> pkg.remove()
   >>> mod1.remove()
   >>> project.close()
+
+
+Introduce Parameter
+-------------------
+
+``IntroduceParameter(project, resource, offset)`` replaces references to a
+selected name or attribute inside a function with a new parameter.  Its
+default value is the original expression, so existing calls need not change.
+``offset`` is a character offset inside the reference in the function body,
+not the variable's definition.  ``get_changes(new_parameter)`` prepares a
+change set; apply it with ``project.do()`` after reviewing its description.
+
+This complete example uses an isolated temporary project:
+
+.. code-block:: python
+
+    from tempfile import TemporaryDirectory
+    from textwrap import dedent
+
+    from rope.base.project import Project
+    from rope.refactor.introduce_parameter import IntroduceParameter
+
+    with TemporaryDirectory() as directory:
+        project = Project(directory, ropefolder=None)
+        try:
+            module = project.root.create_file("example.py")
+            source = dedent("""\
+                greeting = "hello"
+                def greet():
+                    return greeting
+            """)
+            module.write(source)
+            offset = source.rindex("greeting")
+            refactoring = IntroduceParameter(project, module, offset)
+            changes = refactoring.get_changes("message")
+            assert module.read() == source  # No files have changed yet.
+            project.do(changes)
+            assert module.read() == dedent("""\
+                greeting = "hello"
+                def greet(message=greeting):
+                    return message
+            """)
+            project.history.undo()
+            assert module.read() == source
+        finally:
+            project.close()
+
+Occurrences are found by the object they reference, rather than by textual
+equality alone.  The selection must resolve to a name or attribute inside a
+function; this is not a general operation on an arbitrary selected range of
+text.  An unresolved name or a selection outside a function raises
+``rope.base.exceptions.RefactoringError``.
+
+Review the generated default carefully.  Python evaluates defaults when the
+function is defined, and mutable default objects are shared between calls.
+An expression that depends on a local variable or another parameter may not
+be available there.  Rope does not prove that these changes preserve runtime
+behavior.  Choose a fresh, valid parameter name and check the resulting
+signature before applying the change.
 
 
 Restructuring
