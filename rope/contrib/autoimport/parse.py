@@ -26,14 +26,18 @@ from .defs import (
 logger = logging.getLogger(__name__)
 
 
+_NODE_TYPE_MAP = (
+    (ast.ClassDef, NameType.Class),
+    (ast.FunctionDef, NameType.Function),
+    (ast.Assign, NameType.Variable),
+)
+
+
 def get_type_ast(node: ast.AST) -> NameType:
     """Get the lsp type of a node."""
-    if isinstance(node, ast.ClassDef):
-        return NameType.Class
-    if isinstance(node, ast.FunctionDef):
-        return NameType.Function
-    if isinstance(node, ast.Assign):
-        return NameType.Variable
+    for node_type, name_type in _NODE_TYPE_MAP:
+        if isinstance(node, node_type):
+            return name_type
     return NameType.Variable  # default value
 
 
