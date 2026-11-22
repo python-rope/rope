@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import multiprocessing
 import re
 import secrets
 import sqlite3
@@ -55,11 +56,23 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
 
+def _process_pool() -> ProcessPoolExecutor:
+    """Return a pool whose workers never come from forking this process.
+
+    Forking a process that has threads (an editor, a language server or a
+    test runner usually do) can deadlock the child. ``forkserver`` (the
+    POSIX default since Python 3.14) or ``spawn`` start workers cleanly.
+    """
+    methods = multiprocessing.get_all_start_methods()
+    method = "forkserver" if "forkserver" in methods else "spawn"
+    return ProcessPoolExecutor(mp_context=multiprocessing.get_context(method))
+
+
 def get_future_names(
     packages: List[Package], underlined: bool, job_set: taskhandle.BaseJobSet
 ) -> Generator[Future[Collection[Name]], None, None]:
     """Get all names as futures."""
-    with ProcessPoolExecutor() as executor:
+    with _process_pool() as executor:
         for package in packages:
             for module in get_files(package, underlined):
                 job_set.started_job(module.modname)
@@ -390,7 +403,7 @@ class AutoImport:
             models.Package.delete_by_package_name, (self.project_package.name,)
         )
         futures = []
-        with ProcessPoolExecutor() as executor:
+        with _process_pool() as executor:
             for file in resources:
                 job_set.started_job(f"Working on {file.path}")
                 module = self._resource_to_module(file, underlined)
