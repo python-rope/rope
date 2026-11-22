@@ -69,22 +69,23 @@ class ModuleImports:
                     elif isinstance(el, ast.Starred):
                         assignments.append(el.value)
                     else:
-                        if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                        is_str_constant = isinstance(el, ast.Constant) and isinstance(
+                            el.value, str
+                        )
+                        is_name_ref = isinstance(el, ast.Name)
+                        if is_str_constant:
                             result.add(el.value)
-                        elif isinstance(el, ast.Name):
+                        elif is_name_ref:
                             try:
                                 name = pymodule.get_attribute(el.id)
                             except exceptions.AttributeNotFoundError:
                                 continue
                             else:
                                 for av in _resolve_name(name):
-                                    if isinstance(
-                                        av.ast_node,
-                                        ast.Constant,
-                                    ) and isinstance(
-                                        av.ast_node.value,
-                                        str,
-                                    ):
+                                    is_str_assignment = isinstance(
+                                        av.ast_node, ast.Constant
+                                    ) and isinstance(av.ast_node.value, str)
+                                    if is_str_assignment:
                                         result.add(av.ast_node.value)
             elif isinstance(assignment, ast.Name):
                 try:
