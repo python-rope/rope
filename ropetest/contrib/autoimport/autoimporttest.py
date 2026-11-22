@@ -1,4 +1,7 @@
+import multiprocessing
 import sqlite3
+import threading
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from textwrap import dedent
@@ -99,6 +102,43 @@ def test_init_py(
     autoimport.generate_cache([mod1_init])
     results = autoimport.search("foo", True)
     assert [("from pkg1 import foo", "foo")] == results
+
+
+@pytest.fixture
+def fork_default_start_method():
+    # Select "fork", the POSIX default before Python 3.14, so the test shows
+    # the cache workers do not depend on the global start method.
+    if "fork" not in multiprocessing.get_all_start_methods():
+        pytest.skip("the platform has no fork start method")
+    previous = multiprocessing.get_start_method(allow_none=True)
+    multiprocessing.set_start_method("fork", force=True)
+    yield
+    multiprocessing.set_start_method(previous, force=True)
+
+
+@pytest.mark.usefixtures("fork_default_start_method")
+def test_cache_workers_do_not_fork_a_threaded_process(
+    autoimport: AutoImport,
+    pkg1: Folder,
+):
+    # Forking a process that runs other threads can deadlock the child.
+    # CPython reports that warning from inside fork(), where it cannot be
+    # raised, so the test records warnings instead of relying on the
+    # "error" filter.
+    pkg1.get_child("__init__.py").write("def foo():\n    pass\n")
+    stop = threading.Event()
+    helper = threading.Thread(target=stop.wait)
+    helper.start()
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            autoimport.generate_cache([pkg1.get_child("__init__.py")])
+            autoimport.generate_modules_cache(["textwrap"])
+    finally:
+        stop.set()
+        helper.join()
+    assert [str(warning.message) for warning in caught] == []
+    assert ("from pkg1 import foo", "foo") in autoimport.search("foo", True)
 
 
 def test_multithreading(
