@@ -693,6 +693,13 @@ class PyCoreTest(unittest.TestCase):
         with self.assertRaises(exceptions.ModuleSyntaxError):
             libutils.get_string_module(self.project, "xyx print\n")
 
+    def test_unknown_source_encoding_is_a_module_syntax_error(self):
+        with self.assertRaises(exceptions.ModuleSyntaxError) as caught:
+            libutils.get_string_module(self.project, "# coding: utf-8X\n")
+        self.assertEqual(caught.exception.filename, "string")
+        self.assertEqual(caught.exception.lineno, 1)
+        self.assertIn("unknown encoding", str(caught.exception))
+
     def test_holding_error_location_information(self):
         try:
             libutils.get_string_module(self.project, "xyx print\n")
