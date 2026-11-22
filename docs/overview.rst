@@ -52,6 +52,37 @@ This section shows some random refactorings that you can perform using
 rope.
 
 
+Introducing A Parameter
+-----------------------
+
+Use Introduce Parameter to replace a name or attribute used inside a function
+with a new optional parameter.  For example, select ``greeting`` in the body
+of this function:
+
+.. code-block:: python
+
+    greeting = "hello"
+    def greet():
+        return greeting
+
+Introducing a parameter named ``message`` produces:
+
+.. code-block:: python
+
+    greeting = "hello"
+    def greet(message=greeting):
+        return message
+
+Existing calls such as ``greet()`` remain valid, and callers can now pass
+``greet("goodbye")``.  The default is evaluated at function definition time,
+so later changes to the global ``greeting`` no longer affect ``greet()``.
+Mutable defaults are also shared between calls.  Review these consequences
+before applying the refactoring.
+
+Availability in an editor depends on its Rope integration.  See
+:ref:`library:Introduce Parameter` for the library API and a runnable example.
+
+
 Renaming Attributes
 -------------------
 
