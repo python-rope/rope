@@ -98,6 +98,16 @@ class InlineMethod(_Inliner):
         super().__init__(*args, **kwds)
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
+        scope = self.pyfunction.parent.get_scope()
+        for decorator in self.pyfunction.decorators:
+            pyname = evaluate.eval_node(scope, decorator)
+            pyobject = pyname.get_object() if pyname is not None else None
+            if (
+                isinstance(pyobject, pyobjects.PyFunction)
+                and pyobject.get_name() == "abstractmethod"
+                and pyobject.get_module().get_name() == "abc"
+            ):
+                raise exceptions.RefactoringError("Cannot inline an abstract method.")
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = occurrences.create_finder(
             self.project, self.name, self.pyname
