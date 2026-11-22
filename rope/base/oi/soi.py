@@ -6,7 +6,7 @@ package.
 """
 
 import rope.base.builtins  # Use full qualification for clarity.
-from rope.base import arguments, evaluate, pynames, pyobjects, utils
+from rope.base import arguments, ast, evaluate, pynames, pyobjects, utils
 from rope.base.oi.type_hinting.factory import get_type_hinting_factory
 
 _ignore_inferred = utils.ignore_exception(pyobjects.IsBeingInferredError)
@@ -63,7 +63,10 @@ def _handle_first_parameter(pyobject, parameters):
 def infer_assigned_object(pyname):
     if not pyname.assignments:
         return
+    result = None
     for assignment in reversed(pyname.assignments):
+        if _in_type_checking_else(assignment, pyname.module):
+            continue
         result = _infer_assignment(assignment, pyname.module)
         if (
             isinstance(result, rope.base.builtins.BuiltinUnknown)
@@ -82,6 +85,73 @@ def infer_assigned_object(pyname):
     if hinting_result is not None:
         return pyobjects.PyObject(hinting_result)
     return result
+
+
+def _in_type_checking_else(assignment, pymodule):
+    """Tell whether `assignment` is in the ``else`` of ``if TYPE_CHECKING:``
+
+    Static analysis assumes `typing.TYPE_CHECKING` is true (PEP 484), so
+    the ``else`` branch of such an ``if`` is never taken.
+
+    """
+    if not assignment.orelse_tests:
+        return False
+    decided = pymodule._type_checking_tests()
+    if decided.get() is None:
+        decided.set({})
+    for test in assignment.orelse_tests:
+        if test not in decided.get():
+            scope = pymodule.get_scope().get_inner_scope_for_line(test.lineno)
+            decided.get()[test] = _is_type_checking(scope, test)
+        if decided.get()[test]:
+            return True
+    return False
+
+
+def _is_type_checking(scope, node):
+    """Tell whether `node` reads `typing.TYPE_CHECKING`
+
+    Imports, attributes of imported modules and a name's single plain
+    assignment (like ``TYPE_CHECKING = typing.TYPE_CHECKING`` in
+    `typing_extensions`) are followed without inferring any object.  The
+    constant is recognized as the ``TYPE_CHECKING`` attribute of the
+    module named `typing`, whatever its value.
+
+    """
+    pyname = _get_binding(scope, node)
+    followed = set()
+    while pyname is not None and pyname not in followed:
+        followed.add(pyname)
+        if isinstance(pyname, pynames.ImportedName):
+            pyname = pyname._get_imported_pyname()
+            continue
+        if not isinstance(pyname, pynames.AssignedName) or pyname.module is None:
+            return False
+        module = pyname.module
+        if (
+            module.get_name() == "typing"
+            and module.get_attributes().get("TYPE_CHECKING") is pyname
+        ):
+            return True
+        if len(pyname.assignments) != 1:
+            return False
+        assignment = pyname.assignments[0]
+        if assignment.levels or assignment.evaluation:
+            return False
+        lineno = _get_lineno_for_node(assignment.ast_node)
+        scope = module.get_scope().get_inner_scope_for_line(lineno)
+        pyname = _get_binding(scope, assignment.ast_node)
+    return False
+
+
+def _get_binding(scope, node):
+    if isinstance(node, ast.Name):
+        return scope.lookup(node.id)
+    if isinstance(node, ast.Attribute):
+        owner = _get_binding(scope, node.value)
+        if isinstance(owner, pynames.ImportedModule):
+            return owner.get_object().get_attributes().get(node.attr)
+    return None
 
 
 def get_passed_objects(pyfunction, parameter_index):

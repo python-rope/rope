@@ -405,6 +405,7 @@ class _ScopeVisitor(_ExpressionVisitor):
         self.owner_object = owner_object
         self.names = {}
         self.defineds = []
+        self.orelse_tests = []
 
     def get_module(self):
         if self.owner_object is not None:
@@ -462,12 +463,22 @@ class _ScopeVisitor(_ExpressionVisitor):
     def _AsyncFor(self, node):
         return self._For(node)
 
+    def _If(self, node):
+        self.visit(node.test)
+        for child in node.body:
+            self.visit(child)
+        self.orelse_tests.append(node.test)
+        for child in node.orelse:
+            self.visit(child)
+        self.orelse_tests.pop()
+
     def _assigned(self, name, assignment):
         pyname = self.names.get(name, None)
         if pyname is None:
             pyname = pynamesdef.AssignedName(module=self.get_module())
         if isinstance(pyname, pynamesdef.AssignedName):
             if assignment is not None:
+                assignment.orelse_tests = tuple(self.orelse_tests)
                 pyname.assignments.append(assignment)
             self.names[name] = pyname
 
