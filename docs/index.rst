@@ -13,6 +13,7 @@ Welcome to rope's documentation!
    overview
    rope
    library
+   api
    configuration
    contributing
    release-process

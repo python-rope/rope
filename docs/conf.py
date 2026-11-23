@@ -37,9 +37,12 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "pytoolconfig.documentation",
     "sphinx_rtd_theme",
+    "autoapi.extension",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,4 +71,59 @@ html_css_files = ["rope.css"]
 autosectionlabel_prefix_document = True
 
 # suppress third-party generated warnings
-suppress_warnings = ["docutils"]
+suppress_warnings = [
+    "docutils",
+    # rope.base.ast re-exports the stdlib ast with ``from ast import *``,
+    # which sphinx-autoapi cannot follow.
+    "autoapi.python_import_resolution",
+]
+
+# -- Automatically generated API reference (sphinx-autoapi) ------------------
+
+autoapi_dirs = ["../rope"]
+autoapi_root = "api"
+# The entry point is added explicitly to the toctree in api.rst.
+autoapi_add_toctree_entry = False
+# Document the public interface, including members inherited from
+# private base classes such as rope.base.project._Project.  Imported
+# members are left out, otherwise e.g. rope.base.ast would document
+# the whole stdlib ast again.
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "show-inheritance",
+    "inherited-members",
+    "show-module-summary",
+]
+
+
+_documented_objects = {}
+
+
+def _reset_documented_objects(app):
+    _documented_objects.clear()
+
+
+def _skip_redefinitions(app, what, name, obj, skip, options):
+    """Document only the first of repeated definitions of one name
+
+    Some modules define the same name more than once on purpose
+    (e.g. fallbacks in ``try``/``except`` blocks or the operator
+    handlers in ``rope.base.oi.type_hinting.evaluate``), which would
+    otherwise produce duplicate object descriptions.
+    """
+    if skip:
+        return None
+    first = _documented_objects.setdefault(name, obj)
+    return True if first is not obj else None
+
+
+def setup(app):
+    # Run before sphinx-autoapi, which renders its pages on builder-inited.
+    app.connect("builder-inited", _reset_documented_objects, priority=100)
+    app.connect("autoapi-skip-member", _skip_redefinitions)
+
+
+# -- Intersphinx -------------------------------------------------------------
+
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

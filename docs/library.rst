@@ -67,7 +67,7 @@ What Are These `Resource`\s?
 ----------------------------
 
 In rope, files and folders in a project are accessed through
-``rope.base.resources.Resource`` objects.  It has two subclasses
+:class:`rope.base.resources.Resource` objects.  It has two subclasses
 ``File`` and ``Folder``.  What we care about is that refactorings and
 ``Change``\s (we'll talk about them later) use resources.
 
@@ -81,7 +81,7 @@ The first approach uses the ``Project.get_resource()`` method.
 
   myresource = myproject.get_resource('/path/to/resource')
 
-However, it's preferable to use the ``libutils.path_to_resource()``
+However, it's preferable to use the :func:`libutils.path_to_resource() <rope.base.libutils.path_to_resource>`
 function, because it's more flexible and offers a unified way to create
 resources.  It takes a ``project`` and ``path`` as parameters with an
 optional ``type``.  The ``type`` parameter, with values ``file`` or
@@ -137,7 +137,7 @@ After that, we can calculate the changes:
 
   changes = extractor.get_changes('extracted_variable')
 
-Each refactoring returns a ``rope.base.change.Change`` object that holds
+Each refactoring returns a :class:`rope.base.change.Change` object that holds
 the changes it made.  Calculating those changes can be time consuming.
 See the `rope.base.taskhandle.TaskHandle`_ section for measuring its
 progress or interrupting it.
@@ -147,7 +147,7 @@ Previewing And Performing Changes
 ---------------------------------
 
 As mentioned in the last section each refactoring returns a
-``rope.base.change.Change`` object.  Now how can we know what it
+:class:`rope.base.change.Change` object.  Now how can we know what it
 contains and how to perform it?
 
 *Previewing*:
@@ -155,7 +155,7 @@ contains and how to perform it?
 You can use ``changes.get_description()`` to get a preview. It is useful
 when you don't care much about the format.  Otherwise you can use the
 ``changes`` object directly.  See the documentation in
-``rope.base.change`` module.
+:mod:`rope.base.change` module.
 
 *Performing*:
 
@@ -176,7 +176,7 @@ handling version control systems that are not supported by rope.
 
 2. The second approach is to perform the changes manually based on the
    returned ``changes`` object (again see the documentation in
-   ``rope.base.change`` module).  If this approach is used you cannot undo
+   :mod:`rope.base.change` module).  If this approach is used you cannot undo
    the refactoring using ``project.history.undo()``.
 
 *Updating Open Buffers In IDEs*:
@@ -212,14 +212,14 @@ One of the greatest strengths of rope is its Static Object Analysis
 of objects passed to the function. Rope uses the collected data to infer
 the type of function parameters, return values, and the objects stored
 in built-in containers. The function
-``rope.base.libutils.analyze_modules()`` performs SOA on all modules in
+:func:`rope.base.libutils.analyze_modules` performs SOA on all modules in
 the project. It is recommended that you call this function occasionally,
 and especially before performing large refactorings. Note that analyzing
 all modules of a project may take a long time.
 
 If you have ``automatic_soa`` set, which instructs rope to analyze the
 changed scopes of modules, then you should report the changes by calling
-``rope.base.libutils.report_change()`` when saving files, as follows:
+:func:`rope.base.libutils.report_change` when saving files, as follows:
 
 .. code-block:: python
 
@@ -248,10 +248,10 @@ function when you don't need a project anymore:
 ``rope.base.libutils``
 ======================
 
-The ``rope.base.libutils`` module contains functions that make life
+The :mod:`rope.base.libutils` module contains functions that make life
 easier for building refactoring tools. In some cases, the functions
 offer a unified way to access or create objects. You're encouraged to
-use ``rope.base.libutils`` functions whenever possible, because the APIs
+use :mod:`rope.base.libutils` functions whenever possible, because the APIs
 here may not be as volatile as class methods.
 
 
@@ -280,10 +280,10 @@ that it might take a long time to finish.
 ``libutils.get_string_module()``
 --------------------------------
 
-Returns a ``rope.base.pyobjects.PyModule`` object for the code string.
+Returns a :class:`rope.base.pyobjects.PyModule` object for the code string.
 An optional ``resource`` argument can be specified for the resource this
 code is associated with. If ``force_errors`` is ``True``, then
-``rope.base.exceptions.ModuleSyntaxError`` is raised when the code has
+:class:`rope.base.exceptions.ModuleSyntaxError` is raised when the code has
 syntax errors. Otherwise, syntax errors are silently ignored. Note that
 ``force_errors`` overrides the ``ignore_syntax_errors`` project
 configuration flag.
@@ -296,7 +296,7 @@ configuration flag.
 ``libutils.get_string_scope()``
 -------------------------------
 
-Get the ``rope.base.pyscopes.GlobalScope`` object for the code string.
+Get the :class:`rope.base.pyscopes.GlobalScope` object for the code string.
 This is the outermost scope of the code encompassing the whole module.
 
 .. code-block:: python
@@ -383,7 +383,7 @@ Used to commit changes returned by refactorings:
 `Project.history`
 -----------------
 
-A ``rope.base.history.History`` object.  You can use its ``undo`` and
+A :class:`rope.base.history.History` object.  You can use its ``undo`` and
 ``redo`` methods for undoing or redoing changes.  Note that you can use
 this only if you have committed your changes using rope.
 
@@ -418,12 +418,12 @@ put them in an inconsistent state.
 `rope.base.fscommands`
 ======================
 
-The ``rope.base.fscommands`` module implements basic file system
+The :mod:`rope.base.fscommands` module implements basic file system
 operations that rope needs to perform.  The main reason for the
 existence of this module is supporting version control systems.  Have a
 look at ``FileSystemCommands`` and ``SubversionCommands`` in the same
 module.  If you need other version control systems you can write a new
-class that provides this interface.  ``rope.base.project.Project``
+class that provides this interface.  :class:`rope.base.project.Project`
 accepts an ``fscommands`` argument.  You can use this argument to force
 rope to use your new class.
 
@@ -515,14 +515,14 @@ Also you can use something like this for stopping the task:
       handle.stop()
 
 After calling ``stop()``, the thread that is executing the task will
-be interrupted by a ``rope.base.exceptions.InterruptedTaskError``
+be interrupted by a :class:`rope.base.exceptions.InterruptedTaskError`
 exception.
 
 
 Refactorings
 ============
 
-Have a look at ``rope.refactor`` package and its sub-modules.  For
+Have a look at :mod:`rope.refactor` package and its sub-modules.  For
 example for performing a move refactoring you can create an object
 representing this operation (which will be an instance of e.g.
 `MoveMethod`, `MoveModule`, ...) like this:
@@ -555,48 +555,48 @@ might be out of date.)  For more information about these refactoring see
 pydocs in their modules and the unit-tests in the ``ropetest/refactor/``
 folder.
 
-* ``rope.refactor.rename``:
+* :mod:`rope.refactor.rename`:
   Rename something in the project.  See the example below.
 
-* ``rope.refactor.move``:
+* :mod:`rope.refactor.move`:
   Move a python element in the project.
 
-* ``rope.refactor.restructure``:
+* :mod:`rope.refactor.restructure`:
   Restructure code.  See the example below.
 
-* ``rope.refactor.extract``:
+* :mod:`rope.refactor.extract`:
   Extract methods/variables.
 
-* ``rope.refactor.inline``:
+* :mod:`rope.refactor.inline`:
   Inline occurrences of a method/variable/parameter.
 
-* ``rope.refactor.usefunction``:
+* :mod:`rope.refactor.usefunction`:
   Try to use a function wherever possible.
 
-* ``rope.refactor.method_object``:
+* :mod:`rope.refactor.method_object`:
   Transform a function or a method to a method object.
 
-* ``rope.refactor.change_signature``:
+* :mod:`rope.refactor.change_signature`:
   Change the signature of a function/method.
 
-* ``rope.refactor.introduce_factory``:
+* :mod:`rope.refactor.introduce_factory`:
   Introduce a factory for a class and changes all constructors to use
   it.
 
-* ``rope.refactor.introduce_parameter``:
+* :mod:`rope.refactor.introduce_parameter`:
   Introduce a parameter in a function.
 
-* ``rope.refactor.encapsulate_field``:
+* :mod:`rope.refactor.encapsulate_field`:
   Generate a getter/setter for a field and changes its occurrences to
   use them.
 
-* ``rope.refactor.localtofield``:
+* :mod:`rope.refactor.localtofield`:
   Change a local variable to field.
 
-* ``rope.refactor.topackage``:
+* :mod:`rope.refactor.topackage`:
   Transform a module to a package with the same name.
 
-* ``rope.refactor.importutils``:
+* :mod:`rope.refactor.importutils`:
   Perform actions like organize imports.
 
 
@@ -710,12 +710,12 @@ Writing A `FileSystemCommands`
 ------------------------------
 
 The ``get_changes()`` method of refactoring classes return a
-``rope.base.change.Change`` object.  You perform these changes by
+:class:`rope.base.change.Change` object.  You perform these changes by
 calling ``Project.do()``.  But as explained above some IDEs need to
 perform the changes themselves.
 
 Every change to the file-system in rope is committed using an object that
-provides a ``rope.base.fscommands.FileSystemCommands`` interface.  As
+provides a :class:`rope.base.fscommands.FileSystemCommands` interface.  As
 explained above in `rope.base.fscommands`_ section, rope uses this
 interface to handle different VCSs.
 
@@ -761,8 +761,8 @@ And you can create a project like this:
 `rope.contrib.codeassist`
 -------------------------
 
-The ``rope.contrib`` package contains modules that use rope base parts
-and provide useful features.  ``rope.contrib.codeassist`` module can be
+The :mod:`rope.contrib` package contains modules that use rope base parts
+and provide useful features.  :mod:`rope.contrib.codeassist` module can be
 used in IDEs:
 
 .. code-block:: python
@@ -878,7 +878,7 @@ It provides two new search methods:
 Cross-Project Refactorings
 --------------------------
 
-``rope.refactor.multiproject`` can be used to perform a refactoring
+:mod:`rope.refactor.multiproject` can be used to perform a refactoring
 across multiple projects.
 
 Usually refactorings have a main project.  That is the project that
