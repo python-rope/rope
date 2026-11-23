@@ -144,6 +144,26 @@ All required packages for development could be installed with::
 
     pip install -e ".[dev]"
 
+Typing Coverage
+---------------
+
+Rope tracks static typing coverage on pull requests using ``mypy``'s
+``--lineprecision-report`` (precise non-empty lines, primary metric) and
+``--linecount-report`` (annotated functions, secondary metric), comparing the
+PR against its base commit:
+
+* **Below 50% precise-line coverage:** the check is strictly informational. It
+  posts and updates a summary comment on the pull request showing the coverage
+  change and per-module breakdown, and always passes.
+* **At or above 50% precise-line coverage:** a drop of more than **5 percentage
+  points** fails the check unless a maintainer explicitly approves the
+  regression by applying the ``allow-typing-regression`` label to the pull
+  request.
+
+You can run the same comparison locally against two checkouts::
+
+    python3 bin/typing-coverage.py --base-dir /path/to/base --pr-dir .
+
 .. _GitHub: http://github.com/
 .. _`python-rope/rope`: https://github.com/python-rope/rope
 .. _`pull request`: https://help.github.com/articles/using-pull-requests

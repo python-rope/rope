@@ -1,0 +1,88 @@
+name: Typing coverage
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  typing-coverage:
+    name: Typing coverage
+    runs-on: ubuntu-latest
+    env:
+      MYPY_VERSION: "2.4.1"
+      COVERAGE_THRESHOLD: "50.0"
+      MAX_DROP_PP: "5.0"
+      OVERRIDE_LABEL: "allow-typing-regression"
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: pr
+
+      - name: Check out base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install mypy
+        run: python -m pip install --no-cache-dir "mypy==${MYPY_VERSION}"
+
+      - name: Compare typing coverage
+        id: compare
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          HAS_OVERRIDE_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'allow-typing-regression') }}
+        run: |
+          mkdir -p report
+          printf '%s\n' "${PR_NUMBER}" > report/pr-number.txt
+
+          extra_args=()
+          if [ "${HAS_OVERRIDE_LABEL}" = "true" ]; then
+            extra_args+=(--allow-regression)
+          fi
+
+          status=0
+          python pr/bin/typing-coverage.py \
+            --base-dir base \
+            --pr-dir pr \
+            --package rope \
+            --threshold "${COVERAGE_THRESHOLD}" \
+            --max-drop "${MAX_DROP_PP}" \
+            --override-label "${OVERRIDE_LABEL}" \
+            --base-ref "${BASE_REF}" \
+            --pr-sha "${PR_SHA}" \
+            --markdown-out report/comment.md \
+            --json-out report/results.json \
+            "${extra_args[@]}" || status=$?
+
+          if [ -f report/comment.md ]; then
+            cat report/comment.md >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          exit "${status}"
+
+      - name: Upload typing coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: typing-coverage-report
+          path: |
+            report/pr-number.txt
+            report/comment.md
+            report/results.json
+          retention-days: 7
+          if-no-files-found: warn
