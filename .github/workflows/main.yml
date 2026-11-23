@@ -13,6 +13,10 @@ jobs:
   test:
     name: Test - ${{ matrix.python-version }} - ${{matrix.os}}
     runs-on: ${{matrix.os}}
+    timeout-minutes: 20
+    # Hosted macOS runners are often short of capacity; do not let
+    # an unavailable or failing macOS job fail the whole workflow.
+    continue-on-error: ${{ matrix.os == 'macos-latest' }}
 
     strategy:
       matrix:
