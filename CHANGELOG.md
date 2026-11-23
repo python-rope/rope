@@ -1,5 +1,6 @@
 # **Upcoming release**
 
+- #925 Allow `report_change(..., perform_soa=False)` to refresh cached modules without running static object analysis on each editor buffer update. (@wozhenbang2004)
 - #859 Fix `find_definition`/Rename not resolving `async def` methods called via `self` (@gadievron)
 - #895 patchedast Starred and keyword now consumes their syntactically expected and ** (@lieryan)
 - #896 patchedast cleanup and refactoring (@lieryan)

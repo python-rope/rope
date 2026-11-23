@@ -3,6 +3,7 @@ from textwrap import dedent
 
 import rope.base.libutils
 import rope.base.oi
+from rope.base import pyobjects
 from rope.base.builtins import Str
 from ropetest import testutils
 
@@ -990,6 +991,52 @@ class NewStaticOITest(unittest.TestCase):
         f_scope = pymod["f"].get_object().get_scope()
         p_type = f_scope["p"].get_object().get_type()
         self.assertEqual(c_class, p_type)
+
+    def test_report_change_can_skip_soa(self):
+        self.project.prefs["automatic_soa"] = True
+        code = dedent("""\
+            class C:
+                pass
+            def f(p):
+                pass
+            f(C())
+        """)
+        with open(self.mod.real_path, "w") as mod_file:
+            mod_file.write(code)
+
+        rope.base.libutils.report_change(
+            self.project, self.mod.real_path, "", perform_soa=False
+        )
+        pymod = self.project.get_pymodule(self.mod)
+        parameter = pymod["f"].get_object().get_scope()["p"]
+        self.assertIs(parameter.get_object(), pyobjects.get_unknown())
+        self.assertTrue(self.project.pycore.automatic_soa)
+
+        rope.base.libutils.report_change(self.project, self.mod.real_path, "")
+        pymod = self.project.get_pymodule(self.mod)
+        parameter = pymod["f"].get_object().get_scope()["p"]
+        self.assertEqual(parameter.get_object().get_type(), pymod["C"].get_object())
+
+    def test_report_change_does_not_enable_soa(self):
+        self.project.prefs["automatic_soa"] = False
+        code = dedent("""\
+            class C:
+                pass
+            def f(p):
+                pass
+            f(C())
+        """)
+        with open(self.mod.real_path, "w") as mod_file:
+            mod_file.write(code)
+
+        rope.base.libutils.report_change(
+            self.project, self.mod.real_path, "", perform_soa=True
+        )
+
+        pymod = self.project.get_pymodule(self.mod)
+        parameter = pymod["f"].get_object().get_scope()["p"]
+        self.assertIs(parameter.get_object(), pyobjects.get_unknown())
+        self.assertFalse(self.project.pycore.automatic_soa)
 
     def test_report_libutils_and_analyze_all_modules(self):
         code = dedent("""\

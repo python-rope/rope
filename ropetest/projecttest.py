@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from rope.base.exceptions import ResourceNotFoundError, RopeError
 from rope.base.fscommands import FileSystemCommands
-from rope.base.libutils import path_to_resource
+from rope.base.libutils import path_to_resource, report_change
 from rope.base.project import NoProject, Project, _realpath
 from rope.base.resourceobserver import FilteredResourceObserver
 from rope.base.resources import File, Folder
@@ -1089,6 +1089,46 @@ class RopeFolderTest(unittest.TestCase):
         myfile = self.project.get_file("myfile.txt")
         myfile.create()
         self.assertEqual("", fscommands.log)
+
+    def test_report_change_refreshes_unsaved_buffer_without_soa(self):
+        class Overlay(FileSystemCommands):
+            def __init__(self):
+                self.buffers = {}
+
+            def read(self, path):
+                if path in self.buffers:
+                    return self.buffers[path].encode()
+                return super().read(path)
+
+        fscommands = Overlay()
+        self.project = testutils.sample_project(
+            fscommands=fscommands, automatic_soa=True, ropefolder=None
+        )
+        module = testutils.create_module(self.project, "mod")
+        old_contents = dedent("""\
+            def before():
+                return 1
+        """)
+        module.write(old_contents)
+        cached = self.project.get_pymodule(module)
+        self.assertIn("before", cached)
+        new_contents = dedent("""\
+            def after():
+                return 2
+        """)
+        fscommands.buffers[module.real_path] = new_contents
+
+        report_change(
+            self.project, module.real_path, old_contents, perform_soa=False
+        )
+
+        refreshed = self.project.get_pymodule(module)
+        self.assertIsNot(cached, refreshed)
+        self.assertNotIn("before", refreshed)
+        self.assertIn("after", refreshed)
+        self.assertEqual(refreshed.source_code, new_contents)
+        self.assertEqual(pathlib.Path(module.real_path).read_text(), old_contents)
+        self.assertTrue(self.project.pycore.automatic_soa)
 
     def test_deprecated_fscommands(self):
         fscommands = _DeprecatedFSCommands()
