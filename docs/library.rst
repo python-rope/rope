@@ -233,6 +233,22 @@ changed scopes of modules, then you should report the changes by calling
 Note, however, that the use of ``automatic_soa`` is discouraged, because it may
 slow down saving considerably.
 
+Editors that serve unsaved buffers through a custom ``fscommands.read()`` can
+also use ``report_change()`` to refresh Rope's cached modules after a buffer
+edit. Pass ``perform_soa=False`` to notify resource observers without running
+static object analysis on each edit:
+
+.. code-block:: python
+
+  # Update the buffer returned by fscommands.read(), then notify Rope.
+  libutils.report_change(myproject, path, old_contents, perform_soa=False)
+
+This option applies only to the current call; it does not change the project's
+``automatic_soa`` preference. If analysis is deferred across multiple edits,
+call ``libutils.analyze_module(myproject, resource)`` when the editor is ready
+to analyze the complete module, or retain the last analyzed contents for a
+later ``report_change()`` call with analysis enabled.
+
 
 Closing The Project
 -------------------
