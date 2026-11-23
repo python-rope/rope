@@ -1598,6 +1598,35 @@ class PatchedASTTest(unittest.TestCase):
         ])
 
     @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_with_grouped_first_pattern(self):
+        source = dedent("""\
+            match x:
+                case (("a" | None), None):
+                    pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_children("MatchSequence", [
+            "(", "(", "MatchOr", ")", ",", " ", "MatchSingleton", "", ")",
+        ])
+        start = source.index("((")
+        checker.check_region("MatchSequence", start, source.index(":\n", start))
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    @testutils.only_for_versions_higher("3.10")
+    def test_match_node_with_match_sequence_of_parenthesized_patterns(self):
+        source = dedent("""\
+            match x:
+                case (1), (2):
+                    pass
+        """)
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        start = source.index("(1)")
+        checker.check_region("MatchSequence", start, start + len("(1), (2)"))
+        self.assertEqual(source, patchedast.write_ast(ast_frag))
+
+    @testutils.only_for_versions_higher("3.10")
     def test_match_node_with_match_sequence_with_square_parens(self):
         source = dedent("""\
             match x:
