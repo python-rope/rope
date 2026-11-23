@@ -45,10 +45,16 @@ def relative(root, path):
         return path[len(root) + 1 :]
 
 
-def report_change(project, path, old_content):
+def report_change(project, path, old_content, *, perform_soa=True):
     """Report that the contents of file at `path` was changed
 
     The new contents of file is retrieved by reading the file.
+
+    Set `perform_soa` to `False` to skip static object analysis for this
+    call, while still notifying resource observers and invalidating cached
+    module data.  This does not change the project's `automatic_soa`
+    preference.  The default performs analysis only if that preference
+    is enabled.
 
     """
     resource = path_to_resource(project, path)
@@ -56,7 +62,7 @@ def report_change(project, path, old_content):
         return
     for observer in list(project.observers):
         observer.resource_changed(resource)
-    if project.pycore.automatic_soa:
+    if perform_soa and project.pycore.automatic_soa:
         rope.base.pycore.perform_soa_on_changed_scopes(project, resource, old_content)
 
 
