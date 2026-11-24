@@ -140,6 +140,15 @@ class Rename:
                 f"Invalid refactoring target name. '{new_name}' is a Python keyword."
             )
 
+        if (
+            self.old_name != new_name
+            and "__new__" in (self.old_name, new_name)
+            and self.is_method()
+        ):
+            raise exceptions.RefactoringError(
+                "Cannot rename a class method to or from '__new__'."
+            )
+
     def _is_allowed_to_move(self, resources, resource):
         if resource.is_folder():
             try:
