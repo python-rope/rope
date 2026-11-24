@@ -4,6 +4,44 @@ from rope.base import ast, exceptions, pynames, pynamesdef, utils
 from rope.refactor.importutils import actions, importinfo
 
 
+def _resolve_assigned_names(
+    name: Union[pynamesdef.AssignedName, pynames.ImportedName],
+) -> List:
+    """Follow import aliases to the underlying assigned names."""
+    while isinstance(name, pynames.ImportedName):
+        try:
+            name = name.imported_module.get_object().get_attribute(
+                name.imported_name,
+            )
+        except exceptions.AttributeNotFoundError:
+            return []
+    assert isinstance(name, pynamesdef.AssignedName)
+    return name.assignments
+
+
+class _StarListCollector:
+    """Hold pending __all__ assignments and collected star names."""
+
+    def __init__(self, initial_assignments):
+        self.pending = list(initial_assignments)
+        self.names = set()
+
+    def has_pending(self):
+        return bool(self.pending)
+
+    def next_assignment(self):
+        return self.pending.pop()
+
+    def defer(self, assignment):
+        self.pending.append(assignment)
+
+    def defer_many(self, assignments):
+        self.pending.extend(assignments)
+
+    def add(self, name):
+        self.names.add(name)
+
+
 class ModuleImports:
     def __init__(self, project, pymodule, import_filter=None):
         self.project = project
@@ -30,35 +68,21 @@ class ModuleImports:
         return visitor.unbound
 
     def _get_all_star_list(self, pymodule):
-        def _resolve_name(
-            name: Union[pynamesdef.AssignedName, pynames.ImportedName],
-        ) -> List:
-            while isinstance(name, pynames.ImportedName):
-                try:
-                    name = name.imported_module.get_object().get_attribute(
-                        name.imported_name,
-                    )
-                except exceptions.AttributeNotFoundError:
-                    return []
-            assert isinstance(name, pynamesdef.AssignedName)
-            return name.assignments
-
-        result = set()
         try:
             all_star_list = pymodule.get_attribute("__all__")
         except exceptions.AttributeNotFoundError:
-            return result
+            return set()
 
-        assignments = [
-            assignment.ast_node for assignment in _resolve_name(all_star_list)
-        ]
+        collector = _StarListCollector(
+            assignment.ast_node for assignment in _resolve_assigned_names(all_star_list)
+        )
 
         # FIXME: Need a better way to recursively infer possible values.
         #        Currently pyobjects can recursively infer type, but not values.
         # Do a very basic 1-level value inference
 
-        while assignments:
-            assignment = assignments.pop()
+        while collector.has_pending():
+            assignment = collector.next_assignment()
             if isinstance(assignment, ast.List):
                 stack = list(assignment.elts)
                 while stack:
@@ -67,38 +91,40 @@ class ModuleImports:
                         stack.append(el.body)
                         stack.append(el.orelse)
                     elif isinstance(el, ast.Starred):
-                        assignments.append(el.value)
+                        collector.defer(el.value)
                     else:
-                        if isinstance(el, ast.Constant) and isinstance(el.value, str):
-                            result.add(el.value)
-                        elif isinstance(el, ast.Name):
+                        is_str_constant = isinstance(el, ast.Constant) and isinstance(
+                            el.value, str
+                        )
+                        is_name_ref = isinstance(el, ast.Name)
+                        if is_str_constant:
+                            collector.add(el.value)
+                        elif is_name_ref:
                             try:
                                 name = pymodule.get_attribute(el.id)
                             except exceptions.AttributeNotFoundError:
                                 continue
                             else:
-                                for av in _resolve_name(name):
-                                    if isinstance(
-                                        av.ast_node,
-                                        ast.Constant,
-                                    ) and isinstance(
-                                        av.ast_node.value,
-                                        str,
-                                    ):
-                                        result.add(av.ast_node.value)
+                                for av in _resolve_assigned_names(name):
+                                    is_str_assignment = isinstance(
+                                        av.ast_node, ast.Constant
+                                    ) and isinstance(av.ast_node.value, str)
+                                    if is_str_assignment:
+                                        collector.add(av.ast_node.value)
             elif isinstance(assignment, ast.Name):
                 try:
                     name = pymodule.get_attribute(assignment.id)
                 except exceptions.AttributeNotFoundError:
                     continue
                 else:
-                    assignments.extend(
-                        assignment.ast_node for assignment in _resolve_name(name)
+                    collector.defer_many(
+                        assignment.ast_node
+                        for assignment in _resolve_assigned_names(name)
                     )
             elif isinstance(assignment, ast.BinOp):
-                assignments.append(assignment.left)
-                assignments.append(assignment.right)
-        return result
+                collector.defer(assignment.left)
+                collector.defer(assignment.right)
+        return collector.names
 
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(

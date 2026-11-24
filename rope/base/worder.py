@@ -33,7 +33,7 @@ class Worder:
 
     def _init_ignores(self):
         ignores = rope.base.simplify.ignored_regions(self.code)
-        self.dumb_finder = _RealFinder(self.code, self.code)
+        self.fallback_finder = _RealFinder(self.code, self.code)
         self.starts = [ignored[0] for ignored in ignores]
         self.ends = [ignored[1] for ignored in ignores]
 
@@ -43,7 +43,7 @@ class Worder:
                 self._init_ignores()
             start = bisect.bisect(self.starts, offset)
             if start > 0 and offset < self.ends[start - 1]:
-                return getattr(self.dumb_finder, name)(offset)
+                return getattr(self.fallback_finder, name)(offset)
         return getattr(self.code_finder, name)(offset)
 
     def get_primary_at(self, offset):
