@@ -34,6 +34,29 @@ class RenameTestMixin:
 
 
 class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
+    def test_renaming_dunder_new_method_is_rejected(self):
+        code = dedent("""\
+            class Item:
+                def __new__(cls):
+                    return super().__new__(cls)
+        """)
+        with self.assertRaisesRegex(exceptions.RefactoringError, "__new__"):
+            self._local_rename(code, code.index("__new__"), "create")
+
+    def test_renaming_method_to_dunder_new_is_rejected(self):
+        code = dedent("""\
+            class Item:
+                def create(self):
+                    return self
+        """)
+        with self.assertRaisesRegex(exceptions.RefactoringError, "__new__"):
+            self._local_rename(code, code.index("create"), "__new__")
+
+    def test_renaming_dunder_new_at_module_scope_is_allowed(self):
+        code = "__new__ = 1\nvalue = __new__\n"
+        refactored = self._local_rename(code, 0, "new")
+        self.assertEqual("new = 1\nvalue = new\n", refactored)
+
     def test_local_variable_but_not_parameter(self):
         code = dedent("""\
             a = 10
