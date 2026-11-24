@@ -1,4 +1,5 @@
 import logging
+from types import SimpleNamespace
 
 from rope.contrib.autoimport import parse
 from rope.contrib.autoimport.defs import Name, NameType, PartialName, Source
@@ -125,3 +126,11 @@ def test_imports_ignored_without_process_imports(tmp_path):
     source = tmp_path / "mod.py"
     source.write_text("from . import helper\n", encoding="utf-8")
     assert list(parse.get_names_from_file(source, package_name="pkg")) == []
+
+
+def test_names_from_importfrom_with_plain_name():
+    # Defensive branch: names are normally ast.alias nodes, but a plain
+    # name must pass through unchanged.
+    node = SimpleNamespace(level=1, module="sub", names=["helper"])
+    names = list(parse._names_from_importfrom(node, "pkg", False))
+    assert PartialName("helper", NameType.Variable) in names
