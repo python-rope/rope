@@ -504,15 +504,473 @@ class ProjectTest(unittest.TestCase):
         sample_file.write(contents)
         self.assertEqual(contents, sample_file.read())
 
-    # XXX: supporting utf_8_sig
-    def xxx_test_file_encoding_reading_for_notepad_styles(self):
+    def test_file_encoding_reading_for_notepad_styles(self):
         sample_file = self.project.root.create_file("my_file.txt")
         contents = "#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n"
-        file = open(sample_file.real_path, "w")
-        # file.write('\xef\xbb\xbf')
-        file.write(contents.encode("utf-8-sig"))
-        file.close()
+        with open(sample_file.real_path, "wb") as file:
+            file.write(contents.encode("utf-8-sig"))
         self.assertEqual(contents, sample_file.read())
+
+    def test_file_encoding_reading_bom_with_utf8_cookie(self):
+        sample_file = self.project.root.create_file("my_file.py")
+        contents = "# -*- coding: utf-8 -*-\n#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n"
+        with open(sample_file.real_path, "wb") as file:
+            file.write(contents.encode("utf-8-sig"))
+        self.assertEqual(contents, sample_file.read())
+
+    def test_file_edit_and_undo_preserve_utf8_bom_and_newlines(self):
+        for filename, newline in [("bom_lf.py", b"\n"), ("bom_crlf.py", b"\r\n")]:
+            sample_file = self.project.root.create_file(filename)
+            original_bytes = b"\xef\xbb\xbfx = 1" + newline
+            with open(sample_file.real_path, "wb") as file:
+                file.write(original_bytes)
+
+            self.assertEqual("x = 1\n", sample_file.read())
+            sample_file.write("x = 2\n")
+            self.assertEqual(b"\xef\xbb\xbfx = 2" + newline, sample_file.read_bytes())
+
+            self.project.history.undo()
+            self.assertEqual(original_bytes, sample_file.read_bytes())
+
+    def test_file_edit_read_and_persisted_history_undo_preserve_utf8_bom(self):
+        from rope.base.history import History
+
+        # 1. Edit BOM file to latin-1, read it back, then undo -> BOM restored.
+        sample_file = self.project.root.create_file("bom_switch.py")
+        original_bytes = b"\xef\xbb\xbfx = 1\n"
+        with open(sample_file.real_path, "wb") as file:
+            file.write(original_bytes)
+
+        sample_file.write("# -*- coding: latin-1 -*-\n# \xa9\n")
+        self.assertEqual(b"# -*- coding: latin-1 -*-\n# \xa9\n", sample_file.read_bytes())
+        self.assertEqual("# -*- coding: latin-1 -*-\n# \xa9\n", sample_file.read())
+
+        self.project.history.undo()
+        self.assertEqual(original_bytes, sample_file.read_bytes())
+
+        # 2. Undo from persisted history restores BOM state in all directions:
+        #    (a) BOM + CRLF edit, (b) BOM UTF-8 -> latin-1, (c) plain UTF-8 -> BOM UTF-8.
+        persisted_project = testutils.sample_project(
+            foldername="bom_history_project", ropefolder=".ropeproject"
+        )
+        try:
+            persisted_project.set("save_history", True)
+
+            bom_crlf = persisted_project.root.create_file("bom_persisted.py")
+            bom_to_latin1 = persisted_project.root.create_file("bom_to_latin1.py")
+            plain_to_bom = persisted_project.root.create_file("plain_to_bom.py")
+
+            bom_crlf_orig = b"\xef\xbb\xbfx = 1\r\n"
+            with open(bom_crlf.real_path, "wb") as file:
+                file.write(bom_crlf_orig)
+            bom_to_latin1_orig = b"\xef\xbb\xbfx = 1\n"
+            with open(bom_to_latin1.real_path, "wb") as file:
+                file.write(bom_to_latin1_orig)
+            plain_orig = b"x = 1\n"
+            with open(plain_to_bom.real_path, "wb") as file:
+                file.write(plain_orig)
+
+            bom_crlf.write("x = 2\n")
+            self.assertEqual(b"\xef\xbb\xbfx = 2\r\n", bom_crlf.read_bytes())
+
+            bom_to_latin1.write("# -*- coding: latin-1 -*-\n# \xa9\n")
+            self.assertEqual(
+                b"# -*- coding: latin-1 -*-\n# \xa9\n", bom_to_latin1.read_bytes()
+            )
+
+            plain_to_bom.write("\ufeffx = 2\n")
+            self.assertEqual(b"\xef\xbb\xbfx = 2\n", plain_to_bom.read_bytes())
+
+            persisted_project.history.write()
+
+            reloaded_history = History(persisted_project)
+            reloaded_history.undo()
+            self.assertEqual(
+                plain_orig,
+                persisted_project.get_file("plain_to_bom.py").read_bytes(),
+            )
+            reloaded_history.undo()
+            self.assertEqual(
+                bom_to_latin1_orig,
+                persisted_project.get_file("bom_to_latin1.py").read_bytes(),
+            )
+            reloaded_history.undo()
+            self.assertEqual(
+                bom_crlf_orig,
+                persisted_project.get_file("bom_persisted.py").read_bytes(),
+            )
+        finally:
+            testutils.remove_project(persisted_project)
+
+    def test_file_with_bom_and_leading_body_feff_preserves_both_on_edit_and_undo(self):
+        sample_file = self.project.root.create_file("double_feff.txt")
+        original_bytes = b"\xef\xbb\xbf\xef\xbb\xbfbody\n"
+        with open(sample_file.real_path, "wb") as file:
+            file.write(original_bytes)
+
+        self.assertEqual("\ufeffbody\n", sample_file.read())
+        sample_file.write("\ufeffbody2\n")
+        self.assertEqual(b"\xef\xbb\xbf\xef\xbb\xbfbody2\n", sample_file.read_bytes())
+        self.assertEqual("\ufeffbody2\n", sample_file.read())
+
+        self.project.history.undo()
+        self.assertEqual(original_bytes, sample_file.read_bytes())
+        self.assertEqual("\ufeffbody\n", sample_file.read())
+
+    def test_legacy_three_tuple_history_undo_and_redo_preserve_exact_bom_bytes(self):
+        from rope.base.change import DataToChange
+
+        converter = DataToChange(self.project)
+
+        # 1. Legacy BOM file edit: both old/new_contents contain inline U+FEFF.
+        bom_file = self.project.root.create_file("legacy_bom.py")
+        with open(bom_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbfx = 2\r\n")
+        legacy_bom_change = converter(
+            ("ChangeContents", ("legacy_bom.py", "\ufeffx = 2\n", "\ufeffx = 1\n"))
+        )
+        legacy_bom_change.undo()
+        self.assertEqual(b"\xef\xbb\xbfx = 1\r\n", bom_file.read_bytes())
+        self.project.pycore.resource_to_pyobject(bom_file)
+        legacy_bom_change.do()
+        self.assertEqual(b"\xef\xbb\xbfx = 2\r\n", bom_file.read_bytes())
+        self.project.pycore.resource_to_pyobject(bom_file)
+
+        # 2. Legacy plain -> BOM edit: old_contents has no U+FEFF, new_contents has inline U+FEFF.
+        plain_file = self.project.root.create_file("legacy_plain.py")
+        with open(plain_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbfx = 2\n")
+        legacy_plain_change = converter(
+            ("ChangeContents", ("legacy_plain.py", "\ufeffx = 2\n", "x = 1\n"))
+        )
+        legacy_plain_change.undo()
+        self.assertEqual(b"x = 1\n", plain_file.read_bytes())
+        legacy_plain_change.do()
+        self.assertEqual(b"\xef\xbb\xbfx = 2\n", plain_file.read_bytes())
+
+        # 3. Legacy PEP 263 `# coding: utf-8-sig` on line 2 after a comment:
+        # old Rope stripped BOM on read and re-emitted it based on the cookie.
+        sig_file = self.project.root.create_file("legacy_sig_cookie.py")
+        with open(sig_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbf# comment\n# coding: utf-8-sig\nx = 2\n")
+        legacy_sig_change = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_sig_cookie.py",
+                    "# comment\n# coding: utf-8-sig\nx = 2\n",
+                    "# comment\n# coding: utf-8-sig\nx = 1\n",
+                ),
+            )
+        )
+        legacy_sig_change.undo()
+        self.assertEqual(
+            b"\xef\xbb\xbf# comment\n# coding: utf-8-sig\nx = 1\n",
+            sig_file.read_bytes(),
+        )
+        legacy_sig_change.do()
+        self.assertEqual(
+            b"\xef\xbb\xbf# comment\n# coding: utf-8-sig\nx = 2\n",
+            sig_file.read_bytes(),
+        )
+
+        # 4. Legacy adding / removing `# coding: utf-8-sig` cookie toggles BOM accurately.
+        toggle_file = self.project.root.create_file("legacy_sig_toggle.py")
+        with open(toggle_file.real_path, "wb") as file:
+            file.write(b"# comment\nx = 1\n")
+        legacy_remove_sig = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_sig_toggle.py",
+                    "# comment\nx = 1\n",
+                    "# comment\n# coding: utf-8-sig\nx = 1\n",
+                ),
+            )
+        )
+        legacy_remove_sig.undo()
+        self.assertEqual(
+            b"\xef\xbb\xbf# comment\n# coding: utf-8-sig\nx = 1\n",
+            toggle_file.read_bytes(),
+        )
+        legacy_remove_sig.do()
+        self.assertEqual(b"# comment\nx = 1\n", toggle_file.read_bytes())
+
+        # 5. Legacy `# coding: utf-8-sig` on line 2 after non-comment code line 1.
+        code_line1_file = self.project.root.create_file("legacy_code_line1_sig.py")
+        with open(code_line1_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbfx = 2\n# coding: utf-8-sig\n")
+        legacy_code_line1_change = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_code_line1_sig.py",
+                    "x = 2\n# coding: utf-8-sig\n",
+                    "x = 1\n# coding: utf-8-sig\n",
+                ),
+            )
+        )
+        legacy_code_line1_change.undo()
+        self.assertEqual(
+            b"\xef\xbb\xbfx = 1\n# coding: utf-8-sig\n",
+            code_line1_file.read_bytes(),
+        )
+        legacy_code_line1_change.do()
+        self.assertEqual(
+            b"\xef\xbb\xbfx = 2\n# coding: utf-8-sig\n",
+            code_line1_file.read_bytes(),
+        )
+
+        # 6. Legacy `# encoding info; coding: utf-8-sig` (legacy `_find_coding`
+        # matched "coding" inside "encoding" and returned None, emitting 0 BOMs).
+        encoding_word_file = self.project.root.create_file("legacy_encoding_word.py")
+        with open(encoding_word_file.real_path, "wb") as file:
+            file.write(b"# encoding info; coding: utf-8-sig\nx = 2\n")
+        legacy_encoding_word = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_encoding_word.py",
+                    "# encoding info; coding: utf-8-sig\nx = 2\n",
+                    "# encoding info; coding: utf-8-sig\nx = 1\n",
+                ),
+            )
+        )
+        legacy_encoding_word.undo()
+        self.assertEqual(
+            b"# encoding info; coding: utf-8-sig\nx = 1\n",
+            encoding_word_file.read_bytes(),
+        )
+        legacy_encoding_word.do()
+        self.assertEqual(
+            b"# encoding info; coding: utf-8-sig\nx = 2\n",
+            encoding_word_file.read_bytes(),
+        )
+
+        # 7. Legacy inline U+FEFF on line 1 + `# coding: utf-8-sig` on line 2
+        # preserved both BOMs (legacy read_str_coding matched line 2).
+        double_bom_file = self.project.root.create_file("legacy_double_bom.py")
+        with open(double_bom_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbf\xef\xbb\xbfx = 2\n# coding: utf-8-sig\n")
+        legacy_double_bom = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_double_bom.py",
+                    "\ufeffx = 2\n# coding: utf-8-sig\n",
+                    "\ufeffx = 1\n# coding: utf-8-sig\n",
+                ),
+            )
+        )
+        legacy_double_bom.undo()
+        self.assertEqual(
+            b"\xef\xbb\xbf\xef\xbb\xbfx = 1\n# coding: utf-8-sig\n",
+            double_bom_file.read_bytes(),
+        )
+        legacy_double_bom.do()
+        self.assertEqual(
+            b"\xef\xbb\xbf\xef\xbb\xbfx = 2\n# coding: utf-8-sig\n",
+            double_bom_file.read_bytes(),
+        )
+
+        # 8. Legacy CR-only file: newline expansion happens before coding lookup,
+        # so `# coding: utf-8-sig` after `\r` does not match and emits no BOM.
+        cr_only_file = self.project.root.create_file("legacy_cr_only.py")
+        with open(cr_only_file.real_path, "wb") as file:
+            file.write(b"x = 2\r# coding: utf-8-sig\r")
+        legacy_cr_only = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_cr_only.py",
+                    "x = 2\n# coding: utf-8-sig\n",
+                    "x = 1\n# coding: utf-8-sig\n",
+                ),
+            )
+        )
+        legacy_cr_only.undo()
+        self.assertEqual(b"x = 1\r# coding: utf-8-sig\r", cr_only_file.read_bytes())
+        legacy_cr_only.do()
+        self.assertEqual(b"x = 2\r# coding: utf-8-sig\r", cr_only_file.read_bytes())
+
+        # 9. Legacy vertical-tab cookie (`# coding:\x0butf-8-sig; coding: latin-1`):
+        # legacy `_find_coding` selects utf-8-sig and emits BOM without being
+        # overridden by tokenize's latin-1 detection.
+        vtab_file = self.project.root.create_file("legacy_vtab_sig.py")
+        with open(vtab_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbf# coding:\x0butf-8-sig; coding: latin-1\nx = 2\n")
+        legacy_vtab = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_vtab_sig.py",
+                    "# coding:\x0butf-8-sig; coding: latin-1\nx = 2\n",
+                    "# coding:\x0butf-8-sig; coding: latin-1\nx = 1\n",
+                ),
+            )
+        )
+        legacy_vtab.undo()
+        self.assertEqual(
+            b"\xef\xbb\xbf# coding:\x0butf-8-sig; coding: latin-1\nx = 1\n",
+            vtab_file.read_bytes(),
+        )
+        legacy_vtab.do()
+        self.assertEqual(
+            b"\xef\xbb\xbf# coding:\x0butf-8-sig; coding: latin-1\nx = 2\n",
+            vtab_file.read_bytes(),
+        )
+
+        # 10. Legacy non-ASCII trailing byte in cookie (`# coding: utf-8é`):
+        # legacy `_find_coding` caught UnicodeDecodeError (a ValueError) and fell
+        # back to UTF-8 without raising.
+        non_ascii_cookie_file = self.project.root.create_file("legacy_utf8_accent.py")
+        with open(non_ascii_cookie_file.real_path, "wb") as file:
+            file.write("# coding: utf-8é\nx = 2\n".encode("utf-8"))
+        legacy_non_ascii_cookie = converter(
+            (
+                "ChangeContents",
+                (
+                    "legacy_utf8_accent.py",
+                    "# coding: utf-8é\nx = 2\n",
+                    "# coding: utf-8é\nx = 1\n",
+                ),
+            )
+        )
+        legacy_non_ascii_cookie.undo()
+        self.assertEqual(
+            "# coding: utf-8é\nx = 1\n".encode("utf-8"),
+            non_ascii_cookie_file.read_bytes(),
+        )
+        legacy_non_ascii_cookie.do()
+        self.assertEqual(
+            "# coding: utf-8é\nx = 2\n".encode("utf-8"),
+            non_ascii_cookie_file.read_bytes(),
+        )
+
+    def test_utf8_sig_cookie_without_bom_does_not_add_bom_on_edit_or_undo(self):
+        sample_file = self.project.root.create_file("no_bom_sig_cookie.py")
+        original_bytes = b"# coding: utf-8-sig\nx = 1\n"
+        with open(sample_file.real_path, "wb") as file:
+            file.write(original_bytes)
+
+        self.assertEqual("# coding: utf-8-sig\nx = 1\n", sample_file.read())
+        sample_file.write("x = 1\n")
+        self.assertEqual(b"x = 1\n", sample_file.read_bytes())
+
+        self.project.history.undo()
+        self.assertEqual(original_bytes, sample_file.read_bytes())
+
+    def test_read_str_coding_uses_tokenize_detect_encoding(self):
+        from rope.base import fscommands
+
+        self.assertEqual("utf-8", fscommands.read_str_coding(b"x = 1\n"))
+        self.assertEqual("utf-8", fscommands.read_str_coding("x = 1\n"))
+        self.assertEqual(
+            "iso-8859-1",
+            fscommands.read_str_coding(b"# -*- coding: latin-1 -*-\n\xa9\n"),
+        )
+        self.assertEqual(
+            "iso-8859-1",
+            fscommands.read_str_coding(b"# -*- coding: latin-1 -*-\r\xa9\r"),
+        )
+        self.assertEqual(
+            "iso-8859-1",
+            fscommands.read_str_coding("\f# -*- coding: latin-1 -*-\n\xa9\n"),
+        )
+        self.assertEqual(
+            "cp1252",
+            fscommands.read_str_coding(b'# coding: cp1252 \x80\nv = "\x80"\n'),
+        )
+        self.assertEqual(
+            "cp1252",
+            fscommands.read_str_coding('# coding: cp1252 \u201d\nv = "\u201d"\n'),
+        )
+        self.assertEqual(
+            "utf-8-sig",
+            fscommands.read_str_coding(b"\xef\xbb\xbf# -*- coding: utf-8 -*-\n"),
+        )
+        self.assertEqual(
+            "utf-8-sig",
+            fscommands.read_str_coding(b"\xef\xbb\xbfhello\n"),
+        )
+        # Conflicting BOM + non-UTF-8 cookie or unknown encoding returns None cleanly.
+        self.assertIsNone(
+            fscommands.read_str_coding(b"\xef\xbb\xbf# -*- coding: latin-1 -*-\n")
+        )
+        self.assertIsNone(
+            fscommands.read_str_coding(b"# -*- coding: not-a-real-encoding -*-\n")
+        )
+        self.assertIsNone(fscommands.read_str_coding(b"\n\xa9\n"))
+
+    def test_cp1252_non_ascii_on_coding_line_roundtrips(self):
+        from rope.base import fscommands
+
+        raw = b'# coding: cp1252 \x80\nv = "\x80"\n'
+        sample_file = self.project.root.create_file("cp1252_mod.py")
+        with open(sample_file.real_path, "wb") as file:
+            file.write(raw)
+
+        text = sample_file.read()
+        self.assertEqual('# coding: cp1252 \u20ac\nv = "\u20ac"\n', text)
+        sample_file.write(text.replace("v =", "w ="))
+        self.assertEqual(b'# coding: cp1252 \x80\nw = "\x80"\n', sample_file.read_bytes())
+
+        # Writing str with right double quote (0x94 in cp1252, invalid cp1252 byte 0x9d in UTF-8)
+        encoded = fscommands.unicode_to_file_data('# coding: cp1252 \u201d\nv = "\u201d"\n')
+        self.assertEqual(b'# coding: cp1252 \x94\nv = "\x94"\n', encoded)
+
+    def test_unicode_to_file_data_bom_handling(self):
+        from rope.base import fscommands
+
+        # Inferred utf-8-sig does not duplicate an existing U+FEFF in contents.
+        self.assertEqual(
+            b"\xef\xbb\xbfhello\n",
+            fscommands.unicode_to_file_data("\ufeffhello\n"),
+        )
+        self.assertEqual(
+            b"\xef\xbb\xbf# -*- coding: utf-8 -*-\nhello\n",
+            fscommands.unicode_to_file_data("\ufeff# -*- coding: utf-8 -*-\nhello\n"),
+        )
+        # Explicit encoding="utf-8-sig" preserves caller data (round-trips via decode("utf-8-sig")).
+        self.assertEqual(
+            b"\xef\xbb\xbfhello\n",
+            fscommands.unicode_to_file_data("hello\n", encoding="utf-8-sig"),
+        )
+        explicit_with_feff = fscommands.unicode_to_file_data(
+            "\ufeffhello\n", encoding="utf-8-sig"
+        )
+        self.assertEqual("\ufeffhello\n", explicit_with_feff.decode("utf-8-sig"))
+
+    def test_non_text_codec_falls_back_on_read_and_write(self):
+        from rope.base import fscommands
+
+        for codec in ("rot_13", "undefined"):
+            src_str = f"# coding: {codec}\nx = 1\n"
+            src_bytes = src_str.encode("ascii")
+            self.assertIsNone(fscommands.read_str_coding(src_bytes))
+            self.assertIsNone(fscommands.read_str_coding(src_str))
+            self.assertEqual(src_bytes, fscommands.unicode_to_file_data(src_str))
+            sample_file = self.project.root.create_file(f"codec_{codec}.py")
+            with open(sample_file.real_path, "wb") as file:
+                file.write(src_bytes)
+            self.assertEqual(src_str, sample_file.read())
+
+    def test_bom_with_conflicting_cookie_falls_back_on_read_and_errors_on_parse(self):
+        from rope.base import exceptions
+
+        # Valid ASCII module body ensures ModuleSyntaxError comes solely from BOM conflict.
+        mod = self.project.root.create_file("bad_bom.py")
+        with open(mod.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbf# -*- coding: latin-1 -*-\nx = 1\n")
+        self.assertIn("x = 1", mod.read())
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.project.pycore.resource_to_pyobject(mod)
+
+        # Non-UTF-8 body with conflicting BOM still falls back tolerantly on raw read().
+        raw_file = self.project.root.create_file("bad_bom_latin1.txt")
+        with open(raw_file.real_path, "wb") as file:
+            file.write(b"\xef\xbb\xbf# -*- coding: latin-1 -*-\n\xa9\n")
+        self.assertIn("\xa9", raw_file.read())
 
     def test_using_project_get_file(self):
         myfile = self.project.get_file(self.sample_file)

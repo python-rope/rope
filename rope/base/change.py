@@ -1,8 +1,10 @@
+import codecs
 import datetime
 import difflib
 import os
+import re
 import time
-from typing import Union
+from typing import Optional, Union
 
 import rope.base.fscommands
 from rope.base import exceptions, taskhandle, utils
@@ -131,6 +133,39 @@ def _handle_job_set(function):
     return call
 
 
+_LEGACY_CODING_LINE_PATTERN = re.compile(
+    r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)"
+)
+
+
+def _legacy_read_str_coding(source: str) -> Optional[str]:
+    """Reproduce pre-#975 Rope's coding cookie lookup for legacy 3-tuple replay.
+
+    Used only when replaying legacy 3-tuple history records created before
+    `_old_has_bom` was persisted.
+    """
+    for line in source.split("\n", 2)[:2]:
+        if _LEGACY_CODING_LINE_PATTERN.match(line):
+            raw_line = line.encode("utf-8")
+            try:
+                start = raw_line.index(b"coding") + len(b"coding")
+                if start >= len(raw_line) or raw_line[start] not in b"=:":
+                    return None
+                start += 1
+                while start < len(raw_line) and chr(raw_line[start]).isspace():
+                    start += 1
+                end = start
+                while end < len(raw_line):
+                    byte = raw_line[end]
+                    if not chr(byte).isalnum() and byte not in b"-_":
+                        break
+                    end += 1
+                return raw_line[start:end].decode("utf-8")
+            except ValueError:
+                return None
+    return None
+
+
 class ChangeContents(Change):
     """A class to change the contents of a file
 
@@ -145,17 +180,35 @@ class ChangeContents(Change):
         # IDEA: Only saving diffs; possible problems when undo/redoing
         self.new_contents = new_contents
         self.old_contents = old_contents
+        self._old_has_bom = None
+        self._is_legacy = False
 
     @_handle_job_set
     def do(self):
         if self.old_contents is None:
             self.old_contents = self.resource.read()
+        elif self.resource.newlines is None and self.resource.exists():
+            self.resource.read()
+        if self._is_legacy:
+            self._operations.write_file(self.resource, self.new_contents, legacy=True)
+            return
+        if self._old_has_bom is None:
+            self._old_has_bom = getattr(self.resource, "_has_bom", False)
+        else:
+            self.resource._has_bom = self._old_has_bom
         self._operations.write_file(self.resource, self.new_contents)
 
     @_handle_job_set
     def undo(self):
         if self.old_contents is None:
             raise exceptions.HistoryError("Undoing a change that is not performed yet!")
+        if self.resource.newlines is None and self.resource.exists():
+            self.resource.read()
+        if self._is_legacy:
+            self._operations.write_file(self.resource, self.old_contents, legacy=True)
+            return
+        if self._old_has_bom is not None:
+            self.resource._has_bom = self._old_has_bom
         self._operations.write_file(self.resource, self.old_contents)
 
     def __str__(self):
@@ -331,17 +384,35 @@ class _ResourceOperations:
             return self.direct_commands
         return self.fscommands
 
-    def write_file(self, resource, contents: Union[str, FileContent]):
+    def write_file(self, resource, contents: Union[str, FileContent], *, legacy=False):
         data: FileContent
         if not isinstance(contents, bytes):
-            data = rope.base.fscommands.unicode_to_file_data(
-                contents,
-                newlines=resource.newlines,
-            )
+            if legacy:
+                expanded = (
+                    contents.replace("\n", resource.newlines)
+                    if resource.newlines and resource.newlines != "\n"
+                    else contents
+                )
+                encoding = _legacy_read_str_coding(expanded)
+                data = FileContent(
+                    expanded.encode(encoding if encoding is not None else "utf-8")
+                )
+            else:
+                encoding = None
+                if getattr(resource, "_has_bom", False):
+                    detected = rope.base.fscommands.read_str_coding(contents)
+                    if detected in (None, "utf-8", "utf-8-sig"):
+                        encoding = "utf-8-sig"
+                data = rope.base.fscommands.unicode_to_file_data(
+                    contents,
+                    encoding=encoding,
+                    newlines=resource.newlines,
+                )
         else:
             data = contents
         fscommands = self._get_fscommands(resource)
         fscommands.write(resource.real_path, data)
+        resource._has_bom = data.startswith(codecs.BOM_UTF8)
         for observer in list(self.project.observers):
             observer.resource_changed(resource)
 
@@ -401,7 +472,14 @@ class ChangeToData:
         return (description, changes, change.time)
 
     def convertChangeContents(self, change):
-        return (change.resource.path, change.new_contents, change.old_contents)
+        if change._old_has_bom is None:
+            return (change.resource.path, change.new_contents, change.old_contents)
+        return (
+            change.resource.path,
+            change.new_contents,
+            change.old_contents,
+            change._old_has_bom,
+        )
 
     def convertMoveResource(self, change):
         return (change.resource.path, change.new_resource.path)
@@ -430,9 +508,16 @@ class DataToChange:
             result.add_change(self(child))
         return result
 
-    def makeChangeContents(self, path, new_contents, old_contents):
+    def makeChangeContents(self, path, new_contents, old_contents, old_has_bom=None):
         resource = self.project.get_file(path)
-        return ChangeContents(resource, new_contents, old_contents)
+        result = ChangeContents(resource, new_contents, old_contents)
+        if old_has_bom is None:
+            # Legacy 3-tuple entries predate ChangeContents._old_has_bom tracking;
+            # replay using pre-#975 newline-expanded coding detection.
+            result._is_legacy = True
+        else:
+            result._old_has_bom = old_has_bom
+        return result
 
     def makeMoveResource(self, old_path, new_path):
         resource = self.project.get_file(old_path)

@@ -26,6 +26,7 @@ getting the path relative to the project's root (via `path`), reading
 from and writing to the resource, moving the resource, etc.
 """
 
+import codecs
 import os
 import re
 import warnings
@@ -125,12 +126,17 @@ class File(Resource):
 
     def __init__(self, project, name):
         self.newlines = None
+        self._has_bom = None
         super().__init__(project, name)
 
     def read(self):
         data = self.read_bytes()
         try:
-            content, self.newlines = fscommands.file_data_to_unicode(data)
+            content, used_encoding = fscommands._decode_data_with_encoding(data, None)
+            self._has_bom = used_encoding == "utf-8-sig" and data.startswith(
+                codecs.BOM_UTF8
+            )
+            content, self.newlines = fscommands.file_data_to_unicode(content)
             return content
         except UnicodeDecodeError as e:
             raise exceptions.ModuleDecodeError(self.path, e.reason)

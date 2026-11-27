@@ -7,10 +7,11 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 
 """
 
+import codecs
 import os
-import re
 import shutil
 import subprocess
+import tokenize
 import typing
 
 FileContent = typing.NewType("FileContent", bytes)
@@ -217,16 +218,21 @@ def unicode_to_file_data(contents: str, encoding=None, newlines=None) -> FileCon
         contents = contents.replace("\n", newlines)
     if encoding is None:
         encoding = read_str_coding(contents)
+        # Avoid prepending a duplicate UTF-8 BOM when `utf-8-sig` was inferred
+        # from a leading U+FEFF already present in `contents`.
+        if (
+            encoding is not None
+            and contents.startswith("\ufeff")
+            and _is_utf8_sig(encoding)
+        ):
+            encoding = "utf-8"
     if encoding is not None:
         return FileContent(contents.encode(encoding))
-    try:
-        return FileContent(contents.encode())
-    except UnicodeEncodeError:
-        return FileContent(contents.encode("utf-8"))
+    return FileContent(contents.encode("utf-8"))
 
 
 def file_data_to_unicode(data, encoding=None):
-    result = _decode_data(data, encoding)
+    result, _ = _decode_data_with_encoding(data, encoding)
     newline = "\n"
     if "\r\n" in result:
         result = result.replace("\r\n", "\n")
@@ -238,61 +244,128 @@ def file_data_to_unicode(data, encoding=None):
 
 
 def _decode_data(data, encoding):
+    result, _ = _decode_data_with_encoding(data, encoding)
+    return result
+
+
+def _decode_data_with_encoding(data, encoding):
     if isinstance(data, str):
-        return data
+        return data, encoding
     if encoding is None:
         encoding = read_str_coding(data)
     if encoding is None:
-        # there is no encoding tip, we need to guess.
-        # PEP263 says that "encoding not explicitly defined" means it is ascii,
-        # but we will use utf8 instead since utf8 fully covers ascii and btw is
-        # the only non-latin sane encoding.
+        # Fallback when tokenize.detect_encoding() could not determine a valid encoding.
         encoding = "utf-8"
     try:
-        return data.decode(encoding)
+        return data.decode(encoding), encoding
     except (UnicodeError, LookupError):
         # fallback to latin1: it should never fail
-        return data.decode("latin1")
+        return data.decode("latin1"), "latin1"
 
 
-def read_str_coding(source):
-    # as defined by PEP-263 (https://www.python.org/dev/peps/pep-0263/)
-    CODING_LINE_PATTERN = b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)"
-
-    if type(source) == bytes:
-        newline = b"\n"
-        CODING_LINE_PATTERN = re.compile(CODING_LINE_PATTERN)
-    else:
-        newline = "\n"
-        CODING_LINE_PATTERN = re.compile(CODING_LINE_PATTERN.decode("ascii"))
-    for line in source.split(newline, 2)[:2]:
-        if re.match(CODING_LINE_PATTERN, line):
-            return _find_coding(line)
-    else:
-        return
-
-
-def _find_coding(text):
-    if isinstance(text, str):
-        text = text.encode("utf-8")
-    coding = b"coding"
-    to_chr = chr
+def _is_utf8_sig(encoding: str) -> bool:
     try:
-        start = text.index(coding) + len(coding)
-        if text[start] not in b"=:":
-            return
-        start += 1
-        while start < len(text) and to_chr(text[start]).isspace():
-            start += 1
-        end = start
-        while end < len(text):
-            c = text[end]
-            if not to_chr(c).isalnum() and c not in b"-_":
-                break
-            end += 1
-        result = text[start:end]
-        if isinstance(result, bytes):
-            result = result.decode("utf-8")
-        return result
-    except ValueError:
-        pass
+        return codecs.lookup(encoding).name == "utf-8-sig"
+    except LookupError:
+        return False
+
+
+def _iter_first_two_lines(
+    source: typing.Union[str, bytes],
+) -> typing.Iterator[bytes]:
+    """Lazily yield up to the first two lines of `source` as bytes.
+
+    Splits only on CRLF, LF, or CR (matching PEP 263 / bytes line-ending rules)
+    so control characters such as form-feed (`\\f`) on line 1 are preserved,
+    and avoids scanning beyond the first two lines on large files.
+
+    For `str` inputs, non-ASCII characters (other than a leading U+FEFF BOM)
+    are replaced with `?` so `tokenize.detect_encoding()` can detect a PEP 263
+    coding cookie without failing when validating UTF-8 bytes against a
+    non-UTF-8 declared encoding (e.g. cp1252 on Python 3.14.1+).
+    """
+    is_str = isinstance(source, str)
+    lf = "\n" if is_str else b"\n"
+    cr = "\r" if is_str else b"\r"
+    pos = 0
+    length = len(source)
+    for line_index in range(2):
+        if pos >= length:
+            break
+        nl_idx = source.find(lf, pos)
+        cr_idx = source.find(cr, pos, nl_idx) if nl_idx != -1 else source.find(cr, pos)
+        if cr_idx != -1:
+            end = cr_idx + 2 if nl_idx == cr_idx + 1 else cr_idx + 1
+        elif nl_idx != -1:
+            end = nl_idx + 1
+        else:
+            end = length
+        chunk = source[pos:end]
+        pos = end
+        if is_str:
+            assert isinstance(chunk, str)
+            if line_index == 0 and chunk.startswith("\ufeff"):
+                yield codecs.BOM_UTF8 + chunk[1:].encode("ascii", errors="replace")
+            else:
+                yield chunk.encode("ascii", errors="replace")
+        else:
+            assert isinstance(chunk, bytes)
+            yield chunk
+
+
+def _sanitize_non_ascii_bytes(line: bytes) -> bytes:
+    return bytes(byte if byte < 0x80 else ord("?") for byte in line)
+
+
+def read_str_coding(source: typing.Union[str, bytes]) -> typing.Optional[str]:
+    """Detect source encoding via PEP 263 / `tokenize.detect_encoding()`.
+
+    Returns `None` if `tokenize.detect_encoding()` cannot determine a valid
+    encoding (e.g. invalid UTF-8 in the first two lines without a coding
+    cookie, an unknown/non-text encoding name, or a UTF-8 BOM that conflicts
+    with the declared coding cookie).
+    """
+    line_iter = _iter_first_two_lines(source)
+    consumed: typing.List[bytes] = []
+
+    def readline() -> bytes:
+        line = next(line_iter, b"")
+        if line:
+            consumed.append(line)
+        return line
+
+    try:
+        encoding, _ = tokenize.detect_encoding(readline)
+        # Reject non-text or unusable codecs (e.g. rot_13, undefined)
+        # consistently across Python versions.
+        "a".encode(encoding)
+    except (LookupError, UnicodeError):
+        return None
+    except SyntaxError:
+        # On Python < 3.14.1, tokenize.detect_encoding() decodes the cookie line
+        # as UTF-8 before matching the PEP 263 cookie, causing valid non-UTF-8
+        # files with non-ASCII bytes on the coding line itself (e.g. cp1252) to
+        # raise SyntaxError. Retry with non-ASCII bytes sanitized to ASCII and
+        # validate the consumed raw lines against the declared encoding (matching
+        # CPython 3.14.1+ behavior), unless a UTF-8 BOM is present.
+        if not isinstance(source, bytes) or source.startswith(codecs.BOM_UTF8):
+            return None
+        for extra in line_iter:
+            consumed.append(extra)
+        sanitized_iter = iter(_sanitize_non_ascii_bytes(line) for line in consumed)
+        try:
+            encoding, detected_lines = tokenize.detect_encoding(
+                lambda: next(sanitized_iter, b"")
+            )
+        except (SyntaxError, LookupError):
+            return None
+        try:
+            if codecs.lookup(encoding).name == "utf-8":
+                return None
+            "a".encode(encoding)
+            for line in consumed[: len(detected_lines)]:
+                line.decode(encoding)
+        except (UnicodeError, LookupError):
+            return None
+        return encoding
+    return encoding
