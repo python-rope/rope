@@ -1154,6 +1154,96 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
             refactored,
         )
 
+    _nonlocal_code = dedent("""\
+        var_x = "global"
+        def outer():
+            def inner1():
+                nonlocal var_x
+                var_x = 1
+            def inner2():
+                nonlocal var_x
+                var_x = 2
+            def inner3():
+                print(var_x)
+            def inner4():
+                var_x = 4
+            var_x = None
+            return var_x
+    """)
+
+    _nonlocal_expected = dedent("""\
+        var_x = "global"
+        def outer():
+            def inner1():
+                nonlocal new_var
+                new_var = 1
+            def inner2():
+                nonlocal new_var
+                new_var = 2
+            def inner3():
+                print(new_var)
+            def inner4():
+                var_x = 4
+            new_var = None
+            return new_var
+    """)
+
+    def test_renaming_nonlocal_variables(self):
+        code = self._nonlocal_code
+        refactored = self._local_rename(code, code.index("var_x", code.index("nonlocal")), "new_var")
+        self.assertEqual(self._nonlocal_expected, refactored)
+
+    def test_renaming_nonlocal_variables_from_enclosing_function(self):
+        code = self._nonlocal_code
+        refactored = self._local_rename(code, code.index("var_x = None"), "new_var")
+        self.assertEqual(self._nonlocal_expected, refactored)
+
+    def test_renaming_nonlocal_variables_skips_class_bodies(self):
+        code = dedent("""\
+            def outer():
+                var_x = None
+                class C:
+                    var_x = "class attribute"
+                    def method(self):
+                        nonlocal var_x
+                        var_x = 1
+                return var_x
+        """)
+        expected = dedent("""\
+            def outer():
+                new_var = None
+                class C:
+                    var_x = "class attribute"
+                    def method(self):
+                        nonlocal new_var
+                        new_var = 1
+                return new_var
+        """)
+        refactored = self._local_rename(code, code.index("var_x", code.index("nonlocal")), "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_nonlocal_variables_without_matching_enclosing_function(self):
+        code = dedent("""\
+            var_x = "global"
+            def outer():
+                def inner():
+                    nonlocal var_x
+                    var_x = 1
+                    return var_x
+                return inner
+        """)
+        expected = dedent("""\
+            var_x = "global"
+            def outer():
+                def inner():
+                    nonlocal new_var
+                    new_var = 1
+                    return new_var
+                return inner
+        """)
+        refactored = self._local_rename(code, code.index("var_x", code.index("nonlocal")), "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_renaming_when_unsure(self):
         code = dedent("""\
             class C(object):

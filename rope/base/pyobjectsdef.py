@@ -568,6 +568,22 @@ class _ScopeVisitor(_ExpressionVisitor):
                     pyname = pynamesdef.AssignedName(node.lineno)
             self.names[name] = pyname
 
+    def _Nonlocal(self, node):
+        for name in node.names:
+            pyname = self._lookup_enclosing_function(name)
+            if pyname is not None:
+                self.names[name] = pyname
+
+    def _lookup_enclosing_function(self, name):
+        enclosing = self.owner_object.parent
+        while isinstance(enclosing, (PyFunction, PyClass)):
+            if isinstance(enclosing, PyFunction):
+                names = enclosing.get_scope().get_names()
+                if name in names:
+                    return names[name]
+            enclosing = enclosing.parent
+        return None
+
 
 class _ComprehensionVisitor(_ScopeVisitor):
     def _comprehension(self, node):
