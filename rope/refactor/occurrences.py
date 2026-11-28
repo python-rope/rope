@@ -36,7 +36,10 @@ calling the `create_finder()` function.
 """
 
 import contextlib
-import re
+import io
+import sys
+import tokenize
+from itertools import accumulate
 from typing import Iterator
 
 from rope.base import (
@@ -311,14 +314,6 @@ class _TextualFinder:
     def __init__(self, name, docs=False):
         self.name = name
         self.docs = docs
-        self.comment_pattern = _TextualFinder.any("comment", [r"#[^\n]*"])
-        self.string_pattern = _TextualFinder.any(
-            "string", [codeanalyze.get_string_pattern()]
-        )
-        self.f_string_pattern = _TextualFinder.any(
-            "fstring", [codeanalyze.get_formatted_string_pattern()]
-        )
-        self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_offsets(self, source: str) -> Iterator[int]:
         if not self._fast_file_query(source):
@@ -326,26 +321,50 @@ class _TextualFinder:
         if self.docs:
             searcher = self._normal_search
         else:
-            searcher = self._re_search
+            searcher = self._token_search
         yield from searcher(source)
 
-    def _re_search(self, source: str) -> Iterator[int]:
-        for match in self.pattern.finditer(source):
-            if match.groupdict()["occurrence"]:
-                yield match.start("occurrence")
-            elif match.groupdict()["fstring"]:
-                f_string = match.groupdict()["fstring"]
-                for offset in self._search_in_f_string(f_string):
-                    yield match.start("fstring") + offset
+    def _token_search(self, source: str) -> Iterator[int]:
+        """Yield the offsets of every NAME token equal to the searched name.
 
-    def _search_in_f_string(self, f_string: str) -> Iterator[int]:
-        tree = ast.parse(f_string)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and node.id == self.name:
-                yield node.col_offset
-            elif isinstance(node, ast.Attribute) and node.attr == self.name:
-                assert node.end_col_offset is not None
-                yield node.end_col_offset - len(self.name)
+        Complete string tokens expose replacement expressions through Python's
+        native AST; expression tokens retain their source coordinates.
+        """
+        line_starts = [0, *accumulate(map(len, source.splitlines(keepends=True)))]
+        for item in tokenize.generate_tokens(io.StringIO(source).readline):
+            row, column = item.start
+            if item.type == tokenize.NAME and item.string == self.name:
+                yield line_starts[row - 1] + column
+            elif item.type == tokenize.STRING and item.string.lower().startswith(
+                ("f", "rf")
+            ):
+                assert sys.version_info < (3, 12, 0), """
+                    This branch is only used before Python 3.12, because
+                    `tokenize.generate_tokens()` tokenize the whole f-string as
+                    a single STRING token, so we need to parse it out again to
+                    search for any variables used inside them.
+
+                    From Python 3.12 onwards, `generate_tokens()` would
+                    yield NAME tokens for variables inside f-string/t-string so
+                    this would be unreachable.
+                """
+                for offset in self._fstring_ast_search(item.string):
+                    yield line_starts[row - 1] + column + offset
+
+    def _fstring_ast_search(self, source: str) -> Iterator[int]:
+        expr = ast.parse(source, mode="eval")
+        positions = codeanalyze.ASTLinesAdapter(source)
+        for n in ast.walk(expr):
+            start, end = positions[n]
+            match n:
+                case ast.Name(id=self.name) if start is not None:
+                    yield start
+                case ast.Attribute(attr=self.name) if end is not None:
+                    yield end - len(n.attr)
+                case ast.keyword(arg=self.name) if start is not None:
+                    yield start
+                case _:
+                    continue
 
     def _normal_search(self, source: str) -> Iterator[int]:
         current = 0
@@ -365,33 +384,6 @@ class _TextualFinder:
 
     def _fast_file_query(self, source):
         return self.name in source
-
-    def _get_source(self, resource, pymodule):
-        if resource is not None:
-            return resource.read()
-        else:
-            return pymodule.source_code
-
-    def _get_occurrence_pattern(self, name):
-        # A name directly followed by a quote is a string prefix, e.g. the
-        # ``f`` in ``f"..."``, never a reference to the name.
-        occurrence_pattern = _TextualFinder.any(
-            "occurrence", ["\\b" + name + "\\b(?![\"'])"]
-        )
-        pattern = re.compile(
-            occurrence_pattern
-            + "|"
-            + self.comment_pattern
-            + "|"
-            + self.string_pattern
-            + "|"
-            + self.f_string_pattern
-        )
-        return pattern
-
-    @staticmethod
-    def any(name, list_):
-        return "(?P<%s>" % name + "|".join(list_) + ")"
 
 
 class _OccurrenceToolsCreator:

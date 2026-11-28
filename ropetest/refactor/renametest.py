@@ -302,10 +302,20 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         )
 
     def test_renaming_with_backslash_continued_names(self):
+        code = dedent("""\
+            replace = True
+            'ali'.\\
+            replace
+        """)
         refactored = self._local_rename(
-            "replace = True\n'ali'.\\\nreplace\n", 2, "is_replace"
+            code, 2, "is_replace"
         )
-        self.assertEqual("is_replace = True\n'ali'.\\\nreplace\n", refactored)
+        expected = dedent("""\
+            is_replace = True
+            'ali'.\\
+            replace
+        """)
+        self.assertEqual(expected, refactored)
 
     def test_renaming_occurrence_in_f_string(self):
         code = dedent("""\
@@ -331,6 +341,30 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(expected, refactored)
 
+    def test_renaming_occurrence_in_f_string_with_reused_quotes(self):
+        code = dedent('''\
+            a_var = {"key": 20}
+            a_string=f"{a_var['key']} and {a_var['key']:>2}"
+        ''')
+        expected = dedent('''\
+            new_var = {"key": 20}
+            a_string=f"{new_var['key']} and {new_var['key']:>2}"
+        ''')
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_occurrence_in_f_string_format_spec(self):
+        code = dedent("""\
+            a_var = 4
+            a_string=f"{a_var:>{a_var}}"
+        """)
+        expected = dedent("""\
+            new_var = 4
+            a_string=f"{new_var:>{new_var}}"
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
+        self.assertEqual(expected, refactored)
+
     def test_renaming_attribute_occurrences_in_f_string(self):
         code = dedent("""\
             class MyClass:
@@ -351,6 +385,22 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
                     return obj.new_var
         """)
         refactored = self._local_rename(code, code.index('abc'), "new_var")
+        self.assertEqual(expected, refactored)
+
+    def test_renaming_keyword_arg_occurrences_in_f_string(self):
+        code = dedent("""\
+            def func(target):
+                print(target)
+
+            print(f"{func(target=10)}")
+        """)
+        expected = dedent("""\
+            def func(new_var):
+                print(new_var)
+
+            print(f"{func(new_var=10)}")
+        """)
+        refactored = self._local_rename(code, code.index('target'), "new_var")
         self.assertEqual(expected, refactored)
 
     def test_not_renaming_f_string_prefix(self):
@@ -378,8 +428,12 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         self.assertEqual(expected, refactored)
 
     def test_not_renaming_string_contents_in_f_string(self):
+        code = dedent("""\
+            a_var = 20
+            a_string=f'{"a_var"}'
+        """)
         refactored = self._local_rename(
-            "a_var = 20\na_string=f'{\"a_var\"}'\n", 2, "new_var"
+            code, 2, "new_var"
         )
         self.assertEqual(
             dedent("""\
@@ -390,7 +444,11 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         )
 
     def test_not_renaming_string_contents(self):
-        refactored = self._local_rename("a_var = 20\na_string='a_var'\n", 2, "new_var")
+        code = dedent("""\
+            a_var = 20
+            a_string='a_var'
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(
             dedent("""\
                 new_var = 20
@@ -400,7 +458,11 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         )
 
     def test_not_renaming_comment_contents(self):
-        refactored = self._local_rename("a_var = 20\n# a_var\n", 2, "new_var")
+        code = dedent("""\
+            a_var = 20
+            # a_var
+        """)
+        refactored = self._local_rename(code, 2, "new_var")
         self.assertEqual(
             dedent("""\
                 new_var = 20
@@ -1430,7 +1492,7 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         """)
         self.assertEqual(expected, mod1.read())
 
-    def test_rename_in_list_comprehension(self):
+    def test_rename_outside_list_comprehension(self):
         code = dedent("""\
             some_var = 1
             compr = [some_var for some_var in range(10)]
@@ -1472,7 +1534,10 @@ class RenameRefactoringTest(RenameTestMixin, unittest.TestCase):
         self.assertEqual("import new_json.utils.a as stdlib_json_utils\n", mod2.read())
 
     def test_rename_refuses_renaming_to_python_keyword(self):
-        with self.assertRaises(exceptions.RefactoringError, msg="Invalid refactoring target name. 'class' is a Python keyword."):
+        with self.assertRaises(
+            exceptions.RefactoringError,
+            msg="Invalid refactoring target name. 'class' is a Python keyword.",
+        ):
             self._local_rename("a_var = 20\n", 2, "class")
 
 
