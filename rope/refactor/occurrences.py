@@ -37,6 +37,7 @@ calling the `create_finder()` function.
 
 import contextlib
 import io
+import sys
 import tokenize
 from itertools import accumulate
 from typing import Iterator
@@ -337,6 +338,16 @@ class _TextualFinder:
             elif item.type == tokenize.STRING and item.string.lower().startswith(
                 ("f", "rf")
             ):
+                assert sys.version_info < (3, 12, 0), """
+                    This branch is only used before Python 3.12, because
+                    `tokenize.generate_tokens()` tokenize the whole f-string as
+                    a single STRING token, so we need to parse it out again to
+                    search for any variables used inside them.
+
+                    From Python 3.12 onwards, `generate_tokens()` would
+                    yield NAME tokens for variables inside f-string/t-string so
+                    this would be unreachable.
+                """
                 for offset in self._fstring_ast_search(item.string):
                     yield line_starts[row - 1] + column + offset
 
