@@ -3,23 +3,17 @@ from rope.refactor.rename import Rename
 
 
 class LocalToField:
+    """Convert a method local to a field, rejecting invalid selections at construction."""
+
     def __init__(self, project, resource, offset):
         self.project = project
         self.resource = resource
         self.offset = offset
+        self._get_method_scope()
 
     def get_changes(self):
         name = worder.get_name_at(self.resource, self.offset)
-        this_pymodule = self.project.get_pymodule(self.resource)
-        pyname = evaluate.eval_location(this_pymodule, self.offset)
-        if not self._is_a_method_local(pyname):
-            raise exceptions.RefactoringError(
-                "Convert local variable to field should be performed on "
-                "a local variable of a method."
-            )
-
-        pymodule, lineno = pyname.get_definition_location()
-        function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+        function_scope = self._get_method_scope()
         # Not checking redefinition
         # self._check_redefinition(name, function_scope)
 
@@ -39,14 +33,20 @@ class LocalToField:
         new_name = self_name + "." + name
         return new_name
 
-    def _is_a_method_local(self, pyname):
-        pymodule, lineno = pyname.get_definition_location()
-        holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-        parent = holding_scope.parent
-        return (
-            isinstance(pyname, pynames.AssignedName)
-            and pyname in holding_scope.get_names().values()
-            and holding_scope.get_kind() == "Function"
-            and parent is not None
-            and parent.get_kind() == "Class"
+    def _get_method_scope(self):
+        pymodule = self.project.get_pymodule(self.resource)
+        pyname = evaluate.eval_location(pymodule, self.offset)
+        if isinstance(pyname, pynames.AssignedName):
+            definition_module, lineno = pyname.get_definition_location()
+            scope = definition_module.get_scope().get_inner_scope_for_line(lineno)
+            if (
+                scope.get_kind() == "Function"
+                and scope.parent is not None
+                and scope.parent.get_kind() == "Class"
+                and pyname in scope.get_names().values()
+            ):
+                return scope
+        raise exceptions.RefactoringError(
+            "Convert local variable to field should be performed on "
+            "a local variable of a method."
         )

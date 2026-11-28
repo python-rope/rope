@@ -861,6 +861,17 @@ class LocalToFieldTest(unittest.TestCase):
         changes = LocalToField(self.project, resource, offset).get_changes()
         self.project.do(changes)
 
+    def test_local_to_field_rejects_module_variable_during_construction(self):
+        self.mod.write("module_var = 1\n")
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, 0)
+
+    def test_local_to_field_rejects_unknown_variable_during_construction(self):
+        code = "class A:\n    def method(self):\n        unknown()\n"
+        self.mod.write(code)
+        with self.assertRaises(RefactoringError):
+            LocalToField(self.project, self.mod, code.index("unknown"))
+
     def test_simple_local_to_field(self):
         code = dedent("""\
             class A(object):
